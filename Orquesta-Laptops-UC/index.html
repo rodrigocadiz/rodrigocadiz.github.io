@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Orquesta de Laptops UC: ensamble donde computadores portátiles se usan como instrumentos musicales. Conciertos, creación, repertorio y actividades abiertas." />
+  <title>Orquesta de Laptops UC</title>
+
+  <style>
+    :root{
+      --bg:#0b0f19;
+      --card:#111827;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#60a5fa;
+      --accent2:#34d399;
+      --border:rgba(255,255,255,.08);
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --max:1040px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      background:radial-gradient(1200px 800px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
+                 radial-gradient(1000px 700px at 80% 10%, rgba(52,211,153,.14), transparent 60%),
+                 var(--bg);
+      color:var(--text); line-height:1.55}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    header{
+      position:sticky; top:0; z-index:10;
+      background:rgba(11,15,25,.72); backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav{
+      max-width:var(--max); margin:0 auto; padding:12px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+    }
+
+    /* Brand (logo UC + título) */
+    .brand{display:flex; align-items:center; gap:12px; min-width: 260px;}
+    .ucmark{
+      height:32px; width:auto; max-width:140px;
+      display:block;
+      border-radius:8px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      padding:4px;
+      object-fit:contain;
+    }
+    .brandtext{display:flex; flex-direction:column; line-height:1.05}
+    .brandtext strong{font-size:15px; letter-spacing:.2px}
+    .brandtext span{font-size:12px; color:var(--muted); margin-top:2px}
+
+    .links{display:flex; flex-wrap:wrap; gap:10px 14px; font-size:14px}
+    .links a{color:var(--text); opacity:.9}
+    .links a:hover{opacity:1}
+
+    .wrap{max-width:var(--max); margin:0 auto; padding:20px 16px 60px}
+
+    /* Header image */
+    .header-hero{
+      max-width:var(--max);
+      margin:18px auto 0;
+      border-radius:22px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      background:#000;
+      position:relative;
+    }
+    .header-hero img.header-photo{
+      width:100%;
+      height:min(56vh, 520px);
+      object-fit:cover;
+      display:block;
+      filter: saturate(1.05) contrast(1.05);
+    }
+    .header-overlay{
+      position:absolute; inset:0;
+      background:linear-gradient(0deg, rgba(11,15,25,.86) 0%, rgba(11,15,25,.15) 55%, rgba(11,15,25,.05) 100%);
+      pointer-events:none;
+      z-index:1;
+    }
+    .header-content{
+      position:absolute;
+      left:16px; right:16px; bottom:16px;
+      max-width:900px;
+      padding:18px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(17,24,39,.55);
+      backdrop-filter: blur(10px);
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      z-index:2;
+    }
+
+    .header-uc{
+      flex:0 0 auto;
+      height:130px;      /* was 56px */
+      width:auto;
+      max-width:400px;  /* was 150px */
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      padding:10px;
+      display:block;
+      object-fit:contain;
+    }
+
+    .header-copy{flex:1 1 auto}
+    .header-copy h1{margin:0 0 8px; font-size:34px; line-height:1.15}
+    .header-copy p{margin:0; color:var(--muted); font-size:16px}
+
+    .card{
+      background:rgba(17,24,39,.72);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+    h2{margin:0 0 10px; font-size:22px}
+    h3{margin:0 0 8px; font-size:17px}
+    p{margin:0 0 12px}
+    .muted{color:var(--muted)}
+
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 18px}
+    .pill{
+      font-size:13px; color:var(--text); opacity:.95;
+      border:1px solid var(--border);
+      padding:6px 10px; border-radius:999px;
+      background:rgba(255,255,255,.03);
+    }
+    .cta{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px; border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--text); font-weight:600; font-size:14px;
+    }
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(96,165,250,.95), rgba(52,211,153,.85));
+      border:none; color:#061018;
+    }
+    .btn:hover{transform: translateY(-1px); transition:.15s ease}
+
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: repeat(12, 1fr);
+      margin-top:14px;
+    }
+    .span12{grid-column: span 12}
+    .span8{grid-column: span 8}
+    .span6{grid-column: span 6}
+    .span4{grid-column: span 4}
+    @media (max-width: 900px){
+      .span6,.span4,.span8{grid-column: span 12}
+      .header-copy h1{font-size:28px}
+      .header-hero img.header-photo{height:min(46vh, 420px)}
+      .header-content{flex-direction:column; align-items:flex-start}
+      .header-uc{height:82px; max-width:260px;}
+      .brand{min-width:auto}
+    }
+
+    ul{margin:0; padding-left:18px}
+    li{margin:6px 0}
+
+    .kpi{display:flex; gap:12px; flex-wrap:wrap; margin-top:10px}
+    .kpi .box{
+      flex:1; min-width:160px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background:rgba(255,255,255,.03);
+    }
+    .box strong{display:block; font-size:18px}
+
+    .badge{
+      display:inline-block;
+      font-size:12px;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      margin-bottom:10px;
+    }
+
+    figure{margin:14px 0 0; padding:0;}
+    figure img{
+      width:100%;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+      box-shadow:0 10px 26px rgba(0,0,0,.28);
+      display:block;
+    }
+    figcaption{margin-top:8px; color:var(--muted); font-size:13px;}
+
+    .video-embed{
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 26px rgba(0,0,0,.28);
+      background: #000;
+      margin-top:12px;
+    }
+    .video-embed iframe{
+      position:absolute;
+      top:0; left:0;
+      width:100%;
+      height:100%;
+    }
+
+    .faq details{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px 12px;
+      background:rgba(255,255,255,.03);
+      margin:10px 0;
+    }
+    .faq summary{cursor:pointer; font-weight:700}
+
+    footer{
+      border-top:1px solid var(--border);
+      margin-top:30px; padding-top:18px;
+      color:var(--muted); font-size:13px;
+    }
+    .small{font-size:13px}
+    .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+  </style>
+</head>
+
+<body>
+<header>
+  <nav class="nav">
+    <div class="brand">
+      <img class="ucmark" src="assets/logoUClaptop.png" alt="Logo Pontificia Universidad Católica de Chile" />
+      <div class="brandtext">
+        <strong>Orquesta de Laptops UC</strong>
+        <span>Pontificia Universidad Católica de Chile</span>
+      </div>
+    </div>
+
+    <div class="links">
+      <a href="#que-es">¿Qué es?</a>
+      <a href="#que-hacemos">Qué hacemos</a>
+      <a href="#sumate">Súmate</a>
+      <a href="#conciertos">Conciertos</a>
+      <a href="#repertorio">Repertorio</a>
+      <a href="#playlist">Videos</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+  </nav>
+</header>
+
+<section class="header-hero" aria-label="Foto de cabecera">
+  <img class="header-photo" src="assets/header.png" alt="Presentación de una orquesta de laptops en escenario" />
+  <div class="header-overlay" aria-hidden="true"></div>
+
+  <div class="header-content">
+    <img class="header-uc" src="assets/logoUClaptop.png" alt="Logo Pontificia Universidad Católica de Chile" />
+    <div class="header-copy">
+      <span class="badge">Ensayo • creación • conciertos • mediación</span>
+      <h1>Orquesta de Laptops UC</h1>
+        <p><b>Director: </b><a href="http://rodrigocadiz.com">Rodrigo F. Cádiz</a>, profesor titular, Instituto de Música y Departamento de Ingeniería Eléctrica UC.</p>
+      
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+
+  <section class="grid" id="inicio">
+    <div class="card span8">
+      <h2>¿De qué se trata?</h2>
+      <p>
+        La Orquesta de Laptops UC es un ensamble, el primero de su tipo en Chile, donde cada integrante interpreta música en vivo usando un computador portátil, software de síntesis y procesamiento de audio, y <a href="http://nime.org" target="_blank">nuevas interfaces de expresión musical</a>. Este formato se ha desarrollado en distintos contextos universitarios y artísticos en el mundo, incluyendo proyectos como la <a href="http://slork.stanford.edu"v>Stanford Laptop Orchestra (SLOrk)</a>, la <a href="http://plork.princeton.edu" target="_blank">Princeton Laptop Orchestra (PLOrk)</a> y otras orquestas afines alrededor del mundo.</p>
+
+      <div class="pillrow" aria-label="Características">
+        <span class="pill">Música contemporánea</span>
+        <span class="pill">Música computacional</span>
+        <span class="pill">Música electroacústica</span>
+        <span class="pill">Diseño sonoro</span>
+        <span class="pill">Performance digital</span>
+        <span class="pill">Obras nuevas</span>
+        <span class="pill">Conciertos y actividades abiertas</span>
+      </div>
+
+        <p>Durante el primer semestre de 2026 se desarrollará a través un taller abierto a alumnos de la UC previa inscripción, entrevista y selección. Los cupos son limitados. Durante el segundo semestre 2026 la participación será a través de un curso.</p>
+
+      <div class="cta">
+        <a class="btn primary" href="#sumate">Quiero sumarme</a>
+        <a class="btn" href="#playlist">Ver videos</a>
+      </div>
+    </div>
+
+    <aside class="card span4">
+      <h2>¿Para quién es?</h2>
+      <p class="muted">
+        Para estudiantes UC con interés por el sonido, la música y/o la tecnología, que quieran componer y/o interpretar música para un formato tecnológico e interactivo. No necesitas saberlo todo para entrar: se aprende en equipo.
+      </p>
+      <div class="kpi" aria-label="Datos rápidos">
+        <div class="box">
+          <strong>Ensayos</strong>
+          <span class="muted">trabajos periódicos de ensamble y escucha</span>
+        </div>
+        <div class="box">
+          <strong>Creación</strong>
+          <span class="muted">obras nuevas y repertorio</span>
+        </div>
+        <div class="box">
+          <strong>Conciertos</strong>
+          <span class="muted">presentaciones y mediación</span>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="grid" id="que-es">
+    <div class="card span12">
+      <h2>¿Qué es una orquesta de laptops?</h2>
+      <p>
+        Es un ensamble musical donde cada integrante utiliza un computador portátil como instrumento. En vez de simplemente “reproducir audio”, aquí el computador se interpreta: se controlan sonidos, ritmos, texturas y transformaciones en tiempo real. Esto puede hacerse mediante el teclado, cámaras web, mouse, joysticks, microcontroladores, celulares, tablets, o muchos otros dipositivos que se puedan conectar a un laptop.
+      </p>
+      <p>
+        Un elemento distintivo del formato es la proyección sonora: cada estación cuenta con un sistema de amplificación propio, tal como sucede con los instrumentos en una orquesta tradicional, lo que abre posibilidades escénicas y espaciales.
+      </p>
+
+      <figure>
+        <img src="assets/croquis.png" alt="Croquis de una orquesta de laptops con altavoces hemisféricos y estaciones de trabajo" />
+        <figcaption>
+          Croquis referencial: estaciones individuales con laptop e interfaz, y altavoces de proyección sonora distribuidos en escena.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="grid" id="que-hacemos">
+    <div class="card span12">
+      <h2>Qué hacemos</h2>
+      <div class="grid" style="margin-top:8px">
+        <div class="card span4" style="background:rgba(255,255,255,.02)">
+          <h3>Ensayos</h3>
+          <p class="muted">Coordinación, escucha, balance y armado de un sonido colectivo. Creación de tecnología de audio y de expresión musical.</p>
+        </div>
+        <div class="card span4" style="background:rgba(255,255,255,.02)">
+          <h3>Repertorio</h3>
+          <p class="muted">Obras del repertorio nacional o internacional para orquestas de laptops y adaptaciones al grupo.</p>
+        </div>
+        <div class="card span4" style="background:rgba(255,255,255,.02)">
+          <h3>Creación</h3>
+          <p class="muted">Obras nuevas por encargo y piezas creadas por integrantes de la orquesta en forma individual o colectiva.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid" id="sumate">
+    <div class="card span12">
+      <h2>Súmate</h2>
+      <p>
+        Si eres estudiante (idealmente de Música, Ingeniería o carreras afines) de pre o postgrado y te interesa participar, <a href="https://forms.gle/emDUUcQwFdJcGgmE8" target="_blank">inscríbete en este formulario</a> para recibir información
+        sobre audiciones, entrevistas, cupos, requisitos y horarios.
+      </p>
+    </div>
+  </section>
+
+  <section class="grid" id="conciertos">
+    <div class="card span12">
+      <h2>Conciertos</h2>
+      <p class="muted">Próximamente publicaremos fechas, lugares, programas y registros.</p>
+    </div>
+  </section>
+
+  <section class="grid" id="repertorio">
+    <div class="card span12">
+      <h2>Repertorio</h2>
+      <p class="muted">Próximamente: obras interpretadas, obras encargadas y creaciones del grupo.</p>
+    </div>
+  </section>
+
+  <section class="grid" id="playlist">
+    <div class="card span12">
+      <h2>Videos</h2>
+      <p class="muted">
+        Esta playlist de youtube contiene una selección de ejemplos de orquestas de laptops de distintos lugares del mundo, los cuales sirven como inspiración para el trabajo proyectado con esta orquesta.
+      </p>
+      <div class="video-embed">
+        <iframe
+          src="https://www.youtube.com/embed/videoseries?list=PLj4BX1QkmDLq2Cs8badcraUDFzV4V5sfn"
+          title="Orquestas de Laptops – Playlist"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid faq" id="faq">
+    <div class="card span12">
+      <h2>Preguntas frecuentes</h2>
+      <details>
+        <summary>¿Necesito saber programar?</summary>
+        <p class="muted">Idealmente se requiere alguna experiencia con software de síntesis y control sonoro como <a href="https://cycling74.com/" target="_blank">MaxMSP</a>, <a href="https://msp.ucsd.edu/software.html" target="_blank">Pure Data</a>, <a href="https://supercollider.github.io/" target="_blank">Supercollider</a> o <a href="https://chuck.stanford.edu/" target="_blank">Chuck</a>. Sin embargo, no es requisito saber programar. Se aprende en equipo.</p>
+      </details>
+      <details>
+        <summary>¿Qué compromiso se requiere para participar?</summary>
+        <p class="muted">Asistir a todos los ensayos y presentaciones de la orquesta. Este es un trabajo presencial y colectivo. En resumen, se requiere compromiso de participación presencial y constante.</p>
+      </details>
+      <details>
+        <summary>¿Necesito tener un laptop para participar?</summary>
+        <p class="muted">No necesariamente. La orquesta cuenta con sus propios laptops que aseguran un mínimo de integrantes en el ensamble.</p>
+      </details>        
+    </div>
+  </section>
+
+  <section class="grid" id="contacto">
+    <div class="card span12">
+      <h2>Contacto</h2>
+      <p class="muted">Para participación, colaboraciones o actividades, contactar a Rodrigo F. Cádiz, director de la orquesta.</p>
+      <p>
+        <strong>Correo:</strong> <a href="mailto:rcadiz@uc.cl">rcadiz@uc.cl</a>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© <span id="year"></span> Orquesta de Laptops UC, Rodrigo F. Cádiz y Pontificia Universidad Católica de Chile.</p>
+  </footer>
+
+</main>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
