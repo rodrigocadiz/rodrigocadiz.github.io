@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FME UC 2026 — Música Mixta</title>
+<style>
+:root {
+  --bg: #0D1117; --bg2: #161B22; --bg3: #1C2128;
+  --border: #30363D; --text: #E6EDF3; --muted: #8B949E;
+  --accent: #3FD17A; --accent-dim: #3FD17A22;
+  --green: #3FB950; --red: #F85149; --yellow: #D29922;
+  --font: 'Segoe UI', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font);
+  min-height: 100vh; padding: 0; }
+.screen { display: none; max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+.screen.active { display: block; }
+.logo { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 6px; }
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--muted); }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; margin-bottom: 16px; }
+.card-title { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+.meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.meta-item { font-size: 13px; color: var(--muted); }
+.meta-item span { color: var(--text); }
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
+  font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: .5px; }
+.badge-concurso { background: var(--accent-dim); color: var(--accent); border: 1px solid #3FD17A55; }
+.badge-mix { background: #3FB95022; color: var(--green); border: 1px solid #3FB95055;
+  font-size: 12px; font-weight: 500; padding: 4px 10px; }
+.notes-toggle { width: 100%; text-align: left; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;
+  color: var(--muted); cursor: pointer; font-size: 13px; font-family: var(--font);
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.notes-toggle:hover { border-color: var(--accent); color: var(--text); }
+.notes-toggle .arrow { transition: transform .2s; }
+.notes-toggle.open .arrow { transform: rotate(180deg); }
+.notes-body { display: none; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px; font-size: 14px; line-height: 1.7;
+  color: #C9D1D9; margin-bottom: 8px; white-space: pre-wrap; }
+.notes-body.open { display: block; }
+.links-section { margin-bottom: 16px; }
+.links-label { font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+.links-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+  background: var(--accent-dim); color: var(--accent); border: 1px solid #3FD17A55;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  text-decoration: none; transition: background .15s; }
+.btn-link:hover { background: #3FD17A33; }
+.btn-broken { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: var(--font); transition: all .15s; }
+.btn-broken:hover { border-color: var(--red); color: var(--red); }
+.btn-broken.flagged { background: #F8514922; color: var(--red); border-color: var(--red); }
+.no-links { font-size: 13px; color: var(--red); font-style: italic; }
+.criteria { margin-bottom: 16px; }
+.criterion { margin-bottom: 14px; }
+.crit-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.crit-name { font-size: 14px; font-weight: 500; }
+.crit-score { font-size: 18px; font-weight: 700; color: var(--accent); min-width: 28px; text-align: right; }
+input[type=range] { -webkit-appearance: none; width: 100%; height: 6px;
+  background: var(--border); border-radius: 3px; outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); cursor: pointer; box-shadow: 0 0 0 4px var(--accent-dim); }
+.score-total { display: flex; justify-content: flex-end; align-items: baseline;
+  gap: 4px; margin-top: 4px; }
+.score-total-label { font-size: 13px; color: var(--muted); }
+.score-total-val { font-size: 28px; font-weight: 800; color: var(--accent); }
+.score-total-max { font-size: 16px; color: var(--muted); }
+.comment-label { font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; margin-top: 16px; }
+textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px;
+  padding: 10px 12px; resize: vertical; min-height: 70px; line-height: 1.5; }
+textarea:focus { outline: none; border-color: var(--accent); }
+.nav { display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 0; border-top: 1px solid var(--border); margin-top: 8px; }
+.nav-info { font-size: 13px; color: var(--muted); text-align: center; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px;
+  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: var(--font); border: none; transition: opacity .15s; }
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--accent); color: #000; }
+.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-success { background: var(--green); color: #000; font-size: 15px; padding: 13px 28px; }
+.btn-disabled { opacity: .35; cursor: not-allowed; }
+.progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 20px; }
+.progress-fill { height: 3px; background: var(--accent); border-radius: 2px;
+  transition: width .3s; }
+.lang-toggle { position: fixed; top: 16px; right: 16px; display: flex; gap: 0;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; z-index: 100; }
+.lang-btn { padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  background: none; border: none; color: var(--muted); font-family: var(--font); }
+.lang-btn.active { background: var(--accent); color: #000; }
+/* Jurado selection */
+.jur-select { width: 100%; padding: 12px 16px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+  font-size: 15px; font-family: var(--font); appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%238B949E'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center;
+  cursor: pointer; margin-bottom: 16px; }
+.jur-select:focus { outline: none; border-color: var(--accent); }
+.test-mode { display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  background: var(--yellow)11; border: 1px solid var(--yellow)44; border-radius: 8px;
+  margin-bottom: 20px; cursor: pointer; }
+.test-mode input { width: 16px; height: 16px; accent-color: var(--yellow); cursor: pointer; }
+.test-mode label { font-size: 13px; color: var(--yellow); cursor: pointer; line-height: 1.4; }
+/* Summary table */
+.summary-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+.summary-table th { background: var(--bg3); padding: 8px 10px; text-align: left;
+  border-bottom: 1px solid var(--border); color: var(--muted);
+  font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+.summary-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.summary-table tr:last-child td { border-bottom: none; }
+.score-cell { font-weight: 700; color: var(--accent); text-align: center; }
+.total-cell { font-weight: 800; font-size: 15px; color: var(--accent); text-align: center; }
+.broken-icon { color: var(--red); font-size: 12px; }
+.missing-icon { color: var(--yellow); font-size: 11px; }
+.instr-tag { display: inline-block; background: var(--green)15; color: var(--green);
+  border: 1px solid var(--green)40; border-radius: 6px; padding: 3px 10px;
+  font-size: 12px; margin-bottom: 12px; }
+.instructions-body { font-size: 14px; line-height: 1.8; color: #C9D1D9; }
+.instructions-body p { margin-bottom: 12px; }
+.instructions-body ul { padding-left: 20px; margin-bottom: 12px; }
+.instructions-body li { margin-bottom: 6px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.send-section { text-align: center; padding: 20px; }
+.send-note { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.autosave-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
+.test-badge { display: inline-block; background: var(--yellow)22; color: var(--yellow);
+  border: 1px solid var(--yellow)55; border-radius: 20px; padding: 3px 10px;
+  font-size: 11px; font-weight: 700; margin-left: 8px; letter-spacing: .5px; }
+.obra-num { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px;
+  letter-spacing: 1px; }
+.incomplete-warning { background: var(--yellow)11; border: 1px solid var(--yellow)44;
+  border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--yellow);
+  margin-bottom: 16px; }
+.premio-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.premio-label { font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+.btn-premio { display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: var(--font); width: 100%; transition: all .15s; text-align: left; }
+.btn-premio:hover { border-color: var(--yellow); color: var(--yellow); }
+.btn-premio.selected { background: var(--yellow)22; color: var(--yellow);
+  border-color: var(--yellow); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- Language toggle -->
+<div class="lang-toggle">
+  <button class="lang-btn active" id="btn-es" onclick="setLang('es')">ES</button>
+  <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ── SCREEN 0: Jurado selection ── -->
+<div class="screen active" id="screen-jurado">
+  <div style="margin-top:60px; margin-bottom:32px;">
+    <div class="logo">FME UC 2026</div>
+    <h1 id="s0-title">Música Mixta</h1>
+    <h2 id="s0-sub">Evaluación del jurado</h2>
+  </div>
+  <div class="card">
+    <div style="font-size:14px; color:var(--muted); margin-bottom:12px;" id="s0-select-label">Selecciona tu nombre:</div>
+    <select class="jur-select" id="jurado-select">
+      <option value="">— Seleccionar —</option>
+    </select>
+    <div class="test-mode" onclick="toggleTest()">
+      <input type="checkbox" id="test-cb">
+      <label for="test-cb" id="s0-test-label">
+        <strong>Modo prueba</strong><br>
+        Las respuestas irán a una pestaña separada, no a la evaluación oficial.
+      </label>
+    </div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="startEval()" id="btn-start">
+      Comenzar evaluación →
+    </button>
+  </div>
+  <p style="font-size:12px; color:var(--muted); text-align:center; margin-top:8px;" id="s0-deadline">
+    Plazo: 5 de abril de 2026
+  </p>
+</div>
+
+<!-- ── SCREEN 1: Instructions ── -->
+<div class="screen" id="screen-instrucciones">
+  <div style="margin-top:60px; margin-bottom:20px;">
+    <div class="logo">FME UC 2026</div>
+    <h1 id="s1-title">Instrucciones</h1>
+    <div id="s1-jurado-name" style="font-size:14px; color:var(--muted); margin-top:4px;"></div>
+  </div>
+  <div class="card instructions-body" id="s1-body"></div>
+  <div style="text-align:right; margin-top:16px;">
+    <button class="btn btn-primary" onclick="showScreen('screen-obras')">
+      <span id="s1-btn">Comenzar evaluación →</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── SCREEN 2: Works ── -->
+<div class="screen" id="screen-obras">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div id="obra-container"></div>
+  <div class="nav">
+    <button class="btn btn-secondary" id="btn-prev" onclick="navigate(-1)">← <span id="nav-prev-txt">Anterior</span></button>
+    <div class="nav-info">
+      <span id="nav-count"></span><br>
+      <span id="nav-autosave" class="autosave-note"></span>
+    </div>
+    <button class="btn btn-primary" id="btn-next" onclick="navigate(1)"><span id="nav-next-txt">Siguiente</span> →</button>
+  </div>
+</div>
+
+<!-- ── SCREEN 3: Summary ── -->
+<div class="screen" id="screen-resumen">
+  <div style="margin-top:60px; margin-bottom:20px;">
+    <div class="logo">FME UC 2026</div>
+    <h1 id="s3-title">Resumen</h1>
+    <div id="s3-jurado" style="font-size:14px; color:var(--muted); margin-top:4px;"></div>
+  </div>
+  <div id="incomplete-warning" class="incomplete-warning" style="display:none;"></div>
+  <div style="overflow-x:auto;">
+    <table class="summary-table" id="summary-table"></table>
+  </div>
+  <div class="send-section">
+    <p class="send-note" id="s3-note"></p>
+    <button class="btn btn-success" onclick="sendEval()" id="btn-send">✓ <span id="s3-send-btn">Enviar evaluación</span></button>
+    <br><br>
+    <button class="btn btn-secondary" onclick="downloadJSON()" style="margin-top:8px;">
+      ↓ <span id="s3-backup">Descargar respaldo JSON</span>
+    </button>
+    <br>
+    <button class="btn btn-secondary" onclick="showScreen('screen-obras')" style="margin-top:8px; font-size:13px;">
+      ← <span id="s3-back">Volver a editar</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── SCREEN 4: Sent ── -->
+<div class="screen" id="screen-enviado">
+  <div style="margin-top:80px; text-align:center;">
+    <div style="font-size:48px; margin-bottom:16px;">✅</div>
+    <div class="logo">FME UC 2026</div>
+    <h1 id="s4-title" style="margin-bottom:8px;">¡Evaluación enviada!</h1>
+    <p id="s4-body" style="color:var(--muted); font-size:14px; line-height:1.7; max-width:400px; margin:0 auto;"></p>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const CAT        = "B";
+const CAT_NAME   = { es: "Música Mixta", en: "Mixed Music" };
+const CRITERIOS  = [{"id": "comp", "es": "Calidad compositiva", "en": "Compositional quality"}, {"id": "orig", "es": "Originalidad", "en": "Originality"}, {"id": "tec", "es": "Realización técnica", "en": "Technical realization"}];
+const MAX_SCORE  = 30;
+const JURADOS    = ["Pink Noise", "Anthony de Ritis", "Miguel Farías", "Rodrigo Cádiz", "Juan Pablo Vergara"];
+const OBRAS      = [{"titulo": "a los que no ven", "duracion": "7min", "anio": "2024", "concurso": false, "notas": "Esta obra es parte del trabajo de música situada del compositor y contrabajista chileno\nPone en dialogo las fragiliades desde la escucha de Albuquerque donde realiza un trabajo de creación en base al registro de lugares especificos, documentación escrita y fotografica, con el imaginario desde el contrabajo.\n\nA(l)bandono, es una obra creada en Albuquerque en medio de una residencia artística que estaba llevando ababo el músico en el departamento de composición, donde trabajo con Ensamble of New Music", "links": ["https://www.youtube.com/watch?v=W3-rp6gzQ5A&list=RDW3-rp6gzQ5A&start_radio=1"], "instrumentacion": "contrabajo y electrónica", "num": 1}, {"titulo": "En el No Mundo", "duracion": "5'44''", "anio": "2024", "concurso": true, "notas": "\"En el no-mundo\" es una obra para clarinete bajo y electroacústica que explora el espacio sonoro del \"no-mundo\", un no-lugar habitado por lo que la modernidad ha desplazado, ignorado y descartado. La pieza se construye a partir del exceso y lo residual: el ruido, la sobreproducción, el fragor de la guerra, la violencia producida por diversos motivos e intenciones, la migración forzada, la hiperestimulación sensorial, etc. A través de esta cartografía de lo invisibilizado, la obra evoca lo invisible y trae al presente aquello que ya no tiene cabida en el mundo, pero que se produce en él.\n\nDado que el mundo está lleno, el no-mundo está compuesto por todo lo que existe y no es visible en él, ya sea porque está oculto o porque no queremos verlo. La obra también aborda la habitación del sujeto en el no-mundo, quien también experimenta la plenitud en su interior —en un cuerpo explotado por los excesos y una mente hiperestimulada por la información y la tecnología— interpretándola desde su subjetividad. El concepto de “no mundo” está inspirado en la “Estética del lleno” desarrollada por el filósofo chileno Sergio Rojas.", "links": ["https://drive.google.com/drive/folders/1jMDwBF0I_EiKbrjT180VdViFqOgETLMw?usp=sharing"], "instrumentacion": "clarinete bajo y electrónica", "num": 2}, {"titulo": "Extemporización Espacial \"La guitarra como dispositivo de espacialización\"", "duracion": "8'", "anio": "2025", "concurso": true, "notas": "En Extemporización espacial, la guitarra eléctrica deja de ser solo una fuente sonora: se convierte en un dispositivo de espacialización. El gesto del intérprete —sus movimientos, orientaciones y variaciones corporales— no únicamente modela el timbre, sino que activa y modula trayectorias del sonido en un entorno de escucha envolvente. La interpretación, en este sentido, ocurre simultáneamente en la materia musical y en el espacio.\n\nLa pieza se construye como una práctica de extemporización: un hacer en tiempo real que asume la incertidumbre como método. En lugar de una forma cerrada, se propone un marco de acción donde el intérprete explora zonas de estabilidad e inestabilidad, tensando la relación entre control y deriva. El sonido, a veces nítido y direccional, a veces difuso o desanclado de su fuente visible, se desplaza alrededor del público como un componente compositivo activo.\n\nEl sistema interactivo amplía la guitarra hacia un “meta-instrumento”: un ensamblaje de señal, procesamiento y espacialización que transforma cada gesto en una decisión espacial. Más que ilustrar el movimiento, la obra investiga cómo la espacialidad puede volverse un material expresivo.\n\nRecomendación de escucha: percibir no solo “qué” suena, sino desde dónde, cómo se mueve y qué relación establece con el cuerpo del intérprete y con la presencia de la audiencia.", "links": ["https://drive.google.com/drive/folders/1uL9stPgH0nDQRywG9-n-uESf2NL0CxlG?usp=sharing"], "instrumentacion": "guitarra eléctrica y electrónica / live electronics", "num": 3}, {"titulo": "Hoy no hay mucho pájaro, para ensamble", "duracion": "9 minutos", "anio": "2024", "concurso": false, "notas": "Hoy no hay mucho pájaro...\n\nobra para flauta traversa bajo, flauta Petzold, vioín, violonchelo y electroacústica\naño de composición: 2024\nduración: 9 min\nGonzalo Biffarella: Composición\nMovimiento Paralelo: Karina Fischer. Flauta Traversa Baja & Paola Muñoz: Flauta Paetzold\nMiguel Munoz: Violín\nBeatriz Lemus: Violonchelo\n\nHoy no hay mucho pájaro..., es una obra que realicé a partir grabaciones en casa de Karina Fisher y Guillermo Lavado. Como la construcción está en la última línea antes de la cordillera, los pájaros, habitan en permanencia el espacio que rodea la casa. Luego se sumaron los registros, en la misma casa, durante un día de mucha lluvia,  de cuatro instrumentistas excelentes. Se trata de las flautas de Karina Fischer y Paola Muñoz, el violín de Miguel Muñoz y el violonchelo de Beatriz Lemus. En ese tipo de sesiones, busco llegar a conocer los modos que los músicos han desarrollado a través de años, ejercitando e investigando con sus instrumentos. En este caso, buscaba el modo en que esos recursos instrumentales pudieran,  por momentos, entretejer un diálogo con los sonidos de los pájaros. Luego construí una base electroacústica, sobre la cual, los cuatro músicos deberían tocar en escena.\nLa idea básica es que los instrumentistas se fusionen con los sonidos de los pájaros y de los registros de sus propios instrumentos, enriqueciendo las texturas y clarificando la forma de la pieza.\nCada versión, será una versión única, debido al grado de libertad con la que cuentan las intérpretes.\nEl nombre de la pieza es un guiño a un registro involuntario de la voz de Guillermo Lavado, que en momento de terminar una mis grabaciones en el patio de su casa dijo: “hoy no hay mucho pájaro...”.\n\nLa obra esta dedicada a Karina Fischer, Paola Muñoz, Miguel Muñoz y Beatriz Lemus.\n\n\t\t\t\t\t\tGonzalo Biffarella\n\nLink de referencia de la obra\n\nhttps://soundcloud.com/gonzasound/hoy-no-hay-mucho-pa-jaro-base", "links": ["https://drive.google.com/file/d/1Pn6ENe2Ew3mA9Ly2XplcbH0Dfx8sANzX/view?usp=sharing", "https://soundcloud.com/gonzasound/hoy-no-hay-mucho-pa-jaro-base"], "instrumentacion": "flauta traversa bajo, flauta Paetzold, violín, violonchelo y electrónica", "num": 4}, {"titulo": "Onigram", "duracion": "14:10", "anio": "2025", "concurso": false, "notas": "Onigram (2025) es una obra para violín y electrónica inspirada en la lógica fragmentaria de los sueños y concebida como una forma de escritura onírica. En su origen se encuentra un breve texto poético construido a partir de imágenes oníricas condensadas: escenas inconexas, objetos cargados de significado, presencias que aparecen y desaparecen sin explicación. Cada uno de estos fragmentos se traduce en gesto sonoro, generando un paisaje en constante mutación donde el violín atraviesa distintas atmósferas y la electrónica abre espacios de significado, profundidad y transformación. La música avanza como lo hace un sueño: por asociaciones inesperadas, desplazamientos de sentido y apariciones súbitas que parecen surgir de algún lugar oculto de la memoria.", "links": ["https://www.dropbox.com/scl/fo/2m69h0kyeqaxhslnstc8w/ACizoKCUpIsAHWAqKG9pDKE?rlkey=obfu5hrai1jkgjc0mqz9od2kg&st=on77grwc&dl=0"], "instrumentacion": "violín y electrónica", "num": 5}, {"titulo": "Re-air", "duracion": "10 a 12 minutos", "anio": "2026", "concurso": false, "notas": "La obra fue compuesta por encargo de la flautista dulce chilena Paola Muñoz Manuguián. Las ideas que dan origen a esta obra provienen de Dinámica destructiva (2017), para clarinete bajo y dispositivo electroacústico en tiempo real, donde la notación señala diversas acciones físicas que el/la instrumentista debe realizar de manera de alterar un sonido de base como consecuencia de la inestabilidad de dichas acciones. Se trata de corromper permanentemente el sonido del instrumento a través de operaciones intrincadas que se gestionan a través de formas gráficas (funciones) que se despliegan en la partitura. Por otro lado, tanto en la citada obra para clarinete bajo, como también en Formas de convergencia (2020), para saxofón barítono y dispositivo electroacústico en tiempo real, e Inexitud —las cuales forman parte de una misma serie— he pretendido desarrollar una noción de sistema recursivo, que se manifiesta en aspectos tales como: 1. la retroalimentación interna del intérprete al internalizar y exteriorizar la complejidad de las acciones que debe realizar; 2. su relación con una parte electrónica interactiva que responde improvisadamente ante ciertos impulsos que captura del intérprete; 3. una idea formal y gestual basada en momentos de comportamiento similar, dentro de los cuales el material sonoro se forma, se transforma y se destruye delineando un devenir constante de la obra. Las transformaciones sucesivas del sonido vuelven a convertirse permanentemente en nuevos impulsos para un sistema recursivo que colapsa y vuelve a empezar. En las cuatro obras que conforman la serie, se han implementado espacios de improvisación que favorecen la idea de interacción entre intérprete y computador como cualidad fundamental de la recursividad dentro de un sistema. Las tres piezas que conforman la serie mencionada están fuertemente inspiradas por las ideas de los científicos chilenos Humberto Maturana y Francisco Varela.", "links": ["https://drive.google.com/file/d/188yCOPqB0VvnwG7DlTvrKACfYIyAX7mF/view?usp=drive_link", "https://553ee3d9-57cd-407a-b63f-69ccd519fe4b.filesusr.com/ugd/1cce2f_38b7e871d29a4f45a671048866a408a3.pdf"], "instrumentacion": "flauta dulce y electrónica", "num": 6}, {"titulo": "Tensio Nervorum", "duracion": "05:20", "anio": "2025", "concurso": false, "notas": "En un presente donde la voz colectiva se disuelve en estadísticas y algoritmos, este trabajo sonoro emerge como resto, interferencia, ruido.\nTensio Nervorum plantea un recorrido auditivo por los despojos de lo común: una serie de paisajes inestables, residuos acústicos y cuerpos\nsonoros fragmentados que insisten en su persistencia.\nEl procesamiento en tiempo real funciona aquí como campo de tensión: lo que se transforma, lo que se corrompe, lo que resiste.Lo que antes fue\ndemos, ahora es dato. Pero el ruido —como traza indómita— aún perfora el silencio impuesto.", "links": ["https://drive.google.com/drive/folders/1zwlnjJpfXlJbiE7iiuX7sYXljhEDbER-?usp=sharing"], "instrumentacion": "electrónica y procesamiento en tiempo real", "num": 7}, {"titulo": "Timshel", "duracion": "15:00", "anio": "2007", "concurso": true, "notas": "Esta obra fue compuesta al mismo tiempo que estaba yo leyendo East of Eden del escritor Steinbeck. Timshel (palabra en hebreo que significa  ‘tu puedes…’) ocupa un lugar fundamental en este libro y relata la  capacidad de seleccionar, decidir y escoger y que es dada a los seres humanos. En el proceso de componer música nos confrontamos con la  selección de entre muchas alternativas y elecciones, y la pieza  musical al final es el resultado de dichas elecciones. Lo mismo  sucede en la vida. Elecciones y decisiones tomadas en un tiempo específico terminan influenciando el futuro de nuestra existencia.  Timshel es una composición donde yo manifiesto y celebro mis buenas y correctas decisiones, y tristeza por aquellas en las que fallé.", "links": ["https://spaces.hightail.com/receive/PvFxn7u7wj"], "instrumentacion": "instrumento solista y electrónica", "num": 8}];
+const APPS_URL   = "https://script.google.com/macros/s/AKfycbxcsWPwkM1-XUv4171nJ9qpLh9AnBkMHgtr2VOxkSUHYGGRgxwe539erzUaC7DbzlBRJQ/exec";
+const PLAZO_ISO  = "2026-04-05T23:59:00";
+const PLAZO_ES   = "5 de abril de 2026";
+const PLAZO_EN   = "April 5, 2026";
+const STORAGE_KEY = "fme2026_eval_" + CAT;
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let state = {
+  jurado: null, modoTest: false, lang: 'es',
+  current: 0,
+  scores: {},     // { obraNum: { criterioId: val } }
+  broken: {},     // { obraNum: true }
+  premio: {},     // { obraNum: true } — jurado recomienda para premio
+  comments: {},   // { obraNum: text }
+  sent: false
+};
+
+// Load from localStorage
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      state.jurado   = s.jurado   || null;
+      state.modoTest = s.modoTest || false;
+      state.scores   = s.scores   || {};
+      state.broken   = s.broken   || {};
+      state.premio   = s.premio   || {};
+      state.comments = s.comments || {};
+      state.sent     = s.sent     || false;
+    } catch(e) {}
+  }
+}
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    jurado: state.jurado, modoTest: state.modoTest,
+    scores: state.scores, broken: state.broken,
+    premio: state.premio, comments: state.comments, sent: state.sent
+  }));
+  document.getElementById('nav-autosave').textContent =
+    state.lang === 'es' ? '💾 Guardado' : '💾 Saved';
+  setTimeout(() => {
+    const el = document.getElementById('nav-autosave');
+    if (el) el.textContent = '';
+  }, 2000);
+}
+
+// ─── LANG ────────────────────────────────────────────────────────────────────
+const TXT = {
+  es: {
+    cat: CAT_NAME.es,
+    sub: "Evaluación del jurado",
+    selectLabel: "Selecciona tu nombre:",
+    testLabel: "<strong>Modo prueba</strong><br>Las respuestas irán a una pestaña separada, no a la evaluación oficial.",
+    btnStart: "Comenzar evaluación →",
+    deadline: "Plazo: " + PLAZO_ES,
+    instrTitle: "Instrucciones",
+    instrBtnStart: "Comenzar evaluación →",
+    navPrev: "Anterior", navNext: "Siguiente",
+    notes: "Notas de programa",
+    links: "ARCHIVOS",
+    openFile: "Abrir archivo",
+    brokenLink: "⚠ Link no funciona",
+    brokenFlagged: "⚠ Link marcado",
+    noLinks: "Sin links — consultar con el organizador",
+    comment: "COMENTARIOS (opcional)",
+    commentPH: "Observaciones sobre la obra...",
+    summaryTitle: "Resumen de evaluación",
+    s3Note: "Revisa tus puntajes antes de enviar. Puedes volver a editar si es necesario.",
+    sendBtn: "Enviar evaluación completa",
+    backup: "Descargar respaldo JSON",
+    backEdit: "Volver a editar",
+    premioSection: "CONCURSO DE COMPOSICIÓN",
+    premioBtn: "☆ Recomendar esta obra para el Premio de Composición",
+    premioBtnActive: "⭐ Recomendada para el Premio de Composición",
+    sentTitle: "¡Evaluación enviada!",
+    sentBody: "Tus puntajes han sido registrados. Gracias por tu participación en el jurado del FME UC 2026.",
+    instrBody: `<p>Bienvenido/a al sistema de evaluación del <strong>XI Festival de Música Electroacústica UC 2026</strong>.</p>
+<p>A continuación evaluarás las obras postuladas a la categoría <strong>Música Mixta</strong>. La evaluación es <strong>ciega</strong>: solo verás el título de cada obra, no el nombre del compositor/a.</p>
+<ul>
+  <li>Cada obra se evalúa con 3 criterios, en escala del 1 al 10.</li>
+  <li>Haz clic en <em>"Abrir archivo"</em> para escuchar/ver la obra (se abrirá en una nueva pestaña).</li>
+  <li>Si un link no funciona, usa el botón <em>"⚠ Link no funciona"</em> para reportarlo.</li>
+  <li>Tu progreso se guarda automáticamente — puedes cerrar el navegador y volver más tarde.</li>
+  <li>Al finalizar todas las obras, ve al resumen y envía tu evaluación.</li>
+</ul>
+<p><strong>Plazo máximo:</strong> 5 de abril de 2026</p>`,
+  },
+  en: {
+    cat: CAT_NAME.en,
+    sub: "Jury evaluation",
+    selectLabel: "Select your name:",
+    testLabel: "<strong>Test mode</strong><br>Responses will go to a separate tab, not the official evaluation.",
+    btnStart: "Start evaluation →",
+    deadline: "Deadline: " + PLAZO_EN,
+    instrTitle: "Instructions",
+    instrBtnStart: "Start evaluation →",
+    navPrev: "Previous", navNext: "Next",
+    notes: "Program notes",
+    links: "FILES",
+    openFile: "Open file",
+    brokenLink: "⚠ Link not working",
+    brokenFlagged: "⚠ Link flagged",
+    noLinks: "No links — contact the organizer",
+    comment: "COMMENTS (optional)",
+    commentPH: "Observations about the work...",
+    summaryTitle: "Evaluation summary",
+    s3Note: "Review your scores before submitting. You can go back to edit if needed.",
+    sendBtn: "Submit complete evaluation",
+    backup: "Download JSON backup",
+    backEdit: "Back to edit",
+    premioSection: "COMPOSITION PRIZE",
+    premioBtn: "☆ Recommend this work for the Composition Prize",
+    premioBtnActive: "⭐ Recommended for the Composition Prize",
+    sentTitle: "Evaluation submitted!",
+    sentBody: "Your scores have been recorded. Thank you for participating as a juror at FME UC 2026.",
+    instrBody: `<p>Welcome to the evaluation system for the <strong>XI Electronic Music Festival UC 2026</strong>.</p>
+<p>You will now evaluate the submitted works in the <strong>Mixed Music</strong> category. The evaluation is <strong>blind</strong>: you will only see the work title, not the composer's name.</p>
+<ul>
+  <li>Each work is evaluated on 3 criteria, on a scale of 1 to 10.</li>
+  <li>Click <em>"Open file"</em> to listen/watch the work (opens in a new tab).</li>
+  <li>If a link does not work, use the <em>"⚠ Link not working"</em> button to report it.</li>
+  <li>Your progress is saved automatically — you can close the browser and return later.</li>
+  <li>When done with all works, go to the summary and submit your evaluation.</li>
+</ul>
+<p><strong>Deadline:</strong> April 5, 2026</p>`,
+  }
+};
+
+function setLang(lang) {
+  state.lang = lang;
+  document.getElementById('btn-es').className = 'lang-btn' + (lang==='es' ? ' active' : '');
+  document.getElementById('btn-en').className = 'lang-btn' + (lang==='en' ? ' active' : '');
+  applyLang();
+}
+function applyLang() {
+  const t = TXT[state.lang];
+  const c = CRITERIOS.map(c => ({ ...c, label: t[c.id] || (state.lang==='es' ? c.es : c.en) }));
+  document.getElementById('s0-title').textContent = t.cat;
+  document.getElementById('s0-sub').textContent = t.sub;
+  document.getElementById('s0-select-label').textContent = t.selectLabel;
+  document.getElementById('s0-test-label').innerHTML = t.testLabel;
+  document.getElementById('btn-start').textContent = t.btnStart;
+  document.getElementById('s0-deadline').textContent = t.deadline;
+  document.getElementById('s1-title').textContent = t.instrTitle;
+  document.getElementById('s1-body').innerHTML = t.instrBody;
+  document.getElementById('s1-btn').textContent = t.instrBtnStart;
+  document.getElementById('nav-prev-txt').textContent = t.navPrev;
+  document.getElementById('nav-next-txt').textContent = t.navNext;
+  document.getElementById('s3-title').textContent = t.summaryTitle;
+  document.getElementById('s3-note').textContent = t.s3Note;
+  document.getElementById('s3-send-btn').textContent = t.sendBtn;
+  document.getElementById('s3-backup').textContent = t.backup;
+  document.getElementById('s3-back').textContent = t.backEdit;
+  document.getElementById('s4-title').textContent = t.sentTitle;
+  document.getElementById('s4-body').textContent = t.sentBody;
+  if (state.current !== null) renderObra();
+  updateNavCount();
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function init() {
+  loadState();
+  // Populate jurado dropdown
+  const sel = document.getElementById('jurado-select');
+  JURADOS.forEach(j => {
+    const o = document.createElement('option');
+    o.value = j; o.textContent = j; sel.appendChild(o);
+  });
+  if (state.jurado) sel.value = state.jurado;
+  if (state.modoTest) document.getElementById('test-cb').checked = true;
+  // If already started, restore position
+  if (state.jurado && !state.sent) {
+    // Check how many scored
+    const scored = Object.keys(state.scores).length;
+    if (scored > 0) {
+      // Go to works screen
+      document.getElementById('s1-jurado-name').textContent =
+        (state.modoTest ? '🔧 Modo prueba — ' : '') + state.jurado;
+      showScreen('screen-obras');
+    }
+  } else if (state.sent) {
+    showScreen('screen-enviado');
+  }
+  applyLang();
+}
+
+function toggleTest() {
+  const cb = document.getElementById('test-cb');
+  cb.checked = !cb.checked;
+}
+
+function startEval() {
+  const sel = document.getElementById('jurado-select').value;
+  if (!sel) { alert(state.lang==='es' ? 'Selecciona tu nombre para continuar.' : 'Please select your name to continue.'); return; }
+  state.jurado = sel;
+  state.modoTest = document.getElementById('test-cb').checked;
+  saveState();
+  document.getElementById('s1-jurado-name').textContent =
+    (state.modoTest ? '🔧 Modo prueba — ' : '') + state.jurado;
+  document.getElementById('s3-jurado').textContent = state.jurado + (state.modoTest ? ' (Modo prueba)' : '');
+  showScreen('screen-instrucciones');
+}
+
+// ─── SCREENS ─────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if (id === 'screen-obras') { renderObra(); updateNavCount(); }
+  if (id === 'screen-resumen') renderSummary();
+}
+
+// ─── OBRA RENDERING ──────────────────────────────────────────────────────────
+function renderObra() {
+  const obra = OBRAS[state.current];
+  const t = TXT[state.lang];
+  const scores = state.scores[obra.num] || {};
+  const isBroken = state.broken[obra.num] || false;
+  const comment = state.comments[obra.num] || '';
+
+  // Progress bar
+  const pct = ((state.current + 1) / OBRAS.length * 100).toFixed(1);
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  let html = '';
+
+  // Header
+  html += `<div class="obra-num">OBRA ${obra.num} / ${OBRAS.length}</div>`;
+  html += `<div class="card-title">${obra.titulo}`;
+  if (obra.concurso) html += ` <span class="badge badge-concurso">🏆 Concurso</span>`;
+  if (state.modoTest) html += ` <span class="test-badge">TEST</span>`;
+  html += `</div>`;
+
+  // Meta
+  html += `<div class="meta">`;
+  if (obra.cat_label) html += `<div class="meta-item"><span style="font-weight:600;">${obra.cat_label}</span></div>`;
+  if (obra.duracion) html += `<div class="meta-item">⏱ <span>${obra.duracion}</span></div>`;
+  if (obra.anio)     html += `<div class="meta-item">📅 <span>${obra.anio}</span></div>`;
+  html += `</div>`;
+
+  // Instrumentation (Mixtas only)
+  if (obra.instrumentacion) {
+    html += `<div class="instr-tag">🎼 ${obra.instrumentacion}</div>`;
+  }
+
+  // Program notes
+  if (obra.notas) {
+    const notesId = 'notes-' + obra.num;
+    html += `<button class="notes-toggle" id="btn-${notesId}" onclick="toggleNotes('${notesId}')" >
+      <span>${t.notes}</span><span class="arrow">▼</span></button>`;
+    html += `<div class="notes-body" id="${notesId}">${escapeHtml(obra.notas)}</div>`;
+  }
+
+  // Links
+  html += `<div class="links-section">`;
+  html += `<div class="links-label">${t.links}</div>`;
+  html += `<div class="links-row">`;
+  if (obra.links && obra.links.length > 0) {
+    obra.links.forEach((url, i) => {
+      const label = obra.links.length > 1 ? `${t.openFile} ${i+1}` : t.openFile;
+      html += `<a class="btn-link" href="${url}" target="_blank" rel="noopener">↗ ${label}</a>`;
+    });
+    html += `<button class="btn-broken${isBroken ? ' flagged' : ''}" onclick="toggleBroken(${obra.num})">
+      ${isBroken ? t.brokenFlagged : t.brokenLink}</button>`;
+  } else {
+    html += `<span class="no-links">${t.noLinks}</span>`;
+  }
+  html += `</div></div>`;
+
+  // Criteria sliders
+  html += `<div class="criteria">`;
+  CRITERIOS.forEach(c => {
+    const val = scores[c.id] !== undefined ? scores[c.id] : 5;
+    const label = state.lang === 'es' ? c.es : c.en;
+    html += `<div class="criterion">
+      <div class="crit-header">
+        <span class="crit-name">${label}</span>
+        <span class="crit-score" id="score-${c.id}-${obra.num}">${val}</span>
+      </div>
+      <input type="range" min="1" max="10" value="${val}"
+        oninput="updateScore(${obra.num}, '${c.id}', this.value)"
+        onchange="saveState()">
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Total
+  const total = CRITERIOS.reduce((s, c) => s + (scores[c.id] !== undefined ? scores[c.id] : 5), 0);
+  html += `<div class="score-total">
+    <span class="score-total-label">${state.lang==='es' ? 'Total' : 'Total'}</span>
+    <span class="score-total-val" id="total-${obra.num}">${total}</span>
+    <span class="score-total-max">/ ${MAX_SCORE}</span>
+  </div>`;
+
+  // Premio toggle (only for works that entered the composition contest)
+  if (obra.concurso) {
+    const isPremio = state.premio[obra.num] || false;
+    html += `<div class="premio-section">
+      <div class="premio-label">${t.premioSection}</div>
+      <button class="btn-premio${isPremio ? ' selected' : ''}" onclick="togglePremio(${obra.num})">
+        ${isPremio ? t.premioBtnActive : t.premioBtn}
+      </button>
+    </div>`;
+  }
+
+  // Comment
+  html += `<div class="comment-label">${t.comment}</div>`;
+  html += `<textarea id="comment-${obra.num}" placeholder="${t.commentPH}" oninput="updateComment(${obra.num}, this.value)">${escapeHtml(comment)}</textarea>`;
+
+  // Last obra: show summary button
+  if (state.current === OBRAS.length - 1) {
+    html += `<div style="text-align:center; margin-top:20px;">
+      <button class="btn btn-success" onclick="showScreen('screen-resumen')">
+        ✓ ${state.lang==='es' ? 'Ver resumen y enviar' : 'View summary and submit'}
+      </button></div>`;
+  }
+
+  document.getElementById('obra-container').innerHTML = html;
+  updateNavCount();
+
+  // Restore notes state
+  if (obra.notas) {
+    const notesId = 'notes-' + obra.num;
+    const stored = sessionStorage.getItem('notes_' + obra.num);
+    if (stored === 'open') openNotes(notesId);
+  }
+}
+
+function toggleNotes(id) {
+  const body = document.getElementById(id);
+  const btn = document.getElementById('btn-' + id);
+  const isOpen = body.classList.contains('open');
+  if (isOpen) { body.classList.remove('open'); btn.classList.remove('open'); sessionStorage.removeItem('notes_' + id.split('-')[1]); }
+  else         { body.classList.add('open');    btn.classList.add('open');    sessionStorage.setItem('notes_' + id.split('-')[1], 'open'); }
+}
+function openNotes(id) {
+  document.getElementById(id)?.classList.add('open');
+  document.getElementById('btn-' + id)?.classList.add('open');
+}
+
+function updateScore(obraNum, critId, val) {
+  if (!state.scores[obraNum]) state.scores[obraNum] = {};
+  state.scores[obraNum][critId] = parseInt(val);
+  const el = document.getElementById('score-' + critId + '-' + obraNum);
+  if (el) el.textContent = val;
+  // Update total
+  const scores = state.scores[obraNum];
+  const total = CRITERIOS.reduce((s, c) => s + (scores[c.id] !== undefined ? scores[c.id] : 5), 0);
+  const tel = document.getElementById('total-' + obraNum);
+  if (tel) tel.textContent = total;
+  saveState();
+}
+
+function toggleBroken(obraNum) {
+  state.broken[obraNum] = !state.broken[obraNum];
+  saveState(); renderObra();
+}
+
+function updateComment(obraNum, text) {
+  state.comments[obraNum] = text;
+  saveState();
+}
+
+function togglePremio(obraNum) {
+  state.premio[obraNum] = !state.premio[obraNum];
+  saveState(); renderObra();
+}
+
+function navigate(dir) {
+  const next = state.current + dir;
+  if (next < 0 || next >= OBRAS.length) return;
+  state.current = next;
+  renderObra(); window.scrollTo(0,0);
+}
+
+function updateNavCount() {
+  const t = TXT[state.lang];
+  const el = document.getElementById('nav-count');
+  if (el) el.textContent = (state.current + 1) + ' / ' + OBRAS.length;
+  const prev = document.getElementById('btn-prev');
+  const next = document.getElementById('btn-next');
+  if (prev) prev.disabled = state.current === 0;
+  if (next) {
+    if (state.current === OBRAS.length - 1) {
+      next.textContent = (state.lang === 'es' ? 'Resumen →' : 'Summary →');
+      next.onclick = () => showScreen('screen-resumen');
+    } else {
+      next.innerHTML = '<span id="nav-next-txt">' + t.navNext + '</span> →';
+      next.onclick = () => navigate(1);
+    }
+  }
+}
+
+// ─── SUMMARY ─────────────────────────────────────────────────────────────────
+function renderSummary() {
+  const t = TXT[state.lang];
+  document.getElementById('s3-jurado').textContent =
+    state.jurado + (state.modoTest ? ' — 🔧 Modo prueba' : '');
+
+  const missing = OBRAS.filter(o => !state.scores[o.num] || CRITERIOS.some(c => state.scores[o.num][c.id] === undefined));
+  const warn = document.getElementById('incomplete-warning');
+  if (missing.length > 0) {
+    warn.style.display = 'block';
+    warn.textContent = (state.lang==='es'
+      ? `⚠ ${missing.length} obra(s) sin evaluar completamente: ${missing.map(o=>o.titulo).join(', ')}`
+      : `⚠ ${missing.length} work(s) not fully evaluated: ${missing.map(o=>o.titulo).join(', ')}`);
+  } else { warn.style.display = 'none'; }
+
+  const hasConcurso = OBRAS.some(o => o.concurso);
+  const critHeaders = CRITERIOS.map(c => `<th>${state.lang==='es' ? c.es.split(' ')[0] : c.en.split(' ')[0]}</th>`).join('');
+  let rows = `<thead><tr><th>#</th><th>${state.lang==='es' ? 'Obra' : 'Work'}</th>
+    ${critHeaders}<th>Tot</th>
+    ${hasConcurso ? `<th title="${state.lang==='es' ? 'Premio composición' : 'Composition prize'}">🏆</th>` : ''}
+    <th></th></tr></thead><tbody>`;
+
+  let grandTotal = 0;
+  OBRAS.forEach(obra => {
+    const scores = state.scores[obra.num] || {};
+    const total = CRITERIOS.reduce((s, c) => s + (scores[c.id] || 5), 0);
+    grandTotal += total;
+    const cells = CRITERIOS.map(c => `<td class="score-cell">${scores[c.id] !== undefined ? scores[c.id] : '<span class="missing-icon">?</span>'}</td>`).join('');
+    const brk = state.broken[obra.num] ? '<span class="broken-icon">⚠</span>' : '';
+    const premioCell = hasConcurso
+      ? `<td style="text-align:center;">${obra.concurso ? (state.premio[obra.num] ? '⭐' : '<span style="color:var(--muted);font-size:11px;">—</span>') : ''}</td>`
+      : '';
+    rows += `<tr>
+      <td style="color:var(--muted)">${obra.num}</td>
+      <td style="font-size:12px;">${obra.titulo}${obra.concurso ? ' <span style="color:var(--accent);font-size:11px;">●</span>' : ''}</td>
+      ${cells}
+      <td class="total-cell">${total}</td>
+      ${premioCell}
+      <td>${brk}</td>
+    </tr>`;
+  });
+
+  const avg = (grandTotal / OBRAS.length).toFixed(1);
+  rows += `</tbody><tfoot><tr><td colspan="2" style="font-weight:700; font-size:13px;">
+    ${state.lang==='es' ? 'Promedio' : 'Average'}</td>
+    <td colspan="${CRITERIOS.length + 2}" class="total-cell" style="font-size:16px;">${avg} / ${MAX_SCORE}</td></tr></tfoot>`;
+
+  document.getElementById('summary-table').innerHTML = rows;
+}
+
+// ─── SEND ─────────────────────────────────────────────────────────────────────
+function sendEval() {
+  const t = TXT[state.lang];
+  if (!state.jurado) { alert(t.selectLabel); return; }
+
+  const payload = {
+    jurado: state.jurado,
+    categoria: CAT,
+    modoTest: state.modoTest,
+    timestamp: new Date().toISOString(),
+    plazo: PLAZO_ISO,
+    evaluaciones: OBRAS.map(obra => {
+      const scores = state.scores[obra.num] || {};
+      return {
+        num: obra.num,
+        titulo: obra.titulo,
+        duracion: obra.duracion,
+        anio: obra.anio,
+        concurso: obra.concurso,
+        scores: scores,
+        total: CRITERIOS.reduce((s, c) => s + (scores[c.id] || 5), 0),
+        brokenLink: state.broken[obra.num] || false,
+        premio: obra.concurso ? (state.premio[obra.num] || false) : null,
+        comentario: state.comments[obra.num] || '',
+      };
+    })
+  };
+
+  const url = APPS_URL;
+  if (url === 'REEMPLAZAR_CON_TU_URL_DE_APPS_SCRIPT') {
+    alert(state.lang==='es'
+      ? '⚠ La URL del Apps Script no está configurada. Por favor descarga el respaldo JSON mientras tanto.'
+      : '⚠ Apps Script URL is not configured. Please download the JSON backup in the meantime.');
+    downloadJSONPayload(payload);
+    return;
+  }
+
+  fetch(url, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    state.sent = true; saveState();
+    showScreen('screen-enviado');
+  }).catch(() => {
+    alert(state.lang==='es'
+      ? '⚠ Error al enviar. Se descargará un respaldo JSON.'
+      : '⚠ Send error. A JSON backup will be downloaded.');
+    downloadJSONPayload(payload);
+  });
+}
+
+function downloadJSON() {
+  const payload = {
+    jurado: state.jurado, categoria: CAT, modoTest: state.modoTest,
+    timestamp: new Date().toISOString(),
+    evaluaciones: OBRAS.map(obra => {
+      const scores = state.scores[obra.num] || {};
+      return { num: obra.num, titulo: obra.titulo, scores,
+        total: CRITERIOS.reduce((s, c) => s + (scores[c.id] || 5), 0),
+        brokenLink: state.broken[obra.num] || false,
+        premio: obra.concurso ? (state.premio[obra.num] || false) : null,
+        comentario: state.comments[obra.num] || '' };
+    })
+  };
+  downloadJSONPayload(payload);
+}
+function downloadJSONPayload(payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'FME2026_' + CAT + '_' + (state.jurado || 'jurado').replace(/ /g,'_') + '.json';
+  a.click();
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FME UC 2026 — Obras Mixtas · Preview</title>
+<style>
+:root {
+  --bg: #0D1117; --bg2: #161B22; --bg3: #1C2128;
+  --border: #30363D; --text: #E6EDF3; --muted: #8B949E;
+  --accent: #3FD17A;
+  --font: 'Segoe UI', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font);
+  min-height: 100vh; padding: 40px 16px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+.logo { font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+.subtitle { font-size: 15px; color: var(--muted); margin-bottom: 32px; }
+.obra { background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px; margin-bottom: 16px; }
+.obra-num { font-size: 11px; font-weight: 700; color: var(--muted);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.obra-titulo { font-size: 19px; font-weight: 700; margin-bottom: 10px;
+  line-height: 1.3; }
+.meta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.meta-item { font-size: 13px; color: var(--muted); }
+.meta-item span { color: var(--text); }
+.instr { display: inline-block; background: #3FD17A15; color: var(--accent);
+  border: 1px solid #3FD17A40; border-radius: 6px; padding: 4px 12px;
+  font-size: 13px; margin-bottom: 14px; }
+.notes-toggle { width: 100%; text-align: left; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;
+  color: var(--muted); cursor: pointer; font-size: 13px; font-family: var(--font);
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 6px; transition: border-color .15s; }
+.notes-toggle:hover { border-color: var(--accent); color: var(--text); }
+.notes-toggle .arrow { transition: transform .2s; }
+.notes-toggle.open .arrow { transform: rotate(180deg); }
+.notes-body { display: none; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px; font-size: 14px; line-height: 1.75;
+  color: #C9D1D9; margin-bottom: 10px; white-space: pre-wrap; }
+.notes-body.open { display: block; }
+.links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.btn-link { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px;
+  background: #3FD17A18; color: var(--accent); border: 1px solid #3FD17A55;
+  border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;
+  transition: background .15s; }
+.btn-link:hover { background: #3FD17A30; }
+.no-link { font-size: 13px; color: #F85149; font-style: italic; }
+.footer { text-align: center; margin-top: 40px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="logo">FME UC 2026</div>
+  <h1>Obras Mixtas</h1>
+  <p class="subtitle">8 obras postuladas · Vista previa para el jurado · Ensamble Pink Noise</p>
+
+  <!-- 1 -->
+  <div class="obra">
+    <div class="obra-num">Obra 1 / 8</div>
+    <div class="obra-titulo">a los que no ven</div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>7 min</span></div>
+      <div class="meta-item">📅 <span>2024</span></div>
+    </div>
+    <div class="instr">🎼 contrabajo y electrónica</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">Esta obra es parte del trabajo de música situada del compositor y contrabajista chileno. Pone en diálogo las fragilidades desde la escucha de Albuquerque, donde realiza un trabajo de creación en base al registro de lugares específicos, documentación escrita y fotográfica, con el imaginario desde el contrabajo.
+
+A(l)bandono es una obra creada en Albuquerque en medio de una residencia artística en el departamento de composición, donde trabajó con el Ensamble of New Music.</div>
+    <div class="links">
+      <a class="btn-link" href="https://www.youtube.com/watch?v=W3-rp6gzQ5A&list=RDW3-rp6gzQ5A&start_radio=1" target="_blank" rel="noopener">↗ Abrir archivo</a>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="obra">
+    <div class="obra-num">Obra 2 / 8</div>
+    <div class="obra-titulo">En el No Mundo</div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>5'44''</span></div>
+      <div class="meta-item">📅 <span>2024</span></div>
+    </div>
+    <div class="instr">🎼 clarinete bajo y electrónica</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">"En el no-mundo" es una obra para clarinete bajo y electroacústica que explora el espacio sonoro del "no-mundo", un no-lugar habitado por lo que la modernidad ha desplazado, ignorado y descartado. La pieza se construye a partir del exceso y lo residual: el ruido, la sobreproducción, el fragor de la guerra, la violencia producida por diversos motivos e intenciones, la migración forzada, la hiperestimulación sensorial, etc. A través de esta cartografía de lo invisibilizado, la obra evoca lo invisible y trae al presente aquello que ya no tiene cabida en el mundo, pero que se produce en él.
+
+Dado que el mundo está lleno, el no-mundo está compuesto por todo lo que existe y no es visible en él, ya sea porque está oculto o porque no queremos verlo. La obra también aborda la habitación del sujeto en el no-mundo, quien también experimenta la plenitud en su interior —en un cuerpo explotado por los excesos y una mente hiperestimulada por la información y la tecnología— interpretándola desde su subjetividad. El concepto de "no mundo" está inspirado en la "Estética del lleno" desarrollada por el filósofo chileno Sergio Rojas.</div>
+    <div class="links">
+      <a class="btn-link" href="https://drive.google.com/drive/folders/1jMDwBF0I_EiKbrjT180VdViFqOgETLMw?usp=sharing" target="_blank" rel="noopener">↗ Abrir archivo</a>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="obra">
+    <div class="obra-num">Obra 3 / 8</div>
+    <div class="obra-titulo">Extemporización Espacial <span style="font-weight:400; font-size:15px; color:var(--muted)">"La guitarra como dispositivo de espacialización"</span></div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>8'</span></div>
+      <div class="meta-item">📅 <span>2025</span></div>
+    </div>
+    <div class="instr">🎼 guitarra eléctrica y electrónica / live electronics</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">En Extemporización espacial, la guitarra eléctrica deja de ser solo una fuente sonora: se convierte en un dispositivo de espacialización. El gesto del intérprete —sus movimientos, orientaciones y variaciones corporales— no únicamente modela el timbre, sino que activa y modula trayectorias del sonido en un entorno de escucha envolvente.
+
+La pieza se construye como una práctica de extemporización: un hacer en tiempo real que asume la incertidumbre como método. En lugar de una forma cerrada, se propone un marco de acción donde el intérprete explora zonas de estabilidad e inestabilidad, tensando la relación entre control y deriva.
+
+El sistema interactivo amplía la guitarra hacia un "meta-instrumento": un ensamblaje de señal, procesamiento y espacialización que transforma cada gesto en una decisión espacial.
+
+Recomendación de escucha: percibir no solo "qué" suena, sino desde dónde, cómo se mueve y qué relación establece con el cuerpo del intérprete y con la presencia de la audiencia.</div>
+    <div class="links">
+      <a class="btn-link" href="https://drive.google.com/drive/folders/1uL9stPgH0nDQRywG9-n-uESf2NL0CxlG?usp=sharing" target="_blank" rel="noopener">↗ Abrir archivo</a>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="obra">
+    <div class="obra-num">Obra 4 / 8</div>
+    <div class="obra-titulo">Hoy no hay mucho pájaro, para ensamble</div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>9 min</span></div>
+      <div class="meta-item">📅 <span>2024</span></div>
+    </div>
+    <div class="instr">🎼 flauta traversa bajo, flauta Paetzold, violín, violonchelo y electrónica</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">Hoy no hay mucho pájaro... es una obra que surgió a partir de grabaciones en la casa de Karina Fischer y Guillermo Lavado. Como la construcción está en la última línea antes de la cordillera, los pájaros habitan en permanencia el espacio que rodea la casa. Luego se sumaron los registros, durante un día de mucha lluvia, de cuatro instrumentistas: las flautas de Karina Fischer y Paola Muñoz, el violín de Miguel Muñoz y el violonchelo de Beatriz Lemus.
+
+La idea básica es que los instrumentistas se fusionen con los sonidos de los pájaros y de los registros de sus propios instrumentos, enriqueciendo las texturas y clarificando la forma de la pieza. Cada versión será única, debido al grado de libertad con el que cuentan las intérpretes.
+
+El nombre de la pieza es un guiño a un registro involuntario de la voz de Guillermo Lavado, que al terminar una de las grabaciones en el patio de su casa dijo: "hoy no hay mucho pájaro...".</div>
+    <div class="links">
+      <a class="btn-link" href="https://drive.google.com/file/d/1Pn6ENe2Ew3mA9Ly2XplcbH0Dfx8sANzX/view?usp=sharing" target="_blank" rel="noopener">↗ Abrir archivo 1</a>
+      <a class="btn-link" href="https://soundcloud.com/gonzasound/hoy-no-hay-mucho-pa-jaro-base" target="_blank" rel="noopener">↗ Abrir archivo 2</a>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="obra">
+    <div class="obra-num">Obra 5 / 8</div>
+    <div class="obra-titulo">Onigram</div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>14:10</span></div>
+      <div class="meta-item">📅 <span>2025</span></div>
+    </div>
+    <div class="instr">🎼 violín y electrónica</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">Onigram (2025) es una obra para violín y electrónica inspirada en la lógica fragmentaria de los sueños y concebida como una forma de escritura onírica. En su origen se encuentra un breve texto poético construido a partir de imágenes oníricas condensadas: escenas inconexas, objetos cargados de significado, presencias que aparecen y desaparecen sin explicación.
+
+Cada uno de estos fragmentos se traduce en gesto sonoro, generando un paisaje en constante mutación donde el violín atraviesa distintas atmósferas y la electrónica abre espacios de significado, profundidad y transformación. La música avanza como lo hace un sueño: por asociaciones inesperadas, desplazamientos de sentido y apariciones súbitas que parecen surgir de algún lugar oculto de la memoria.</div>
+    <div class="links">
+      <a class="btn-link" href="https://www.dropbox.com/scl/fo/2m69h0kyeqaxhslnstc8w/ACizoKCUpIsAHWAqKG9pDKE?rlkey=obfu5hrai1jkgjc0mqz9od2kg&st=on77grwc&dl=0" target="_blank" rel="noopener">↗ Abrir archivo</a>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="obra">
+    <div class="obra-num">Obra 6 / 8</div>
+    <div class="obra-titulo">Re-air</div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>10–12 min</span></div>
+      <div class="meta-item">📅 <span>2026</span></div>
+    </div>
+    <div class="instr">🎼 flauta dulce y electrónica</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">La obra fue compuesta por encargo de la flautista dulce chilena Paola Muñoz Manuguián. Las ideas que dan origen a esta obra provienen de Dinámica destructiva (2017), para clarinete bajo y dispositivo electroacústico en tiempo real, donde la notación señala diversas acciones físicas que el/la instrumentista debe realizar de manera de alterar un sonido de base como consecuencia de la inestabilidad de dichas acciones.
+
+En las cuatro obras que conforman la serie, se han implementado espacios de improvisación que favorecen la idea de interacción entre intérprete y computador como cualidad fundamental de la recursividad dentro de un sistema. Las tres piezas que conforman la serie mencionada están fuertemente inspiradas por las ideas de los científicos chilenos Humberto Maturana y Francisco Varela.</div>
+    <div class="links">
+      <a class="btn-link" href="https://drive.google.com/file/d/188yCOPqB0VvnwG7DlTvrKACfYIyAX7mF/view?usp=drive_link" target="_blank" rel="noopener">↗ Abrir archivo 1</a>
+      <a class="btn-link" href="https://553ee3d9-57cd-407a-b63f-69ccd519fe4b.filesusr.com/ugd/1cce2f_38b7e871d29a4f45a671048866a408a3.pdf" target="_blank" rel="noopener">↗ Abrir archivo 2</a>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="obra">
+    <div class="obra-num">Obra 7 / 8</div>
+    <div class="obra-titulo">Tensio Nervorum</div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>05:20</span></div>
+      <div class="meta-item">📅 <span>2025</span></div>
+    </div>
+    <div class="instr">🎼 electrónica y procesamiento en tiempo real</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">En un presente donde la voz colectiva se disuelve en estadísticas y algoritmos, este trabajo sonoro emerge como resto, interferencia, ruido. Tensio Nervorum plantea un recorrido auditivo por los despojos de lo común: una serie de paisajes inestables, residuos acústicos y cuerpos sonoros fragmentados que insisten en su persistencia.
+
+El procesamiento en tiempo real funciona aquí como campo de tensión: lo que se transforma, lo que se corrompe, lo que resiste. Lo que antes fue demos, ahora es dato. Pero el ruido —como traza indómita— aún perfora el silencio impuesto.</div>
+    <div class="links">
+      <a class="btn-link" href="https://drive.google.com/drive/folders/1zwlnjJpfXlJbiE7iiuX7sYXljhEDbER-?usp=sharing" target="_blank" rel="noopener">↗ Abrir archivo</a>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="obra">
+    <div class="obra-num">Obra 8 / 8</div>
+    <div class="obra-titulo">Timshel</div>
+    <div class="meta">
+      <div class="meta-item">⏱ <span>15:00</span></div>
+      <div class="meta-item">📅 <span>2007</span></div>
+    </div>
+    <div class="instr">🎼 instrumento solista y electrónica</div><br>
+    <button class="notes-toggle" onclick="toggle(this)">
+      <span>Notas de programa</span><span class="arrow">▼</span>
+    </button>
+    <div class="notes-body">Esta obra fue compuesta al mismo tiempo que estaba yo leyendo East of Eden del escritor Steinbeck. Timshel (palabra en hebreo que significa 'tú puedes…') ocupa un lugar fundamental en este libro y relata la capacidad de seleccionar, decidir y escoger que es dada a los seres humanos.
+
+En el proceso de componer música nos confrontamos con la selección de entre muchas alternativas y elecciones, y la pieza musical al final es el resultado de dichas elecciones. Lo mismo sucede en la vida. Elecciones y decisiones tomadas en un tiempo específico terminan influenciando el futuro de nuestra existencia. Timshel es una composición donde manifiesto y celebro mis buenas y correctas decisiones, y tristeza por aquellas en las que fallé.</div>
+    <div class="links">
+      <a class="btn-link" href="https://spaces.hightail.com/receive/PvFxn7u7wj" target="_blank" rel="noopener">↗ Abrir archivo</a>
+    </div>
+  </div>
+
+  <div class="footer">
+    XI Festival de Música Electroacústica UC 2026 · Solo para uso interno del jurado
+  </div>
+</div>
+
+<script>
+function toggle(btn) {
+  const body = btn.nextElementSibling;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+}
+</script>
+</body>
+</html>
