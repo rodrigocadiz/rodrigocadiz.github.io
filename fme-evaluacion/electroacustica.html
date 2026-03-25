@@ -736,7 +736,7 @@ function sendEval() {
   };
 
   const url = APPS_URL;
-  if (url === 'https://script.google.com/macros/s/AKfycbxcsWPwkM1-XUv4171nJ9qpLh9AnBkMHgtr2VOxkSUHYGGRgxwe539erzUaC7DbzlBRJQ/exec') {
+  if (!url || url.indexOf('REEMPLAZAR') !== -1) {
     alert(state.lang==='es'
       ? '⚠ La URL del Apps Script no está configurada. Por favor descarga el respaldo JSON mientras tanto.'
       : '⚠ Apps Script URL is not configured. Please download the JSON backup in the meantime.');
