@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Armónicos vs Parciales — Parámetros del Sonido</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .module-desc {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .control-group .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+    button.play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all .2s;
+      margin-bottom: 6px;
+    }
+    button.play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,229,255,.3); }
+    button.play-btn.playing { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="sec-sonido">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Parámetros del Sonido</a>
+  <a href="../01_circulo_unitario/index.html">1. Círculo Unitario</a>
+  <a href="../02_parametros/index.html">2. Parámetros</a>
+  <a href="../03_suma_sinusoides/index.html">3. Suma de Sinusoides</a>
+  <a href="../04_espectro/index.html">4. Espectro</a>
+  <a href="../05_armonicos_parciales/index.html" class="active">5. Armónicos vs Parciales</a>
+  <a href="../06_sintetizador_aditivo/index.html">6. Sintetizador Aditivo</a>
+  <a href="../07_espectrograma/index.html">7. Espectrograma</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. Armónicos vs Parciales Inarmónicos</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+
+    <div class="module-desc">
+      Los <strong>armónicos</strong> son múltiplos enteros de una frecuencia fundamental (f, 2f, 3f…),
+      produciendo ondas periódicas con timbre definido. Los <strong>parciales inarmónicos</strong> no
+      guardan relación entera, resultando en ondas no periódicas y timbres metálicos o de campana.
+    </div>
+
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Frecuencia Fundamental</label>
+        <div class="value" id="m5FundVal">110 Hz</div>
+        <input type="range" id="m5Fund" min="55" max="440" step="1" value="110" oninput="m5Update()">
+      </div>
+      <div class="control-group">
+        <label>Número de Componentes</label>
+        <div class="value" id="m5NVal">6</div>
+        <input type="range" id="m5N" min="1" max="12" step="1" value="6" oninput="m5Update()">
+      </div>
+      <div class="control-group" style="flex:0; min-width:auto;">
+        <label>Sonido</label>
+        <button class="play-btn" id="m5PlayBtnH" onclick="m5ToggleAudio('h')">▶ Armónicos</button>
+        <button class="play-btn" id="m5PlayBtnI" onclick="m5ToggleAudio('i')" style="background:linear-gradient(135deg,#ff6b6b,#c0392b);color:#fff;">▶ Inarmónicos</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="canvas-label" style="color:#00e5ff;">Armónicos — Forma de onda</div>
+        <canvas id="m5HWave" height="200"></canvas>
+        <div class="canvas-label" style="color:#00e5ff;">Armónicos — Espectro</div>
+        <canvas id="m5HSpec" height="200"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label" style="color:#ff6b6b;">Inarmónicos — Forma de onda</div>
+        <canvas id="m5IWave" height="200"></canvas>
+        <div class="canvas-label" style="color:#ff6b6b;">Inarmónicos — Espectro</div>
+        <canvas id="m5ISpec" height="200"></canvas>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script>
+const VAR_ACCENT = '#00e5ff';
+let audioCtx = null;
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// ── Module 5 — Harmonics vs Partials ──
+let m5PlayingH = false, m5PlayingI = false;
+let m5OscsH = [], m5GainsH = [], m5OscsI = [], m5GainsI = [];
+const inharmonicRatios = [1, 1.41, 2.09, 2.83, 3.51, 4.12, 4.79, 5.37, 6.15, 7.02, 7.83, 8.55];
+
+function m5Update() {
+  const fund = parseFloat(document.getElementById('m5Fund').value);
+  const n = parseInt(document.getElementById('m5N').value);
+  document.getElementById('m5FundVal').textContent = fund + ' Hz';
+  document.getElementById('m5NVal').textContent = n;
+  if (m5PlayingH) {
+    m5OscsH.forEach((osc, i) => {
+      osc.frequency.setTargetAtTime(fund * (i + 1), audioCtx.currentTime, 0.02);
+    });
+  }
+  if (m5PlayingI) {
+    m5OscsI.forEach((osc, i) => {
+      osc.frequency.setTargetAtTime(fund * inharmonicRatios[i], audioCtx.currentTime, 0.02);
+    });
+  }
+}
+
+function m5ToggleAudio(type) {
+  if (type === 'h') {
+    if (!m5PlayingH) {
+      const ctx = getAudioCtx();
+      const fund = parseFloat(document.getElementById('m5Fund').value);
+      const n = parseInt(document.getElementById('m5N').value);
+      m5OscsH = []; m5GainsH = [];
+      for (let i = 0; i < n; i++) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = fund * (i + 1);
+        g.gain.value = 0.25 / (i + 1);
+        osc.connect(g).connect(masterGain);
+        osc.start();
+        m5OscsH.push(osc); m5GainsH.push(g);
+      }
+      m5PlayingH = true;
+      document.getElementById('m5PlayBtnH').textContent = '⏹ Armónicos';
+      document.getElementById('m5PlayBtnH').classList.add('playing');
+    } else {
+      m5OscsH.forEach(o => o.stop());
+      m5OscsH = []; m5GainsH = [];
+      m5PlayingH = false;
+      document.getElementById('m5PlayBtnH').textContent = '▶ Armónicos';
+      document.getElementById('m5PlayBtnH').classList.remove('playing');
+    }
+  } else {
+    if (!m5PlayingI) {
+      const ctx = getAudioCtx();
+      const fund = parseFloat(document.getElementById('m5Fund').value);
+      const n = parseInt(document.getElementById('m5N').value);
+      m5OscsI = []; m5GainsI = [];
+      for (let i = 0; i < n; i++) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = fund * inharmonicRatios[i];
+        g.gain.value = 0.2 / (i + 1);
+        osc.connect(g).connect(masterGain);
+        osc.start();
+        m5OscsI.push(osc); m5GainsI.push(g);
+      }
+      m5PlayingI = true;
+      document.getElementById('m5PlayBtnI').textContent = '⏹ Inarmónicos';
+      document.getElementById('m5PlayBtnI').classList.add('playing');
+    } else {
+      m5OscsI.forEach(o => o.stop());
+      m5OscsI = []; m5GainsI = [];
+      m5PlayingI = false;
+      document.getElementById('m5PlayBtnI').textContent = '▶ Inarmónicos';
+      document.getElementById('m5PlayBtnI').classList.remove('playing');
+    }
+  }
+}
+
+function m5Draw() {
+  const fund = parseFloat(document.getElementById('m5Fund').value);
+  const n = parseInt(document.getElementById('m5N').value);
+  const duration = 4 / fund;
+  const maxF5 = 5500;
+
+  let c = document.getElementById('m5HWave');
+  let ctx = c.getContext('2d');
+  let w = c.width = c.offsetWidth || 500, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = VAR_ACCENT; ctx.lineWidth = 2; ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = (x / w) * duration;
+    let val = 0;
+    for (let i = 0; i < n; i++) val += (1 / (i + 1)) * Math.sin(2 * Math.PI * fund * (i + 1) * t);
+    const y = h / 2 - val * (h * 0.15);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  c = document.getElementById('m5HSpec');
+  ctx = c.getContext('2d'); w = c.width = c.offsetWidth || 500; h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  ctx.beginPath(); ctx.moveTo(30, h - 25); ctx.lineTo(w - 10, h - 25); ctx.stroke();
+  ctx.font = '9px sans-serif';
+  for (let fTick = 0; fTick <= maxF5; fTick += 500) {
+    const x = 30 + (fTick / maxF5) * (w - 50);
+    ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillText(fTick + '', x - 8, h - 4);
+    ctx.strokeStyle = 'rgba(255,255,255,.04)';
+    ctx.beginPath(); ctx.moveTo(x, 10); ctx.lineTo(x, h - 25); ctx.stroke();
+  }
+  for (let i = 0; i < n; i++) {
+    const freq = fund * (i + 1);
+    const amp = 1 / (i + 1);
+    const x = 30 + (freq / maxF5) * (w - 50);
+    const barH = amp * (h - 50);
+    ctx.fillStyle = VAR_ACCENT;
+    ctx.fillRect(x - 4, h - 25 - barH, 8, barH);
+    ctx.font = '9px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+    ctx.fillText(freq + ' Hz', x - 12, h - 28 - barH);
+  }
+
+  c = document.getElementById('m5IWave');
+  ctx = c.getContext('2d'); w = c.width = c.offsetWidth || 500; h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2; ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = (x / w) * duration;
+    let val = 0;
+    for (let i = 0; i < n; i++) val += (1 / (i + 1)) * Math.sin(2 * Math.PI * fund * inharmonicRatios[i] * t);
+    const y = h / 2 - val * (h * 0.15);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  c = document.getElementById('m5ISpec');
+  ctx = c.getContext('2d'); w = c.width = c.offsetWidth || 500; h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  ctx.beginPath(); ctx.moveTo(30, h - 25); ctx.lineTo(w - 10, h - 25); ctx.stroke();
+  ctx.font = '9px sans-serif';
+  for (let fTick = 0; fTick <= maxF5; fTick += 500) {
+    const x = 30 + (fTick / maxF5) * (w - 50);
+    ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillText(fTick + '', x - 8, h - 4);
+    ctx.strokeStyle = 'rgba(255,255,255,.04)';
+    ctx.beginPath(); ctx.moveTo(x, 10); ctx.lineTo(x, h - 25); ctx.stroke();
+  }
+  for (let i = 0; i < n; i++) {
+    const freq = fund * inharmonicRatios[i];
+    const amp = 1 / (i + 1);
+    const x = 30 + (freq / maxF5) * (w - 50);
+    const barH = amp * (h - 50);
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillRect(x - 4, h - 25 - barH, 8, barH);
+    ctx.font = '9px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+    ctx.fillText(Math.round(freq) + ' Hz', x - 12, h - 28 - barH);
+  }
+}
+
+function animate() {
+  m5Draw();
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

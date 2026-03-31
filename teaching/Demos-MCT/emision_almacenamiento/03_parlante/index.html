@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Parlantes — Emisión, Captura y Almacenamiento</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-emision">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Emisión, Captura y Almacenamiento</a>
+  <a href="../01_onda_presion/index.html">1. La onda</a>
+  <a href="../02_microfono/index.html">2. Micrófonos</a>
+  <a href="../03_parlante/index.html" class="active">3. Parlantes</a>
+  <a href="../04_almacenamiento_analogico/index.html">4. Almacenamiento</a>
+  <a href="../05_almacenamiento_digital/index.html">5. Audio digital</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Parlantes / Altavoces</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1. Principio de Lorentz -->
+  <section class="section-card">
+    <h2>Principio de funcionamiento — Fuerza de Lorentz</h2>
+    <p class="description">
+      Un parlante es el <span class="kw">inverso exacto</span> de un micrófono dinámico.
+      La <span class="kw">Fuerza de Lorentz</span> actúa sobre una corriente eléctrica dentro de un
+      campo magnético: <span class="kw">F = B · I · L</span>.
+      La bobina de voz (voice coil) conduce la corriente de audio, se mueve axialmente dentro del
+      campo del imán permanente, y arrastra el cono del parlante — que mueve el aire.
+    </p>
+    <div class="info-box">
+      <strong>Señal eléctrica (audio)</strong> → [bobina en campo magnético] → <strong>Vibración del cono → Sonido</strong>
+    </div>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia del tono</label>
+        <input type="range" id="spkFreq" min="50" max="4000" step="50" value="440">
+        <span class="val" id="spkFreqVal">440 Hz</span>
+      </div>
+      <div class="control-group">
+        <label>Amplitud (corriente)</label>
+        <input type="range" id="spkAmp" min="5" max="30" value="15">
+        <span class="val" id="spkAmpVal">15</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" onclick="spkPlay()">▶ Reproducir tono</button>
+        <button class="btn stop" onclick="stopAllAudio()">■ Detener</button>
+      </div>
+    </div>
+    <div class="canvas-label">Corte transversal — parlante dinámico (animado)</div>
+    <canvas id="spkCanvas" height="300"></canvas>
+  </section>
+
+  <!-- 2. Tipos de cajas acústicas -->
+  <section class="section-card">
+    <h2>Tipos de cajas acústicas (enclosures)</h2>
+    <p class="description">
+      La <span class="kw">caja acústica</span> controla la radiación trasera del cono y determina
+      en gran medida la respuesta en bajas frecuencias. Cada diseño tiene un compromiso
+      distinto entre extensión en graves, eficiencia y tamaño.
+    </p>
+    <div class="btn-group" id="boxBtns">
+      <button class="btn active" onclick="showBox('infinite')">Bafle infinito</button>
+      <button class="btn" onclick="showBox('sealed')">Suspensión acústica</button>
+      <button class="btn" onclick="showBox('ported')">Tuned-port (bass-reflex)</button>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="canvas-label">Diagrama de caja</div>
+        <canvas id="boxDiagCanvas" height="240"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label">Respuesta de frecuencia (graves)</div>
+        <canvas id="boxFreqCanvas" height="240"></canvas>
+      </div>
+    </div>
+    <div id="boxInfo" class="info-box" style="margin-top:10px;"></div>
+  </section>
+
+  <!-- 3. Sistemas de parlantes (vías) -->
+  <section class="section-card">
+    <h2>Sistemas de parlantes — vías y cobertura</h2>
+    <p class="description">
+      Ningún parlante cubre todo el rango audible con igual eficiencia.
+      Los sistemas de <span class="kw">múltiples vías</span> dividen el espectro entre
+      parlantes especializados mediante filtros (<span class="kw">crossover</span>).
+    </p>
+    <div class="canvas-label">Rango de frecuencias por tipo de parlante</div>
+    <canvas id="waysCanvas" height="200"></canvas>
+    <table class="type-table" style="margin-top:14px;">
+      <thead>
+        <tr><th>Tipo</th><th>Frecuencias</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Subwoofer</td><td>20 – 120 Hz</td><td>Graves profundos, grandes, requieren mucha potencia</td></tr>
+        <tr><td>Woofer</td><td>40 – 500 Hz</td><td>Graves y medios-bajos</td></tr>
+        <tr><td>Midrange</td><td>300 – 5000 Hz</td><td>Medios, voz, instrumentos. Zona más crítica para el oído</td></tr>
+        <tr><td>Tweeter</td><td>2000 – 20000 Hz</td><td>Agudos, muy pequeño y liviano</td></tr>
+        <tr><td>Sistema 2 vías</td><td>Todo</td><td>Woofer + Tweeter con crossover ~3kHz</td></tr>
+        <tr><td>Sistema 3 vías</td><td>Todo</td><td>Woofer + Midrange + Tweeter</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4. Potencia -->
+  <section class="section-card">
+    <h2>Potencia de parlantes</h2>
+    <p class="description">
+      <span class="kw">1 watt</span> de potencia de audio equivale en referencia a una orquesta
+      sinfónica completa tocando a volumen alto. La relación entre potencia y SPL es logarítmica.
+      Un amplificador de <span class="kw">100W al 1%</span> produce el mismo nivel que uno de
+      <span class="kw">10W al 10%</span>.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Potencia del amplificador</label>
+        <input type="range" id="powerW" min="1" max="1000" step="1" value="100">
+        <span class="val" id="powerWVal">100 W</span>
+      </div>
+      <div class="control-group">
+        <label>Distancia al oyente</label>
+        <input type="range" id="powerDist" min="1" max="20" step="0.5" value="3">
+        <span class="val" id="powerDistVal">3 m</span>
+      </div>
+    </div>
+    <div id="powerResult" class="info-box" style="margin-top:6px;"></div>
+    <div class="canvas-label" style="margin-top:10px;">Nivel SPL en función de la distancia (ley de cuadrado inverso)</div>
+    <canvas id="powerCanvas" height="200"></canvas>
+  </section>
+
+  <!-- 5. Arreglos de parlantes -->
+  <section class="section-card">
+    <h2>Arreglos de parlantes (Speaker Arrays)</h2>
+    <p class="description">
+      Los arreglos agrupan múltiples parlantes para controlar la dispersión y cubrir un área mayor.
+      Un arreglo de línea (<span class="kw">line array</span>) en su forma pura se comporta como una
+      fuente cilíndrica: <span class="kw">-3 dB</span> al doblar la distancia (vs -6 dB de una fuente puntual).
+    </p>
+    <div class="btn-group" id="arrayBtns">
+      <button class="btn active" onclick="showArray('point')">Fuente puntual</button>
+      <button class="btn" onclick="showArray('trueline')">True Line Array</button>
+      <button class="btn" onclick="showArray('jline')">J-Line Array</button>
+      <button class="btn" onclick="showArray('curved')">Arreglo curvilíneo</button>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="canvas-label">Cobertura del arreglo</div>
+        <canvas id="arrayCanvas" height="300"></canvas>
+      </div>
+      <div>
+        <div id="arrayInfo" class="info-box" style="margin-top:0;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Audio direccional -->
+  <section class="section-card">
+    <h2>Audio Direccional</h2>
+    <p class="description">
+      La <span class="kw">directividad</span> de un parlante depende de la relación entre el tamaño del
+      cono y la longitud de onda: <span class="kw">ka = 2πa / λ</span>, donde <em>a</em> es el radio
+      del cono y <em>λ</em> la longitud de onda. Cuando <span class="kw">ka &lt; 1</span> (frecuencias
+      bajas, λ grande), la radiación es casi omnidireccional. A medida que <span class="kw">ka crece</span>
+      (frecuencias altas), el haz se estrecha. Un parlante de cono típico (~16 cm) tiene cobertura
+      amplia en medios (~100–130°) pero mucho más estrecha en agudos.
+    </p>
+    <p class="description">
+      Los sistemas de <span class="kw">audio direccional</span> (ultrasonic parametric audio)
+      llevan este principio al extremo: usan transductores ultrasónicos (λ muy pequeño, ka muy grande)
+      para crear un haz extremadamente estrecho — el sonido solo se escucha dentro de un área
+      específica, como una linterna de audio.
+      Usado en museos, exposiciones y aplicaciones de privacidad.
+    </p>
+    <div class="canvas-label">Comparación de cobertura: parlante convencional vs audio direccional</div>
+    <canvas id="directCanvas" height="220"></canvas>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ─── Datos cajas ──────────────────────────────────────────────────────────
+const BOX_DATA = {
+  infinite: {
+    name: 'Bafle infinito',
+    color: '#ffaa00',
+    desc: 'El cono radia hacia adelante sin control de la radiación trasera. En teoría, una pared infinita separa ambas caras del cono. En práctica: el cono "cuelga" en el espacio. Respuesta en graves depende solo del parlante.',
+    pros: 'Concepto simple, sin coloraciones de caja',
+    cons: 'Poco práctico, sin extensión adicional en graves'
+  },
+  sealed: {
+    name: 'Suspensión acústica (caja sellada)',
+    color: '#00ffff',
+    desc: 'La cámara trasera sellada actúa como un resorte adicional. Aumenta la frecuencia de resonancia pero controla el movimiento del cono. Respuesta de 2° orden, cae gradualmente.',
+    pros: 'Buen control del cono, respuesta suave y musical',
+    cons: 'Menor extensión en graves que el tuned-port'
+  },
+  ported: {
+    name: 'Tuned-port / Bass-reflex',
+    color: '#00ff44',
+    desc: 'Un puerto o ducto resuena a la frecuencia de Helmholtz, donde el cono prácticamente no trabaja y el puerto radia. Extiende la respuesta en graves más allá de la resonancia del parlante.',
+    pros: 'Mayor extensión y eficiencia en graves',
+    cons: 'Respuesta no tan controlada debajo de la frecuencia de sintonía; puede sonar "suelto"'
+  }
+};
+
+// ─── Animación parlante ───────────────────────────────────────────────────
+const spkCanvas = document.getElementById('spkCanvas');
+const spkCtx = spkCanvas.getContext('2d');
+let spkAnimId = null;
+
+function initSpkCanvas() { spkCanvas.width = spkCanvas.offsetWidth || 700; }
+
+function drawSpeaker(t) {
+  const W = spkCanvas.width, H = spkCanvas.height;
+  spkCtx.clearRect(0, 0, W, H);
+
+  const freq = parseFloat(document.getElementById('spkFreq').value);
+  const amp  = parseFloat(document.getElementById('spkAmp').value);
+  const vel  = Math.cos(t * (freq / 440) * 0.06);
+
+  const cy = H * 0.5;
+
+  // ── Geometría ──────────────────────────────────────────────────────────
+  const innerR    = 20;               // semialtura polo central
+  const gapMidR   = 30;              // posición radial de la bobina
+  const outerR    = 42;              // cara interior del yugo exterior
+  const plateH    = 16;              // grosor de placas exteriores
+  const magLeft   = W * 0.05;        // borde izq del yugo trasero
+  const backYokeW = 16;
+  const gapFrontX = W * 0.30;        // cara frontal (derecha) del ensamble de imán
+  const coilHalfW = 16;              // semiancho axial de la bobina
+  const coilX0    = gapFrontX - coilHalfW; // bobina en reposo (centro en gapFrontX - coilHalfW)
+  // Clamp: el centro de la bobina no supera gapFrontX (límite mecánico del recorrido)
+  const rawDisp = Math.sin(t * (freq / 440) * 0.06) * amp;
+  const disp    = Math.max(-coilHalfW * 2, Math.min(coilHalfW, rawDisp));
+  const coilX     = coilX0 + disp;   // bobina se mueve con disp
+  const coneLen   = W * 0.35;        // longitud del cono
+  const neckR     = gapMidR;         // radio del cuello del cono (= gapMidR)
+  const rimR      = H * 0.285;       // radio del borde del cono
+  const coneNeckX = gapFrontX + disp; // cuello del cono (borde der. del coil = gapFrontX + disp)
+  const coneRimX  = coneNeckX + coneLen;
+
+  // ── Ensamble de imán FIJO ─────────────────────────────────────────────
+  // Polo central (el former/bobina lo rodea)
+  spkCtx.fillStyle = '#c03030';
+  spkCtx.fillRect(magLeft + backYokeW, cy - innerR,
+                  gapFrontX - magLeft - backYokeW, innerR * 2);
+
+  // Placa exterior superior
+  spkCtx.fillStyle = '#a02020';
+  spkCtx.fillRect(magLeft + backYokeW, cy - outerR - plateH,
+                  gapFrontX - magLeft - backYokeW, plateH);
+
+  // Placa exterior inferior
+  spkCtx.fillRect(magLeft + backYokeW, cy + outerR,
+                  gapFrontX - magLeft - backYokeW, plateH);
+
+  // Yugo trasero
+  spkCtx.fillStyle = '#c03030';
+  spkCtx.fillRect(magLeft, cy - outerR - plateH, backYokeW, (outerR + plateH) * 2);
+
+  // N/S en la cara del entrehierro
+  spkCtx.fillStyle = '#ffffff';
+  spkCtx.font = 'bold 10px sans-serif';
+  spkCtx.textAlign = 'center';
+  spkCtx.fillText('N', gapFrontX - 8, cy - innerR - 2);
+  spkCtx.fillText('S', gapFrontX - 8, cy + innerR + 11);
+  spkCtx.fillText('S', gapFrontX - 8, cy - outerR - 2);
+  spkCtx.fillText('N', gapFrontX - 8, cy + outerR + 11);
+
+  spkCtx.fillStyle = '#ff7777';
+  spkCtx.font = '10px sans-serif';
+  spkCtx.fillText('Imán permanente',
+                  (magLeft + gapFrontX) / 2, cy + outerR + plateH + 16);
+
+  // Líneas de campo magnético en el entrehierro (radiales)
+  spkCtx.setLineDash([2, 4]);
+  spkCtx.lineWidth = 1;
+  for (let fx = magLeft + backYokeW + 10; fx < gapFrontX - 4; fx += 16) {
+    spkCtx.strokeStyle = 'rgba(255,120,120,0.40)';
+    spkCtx.beginPath();
+    spkCtx.moveTo(fx, cy - innerR - 3);
+    spkCtx.lineTo(fx, cy - outerR + 3);
+    spkCtx.stroke();
+    spkCtx.beginPath();
+    spkCtx.moveTo(fx, cy + innerR + 3);
+    spkCtx.lineTo(fx, cy + outerR - 3);
+    spkCtx.stroke();
+  }
+  spkCtx.setLineDash([]);
+
+  // ── Bobina de voz COMPLETA (se mueve) ────────────────────────────────
+  // Vista lateral de una bobina helicoidal en cilindro de eje horizontal.
+  // Elipses verticales superpuestas: mitades traseras (punteadas), luego delanteras.
+  const nTurns = 8;
+  const turnW  = (coilHalfW * 2) / nTurns;
+  const ellRX  = turnW * 0.88;
+
+  for (let i = 0; i < nTurns; i++) {
+    const ex = coilX - coilHalfW + (i + 0.5) * turnW;
+    spkCtx.save();
+    spkCtx.setLineDash([2, 3]);
+    spkCtx.beginPath();
+    spkCtx.ellipse(ex, cy, ellRX, gapMidR, 0, Math.PI / 2, 3 * Math.PI / 2);
+    spkCtx.strokeStyle = 'rgba(255,200,68,0.22)';
+    spkCtx.lineWidth = 1.5;
+    spkCtx.stroke();
+    spkCtx.restore();
+  }
+  for (let i = 0; i < nTurns; i++) {
+    const ex = coilX - coilHalfW + (i + 0.5) * turnW;
+    spkCtx.beginPath();
+    spkCtx.ellipse(ex, cy, ellRX, gapMidR, 0, -Math.PI / 2, Math.PI / 2);
+    spkCtx.strokeStyle = '#ffcc44';
+    spkCtx.lineWidth = 2;
+    spkCtx.stroke();
+  }
+  // Líneas de cierre superior/inferior de la bobina
+  spkCtx.beginPath();
+  spkCtx.moveTo(coilX - coilHalfW, cy - gapMidR);
+  spkCtx.lineTo(coilX + coilHalfW, cy - gapMidR);
+  spkCtx.moveTo(coilX - coilHalfW, cy + gapMidR);
+  spkCtx.lineTo(coilX + coilHalfW, cy + gapMidR);
+  spkCtx.strokeStyle = 'rgba(255,200,68,0.35)';
+  spkCtx.lineWidth = 1;
+  spkCtx.stroke();
+
+  spkCtx.fillStyle = '#ffaa00';
+  spkCtx.font = '10px sans-serif';
+  spkCtx.textAlign = 'center';
+  spkCtx.fillText('Bobina', coilX, cy + gapMidR + 14);
+  spkCtx.fillText('(corriente I)', coilX, cy + gapMidR + 26);
+
+  // ── Portabobina / former (tubo entre bobina y cuello del cono) ────────
+  spkCtx.strokeStyle = 'rgba(160,160,160,0.65)';
+  spkCtx.lineWidth = 2;
+  spkCtx.beginPath();
+  spkCtx.moveTo(coilX + coilHalfW, cy - gapMidR);
+  spkCtx.lineTo(coneNeckX, cy - gapMidR);
+  spkCtx.stroke();
+  spkCtx.beginPath();
+  spkCtx.moveTo(coilX + coilHalfW, cy + gapMidR);
+  spkCtx.lineTo(coneNeckX, cy + gapMidR);
+  spkCtx.stroke();
+
+  // ── Cono (se mueve): cuello estrecho a la IZQ, borde ancho a la DER ──
+  spkCtx.beginPath();
+  spkCtx.moveTo(coneNeckX, cy - neckR);   // arriba del cuello (izq)
+  spkCtx.lineTo(coneRimX,  cy - rimR);    // arriba del borde  (der)
+  spkCtx.lineTo(coneRimX,  cy + rimR);    // abajo del borde   (der)
+  spkCtx.lineTo(coneNeckX, cy + neckR);   // abajo del cuello  (izq)
+  spkCtx.closePath();
+  spkCtx.fillStyle = 'rgba(100,200,255,0.12)';
+  spkCtx.fill();
+  spkCtx.strokeStyle = '#44aaff';
+  spkCtx.lineWidth = 2.5;
+  spkCtx.stroke();
+  spkCtx.fillStyle = '#44aaff';
+  spkCtx.textAlign = 'center';
+  spkCtx.font = '10px sans-serif';
+  spkCtx.fillText('Cono', (coneNeckX + coneRimX) * 0.5, cy - rimR - 8);
+
+  // Dust cap (tapa central en el cuello)
+  spkCtx.beginPath();
+  spkCtx.ellipse(coneNeckX, cy, neckR, 8, 0, 0, Math.PI * 2);
+  spkCtx.fillStyle = 'rgba(100,180,255,0.22)';
+  spkCtx.fill();
+  spkCtx.strokeStyle = '#44aaff';
+  spkCtx.lineWidth = 1.5;
+  spkCtx.stroke();
+
+  // Surround (borde del cono, fijación a la cesta)
+  spkCtx.beginPath();
+  spkCtx.ellipse(coneRimX, cy, rimR, 14, Math.PI / 2, 0, Math.PI * 2);
+  spkCtx.strokeStyle = 'rgba(150,200,255,0.55)';
+  spkCtx.lineWidth = 2;
+  spkCtx.stroke();
+
+  // ── Ondas sonoras (desde el frente del cono) ──────────────────────────
+  const waveSrc = coneRimX + 30;
+  const coneArg = t * (freq / 440) * 0.06;  // mismo argumento que disp → sincronizado
+  for (let i = 0; i < 5; i++) {
+    const phase   = coneArg + i * (Math.PI * 2 / 5);
+    const r       = 22 + i * 28 + Math.sin(phase) * (amp * 0.5);
+    const opacity = (0.65 - i * 0.1) * (0.35 + 0.65 * (amp / 30));
+    spkCtx.beginPath();
+    spkCtx.arc(waveSrc, cy, r, -Math.PI * 0.45, Math.PI * 0.45);
+    spkCtx.strokeStyle = `rgba(0,200,255,${opacity.toFixed(2)})`;
+    spkCtx.lineWidth = 1.5;
+    spkCtx.stroke();
+  }
+
+  // ── Flecha de desplazamiento ──────────────────────────────────────────
+  const arrowY = cy + outerR + plateH + 18;
+  spkCtx.strokeStyle = '#00ff44';
+  spkCtx.lineWidth = 2;
+  spkCtx.beginPath();
+  spkCtx.moveTo(coilX0, arrowY);
+  spkCtx.lineTo(coilX, arrowY);
+  spkCtx.stroke();
+  if (Math.abs(disp) > 2) {
+    const ad = disp >= 0 ? 1 : -1;
+    spkCtx.beginPath();
+    spkCtx.moveTo(coilX + ad * 5, arrowY - 4);
+    spkCtx.lineTo(coilX + ad * 5, arrowY + 4);
+    spkCtx.lineTo(coilX + ad * 11, arrowY);
+    spkCtx.fillStyle = '#00ff44';
+    spkCtx.fill();
+  }
+
+  // ── Fuerza de Lorentz ─────────────────────────────────────────────────
+  spkCtx.fillStyle = '#00ff44';
+  spkCtx.font = 'bold 12px sans-serif';
+  spkCtx.textAlign = 'left';
+  spkCtx.fillText('F = B · I · L', 20, 26);
+  spkCtx.fillStyle = '#99ccff';
+  spkCtx.font = '10px sans-serif';
+  spkCtx.fillText(`I = ${(vel * 2).toFixed(2)} (rel.)`, 20, 42);
+  spkCtx.fillText(`desplaz. = ${disp.toFixed(1)} px`, 20, 56);
+
+  spkAnimId = requestAnimationFrame(tt => drawSpeaker(tt * 0.05));
+}
+
+// ─── Diagramas de cajas ───────────────────────────────────────────────────
+const boxDiagCanvas = document.getElementById('boxDiagCanvas');
+const bdCtx = boxDiagCanvas.getContext('2d');
+
+function initBoxCanvas() {
+  boxDiagCanvas.width = boxDiagCanvas.offsetWidth || 400;
+  document.getElementById('boxFreqCanvas').width = document.getElementById('boxFreqCanvas').offsetWidth || 400;
+}
+
+function drawBoxDiagram(key) {
+  const W = boxDiagCanvas.width, H = boxDiagCanvas.height;
+  bdCtx.clearRect(0, 0, W, H);
+  const d = BOX_DATA[key];
+
+  const bx = W * 0.25, by = H * 0.12, bw = W * 0.5, bh = H * 0.7;
+
+  // Caja
+  bdCtx.strokeStyle = d.color;
+  bdCtx.lineWidth = 2.5;
+  if (key === 'infinite') {
+    // Solo línea punteada "pared infinita"
+    bdCtx.setLineDash([6, 4]);
+    bdCtx.beginPath();
+    bdCtx.moveTo(W*0.5, by); bdCtx.lineTo(W*0.5, by + bh);
+    bdCtx.strokeStyle = '#888'; bdCtx.stroke(); bdCtx.setLineDash([]);
+    bdCtx.fillStyle = '#99ccff'; bdCtx.font='10px sans-serif'; bdCtx.textAlign='center';
+    bdCtx.fillText('pared ∞', W*0.5, by - 8);
+  } else {
+    bdCtx.strokeRect(bx, by, bw, bh);
+  }
+
+  // Parlante en la cara frontal
+  const spkY = by + bh * 0.5;
+  const spkX = key === 'infinite' ? W * 0.5 : bx;
+  bdCtx.beginPath();
+  bdCtx.ellipse(spkX, spkY, 28, bh * 0.38, 0, 0, Math.PI * 2);
+  bdCtx.strokeStyle = '#44aaff'; bdCtx.lineWidth = 2; bdCtx.stroke();
+  bdCtx.fillStyle = 'rgba(68,170,255,0.1)'; bdCtx.fill();
+
+  // Cono
+  bdCtx.beginPath();
+  bdCtx.moveTo(spkX, spkY - 16);
+  bdCtx.lineTo(spkX + 30, spkY);
+  bdCtx.lineTo(spkX, spkY + 16);
+  bdCtx.strokeStyle = '#44aaff'; bdCtx.lineWidth=1.5; bdCtx.stroke();
+
+  // Puerto para bass-reflex
+  if (key === 'ported') {
+    const portX = bx + bw * 0.35, portW = bw * 0.3, portH = 18;
+    const portY = by + bh - portH - 10;
+    bdCtx.fillStyle = '#0a1520';
+    bdCtx.fillRect(portX, portY, portW, portH);
+    bdCtx.strokeStyle = '#00ff44'; bdCtx.lineWidth=1.5;
+    bdCtx.strokeRect(portX, portY, portW, portH);
+    bdCtx.fillStyle = '#00ff44'; bdCtx.font='9px sans-serif'; bdCtx.textAlign='center';
+    bdCtx.fillText('puerto', portX + portW/2, portY - 4);
+    bdCtx.fillText('(Helmholtz)', portX + portW/2, portY + portH + 12);
+  }
+
+  // Relleno rígido para sealed
+  if (key === 'sealed') {
+    bdCtx.fillStyle = 'rgba(0,255,255,0.04)';
+    bdCtx.fillRect(bx+2, by+2, bw-4, bh-4);
+    bdCtx.fillStyle = '#00ffff'; bdCtx.font='10px sans-serif'; bdCtx.textAlign='center';
+    bdCtx.fillText('cámara sellada', bx + bw*0.65, spkY);
+    bdCtx.fillText('(resorte acústico)', bx + bw*0.65, spkY+14);
+  }
+
+  // Ondas (frente)
+  for (let i = 1; i <= 3; i++) {
+    const ox = key === 'infinite' ? W*0.5 - 20 : bx - 20;
+    bdCtx.beginPath();
+    bdCtx.arc(ox, spkY, i * 22, -Math.PI*0.5, Math.PI*0.5);
+    bdCtx.strokeStyle = `rgba(0,200,255,${0.4 - i*0.08})`; bdCtx.lineWidth=1.5; bdCtx.stroke();
+  }
+
+  bdCtx.fillStyle = d.color; bdCtx.font='bold 12px sans-serif'; bdCtx.textAlign='center';
+  bdCtx.fillText(d.name, W*0.5, H - 8);
+}
+
+const bfCanvas = document.getElementById('boxFreqCanvas');
+const bfCtx = bfCanvas.getContext('2d');
+
+function drawBoxFreq(key) {
+  const W = bfCanvas.width, H = bfCanvas.height;
+  bfCtx.clearRect(0, 0, W, H);
+
+  const pL=44, pR=16, pT=20, pH=32;
+  const gW=W-pL-pR, gH=H-pT-pH;
+
+  // Ejes
+  bfCtx.strokeStyle = 'rgba(150,200,255,0.6)'; bfCtx.lineWidth=1.5;
+  bfCtx.beginPath();
+  bfCtx.moveTo(pL, pT); bfCtx.lineTo(pL, pT+gH); bfCtx.lineTo(pL+gW, pT+gH); bfCtx.stroke();
+
+  // Etiquetas X
+  const freqs=[20,40,60,100,200,400,600];
+  bfCtx.fillStyle='#99ccff'; bfCtx.font='9px sans-serif'; bfCtx.textAlign='center';
+  freqs.forEach(f=>{
+    const x = pL + (Math.log10(f/20)/Math.log10(600/20))*gW;
+    bfCtx.fillText(f<1000?f+'':f/1000+'k', x, pT+gH+12);
+    bfCtx.beginPath(); bfCtx.moveTo(x,pT); bfCtx.lineTo(x,pT+gH);
+    bfCtx.strokeStyle='rgba(100,180,255,0.12)'; bfCtx.lineWidth=1; bfCtx.stroke();
+  });
+  bfCtx.fillText('Hz', pL+gW+5, pT+gH+12);
+
+  // Etiquetas Y
+  bfCtx.textAlign='right';
+  [-20,-10,0,6].forEach(db=>{
+    const y=pT+gH*0.5-db*(gH/40);
+    bfCtx.fillText(db+'dB', pL-4, y+4);
+    bfCtx.beginPath(); bfCtx.moveTo(pL,y); bfCtx.lineTo(pL+gW,y);
+    bfCtx.strokeStyle='rgba(100,180,255,0.15)'; bfCtx.lineWidth=1; bfCtx.stroke();
+  });
+
+  function plotCurve(fn, color, label) {
+    bfCtx.beginPath();
+    for(let px=0;px<=gW;px++){
+      const f=20*Math.pow(600/20,px/gW);
+      const db=fn(f);
+      const x=pL+px, y=pT+gH*0.5-db*(gH/40);
+      px===0?bfCtx.moveTo(x,y):bfCtx.lineTo(x,y);
+    }
+    bfCtx.strokeStyle=color; bfCtx.lineWidth=2.5; bfCtx.stroke();
+    bfCtx.fillStyle=color; bfCtx.font='bold 10px sans-serif'; bfCtx.textAlign='right';
+    const lx=pL+gW; const lf=500;
+    const ly=pT+gH*0.5-fn(lf)*(gH/40);
+    bfCtx.fillText(label, lx, ly-5);
+  }
+
+  // Respuestas aproximadas
+  const sealed  = f=>{ const f0=60; return -20*Math.log10(1+Math.pow(f0/f,4)); };
+  const ported  = f=>{
+    const f0=40, fb=30;
+    const base=-20*Math.log10(1+Math.pow(fb/f,4));
+    const peak= f>fb-5&&f<f0+10? 2: 0;
+    return base+peak;
+  };
+  const infinite= f=>{ const f0=80; return -20*Math.log10(1+Math.pow(f0/f,2)); };
+
+  const all = {infinite:{fn:infinite,color:'#ffaa00'},sealed:{fn:sealed,color:'#00ffff'},ported:{fn:ported,color:'#00ff44'}};
+  Object.entries(all).forEach(([k,v])=>{
+    bfCtx.globalAlpha = k===key ? 1 : 0.3;
+    plotCurve(v.fn, v.color, BOX_DATA[k].name.split(' ')[0]);
+  });
+  bfCtx.globalAlpha=1;
+  bfCtx.textAlign='left';
+}
+
+function showBox(key) {
+  document.querySelectorAll('#boxBtns .btn').forEach((b,i)=>{
+    b.classList.toggle('active', ['infinite','sealed','ported'][i]===key);
+  });
+  initBoxCanvas();
+  drawBoxDiagram(key);
+  drawBoxFreq(key);
+  const d=BOX_DATA[key];
+  document.getElementById('boxInfo').innerHTML=
+    `<strong style="color:${d.color}">${d.name}</strong><br>
+    ${d.desc}<br><br>
+    <span style="color:#00ff44">✓ ${d.pros}</span><br>
+    <span style="color:#ff4444">✗ ${d.cons}</span>`;
+}
+
+// ─── Vías ─────────────────────────────────────────────────────────────────
+const waysCanvas = document.getElementById('waysCanvas');
+const wCtx = waysCanvas.getContext('2d');
+
+function drawWays() {
+  waysCanvas.width = waysCanvas.offsetWidth || 800;
+  const W=waysCanvas.width, H=waysCanvas.height;
+  wCtx.clearRect(0,0,W,H);
+
+  const pL=55, pR=15, pT=15, pH=30;
+  const gW=W-pL-pR, gH=H-pT-pH;
+
+  // Eje X logarítmico 20Hz-20kHz
+  wCtx.strokeStyle='rgba(150,200,255,0.6)'; wCtx.lineWidth=1.5;
+  wCtx.beginPath(); wCtx.moveTo(pL,pT+gH); wCtx.lineTo(pL+gW,pT+gH); wCtx.stroke();
+  const freqs=[20,50,100,200,500,1000,2000,5000,10000,20000];
+  const fLabels=['20','50','100','200','500','1k','2k','5k','10k','20k'];
+  wCtx.fillStyle='#99ccff'; wCtx.font='9px sans-serif'; wCtx.textAlign='center';
+  freqs.forEach((f,i)=>{
+    const x=pL+(Math.log10(f/20)/Math.log10(20000/20))*gW;
+    wCtx.fillText(fLabels[i],x,pT+gH+12);
+    wCtx.beginPath(); wCtx.moveTo(x,pT); wCtx.lineTo(x,pT+gH);
+    wCtx.strokeStyle='rgba(100,180,255,0.12)'; wCtx.lineWidth=1; wCtx.stroke();
+  });
+  wCtx.fillText('Hz', pL+gW+5, pT+gH+12);
+
+  const bands=[
+    {label:'Subwoofer', f1:20, f2:120, color:'#ff4444', y:0},
+    {label:'Woofer',    f1:40, f2:500, color:'#ffaa00', y:1},
+    {label:'Midrange',  f1:300,f2:5000,color:'#00ff44', y:2},
+    {label:'Tweeter',   f1:2000,f2:20000,color:'#00ffff',y:3},
+  ];
+  const bH=gH/5.5;
+  bands.forEach(b=>{
+    const x1=pL+(Math.log10(b.f1/20)/Math.log10(20000/20))*gW;
+    const x2=pL+(Math.log10(b.f2/20)/Math.log10(20000/20))*gW;
+    const y=pT+b.y*(bH+5);
+    wCtx.fillStyle=b.color+'22';
+    wCtx.fillRect(x1,y,x2-x1,bH);
+    wCtx.strokeStyle=b.color; wCtx.lineWidth=1.5;
+    wCtx.strokeRect(x1,y,x2-x1,bH);
+    wCtx.fillStyle=b.color; wCtx.font='bold 10px sans-serif'; wCtx.textAlign='left';
+    wCtx.fillText(b.label, x1+4, y+bH*0.65);
+  });
+
+  wCtx.textAlign='left';
+}
+
+// ─── Potencia ─────────────────────────────────────────────────────────────
+function updatePower() {
+  const W = parseFloat(document.getElementById('powerW').value);
+  const d = parseFloat(document.getElementById('powerDist').value);
+  document.getElementById('powerWVal').textContent = W + ' W';
+  document.getElementById('powerDistVal').textContent = d + ' m';
+  // SPL = 112 + 10*log10(W) - 20*log10(d) (sensitividad media ~88dB/W/m)
+  const sensitivity = 88;
+  const spl = sensitivity + 10*Math.log10(W) - 20*Math.log10(d);
+  document.getElementById('powerResult').innerHTML =
+    `SPL estimado a <strong style="color:#ffaa00">${d}m</strong>:
+     <strong style="color:#00ff44">${spl.toFixed(1)} dB SPL</strong>
+     (sensitividad típica 88 dB/W/m)
+     <br><span style="color:#99ccff;font-size:0.8em;">Referencia: conversación normal ~60dB, concierto de rock ~110dB, umbral de dolor ~120dB</span>`;
+  drawPowerCurve(W);
+}
+
+const powerCanvas = document.getElementById('powerCanvas');
+const pCtx = powerCanvas.getContext('2d');
+
+function drawPowerCurve(W) {
+  powerCanvas.width = powerCanvas.offsetWidth || 700;
+  const PW=powerCanvas.width, PH=powerCanvas.height;
+  pCtx.clearRect(0,0,PW,PH);
+
+  const pL=55,pR=20,pT=15,pH=35;
+  const gW=PW-pL-pR, gH=PH-pT-pH;
+
+  pCtx.strokeStyle='rgba(150,200,255,0.6)'; pCtx.lineWidth=1.5;
+  pCtx.beginPath(); pCtx.moveTo(pL,pT); pCtx.lineTo(pL,pT+gH); pCtx.lineTo(pL+gW,pT+gH); pCtx.stroke();
+
+  const sens=88;
+  const minSPL=40, maxSPL=130;
+  const maxD=50;
+
+  pCtx.fillStyle='#99ccff'; pCtx.font='9px sans-serif'; pCtx.textAlign='center';
+  [1,2,5,10,20,50].forEach(d=>{
+    const x=pL+(d/maxD)*gW;
+    pCtx.fillText(d+'m', x, pT+gH+12);
+    pCtx.beginPath(); pCtx.moveTo(x,pT); pCtx.lineTo(x,pT+gH);
+    pCtx.strokeStyle='rgba(100,180,255,0.12)'; pCtx.lineWidth=1; pCtx.stroke();
+  });
+  pCtx.textAlign='right';
+  [50,60,70,80,90,100,110,120].forEach(db=>{
+    const y=pT+gH-(db-minSPL)/(maxSPL-minSPL)*gH;
+    if(y<pT||y>pT+gH) return;
+    pCtx.fillText(db+'dB',pL-4,y+4);
+    pCtx.beginPath(); pCtx.moveTo(pL,y); pCtx.lineTo(pL+gW,y);
+    pCtx.strokeStyle='rgba(100,180,255,0.15)'; pCtx.lineWidth=1; pCtx.stroke();
+  });
+
+  // Referencias
+  [[60,'Conversación','#88aacc'],[85,'Música fuerte','#ffaa00'],[110,'Concierto','#ff4444']].forEach(([db,lbl,col])=>{
+    const y=pT+gH-(db-minSPL)/(maxSPL-minSPL)*gH;
+    pCtx.beginPath(); pCtx.moveTo(pL,y); pCtx.lineTo(pL+gW,y);
+    pCtx.strokeStyle=col+'88'; pCtx.lineWidth=1; pCtx.setLineDash([4,4]); pCtx.stroke(); pCtx.setLineDash([]);
+    pCtx.fillStyle=col; pCtx.font='9px sans-serif'; pCtx.textAlign='right';
+    pCtx.fillText(lbl,pL+gW,y-3);
+  });
+
+  // Curva para W dado
+  pCtx.beginPath();
+  for(let px=1;px<=gW;px++){
+    const d=px/gW*maxD;
+    const spl=sens+10*Math.log10(W)-20*Math.log10(d);
+    const x=pL+px;
+    const y=pT+gH-(spl-minSPL)/(maxSPL-minSPL)*gH;
+    px===1?pCtx.moveTo(x,y):pCtx.lineTo(x,y);
+  }
+  pCtx.strokeStyle='#00ff44'; pCtx.lineWidth=2.5; pCtx.stroke();
+
+  const curD=parseFloat(document.getElementById('powerDist').value);
+  const curSPL=sens+10*Math.log10(W)-20*Math.log10(curD);
+  const cx=pL+(curD/maxD)*gW;
+  const cy=pT+gH-(curSPL-minSPL)/(maxSPL-minSPL)*gH;
+  pCtx.beginPath(); pCtx.arc(cx,cy,5,0,Math.PI*2);
+  pCtx.fillStyle='#ffaa00'; pCtx.fill();
+  pCtx.textAlign='left';
+}
+
+document.getElementById('powerW').addEventListener('input', updatePower);
+document.getElementById('powerDist').addEventListener('input', updatePower);
+
+// ─── Arrays ───────────────────────────────────────────────────────────────
+const ARRAY_DATA = {
+  point: {
+    label:'Fuente puntual',
+    color:'#ffaa00',
+    desc:'Un solo parlante o cluster compacto. Dispersión esférica: <strong style="color:#ff4444">−6 dB al doblar la distancia</strong>. Cubre bien a corta distancia pero no alcanza filas traseras sin perder volumen.',
+    decay: -6
+  },
+  trueline: {
+    label:'True Line Array',
+    color:'#00ffff',
+    desc:'Array lineal perfecto (teórico). Dispersión cilíndrica: <strong style="color:#00ff44">−3 dB al doblar la distancia</strong> en el campo cercano. Cobertura uniforme en salas largas.',
+    decay: -3
+  },
+  jline: {
+    label:'J-Line Array',
+    color:'#00ff44',
+    desc:'Variación del line array con los parlantes inferiores inclinados hacia el frente. Permite <strong>cubrir las filas delanteras</strong> que el true line no alcanza bien. El más común en instalaciones profesionales.',
+    decay: -3.5
+  },
+  curved: {
+    label:'Arreglo curvilíneo',
+    color:'#ff88ff',
+    desc:'Los parlantes se montan en un arco: los de <strong>arriba apuntan casi horizontal</strong> (cubren las filas lejanas) y los de <strong>abajo apuntan más inclinados</strong> (cubren las filas cercanas). La curvatura progresiva distribuye la energía uniformemente a todas las distancias, sin depender de reflexiones.',
+    decay: -4
+  }
+};
+
+const arrCanvas = document.getElementById('arrayCanvas');
+const arrCtx = arrCanvas.getContext('2d');
+
+function drawArray(key) {
+  arrCanvas.width = arrCanvas.offsetWidth || 400;
+  const W = arrCanvas.width, H = arrCanvas.height;
+  arrCtx.clearRect(0, 0, W, H);
+  const d = ARRAY_DATA[key];
+  const C = d.color;
+
+  // ── Layout ─────────────────────────────────────────────────────────────
+  const aX   = 38;          // centro x del arreglo
+  const aT   = H * 0.07;    // tope del arreglo
+  const aB   = H * 0.72;    // base del arreglo
+  const flY  = H * 0.80;    // piso del escenario
+  const n1X  = W * 0.48;    // oyente cercano x
+  const n2X  = W * 0.83;    // oyente lejano x
+  const liY  = flY;          // pies del oyente
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  // Parlante individual (rectángulo con cono)
+  function spkBox(cx, cy, rot, col) {
+    arrCtx.save();
+    arrCtx.translate(cx, cy); arrCtx.rotate(rot);
+    arrCtx.fillStyle = col;
+    arrCtx.fillRect(-12, -8, 24, 16);
+    arrCtx.strokeStyle = 'rgba(255,255,255,0.25)'; arrCtx.lineWidth = 0.5;
+    arrCtx.strokeRect(-12, -8, 24, 16);
+    arrCtx.fillStyle = 'rgba(0,0,0,0.45)';
+    arrCtx.beginPath(); arrCtx.arc(2, 0, 4.5, 0, Math.PI * 2); arrCtx.fill();
+    arrCtx.restore();
+  }
+
+  // Figura humana (oyente)
+  function listener(x, labelTop, labelBot, col) {
+    const hy = liY - 10, ey = hy - 14;
+    arrCtx.fillStyle = col;
+    arrCtx.beginPath(); arrCtx.arc(x, ey, 5, 0, Math.PI * 2); arrCtx.fill();
+    arrCtx.strokeStyle = col; arrCtx.lineWidth = 1.5;
+    arrCtx.beginPath();
+    arrCtx.moveTo(x, ey+5);  arrCtx.lineTo(x, hy);
+    arrCtx.moveTo(x-7, hy-4); arrCtx.lineTo(x+7, hy-4);
+    arrCtx.moveTo(x, hy);    arrCtx.lineTo(x-4, liY);
+    arrCtx.moveTo(x, hy);    arrCtx.lineTo(x+4, liY);
+    arrCtx.stroke();
+    arrCtx.fillStyle = '#ddeeff'; arrCtx.font = 'bold 8px sans-serif'; arrCtx.textAlign = 'center';
+    arrCtx.fillText(labelTop, x, flY + 12);
+    arrCtx.fillStyle = '#99ccff'; arrCtx.font = '8px sans-serif';
+    arrCtx.fillText(labelBot, x, flY + 22);
+  }
+
+  // Líneas de propagación desde puntos fuente a punto destino
+  function propLines(srcs, tx, ty, col, alpha) {
+    srcs.forEach(s => {
+      arrCtx.beginPath();
+      arrCtx.moveTo(s.x, s.y); arrCtx.lineTo(tx, ty);
+      arrCtx.strokeStyle = `rgba(${col},${alpha})`;
+      arrCtx.lineWidth = 0.9; arrCtx.stroke();
+    });
+  }
+
+  // Círculo de nivel SPL (dashed) alrededor del oyente
+  function splCircle(x, r, col, label) {
+    arrCtx.beginPath();
+    arrCtx.arc(x, liY - 12, r, 0, Math.PI * 2);
+    arrCtx.strokeStyle = col; arrCtx.setLineDash([2, 4]); arrCtx.lineWidth = 1;
+    arrCtx.stroke(); arrCtx.setLineDash([]);
+    arrCtx.fillStyle = col; arrCtx.font = '8px sans-serif'; arrCtx.textAlign = 'center';
+    arrCtx.fillText(label, x, liY - 12 - r - 3);
+  }
+
+  // ── Escenario / piso ────────────────────────────────────────────────────
+  arrCtx.strokeStyle = 'rgba(150,200,255,0.28)';
+  arrCtx.lineWidth = 1; arrCtx.setLineDash([3, 6]);
+  arrCtx.beginPath(); arrCtx.moveTo(aX - 10, flY); arrCtx.lineTo(W, flY); arrCtx.stroke();
+  arrCtx.setLineDash([]);
+  arrCtx.fillStyle = '#99ccff'; arrCtx.font = '8px sans-serif'; arrCtx.textAlign = 'left';
+  arrCtx.fillText('Escenario', aX + 5, flY + 11);
+
+  // Flecha de distancia
+  const dAY = H * 0.93;
+  arrCtx.strokeStyle = 'rgba(153,204,255,0.45)'; arrCtx.lineWidth = 1;
+  arrCtx.beginPath(); arrCtx.moveTo(aX, dAY); arrCtx.lineTo(n2X, dAY); arrCtx.stroke();
+  [aX, n2X].forEach(x => {
+    arrCtx.beginPath(); arrCtx.moveTo(x, dAY-3); arrCtx.lineTo(x, dAY+3); arrCtx.stroke();
+  });
+  arrCtx.fillStyle = '#99ccff'; arrCtx.textAlign = 'center';
+  arrCtx.fillText('distancia →', (aX + n2X) / 2, dAY - 4);
+
+  // ── Dibujo específico por tipo ──────────────────────────────────────────
+  const N = 8;
+
+  if (key === 'point') {
+    // Fuente puntual: un parlante en el centro del eje
+    const sy = (aT + aB) / 2;
+    spkBox(aX, sy, 0, C);
+
+    // Ondas esféricas
+    for (let i = 1; i <= 4; i++) {
+      arrCtx.beginPath();
+      arrCtx.arc(aX, sy, i * (W * 0.18), -Math.PI * 0.6, Math.PI * 0.6);
+      arrCtx.strokeStyle = `rgba(255,170,0,${0.4 - i * 0.08})`;
+      arrCtx.lineWidth = 1.2; arrCtx.stroke();
+    }
+
+    // Líneas cono
+    arrCtx.beginPath();
+    arrCtx.moveTo(aX, sy); arrCtx.lineTo(W, sy - H * 0.38);
+    arrCtx.moveTo(aX, sy); arrCtx.lineTo(W, sy + H * 0.38);
+    arrCtx.strokeStyle = 'rgba(255,170,0,0.18)'; arrCtx.lineWidth = 1; arrCtx.stroke();
+    arrCtx.fillStyle = 'rgba(255,170,0,0.04)';
+    arrCtx.beginPath();
+    arrCtx.moveTo(aX, sy); arrCtx.lineTo(W, sy - H*0.38); arrCtx.lineTo(W, sy + H*0.38);
+    arrCtx.closePath(); arrCtx.fill();
+
+    // Propagation lines to listeners
+    propLines([{x: aX, y: sy}], n1X, liY - 12, '255,170,0', 0.70);
+    propLines([{x: aX, y: sy}], n2X, liY - 12, '255,170,0', 0.40);
+
+    // SPL circles — −6 dB a doble distancia
+    const r1 = 28, r2 = 14;  // mitad del nivel → mitad del radio perceptivo
+    splCircle(n1X, r1, C, '0 dB ref');
+    splCircle(n2X, r2, 'rgba(255,170,0,0.6)', '−6 dB');
+
+    listener(n1X, 'Cercano', '', C);
+    listener(n2X, 'Lejano', '', 'rgba(255,170,0,0.55)');
+
+  } else if (key === 'trueline') {
+    // True Line Array: columna recta de parlantes
+    const srcs = [];
+    for (let i = 0; i < N; i++) {
+      const y = aT + i * (aB - aT) / (N - 1);
+      srcs.push({x: aX, y});
+      spkBox(aX, y, 0, C);
+    }
+
+    // Líneas a cada oyente (desde todos los parlantes)
+    propLines(srcs, n1X, liY - 12, '0,255,255', 0.35);
+    propLines(srcs, n2X, liY - 12, '0,255,255', 0.20);
+
+    // Franja de cobertura uniforme
+    arrCtx.fillStyle = 'rgba(0,255,255,0.04)';
+    arrCtx.fillRect(aX + 14, aT, W - aX - 14, aB - aT);
+    arrCtx.strokeStyle = 'rgba(0,255,255,0.22)'; arrCtx.lineWidth = 1;
+    arrCtx.beginPath(); arrCtx.moveTo(aX+14, aT); arrCtx.lineTo(W, aT); arrCtx.stroke();
+    arrCtx.beginPath(); arrCtx.moveTo(aX+14, aB); arrCtx.lineTo(W, aB); arrCtx.stroke();
+
+    // SPL circles — casi iguales (−3 dB)
+    const r1 = 26, r2 = 20;
+    splCircle(n1X, r1, C, '0 dB ref');
+    splCircle(n2X, r2, `rgba(0,255,255,0.6)`, '−3 dB');
+
+    listener(n1X, 'Cercano', '', C);
+    listener(n2X, 'Lejano', '', `rgba(0,255,255,0.65)`);
+
+  } else if (key === 'jline') {
+    // J-Line: parlantes superiores rectos, inferiores inclinados hacia el frente
+    const srcs = [];
+    const split = 5;  // primeros 5 rectos, últimos 3 inclinados
+    for (let i = 0; i < N; i++) {
+      const y = aT + i * (aB - aT) / (N - 1);
+      const angle = i < split ? 0 : (i - split + 1) * 0.15;
+      srcs.push({x: aX + Math.sin(angle) * 14, y});
+      spkBox(aX + Math.sin(angle) * 6, y, angle, C);
+    }
+
+    // Far listener ← cubierto por parlantes superiores (rectos)
+    propLines(srcs.slice(0, split), n2X, liY - 12, '0,255,68', 0.28);
+    // Near listener ← cubierto por parlantes inferiores (inclinados)
+    propLines(srcs.slice(split), n1X, liY - 12, '0,255,68', 0.55);
+    // Líneas tenues del resto
+    propLines(srcs.slice(split), n2X, liY - 12, '0,255,68', 0.10);
+    propLines(srcs.slice(0, split), n1X, liY - 12, '0,255,68', 0.10);
+
+    // SPL circles — ambos cubiertos
+    splCircle(n1X, 24, C, '0 dB ref');
+    splCircle(n2X, 22, `rgba(0,255,68,0.6)`, '−3.5 dB');
+
+    listener(n1X, 'Cercano', '(inclinados)', C);
+    listener(n2X, 'Lejano', '(recto)', `rgba(0,255,68,0.65)`);
+
+    // Label flare
+    arrCtx.fillStyle = '#99ccff'; arrCtx.font = '8px sans-serif'; arrCtx.textAlign = 'left';
+    arrCtx.fillText('inclinados ↘', aX + 18, aB - 4);
+
+  } else {
+    // Arreglo curvilíneo — Vista lateral de sala
+    // El array cuelga arriba-izquierda; todos los oyentes están en el piso
+    // a distintas distancias. La curvatura dirige cada sección a una zona.
+    const srcs = [];
+
+    // Punto de colgado del array (arriba-izquierda)
+    const hangX = aX + 8;
+    const hangY = H * 0.06;
+
+    // Parámetros del arco: el array cuelga y se curva hacia abajo
+    const arcR  = H * 0.55;
+    // Ángulos: 0 = horizontal derecha, pi/2 = abajo
+    // Rango: desde casi horizontal (apunta lejos) hasta inclinado (apunta cerca)
+    const a0 = Math.PI * 0.08;   // parlante superior → casi horizontal → lejos
+    const a1 = Math.PI * 0.48;   // parlante inferior → inclinado → cerca
+    const arcCX = hangX;
+    const arcCY = hangY;
+
+    // Tres zonas de audiencia en el PISO a distintas distancias
+    const zNear = { x: W * 0.32, y: flY, col: '255,180,60',  label: 'Cercano' };
+    const zMid  = { x: W * 0.58, y: flY, col: '180,255,120', label: 'Medio'   };
+    const zFar  = { x: W * 0.84, y: flY, col: '0,220,255',   label: 'Lejano'  };
+
+    // Asignar zonas: superiores → lejos, medios → medio, inferiores → cerca
+    const zones = [zFar, zFar, zFar, zMid, zMid, zMid, zNear, zNear];
+
+    for (let i = 0; i < N; i++) {
+      const a  = a0 + i * (a1 - a0) / (N - 1);
+      const sx = arcCX + arcR * Math.cos(a);
+      const sy = arcCY + arcR * Math.sin(a);
+      // Cada parlante apunta en la dirección radial (tangente al arco)
+      const rot = a;  // rotación = ángulo radial
+      srcs.push({x: sx, y: sy});
+      spkBox(sx, sy, rot, `rgba(${zones[i].col},0.9)`);
+    }
+
+    // Soporte / rigging (línea desde techo al array)
+    arrCtx.strokeStyle = 'rgba(150,200,255,0.4)';
+    arrCtx.lineWidth = 1.5;
+    arrCtx.beginPath();
+    arrCtx.moveTo(hangX, 0); arrCtx.lineTo(hangX, hangY + 4);
+    arrCtx.stroke();
+    arrCtx.fillStyle = '#99ccff'; arrCtx.font = '8px sans-serif'; arrCtx.textAlign = 'left';
+    arrCtx.fillText('rigging', hangX + 6, 10);
+
+    // Conos de cobertura semitransparentes por zona
+    [
+      { srcs: srcs.slice(0, 3), z: zFar,  col: '0,220,255' },
+      { srcs: srcs.slice(3, 6), z: zMid,  col: '180,255,120' },
+      { srcs: srcs.slice(6),    z: zNear, col: '255,180,60' }
+    ].forEach(({ srcs: zSrcs, z, col }) => {
+      // Cono triangular desde el centro de la sección hasta la zona
+      const cx = zSrcs.reduce((s, p) => s + p.x, 0) / zSrcs.length;
+      const cy = zSrcs.reduce((s, p) => s + p.y, 0) / zSrcs.length;
+      const halfW = 22;  // ancho del haz en el destino
+      arrCtx.fillStyle = `rgba(${col},0.06)`;
+      arrCtx.beginPath();
+      arrCtx.moveTo(cx, cy);
+      arrCtx.lineTo(z.x - halfW, z.y - 18);
+      arrCtx.lineTo(z.x + halfW, z.y - 18);
+      arrCtx.closePath();
+      arrCtx.fill();
+    });
+
+    // Líneas de propagación por zona
+    srcs.forEach((s, i) => {
+      const z = zones[i];
+      arrCtx.beginPath();
+      arrCtx.moveTo(s.x, s.y);
+      arrCtx.lineTo(z.x, z.y - 18);
+      arrCtx.strokeStyle = `rgba(${z.col},0.35)`;
+      arrCtx.lineWidth = 0.9; arrCtx.stroke();
+    });
+
+    // Oyentes en el PISO
+    function zoneListener(z) {
+      const footY = z.y;
+      listener(z.x, z.label, '', `rgba(${z.col},0.85)`);
+    }
+    [zNear, zMid, zFar].forEach(zoneListener);
+
+    // Etiquetas de zona con flechas curvas
+    arrCtx.font = '8px sans-serif'; arrCtx.textAlign = 'center';
+    [
+      { label: 'Sección superior → lejos',  col: zFar.col,  y: hangY + arcR * Math.sin(a0) - 14, x: hangX + arcR * Math.cos(a0) + 10 },
+      { label: 'Sección inferior → cerca', col: zNear.col, y: hangY + arcR * Math.sin(a1) + 16, x: hangX + arcR * Math.cos(a1) + 10 }
+    ].forEach(lbl => {
+      arrCtx.fillStyle = `rgba(${lbl.col},0.85)`;
+      arrCtx.textAlign = 'left';
+      arrCtx.fillText(lbl.label, lbl.x, lbl.y);
+    });
+
+    // Leyenda
+    const legX = W * 0.62, legY = H * 0.12;
+    arrCtx.fillStyle = '#ddeeff'; arrCtx.font = 'bold 9px sans-serif'; arrCtx.textAlign = 'left';
+    arrCtx.fillText('La curvatura dirige cada sección', legX, legY);
+    arrCtx.fillText('a una distancia distinta del piso', legX, legY + 12);
+  }
+
+  // ── Etiqueta caída de nivel ─────────────────────────────────────────────
+  arrCtx.fillStyle = C; arrCtx.font = 'bold 11px sans-serif'; arrCtx.textAlign = 'center';
+  arrCtx.fillText(`${d.decay} dB / octava de distancia`, W * 0.62, H - 4);
+  arrCtx.textAlign = 'left';
+}
+
+function showArray(key){
+  document.querySelectorAll('#arrayBtns .btn').forEach((b,i)=>{
+    b.classList.toggle('active', Object.keys(ARRAY_DATA)[i]===key);
+  });
+  drawArray(key);
+  const d=ARRAY_DATA[key];
+  document.getElementById('arrayInfo').innerHTML=
+    `<strong style="color:${d.color}">${d.label}</strong><br><br>${d.desc}`;
+}
+
+// ─── Audio direccional ────────────────────────────────────────────────────
+const dirCanvas=document.getElementById('directCanvas');
+const dirCtx=dirCanvas.getContext('2d');
+
+function drawDirectional(){
+  dirCanvas.width=dirCanvas.offsetWidth||800;
+  const W=dirCanvas.width, H=dirCanvas.height;
+  dirCtx.clearRect(0,0,W,H);
+
+  // Panel izquierdo: convencional
+  const lx=W*0.25;
+  dirCtx.fillStyle='#ffaa00';
+  dirCtx.beginPath(); dirCtx.arc(lx,H*0.5,10,0,Math.PI*2); dirCtx.fill();
+  for(let i=1;i<=4;i++){
+    dirCtx.beginPath(); dirCtx.arc(lx,H*0.5,i*32,0,Math.PI*2);
+    dirCtx.strokeStyle=`rgba(255,170,0,${0.4-i*0.07})`; dirCtx.lineWidth=1.5; dirCtx.stroke();
+  }
+  dirCtx.fillStyle='rgba(255,170,0,0.07)';
+  dirCtx.beginPath(); dirCtx.arc(lx,H*0.5,130,-0.9,0.9); dirCtx.lineTo(lx,H*0.5); dirCtx.closePath(); dirCtx.fill();
+  dirCtx.fillStyle='#ffaa00'; dirCtx.font='11px sans-serif'; dirCtx.textAlign='center';
+  dirCtx.fillText('Parlante convencional', lx, 18);
+  dirCtx.fillText('Cobertura amplia (depende de freq.)', lx, H-12);
+
+  // Panel derecho: direccional
+  const rx=W*0.75;
+  dirCtx.fillStyle='#00ffff';
+  dirCtx.fillRect(rx-6,H*0.3,12,H*0.4);
+  for(let i=0;i<5;i++){
+    dirCtx.fillRect(rx-5+i*2, H*0.3+i*4, 10-i*2, H*0.4-i*8);
+  }
+  dirCtx.fillStyle='rgba(0,255,255,0.12)';
+  dirCtx.beginPath();
+  dirCtx.moveTo(rx,H*0.5-8);
+  dirCtx.lineTo(W*0.98,H*0.5-8);
+  dirCtx.lineTo(W*0.98,H*0.5+8);
+  dirCtx.lineTo(rx,H*0.5+8);
+  dirCtx.closePath(); dirCtx.fill();
+  dirCtx.strokeStyle='rgba(0,255,255,0.5)'; dirCtx.lineWidth=2; dirCtx.stroke();
+  dirCtx.fillStyle='#00ffff'; dirCtx.font='11px sans-serif'; dirCtx.textAlign='center';
+  dirCtx.fillText('Audio Direccional (paramétrico)', rx, 18);
+  dirCtx.fillText('< 5° de cobertura', rx, H-12);
+
+  dirCtx.textAlign='left';
+}
+
+// ─── Controles parlante ───────────────────────────────────────────────────
+let _spkAudio = null;
+
+document.getElementById('spkFreq').addEventListener('input', function(){
+  document.getElementById('spkFreqVal').textContent = this.value + ' Hz';
+  if (_spkAudio) _spkAudio.osc.frequency.value = parseFloat(this.value);
+});
+document.getElementById('spkAmp').addEventListener('input', function(){
+  document.getElementById('spkAmpVal').textContent = this.value;
+  if (_spkAudio) _spkAudio.gainNode.gain.value = parseFloat(this.value) / 30 * 0.4;
+});
+function spkPlay(){
+  stopAllAudio();
+  const freq = parseFloat(document.getElementById('spkFreq').value);
+  const gain = parseFloat(document.getElementById('spkAmp').value) / 30 * 0.4;
+  _spkAudio = playTone(freq, 0, 'sine', gain);
+  _spkAudio.osc.onended = () => { _spkAudio = null; };
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+function init(){
+  initSpkCanvas();
+  drawSpeaker(0);
+  showBox('infinite');
+  drawWays();
+  updatePower();
+  showArray('point');
+  drawDirectional();
+}
+
+window.addEventListener('resize', ()=>{
+  initSpkCanvas();
+  drawWays();
+  drawPowerCurve(parseFloat(document.getElementById('powerW').value));
+  drawArray(document.querySelector('#arrayBtns .btn.active').textContent.includes('puntual')?'point':
+    document.querySelector('#arrayBtns .btn.active').textContent.includes('True')?'trueline':
+    document.querySelector('#arrayBtns .btn.active').textContent.includes('J-')?'jline':'curved');
+  drawDirectional();
+  initBoxCanvas();
+  drawBoxDiagram(document.querySelector('#boxBtns .btn.active').textContent.includes('inf')?'infinite':
+    document.querySelector('#boxBtns .btn.active').textContent.includes('Sus')?'sealed':'ported');
+});
+
+init();
+</script>
+</body>
+</html>

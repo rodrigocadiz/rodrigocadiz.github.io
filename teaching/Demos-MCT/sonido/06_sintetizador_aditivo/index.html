@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Sintetizador Aditivo — Parámetros del Sonido</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .module-desc {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .control-group .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+    button.play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    button.play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,229,255,.3); }
+    button.play-btn.playing { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+    .preset-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .preset-btns button {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all .2s;
+    }
+    .preset-btns button:hover { border-color: #00e5ff; color: #00e5ff; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+    .harmonic-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,.03);
+    }
+    .harmonic-row label { font-size: 0.82rem; min-width: 55px; color: var(--text-dim); }
+    .harmonic-row input[type=range] { flex: 1; }
+    .harmonic-row .h-val { font-size: 0.8rem; min-width: 35px; text-align: right; color: #00e5ff; }
+    .harmonic-row .ph-val { font-size: 0.8rem; min-width: 35px; text-align: right; color: #ffb74d; }
+    .harmonic-row input[type=checkbox] { width: 16px; height: 16px; accent-color: #00e5ff; }
+    .harmonic-row .phase-slider { max-width: 80px; }
+    .scrollable-harmonics { max-height: 500px; overflow-y: auto; padding-right: 8px; }
+    .scrollable-harmonics::-webkit-scrollbar { width: 4px; }
+    .scrollable-harmonics::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body class="sec-sonido">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Parámetros del Sonido</a>
+  <a href="../01_circulo_unitario/index.html">1. Círculo Unitario</a>
+  <a href="../02_parametros/index.html">2. Parámetros</a>
+  <a href="../03_suma_sinusoides/index.html">3. Suma de Sinusoides</a>
+  <a href="../04_espectro/index.html">4. Espectro</a>
+  <a href="../05_armonicos_parciales/index.html">5. Armónicos vs Parciales</a>
+  <a href="../06_sintetizador_aditivo/index.html" class="active">6. Sintetizador Aditivo</a>
+  <a href="../07_espectrograma/index.html">7. Espectrograma</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Sintetizador Aditivo</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+
+    <div class="module-desc">
+      Un <strong>sintetizador aditivo</strong> construye sonidos complejos sumando armónicos individuales
+      con amplitud y fase independientes (síntesis de Fourier). Controla cada armónico para crear
+      diferentes timbres: desde una onda pura hasta aproximaciones de ondas cuadradas y más.
+    </div>
+
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Frecuencia Fundamental</label>
+        <div class="value" id="m6FundVal">110 Hz</div>
+        <input type="range" id="m6Fund" min="55" max="440" step="1" value="110" oninput="m6Update()">
+      </div>
+      <div class="control-group" style="flex:0; min-width:auto;">
+        <label>Sonido</label>
+        <button class="play-btn" id="m6PlayBtn" onclick="m6ToggleAudio()">▶ Reproducir</button>
+      </div>
+    </div>
+
+    <div class="preset-btns">
+      <button onclick="m6Preset('sine')">Onda Pura</button>
+      <button onclick="m6Preset('sawtooth')">Diente de Sierra</button>
+      <button onclick="m6Preset('square')">Onda Cuadrada</button>
+      <button onclick="m6Preset('triangle')">Onda Triangular</button>
+      <button onclick="m6Preset('clear')">Limpiar Todo</button>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="canvas-label">Armónicos (Amplitud + Fase)</div>
+        <div class="scrollable-harmonics" id="m6Harmonics"></div>
+      </div>
+      <div>
+        <div class="canvas-label">Forma de Onda</div>
+        <canvas id="m6Wave" height="240"></canvas>
+        <div class="canvas-label">Espectro</div>
+        <canvas id="m6Spec" height="200"></canvas>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script>
+const VAR_ACCENT = '#00e5ff';
+let audioCtx = null;
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// ── Module 6 — Additive Synthesizer ──
+const NUM_HARMONICS = 24;
+let m6Amps = new Array(NUM_HARMONICS).fill(0);
+let m6Phases = new Array(NUM_HARMONICS).fill(0);
+m6Amps[0] = 1.0;
+let m6Playing = false, m6Oscs = [], m6GainNodes = [];
+
+function m6Init() {
+  const container = document.getElementById('m6Harmonics');
+  container.innerHTML = '';
+  for (let i = 0; i < NUM_HARMONICS; i++) {
+    const row = document.createElement('div');
+    row.className = 'harmonic-row';
+    row.innerHTML =
+      '<input type="checkbox" id="m6Chk' + i + '" ' + (i === 0 ? 'checked' : '') + ' onchange="m6ToggleH(' + i + ')">' +
+      '<label>Arm. ' + (i + 1) + '</label>' +
+      '<input type="range" id="m6Sl' + i + '" min="0" max="1" step="0.01" value="' + m6Amps[i] + '" oninput="m6SlChange(' + i + ')">' +
+      '<span class="h-val" id="m6V' + i + '">' + m6Amps[i].toFixed(2) + '</span>' +
+      '<input type="range" class="phase-slider" id="m6Ph' + i + '" min="0" max="360" step="1" value="' + m6Phases[i] + '" oninput="m6PhChange(' + i + ')" title="Fase">' +
+      '<span class="ph-val" id="m6PV' + i + '">' + m6Phases[i] + '°</span>';
+    container.appendChild(row);
+  }
+}
+
+function m6ToggleH(i) {
+  const chk = document.getElementById('m6Chk' + i);
+  if (!chk.checked) { m6Amps[i] = 0; document.getElementById('m6Sl' + i).value = 0; }
+  else { m6Amps[i] = 0.5; document.getElementById('m6Sl' + i).value = 0.5; }
+  document.getElementById('m6V' + i).textContent = m6Amps[i].toFixed(2);
+  m6UpdateAudio();
+}
+
+function m6SlChange(i) {
+  m6Amps[i] = parseFloat(document.getElementById('m6Sl' + i).value);
+  document.getElementById('m6V' + i).textContent = m6Amps[i].toFixed(2);
+  document.getElementById('m6Chk' + i).checked = m6Amps[i] > 0;
+  m6UpdateAudio();
+}
+
+function m6PhChange(i) {
+  m6Phases[i] = parseFloat(document.getElementById('m6Ph' + i).value);
+  document.getElementById('m6PV' + i).textContent = m6Phases[i] + '°';
+}
+
+function m6Update() {
+  const fund = parseFloat(document.getElementById('m6Fund').value);
+  document.getElementById('m6FundVal').textContent = fund + ' Hz';
+  if (m6Playing) {
+    m6Oscs.forEach((osc, i) => {
+      osc.frequency.setTargetAtTime(fund * (i + 1), audioCtx.currentTime, 0.02);
+    });
+  }
+}
+
+function m6UpdateAudio() {
+  if (m6Playing) {
+    m6GainNodes.forEach((g, i) => {
+      g.gain.setTargetAtTime(m6Amps[i] * 0.15, audioCtx.currentTime, 0.02);
+    });
+  }
+}
+
+function m6ToggleAudio() {
+  if (!m6Playing) {
+    const ctx = getAudioCtx();
+    const fund = parseFloat(document.getElementById('m6Fund').value);
+    m6Oscs = []; m6GainNodes = [];
+    for (let i = 0; i < NUM_HARMONICS; i++) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = fund * (i + 1);
+      g.gain.value = m6Amps[i] * 0.15;
+      osc.connect(g).connect(masterGain);
+      osc.start();
+      m6Oscs.push(osc); m6GainNodes.push(g);
+    }
+    m6Playing = true;
+    document.getElementById('m6PlayBtn').textContent = '⏹ Detener';
+    document.getElementById('m6PlayBtn').classList.add('playing');
+  } else {
+    m6Oscs.forEach(o => o.stop());
+    m6Oscs = []; m6GainNodes = [];
+    m6Playing = false;
+    document.getElementById('m6PlayBtn').textContent = '▶ Reproducir';
+    document.getElementById('m6PlayBtn').classList.remove('playing');
+  }
+}
+
+function m6Preset(type) {
+  for (let i = 0; i < NUM_HARMONICS; i++) {
+    m6Phases[i] = 0;
+    switch (type) {
+      case 'sine':     m6Amps[i] = i === 0 ? 1 : 0; break;
+      case 'sawtooth': m6Amps[i] = 1 / (i + 1); break;
+      case 'square':   m6Amps[i] = (i % 2 === 0) ? 1 / (i + 1) : 0; break;
+      case 'triangle':
+        m6Amps[i] = (i % 2 === 0) ? 1 / ((i + 1) * (i + 1)) : 0;
+        if (i % 4 === 2) m6Phases[i] = 180;
+        break;
+      case 'clear': m6Amps[i] = 0; break;
+    }
+    document.getElementById('m6Sl' + i).value = m6Amps[i];
+    document.getElementById('m6V' + i).textContent = m6Amps[i].toFixed(2);
+    document.getElementById('m6Chk' + i).checked = m6Amps[i] > 0;
+    document.getElementById('m6Ph' + i).value = m6Phases[i];
+    document.getElementById('m6PV' + i).textContent = m6Phases[i] + '°';
+  }
+  m6UpdateAudio();
+}
+
+function m6Draw() {
+  const fund = parseFloat(document.getElementById('m6Fund').value);
+  let c = document.getElementById('m6Wave');
+  let ctx = c.getContext('2d');
+  let w = c.width = c.offsetWidth || 500, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+
+  const cycles = 3;
+  let maxVal = 0;
+  for (let x = 0; x < w; x++) {
+    const t = x / w * cycles * 2 * Math.PI;
+    let val = 0;
+    for (let i = 0; i < NUM_HARMONICS; i++) {
+      const ph = m6Phases[i] * Math.PI / 180;
+      val += m6Amps[i] * Math.sin(t * (i + 1) + ph);
+    }
+    if (Math.abs(val) > maxVal) maxVal = Math.abs(val);
+  }
+  if (maxVal < 0.01) maxVal = 1;
+
+  ctx.strokeStyle = VAR_ACCENT; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = x / w * cycles * 2 * Math.PI;
+    let val = 0;
+    for (let i = 0; i < NUM_HARMONICS; i++) {
+      const ph = m6Phases[i] * Math.PI / 180;
+      val += m6Amps[i] * Math.sin(t * (i + 1) + ph);
+    }
+    const y = h / 2 - (val / maxVal) * (h * 0.42);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  c = document.getElementById('m6Spec');
+  ctx = c.getContext('2d'); w = c.width = c.offsetWidth || 500; h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  ctx.beginPath(); ctx.moveTo(20, h - 25); ctx.lineTo(w - 10, h - 25); ctx.stroke();
+  const barW2 = Math.max((w - 40) / NUM_HARMONICS - 2, 6);
+  for (let i = 0; i < NUM_HARMONICS; i++) {
+    if (m6Amps[i] < 0.005) continue;
+    const x = 25 + i * ((w - 40) / NUM_HARMONICS);
+    const barH = m6Amps[i] * (h - 45);
+    const grad = ctx.createLinearGradient(x, h - 25, x, h - 25 - barH);
+    grad.addColorStop(0, VAR_ACCENT); grad.addColorStop(1, VAR_ACCENT + '33');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, h - 25 - barH, barW2, barH);
+    ctx.fillStyle = VAR_ACCENT;
+    ctx.beginPath(); ctx.arc(x + barW2 / 2, h - 25 - barH, 3, 0, Math.PI * 2); ctx.fill();
+    if (i < 12 || i % 2 === 0) {
+      ctx.font = '9px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.4)';
+      ctx.fillText((i + 1), x + 1, h - 10);
+    }
+  }
+}
+
+function animate() {
+  m6Draw();
+  requestAnimationFrame(animate);
+}
+
+m6Init();
+animate();
+</script>
+</body>
+</html>

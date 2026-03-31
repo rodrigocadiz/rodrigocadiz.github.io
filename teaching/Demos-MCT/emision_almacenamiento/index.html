@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emisión, Captura y Almacenamiento — Demostraciones MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-emision">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="index.html" class="active">Emisión, Captura y Almacenamiento</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Emisión, Captura y Almacenamiento</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      Selecciona un módulo para explorar de forma interactiva cómo se captura, emite y almacena el sonido.
+      Cada módulo incluye animaciones, controles y el contenido completo de la unidad.
+    </p>
+    <div class="card-grid">
+
+      <a class="vineta-card" href="01_onda_presion/index.html">
+        <div class="num" style="color:#44aaff;">1 〜</div>
+        <h3 style="color:#44aaff;">La onda de presión</h3>
+        <p>Qué contiene realmente la variación de presión del aire. Una sinfonía completa codificada en p(t).</p>
+      </a>
+
+      <a class="vineta-card" href="02_microfono/index.html">
+        <div class="num" style="color:#00ffff;">2 🎙</div>
+        <h3 style="color:#00ffff;">Micrófonos</h3>
+        <p>Cómo funcionan los distintos tipos de micrófonos. Patrones de directividad. Técnicas de microfonía. Cables y conectores.</p>
+      </a>
+
+      <a class="vineta-card" href="03_parlante/index.html">
+        <div class="num" style="color:#ffaa00;">3 🔊</div>
+        <h3 style="color:#ffaa00;">Parlantes / Altavoces</h3>
+        <p>Fuerza de Lorentz, tipos de cajas acústicas, sistemas de múltiples vías, potencia y arreglos de parlantes.</p>
+      </a>
+
+      <a class="vineta-card" href="04_almacenamiento_analogico/index.html">
+        <div class="num" style="color:#ff88ff;">4 💿</div>
+        <h3 style="color:#ff88ff;">Almacenamiento analógico</h3>
+        <p>Fonógrafo de cilindro, gramófono, discos de vinilo y cinta magnética. Ruido hiss y reducción de ruido Dolby.</p>
+      </a>
+
+      <a class="vineta-card" href="05_almacenamiento_digital/index.html">
+        <div class="num" style="color:#00ff44;">5 💾</div>
+        <h3 style="color:#00ff44;">Almacenamiento Digital</h3>
+        <p>Muestreo, cuantización, aliasing. Lectura del CD (pits y lands). CD vs DVD. Estándares digitales de audio.</p>
+      </a>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+</body>
+</html>

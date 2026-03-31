@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8. Simulación de Sala — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    /* Controles locales */
+    .value-display {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent-1);
+      min-width: 36px;
+    }
+    .play-btn {
+      background: rgba(0,255,68,0.08);
+      border: 1px solid var(--accent-src);
+      color: var(--accent-src);
+      padding: 7px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all .18s;
+    }
+    .play-btn:hover { background: rgba(0,255,68,0.18); }
+    .play-btn.stop-btn {
+      background: rgba(255,68,68,0.08);
+      border-color: var(--accent-3);
+      color: var(--accent-3);
+    }
+    .play-btn.stop-btn:hover { background: rgba(255,68,68,0.18); }
+    .legend-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      align-items: center;
+    }
+    .legend-swatch {
+      display: inline-block;
+      width: 20px;
+      height: 3px;
+      vertical-align: middle;
+      margin-right: 4px;
+      border-radius: 2px;
+    }
+    .inline-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+    .alpha-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+    .alpha-inline input[type=range] { width: 130px; }
+  </style>
+</head>
+<body class="sec-acustica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">Acústica</a>
+  <a href="../01_serie_armonica/index.html">1. Serie Armónica</a>
+  <a href="../02_serie_musical/index.html">2. Serie Musical</a>
+  <a href="../03_formantes/index.html">3. Formantes</a>
+  <a href="../04_diseno_acustico/index.html">4. Diseño Acústico</a>
+  <a href="../05_impulso_sonoro/index.html">5. Impulso Sonoro</a>
+  <a href="../06_reverberacion/index.html">6. Reverberación</a>
+  <a href="../07_respuesta_impulso/index.html">7. Respuesta al Impulso</a>
+  <a href="../08_simulacion_sala/index.html" class="active">8. Simulación de Sala</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>8. Simulación de Sala</h1>
+      <p class="subtitle">Propagación de rayos sonoros y ondas circulares · Método de fuentes imagen</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- TARJETA 1: VISTA TRANSVERSAL — RAYOS -->
+  <section class="section-card">
+    <h2>Vista Transversal — Trazado de Rayos</h2>
+    <p class="description">
+      Un <span class="kw">impulso sonoro</span> emitido por la fuente genera rayos que se propagan en
+      todas direcciones. Cada reflexión en una superficie absorbe parte de la energía (factor α).
+      El oyente recibe primero el <span class="kw">sonido directo</span>, luego las
+      <span class="kw">reflexiones tempranas</span> y finalmente la densa
+      <span class="kw">cola de reverberación</span>.
+    </p>
+
+    <div class="controls" style="margin-bottom:1rem;">
+      <div class="control-group">
+        <label>Coef. absorción α</label>
+        <div class="value-display" id="room_alpha_val">0.10</div>
+        <input type="range" id="room_alpha" min="0" max="1.00" step="0.01" value="0.10">
+      </div>
+      <div class="control-group">
+        <label>Velocidad animación</label>
+        <div class="value-display" id="room_speed_val">1×</div>
+        <input type="range" id="room_speed" min="0.5" max="4" step="0.5" value="1">
+      </div>
+      <div class="control-group" style="flex:0 0 auto;min-width:auto;">
+        <label>Control</label>
+        <div style="display:flex;gap:8px;">
+          <button class="play-btn" id="btn_room_fire">⚡ Disparar impulso</button>
+          <button class="play-btn stop-btn" id="btn_room_stop">■ Detener</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-label">Vista transversal de la sala — propagación de rayos sonoros</div>
+    <canvas id="roomSimCanvas" height="300"></canvas>
+
+    <div class="legend-row">
+      <span>
+        <span class="legend-swatch" style="background:#FFD700;"></span>Sonido directo
+      </span>
+      <span>
+        <span class="legend-swatch" style="background:#00e5ff;"></span>Reflexiones tempranas (1–2 rebotes)
+      </span>
+      <span>
+        <span class="legend-swatch" style="background:#ff6b6b;"></span>Cola de reverberación (3+ rebotes)
+      </span>
+    </div>
+  </section>
+
+  <!-- TARJETA 2: VISTA TOP-DOWN — ONDAS CIRCULARES -->
+  <section class="section-card">
+    <h2>Vista Top-Down — Propagación de Ondas Circulares</h2>
+    <p class="description">
+      Vista de planta de la sala. Las <span class="kw">ondas circulares</span> se propagan desde la fuente,
+      rebotan en las paredes y decaen en amplitud con cada reflexión y con la distancia.
+      El coeficiente de absorción α controla la velocidad de decaimiento energético.
+      Se usan <span class="kw">9 fuentes imagen precomputadas</span> (método de fuentes imagen):
+      1 directa, 4 de primer orden y 4 de segundo orden (esquinas).
+    </p>
+
+    <div class="inline-controls">
+      <div>
+        <button class="play-btn" id="btn_circ_fire">⚡ Disparar impulso</button>
+        <button class="play-btn stop-btn" id="btn_circ_stop" style="margin-left:8px;">■ Detener</button>
+      </div>
+      <div class="alpha-inline">
+        <label for="circ_alpha">α absorción: <strong id="circ_alpha_val">0.10</strong></label>
+        <input type="range" id="circ_alpha" min="0" max="1.00" step="0.01" value="0.10">
+      </div>
+    </div>
+
+    <div class="canvas-label">Vista de planta — ondas circulares reflejadas</div>
+    <canvas id="circWaveCanvas" height="320"></canvas>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+
+  // ============================================
+  // SIMULACIÓN ANIMADA DE SALA — TRAZADO DE RAYOS
+  // ============================================
+  (function() {
+    const canvas = document.getElementById('roomSimCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId = null;
+    let startTime = null;
+    let rays = [];
+
+    // Room margins inside the canvas
+    const PAD_L = 70, PAD_R = 70, PAD_T = 40, PAD_B = 50;
+
+    function roomW() { return canvas.width  - PAD_L - PAD_R; }
+    function roomH() { return canvas.height - PAD_T - PAD_B; }
+    // Convert room-relative coords [0..1] to canvas px
+    function rx(x) { return PAD_L + x * roomW(); }
+    function ry(y) { return PAD_T + y * roomH(); }
+
+    // Compute reflection path of a ray from (sx,sy) in direction angle,
+    // for maxBounces bounces. All coords in [0..1] space.
+    function calcPath(sx, sy, angleDeg, maxBounces) {
+      const pts = [{x: sx, y: sy}];
+      let x = sx, y = sy;
+      let rad = angleDeg * Math.PI / 180;
+      let dx = Math.cos(rad), dy = Math.sin(rad);
+      for (let b = 0; b < maxBounces; b++) {
+        let tMin = 1e9, ndx = dx, ndy = dy;
+        if (dx > 1e-9)  { const t=(1-x)/dx; if(t>1e-9&&t<tMin){tMin=t; ndx=-dx; ndy=dy;} }
+        if (dx < -1e-9) { const t=-x/dx;    if(t>1e-9&&t<tMin){tMin=t; ndx=-dx; ndy=dy;} }
+        if (dy > 1e-9)  { const t=(1-y)/dy; if(t>1e-9&&t<tMin){tMin=t; ndx=dx;  ndy=-dy;} }
+        if (dy < -1e-9) { const t=-y/dy;    if(t>1e-9&&t<tMin){tMin=t; ndx=dx;  ndy=-dy;} }
+        x += dx * tMin; y += dy * tMin;
+        x = Math.max(0, Math.min(1, x));
+        y = Math.max(0, Math.min(1, y));
+        pts.push({x, y});
+        dx = ndx; dy = ndy;
+      }
+      return pts;
+    }
+
+    // Cumulative arc-length of each path
+    function pathLengths(pts) {
+      const lens = [0];
+      for (let i = 1; i < pts.length; i++) {
+        const dx = pts[i].x - pts[i-1].x;
+        const dy = pts[i].y - pts[i-1].y;
+        lens.push(lens[i-1] + Math.sqrt(dx*dx + dy*dy));
+      }
+      return lens;
+    }
+
+    // Source and listener positions (normalized)
+    const SRC = {x: 0.12, y: 0.72};
+    const LST = {x: 0.78, y: 0.72};
+
+    function buildRays() {
+      // Direct ray
+      const direct = calcPath(SRC.x, SRC.y, Math.atan2(LST.y - SRC.y, LST.x - SRC.x) * 180 / Math.PI, 0);
+      direct.push({x: LST.x, y: LST.y});
+
+      const rayDefs = [];
+      // Direct path
+      rayDefs.push({ pts: direct, bounces: 0 });
+      // Various angles with bounces
+      const angles = [-65,-40,-20,-8, 8, 20, 35, 55, 75, 100, 120, 140, 160, 190, 215, 240, 270, 300, 330];
+      angles.forEach((a, i) => {
+        const b = 4 + (i % 4);
+        rayDefs.push({ pts: calcPath(SRC.x, SRC.y, a, b), bounces: b });
+      });
+      return rayDefs.map(r => ({
+        pts: r.pts,
+        lens: pathLengths(r.pts),
+        totalLen: pathLengths(r.pts).slice(-1)[0],
+        bounces: r.bounces
+      }));
+    }
+
+    // Color based on bounce count
+    function rayColor(bounces, alpha) {
+      if (bounces === 0) return `rgba(255,215,0,${alpha})`;       // gold — direct
+      if (bounces <= 2)  return `rgba(0,229,255,${alpha})`;       // cyan — early
+      return `rgba(255,107,107,${alpha})`;                         // red  — late reverb
+    }
+
+    function drawRoom(elapsed) {
+      canvas.width = canvas.offsetWidth || 800;
+      const W = canvas.width, H = canvas.height;
+      ctx.fillStyle = '#060a14';
+      ctx.fillRect(0, 0, W, H);
+
+      const rw = roomW(), rh = roomH();
+
+      // === Room walls ===
+      ctx.fillStyle = '#1a2a3a';
+      ctx.fillRect(PAD_L, PAD_T, rw, rh);
+
+      // Wall hatching (suggests absorption panels)
+      ctx.strokeStyle = 'rgba(100,150,200,0.12)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < rw; i += 18) {
+        ctx.beginPath(); ctx.moveTo(PAD_L+i, PAD_T); ctx.lineTo(PAD_L+i, PAD_T+rh); ctx.stroke();
+      }
+      for (let j = 0; j < rh; j += 18) {
+        ctx.beginPath(); ctx.moveTo(PAD_L, PAD_T+j); ctx.lineTo(PAD_L+rw, PAD_T+j); ctx.stroke();
+      }
+
+      // Room border
+      ctx.strokeStyle = 'rgba(100,160,255,0.7)';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(PAD_L, PAD_T, rw, rh);
+
+      // Wall labels
+      ctx.fillStyle = 'rgba(100,160,255,0.4)';
+      ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('SUELO', PAD_L + rw/2, PAD_T + rh + 14);
+      ctx.fillText('TECHO', PAD_L + rw/2, PAD_T - 8);
+      ctx.save(); ctx.translate(PAD_L - 10, PAD_T + rh/2); ctx.rotate(-Math.PI/2);
+      ctx.fillText('PARED', 0, 0); ctx.restore();
+      ctx.save(); ctx.translate(PAD_L + rw + 10, PAD_T + rh/2); ctx.rotate(Math.PI/2);
+      ctx.fillText('PARED', 0, 0); ctx.restore();
+
+      // === Draw ray trails ===
+      const alpha = parseFloat(document.getElementById('room_alpha').value);
+      const speed = parseFloat(document.getElementById('room_speed').value);
+      const waveFront = elapsed * speed * 0.55; // how far along the longest ray
+
+      rays.forEach(ray => {
+        const lens = ray.lens;
+        const traveled = waveFront;
+        if (traveled <= 0) return;
+
+        // Energy decay based on bounces already reached by wavefront
+        // (bouncesAtFront: how many reflection points the wavefront has passed)
+        let bouncesAtFront = 0;
+        for (let j = 1; j < ray.pts.length - 1; j++) {
+          if (lens[j] <= traveled) bouncesAtFront++;
+          else break;
+        }
+        const energyDecay = Math.pow(1 - alpha, bouncesAtFront);
+        const trailAlpha = energyDecay * 0.65;
+        if (trailAlpha < 0.015) return;
+
+        const strokeColor = rayColor(ray.bounces, trailAlpha);
+
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = ray.bounces === 0 ? 2.5 : (ray.bounces <= 2 ? 1.8 : 1.2);
+        ctx.setLineDash(ray.bounces > 3 ? [3,3] : []);
+        ctx.beginPath();
+
+        let drawn = false;
+        for (let i = 1; i < ray.pts.length; i++) {
+          const segStart = lens[i-1];
+          const segEnd = lens[i];
+          if (segStart >= traveled) break;
+
+          const p0 = ray.pts[i-1];
+          const p1 = ray.pts[i];
+
+          if (!drawn) { ctx.moveTo(rx(p0.x), ry(p0.y)); drawn = true; }
+
+          if (traveled >= segEnd) {
+            ctx.lineTo(rx(p1.x), ry(p1.y));
+          } else {
+            const t = (traveled - segStart) / (segEnd - segStart);
+            const ex = p0.x + (p1.x - p0.x) * t;
+            const ey = p0.y + (p1.y - p0.y) * t;
+            ctx.lineTo(rx(ex), ry(ey));
+            // Draw wavefront dot
+            ctx.stroke();
+            ctx.setLineDash([]);
+            const dotColor = rayColor(ray.bounces, Math.min(1, trailAlpha * 2));
+            ctx.fillStyle = dotColor;
+            ctx.beginPath();
+            ctx.arc(rx(ex), ry(ey), ray.bounces === 0 ? 5 : 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            drawn = false;
+          }
+        }
+        if (drawn) ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      // === Source: speaker icon ===
+      const sx = rx(SRC.x), sy = ry(SRC.y);
+      const srcGrad = ctx.createRadialGradient(sx, sy, 2, sx, sy, 22);
+      srcGrad.addColorStop(0, 'rgba(255,80,80,0.9)');
+      srcGrad.addColorStop(0.4, 'rgba(255,80,80,0.5)');
+      srcGrad.addColorStop(1, 'rgba(255,80,80,0)');
+      ctx.fillStyle = srcGrad;
+      ctx.beginPath(); ctx.arc(sx, sy, 22, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ff4040';
+      ctx.beginPath(); ctx.arc(sx, sy, 12, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'white'; ctx.font = 'bold 13px serif'; ctx.textAlign = 'center';
+      ctx.fillText('♪', sx, sy + 5);
+      ctx.fillStyle = 'rgba(255,150,150,0.9)'; ctx.font = '10px sans-serif';
+      ctx.fillText('FUENTE', sx, sy + 26);
+
+      // === Listener: stick figure ===
+      const lx = rx(LST.x), ly = ry(LST.y);
+      const directLen = rays[0] ? rays[0].totalLen : 1;
+      const arrived = waveFront >= directLen;
+      const listenerColor = arrived ? '#FFD700' : 'rgba(150,200,255,0.8)';
+
+      ctx.strokeStyle = listenerColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(lx, ly - 18, 7, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(lx, ly - 11); ctx.lineTo(lx, ly + 5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(lx - 9, ly - 5); ctx.lineTo(lx + 9, ly - 5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(lx, ly + 5); ctx.lineTo(lx - 7, ly + 18); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(lx, ly + 5); ctx.lineTo(lx + 7, ly + 18); ctx.stroke();
+      ctx.fillStyle = listenerColor; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('OYENTE', lx, ly + 30);
+
+      if (arrived) {
+        const pulse = 0.5 + 0.5 * Math.sin(elapsed * 10);
+        ctx.strokeStyle = `rgba(255,215,0,${pulse * 0.8})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(lx, ly - 10, 14 + pulse * 6, 0, Math.PI*2); ctx.stroke();
+      }
+
+      // === Phase label ===
+      const phase = waveFront < directLen ? 'Propagando...' :
+                    waveFront < directLen * 2.5 ? '⟵ Sonido directo recibido' :
+                    waveFront < directLen * 6   ? '〜 Reflexiones tempranas' :
+                    '≋ Cola de reverberación';
+      ctx.fillStyle = 'rgba(0,229,255,0.85)';
+      ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText(phase, PAD_L + rw - 8, PAD_T + 18);
+    }
+
+    function animateRoom(ts) {
+      if (!startTime) startTime = ts;
+      const elapsed = (ts - startTime) / 1000;
+      drawRoom(elapsed);
+      if (elapsed < 12) animId = requestAnimationFrame(animateRoom);
+      else drawRoom(12); // freeze on last frame
+    }
+
+    function fireImpulse() {
+      if (animId) cancelAnimationFrame(animId);
+      startTime = null;
+      rays = buildRays();
+      animId = requestAnimationFrame(animateRoom);
+    }
+
+    document.getElementById('btn_room_fire').addEventListener('click', fireImpulse);
+    document.getElementById('btn_room_stop').addEventListener('click', () => {
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+    });
+    document.getElementById('room_alpha').addEventListener('input', (e) => {
+      document.getElementById('room_alpha_val').textContent = parseFloat(e.target.value).toFixed(2);
+    });
+    document.getElementById('room_speed').addEventListener('input', (e) => {
+      document.getElementById('room_speed_val').textContent = e.target.value + '×';
+    });
+
+    // Init on load
+    window.addEventListener('load', () => {
+      rays = buildRays();
+      drawRoom(0);
+    });
+    window.addEventListener('resize', () => {
+      if (!animId && canvas.offsetWidth > 0) { rays = buildRays(); drawRoom(0); }
+    });
+  })();
+
+  // ============================================
+  // VISTA TOP-DOWN: ONDAS CIRCULARES
+  // Fuentes imagen precomputadas (9 fuentes — no spawn dinámico)
+  // ============================================
+  (function() {
+    const canvas = document.getElementById('circWaveCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId = null;
+    let startTime = null;
+    let firing = false;
+
+    const PAD = 30;
+    const SRC_NX = 0.12, SRC_NY = 0.72; // coincide con fuente del trazado de rayos
+    const WAVE_SPEED = 160; // canvas px/s — velocidad visual
+    const MAX_ELAPSED = 22; // segundos antes de detenerse
+
+    function roomW() { return canvas.width  - 2 * PAD; }
+    function roomH() { return canvas.height - 2 * PAD; }
+    function tox(nx) { return PAD + nx * roomW(); }
+    function toy(ny) { return PAD + ny * roomH(); }
+
+    function getAlpha() {
+      const el = document.getElementById('circ_alpha');
+      return el ? parseFloat(el.value) : 0.10;
+    }
+
+    // 9 fuentes imagen precomputadas:
+    // 1 directa + 4 de primer orden (reflexión en cada pared) + 4 de segundo orden (esquinas)
+    function buildSources(sx, sy, alpha) {
+      const e1 = 1 - alpha;
+      const e2 = e1 * e1;
+      return [
+        { nx: sx,      ny: sy,      energy: 1.0, level: 0 }, // directa
+        { nx: -sx,     ny: sy,      energy: e1,  level: 1 }, // reflexión pared izq
+        { nx: 2 - sx,  ny: sy,      energy: e1,  level: 1 }, // reflexión pared der
+        { nx: sx,      ny: -sy,     energy: e1,  level: 1 }, // reflexión techo
+        { nx: sx,      ny: 2 - sy,  energy: e1,  level: 1 }, // reflexión suelo
+        { nx: -sx,     ny: -sy,     energy: e2,  level: 2 }, // esquina izq-arriba
+        { nx: -sx,     ny: 2 - sy,  energy: e2,  level: 2 }, // esquina izq-abajo
+        { nx: 2 - sx,  ny: -sy,     energy: e2,  level: 2 }, // esquina der-arriba
+        { nx: 2 - sx,  ny: 2 - sy,  energy: e2,  level: 2 }, // esquina der-abajo
+      ];
+    }
+
+    function drawScene(elapsed) {
+      canvas.width = canvas.offsetWidth || 800;
+      const W = canvas.width, H = canvas.height;
+      ctx.fillStyle = '#060a14';
+      ctx.fillRect(0, 0, W, H);
+
+      const rw = roomW(), rh = roomH();
+
+      // Room floor
+      ctx.fillStyle = '#0d1a2e';
+      ctx.fillRect(PAD, PAD, rw, rh);
+      ctx.strokeStyle = 'rgba(100,160,255,0.7)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(PAD, PAD, rw, rh);
+
+      // Wall labels
+      ctx.fillStyle = 'rgba(100,160,255,0.35)';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('FRENTE', PAD + rw / 2, PAD - 6);
+      ctx.fillText('FONDO',  PAD + rw / 2, PAD + rh + 14);
+      ctx.save(); ctx.translate(PAD - 10, PAD + rh / 2); ctx.rotate(-Math.PI / 2);
+      ctx.fillText('IZQ', 0, 0); ctx.restore();
+      ctx.save(); ctx.translate(PAD + rw + 12, PAD + rh / 2); ctx.rotate(Math.PI / 2);
+      ctx.fillText('DER', 0, 0); ctx.restore();
+
+      if (!firing) {
+        ctx.fillStyle = 'rgba(200,220,255,0.4)';
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Presiona "Disparar impulso" para iniciar', PAD + rw / 2, PAD + rh / 2);
+      } else {
+        const alpha = getAlpha();
+        const sources = buildSources(SRC_NX, SRC_NY, alpha);
+        const r = elapsed * WAVE_SPEED;
+        const maxR = Math.sqrt(rw * rw + rh * rh) * 1.4;
+
+        // Clip todos los círculos al rectángulo de la sala
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(PAD, PAD, rw, rh);
+        ctx.clip();
+
+        sources.forEach(src => {
+          // Fade out a medida que la onda se expande (decaimiento por distancia)
+          const distFade = Math.max(0, 1 - r / maxR);
+          const opacity = src.energy * distFade;
+          if (opacity < 0.01) return;
+
+          const cx = tox(src.nx), cy = toy(src.ny);
+          let color, lw;
+          if (src.level === 0) {
+            color = `rgba(255,215,0,${opacity})`;
+            lw = 2.5;
+          } else if (src.level === 1) {
+            color = `rgba(0,229,255,${opacity * 0.9})`;
+            lw = 1.8;
+          } else {
+            color = `rgba(255,107,107,${opacity * 0.75})`;
+            lw = 1.2;
+          }
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lw;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+
+        ctx.restore();
+
+        // Label α
+        ctx.fillStyle = 'rgba(200,220,255,0.55)';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('α = ' + alpha.toFixed(2), PAD + 5, PAD + 16);
+      }
+
+      // Punto de fuente (siempre visible)
+      const sx = tox(SRC_NX), sy = toy(SRC_NY);
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 9px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('S', sx, sy + 3);
+    }
+
+    function animateCirc(ts) {
+      if (!startTime) startTime = ts;
+      const elapsed = (ts - startTime) / 1000;
+      drawScene(elapsed);
+      if (elapsed < MAX_ELAPSED) {
+        animId = requestAnimationFrame(animateCirc);
+      } else {
+        animId = null;
+        firing = false;
+        drawScene(MAX_ELAPSED);
+      }
+    }
+
+    function fireCircWave() {
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+      firing = true;
+      startTime = null;
+      animId = requestAnimationFrame(animateCirc);
+    }
+
+    function stopCircWave() {
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+      firing = false;
+      startTime = null;
+      drawScene(0);
+    }
+
+    document.getElementById('btn_circ_fire').addEventListener('click', fireCircWave);
+    document.getElementById('btn_circ_stop').addEventListener('click', stopCircWave);
+
+    const circAlphaSlider = document.getElementById('circ_alpha');
+    const circAlphaVal    = document.getElementById('circ_alpha_val');
+    if (circAlphaSlider) {
+      circAlphaSlider.addEventListener('input', () => {
+        circAlphaVal.textContent = parseFloat(circAlphaSlider.value).toFixed(2);
+        if (!firing) drawScene(0);
+      });
+    }
+
+    window.addEventListener('load', () => {
+      if (canvas.offsetWidth > 0) drawScene(0);
+    });
+  })();
+</script>
+</body>
+</html>

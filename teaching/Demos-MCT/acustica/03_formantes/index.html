@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Formantes — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    /* Variables locales alineadas con la paleta del monolito */
+    :root {
+      --accent:    #00e5ff;
+      --text:      #ffffff;
+      --text-dim:  #99ccff;
+      --border:    rgba(100,180,255,0.30);
+      --panel:     #0d1a2e;
+    }
+
+    /* Bullets */
+    .bullets {
+      list-style: none;
+      margin-bottom: 20px;
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bullets li {
+      padding: 8px 12px 8px 28px;
+      position: relative;
+      color: var(--text-dim);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      background: rgba(255,255,255,.02);
+      border-radius: 6px;
+    }
+    .bullets li::before {
+      content: "▸";
+      position: absolute;
+      left: 10px;
+      color: var(--accent);
+    }
+
+    /* Controles */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 180px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 2px;
+    }
+    .value-display {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0,229,255,.4);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+    }
+
+    /* Botones de vocal */
+    .button-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    button, .btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all .2s;
+    }
+    button:hover, .btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    button.active, .btn.active {
+      background: rgba(0,229,255,.1);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    button:disabled, .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Canvas en dos columnas */
+    .canvas-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 900px) { .canvas-row { grid-template-columns: 1fr; } }
+
+    .canvas-container {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    /* Info display */
+    .info-display {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 14px;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+    }
+    .info-display strong { color: var(--text); }
+  </style>
+</head>
+<body class="sec-acustica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Acústica</a>
+  <a href="../01_serie_armonica/index.html">1. Serie Armónica</a>
+  <a href="../02_serie_musical/index.html">2. Serie Musical</a>
+  <a href="../03_formantes/index.html" class="active">3. Formantes</a>
+  <a href="../04_diseno_acustico/index.html">4. Diseño Acústico</a>
+  <a href="../05_impulso_sonoro/index.html">5. Impulso Sonoro</a>
+  <a href="../06_reverberacion/index.html">6. Reverberación</a>
+  <a href="../07_respuesta_impulso/index.html">7. Respuesta al Impulso</a>
+  <a href="../08_simulacion_sala/index.html">8. Simulación de Sala</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Formantes</h1>
+      <p class="subtitle">Resonancias del tracto vocal y espacio vocálico F1-F2</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Formantes vocálicos</h2>
+    <p class="description">
+      Los <span class="kw">formantes</span> son zonas de resonancia del tracto vocal (~17.5 cm, tubo cerrado)
+      que amplifican selectivamente ciertas frecuencias. Cada vocal tiene una combinación característica de F1 y F2
+      que le da su identidad sonora.
+    </p>
+    <ul class="bullets">
+      <li>Tracto vocal ≈ tubo cerrado 17.5 cm: F1≈500Hz, F2≈1500Hz, F3≈2500Hz</li>
+      <li>Cada vocal se define por la posición de sus formantes en el espacio F1-F2</li>
+      <li>Los instrumentos también tienen formantes que les dan su timbre característico</li>
+      <li>Los factores determinantes del timbre son: amplitudes de armónicos, ataque/decaimiento, inharmonicidad, formantes y vibrato</li>
+    </ul>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Vocal:</label>
+        <div class="button-group">
+          <button class="btn active" data-vowel="A">A</button>
+          <button class="btn" data-vowel="E">E</button>
+          <button class="btn" data-vowel="I">I</button>
+          <button class="btn" data-vowel="O">O</button>
+          <button class="btn" data-vowel="U">U</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="formant_freq">Frecuencia Fundamental (Hz):</label>
+        <input type="range" id="formant_freq" min="100" max="300" value="200">
+        <span class="value-display" id="formant_freq_val">200 Hz</span>
+      </div>
+      <button id="formant_play">▶ Reproducir</button>
+      <button id="formant_stop">⏹ Detener</button>
+    </div>
+
+    <div class="canvas-row">
+      <div class="canvas-container">
+        <canvas id="formantSpectrumCanvas" height="250"></canvas>
+      </div>
+      <div class="canvas-container">
+        <canvas id="vowelSpaceCanvas" height="250"></canvas>
+      </div>
+    </div>
+
+    <div class="info-display" id="formant_info">
+      <strong>Vocal A:</strong> F1 = 850 Hz, F2 = 1200 Hz
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>© Rodrigo F. Cádiz · CITA · PUC · <span class="footer-year">2026</span></p>
+</footer>
+
+<script>
+  // ── Audio local ────────────────────────────────────────────
+  let audioCtx = null;
+  let activeOscillators = [];
+  let activeMasterGain = null;
+  let audioEnabled = true;
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function stopAllAudio() {
+    activeOscillators.forEach(osc => {
+      try { osc.stop(0); } catch (e) {}
+    });
+    activeOscillators.length = 0;
+    if (activeMasterGain) {
+      try { activeMasterGain.disconnect(); } catch (e) {}
+      activeMasterGain = null;
+    }
+  }
+
+  // ── Datos de vocales ───────────────────────────────────────
+  const vowels = {
+    'A': { f1: 850, f2: 1200 },
+    'E': { f1: 400, f2: 2300 },
+    'I': { f1: 300, f2: 2600 },
+    'O': { f1: 450, f2: 800  },
+    'U': { f1: 350, f2: 600  }
+  };
+
+  let currentVowel = 'A';
+
+  const formantSpectrumCanvas = document.getElementById('formantSpectrumCanvas');
+  const vowelSpaceCanvas      = document.getElementById('vowelSpaceCanvas');
+  const formantSpecCtx        = formantSpectrumCanvas.getContext('2d');
+  const vowelSpaceCtx         = vowelSpaceCanvas.getContext('2d');
+  let formantAnimId = null;
+
+  // Dimensiones: usar offsetWidth con fallback
+  function resizeCanvases() {
+    formantSpectrumCanvas.width = formantSpectrumCanvas.offsetWidth || 500;
+    vowelSpaceCanvas.width      = vowelSpaceCanvas.offsetWidth      || 500;
+  }
+
+  // ── Dibujo del espectro de formantes ──────────────────────
+  function drawFormantSpectrum() {
+    const f0 = parseInt(document.getElementById('formant_freq').value);
+    const f1 = vowels[currentVowel].f1;
+    const f2 = vowels[currentVowel].f2;
+    const w = formantSpectrumCanvas.width;
+    const h = formantSpectrumCanvas.height;
+    const padding = 40;
+
+    formantSpecCtx.fillStyle = '#0d1b2a';
+    formantSpecCtx.fillRect(0, 0, w, h);
+
+    // Ejes
+    formantSpecCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    formantSpecCtx.lineWidth = 2;
+    formantSpecCtx.beginPath();
+    formantSpecCtx.moveTo(padding, h - padding);
+    formantSpecCtx.lineTo(w - padding, h - padding);
+    formantSpecCtx.moveTo(padding, padding);
+    formantSpecCtx.lineTo(padding, h - padding);
+    formantSpecCtx.stroke();
+
+    // Armónicos hasta 5000 Hz
+    const maxFreq = 5000;
+    const numHarmonics = Math.floor(maxFreq / f0);
+
+    for (let n = 1; n <= numHarmonics; n++) {
+      const harmFreq = f0 * n;
+      const x = padding + (harmFreq / maxFreq) * (w - 2 * padding);
+
+      let amp = 0.3;
+      const bw1 = 100;
+      const bw2 = 150;
+
+      const dist1 = Math.abs(harmFreq - f1);
+      amp += 0.5 * Math.exp(-(dist1 * dist1) / (2 * bw1 * bw1));
+
+      const dist2 = Math.abs(harmFreq - f2);
+      amp += 0.3 * Math.exp(-(dist2 * dist2) / (2 * bw2 * bw2));
+
+      const barHeight = amp * (h - 2 * padding);
+      const y = h - padding - barHeight;
+
+      formantSpecCtx.fillStyle = '#42a5f5';
+      formantSpecCtx.fillRect(x - 2, y, 4, barHeight);
+    }
+
+    // Envolvente formante
+    formantSpecCtx.strokeStyle = '#ff9800';
+    formantSpecCtx.lineWidth = 2;
+    formantSpecCtx.beginPath();
+
+    for (let fx = 0; fx < maxFreq; fx += 50) {
+      let amp = 0.2;
+      const bw1 = 100;
+      const bw2 = 150;
+
+      const dist1 = Math.abs(fx - f1);
+      amp += 0.5 * Math.exp(-(dist1 * dist1) / (2 * bw1 * bw1));
+
+      const dist2 = Math.abs(fx - f2);
+      amp += 0.3 * Math.exp(-(dist2 * dist2) / (2 * bw2 * bw2));
+
+      const x = padding + (fx / maxFreq) * (w - 2 * padding);
+      const barHeight = amp * (h - 2 * padding);
+      const y = h - padding - barHeight;
+
+      if (fx === 0) {
+        formantSpecCtx.moveTo(x, y);
+      } else {
+        formantSpecCtx.lineTo(x, y);
+      }
+    }
+    formantSpecCtx.stroke();
+
+    formantSpecCtx.fillStyle = 'white';
+    formantSpecCtx.font = 'bold 12px Arial';
+    formantSpecCtx.textAlign = 'left';
+    formantSpecCtx.fillText(`Vocal ${currentVowel}`, 5, 20);
+  }
+
+  // ── Dibujo del espacio vocálico F1-F2 ─────────────────────
+  function drawVowelSpace() {
+    const w = vowelSpaceCanvas.width;
+    const h = vowelSpaceCanvas.height;
+    const padding = 50;
+
+    vowelSpaceCtx.fillStyle = '#0d1b2a';
+    vowelSpaceCtx.fillRect(0, 0, w, h);
+
+    // Ejes
+    vowelSpaceCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    vowelSpaceCtx.lineWidth = 2;
+    vowelSpaceCtx.beginPath();
+    vowelSpaceCtx.moveTo(padding, h - padding);
+    vowelSpaceCtx.lineTo(w - padding, h - padding);
+    vowelSpaceCtx.moveTo(padding, padding);
+    vowelSpaceCtx.lineTo(padding, h - padding);
+    vowelSpaceCtx.stroke();
+
+    // Etiquetas de ejes
+    vowelSpaceCtx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    vowelSpaceCtx.font = '12px Arial';
+    vowelSpaceCtx.textAlign = 'center';
+    vowelSpaceCtx.fillText('F1 (Hz)', w / 2, h - 10);
+    vowelSpaceCtx.save();
+    vowelSpaceCtx.translate(15, h / 2);
+    vowelSpaceCtx.rotate(-Math.PI / 2);
+    vowelSpaceCtx.fillText('F2 (Hz)', 0, 0);
+    vowelSpaceCtx.restore();
+
+    // Rango de ejes
+    const minF1 = 250, maxF1 = 1000;
+    const minF2 = 500, maxF2 = 3000;
+
+    const vowelColors = {
+      'A': '#ff6b6b',
+      'E': '#4ecdc4',
+      'I': '#45b7d1',
+      'O': '#ffa07a',
+      'U': '#98d8c8'
+    };
+
+    for (const [vowel, formants] of Object.entries(vowels)) {
+      const x = padding + ((formants.f1 - minF1) / (maxF1 - minF1)) * (w - 2 * padding);
+      const y = h - padding - ((formants.f2 - minF2) / (maxF2 - minF2)) * (h - 2 * padding);
+
+      const isActive = vowel === currentVowel;
+      const radius = isActive ? 25 : 15;
+      const opacity = isActive ? 1 : 0.6;
+
+      vowelSpaceCtx.fillStyle = vowelColors[vowel];
+      vowelSpaceCtx.globalAlpha = opacity;
+      vowelSpaceCtx.beginPath();
+      vowelSpaceCtx.ellipse(x, y, radius, radius * 0.7, 0, 0, Math.PI * 2);
+      vowelSpaceCtx.fill();
+      vowelSpaceCtx.globalAlpha = 1;
+
+      if (isActive) {
+        vowelSpaceCtx.strokeStyle = 'white';
+        vowelSpaceCtx.lineWidth = 3;
+        vowelSpaceCtx.beginPath();
+        vowelSpaceCtx.ellipse(x, y, radius, radius * 0.7, 0, 0, Math.PI * 2);
+        vowelSpaceCtx.stroke();
+      }
+
+      vowelSpaceCtx.fillStyle = 'white';
+      vowelSpaceCtx.font = 'bold 16px Arial';
+      vowelSpaceCtx.textAlign = 'center';
+      vowelSpaceCtx.textBaseline = 'middle';
+      vowelSpaceCtx.fillText(vowel, x, y);
+    }
+
+    vowelSpaceCtx.fillStyle = 'white';
+    vowelSpaceCtx.font = 'bold 12px Arial';
+    vowelSpaceCtx.textAlign = 'left';
+    vowelSpaceCtx.textBaseline = 'alphabetic';
+    vowelSpaceCtx.fillText('Espacio F1-F2', 5, 20);
+  }
+
+  // ── Animación ──────────────────────────────────────────────
+  function animateFormants() {
+    const loop = () => {
+      drawFormantSpectrum();
+      drawVowelSpace();
+      formantAnimId = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  // ── Botones de vocal ───────────────────────────────────────
+  document.querySelectorAll('[data-vowel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-vowel]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentVowel = btn.dataset.vowel;
+      const f1 = vowels[currentVowel].f1;
+      const f2 = vowels[currentVowel].f2;
+      document.getElementById('formant_info').innerHTML =
+        `<strong>Vocal ${currentVowel}:</strong> F1 = ${f1} Hz, F2 = ${f2} Hz`;
+      // Reiniciar audio si está sonando
+      if (activeOscillators.length > 0) {
+        startFormantAudio();
+      }
+    });
+  });
+
+  // ── Slider de frecuencia fundamental ──────────────────────
+  document.getElementById('formant_freq').addEventListener('input', (e) => {
+    document.getElementById('formant_freq_val').textContent = e.target.value + ' Hz';
+  });
+
+  // ── Audio ──────────────────────────────────────────────────
+  function startFormantAudio() {
+    if (!audioEnabled) return;
+    stopAllAudio();
+    const ctx = getAudioCtx();
+    const f0 = parseInt(document.getElementById('formant_freq').value);
+    const f1 = vowels[currentVowel].f1;
+    const f2 = vowels[currentVowel].f2;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.15, ctx.currentTime);
+    masterGain.connect(ctx.destination);
+    activeMasterGain = masterGain;
+
+    const numHarmonics = 10;
+    for (let n = 1; n <= numHarmonics; n++) {
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      osc.frequency.value = f0 * n;
+
+      // Filtro para F1
+      const filter1 = ctx.createBiquadFilter();
+      filter1.type = 'bandpass';
+      filter1.frequency.value = f1;
+      filter1.Q.value = 8;
+
+      // Filtro para F2
+      const filter2 = ctx.createBiquadFilter();
+      filter2.type = 'bandpass';
+      filter2.frequency.value = f2;
+      filter2.Q.value = 8;
+
+      gainNode.gain.setValueAtTime(0.3 / n, ctx.currentTime);
+      osc.connect(gainNode);
+      gainNode.connect(filter1);
+      gainNode.connect(filter2);
+      filter1.connect(masterGain);
+      filter2.connect(masterGain);
+
+      osc.start(ctx.currentTime);
+      activeOscillators.push(osc);
+    }
+  }
+
+  document.getElementById('formant_play').addEventListener('click', startFormantAudio);
+  document.getElementById('formant_stop').addEventListener('click', () => { stopAllAudio(); });
+
+  // ── Inicialización ─────────────────────────────────────────
+  window.addEventListener('load', () => {
+    resizeCanvases();
+    animateFormants();
+  });
+
+  window.addEventListener('resize', () => {
+    resizeCanvases();
+  });
+</script>
+</body>
+</html>

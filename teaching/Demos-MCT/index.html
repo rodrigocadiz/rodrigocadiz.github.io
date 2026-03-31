@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demostraciones de Música, Ciencia y Tecnología</title>
+  <link rel="stylesheet" href="shared/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="font-size:1.6rem; font-weight:700; background:linear-gradient(90deg,#00ffff,#00ff44,#ffaa00); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Demostraciones de Música, Ciencia y Tecnología</h1>
+      <p class="subtitle">Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      Selecciona una sección para explorar sus demostraciones interactivas.
+      Cada módulo incluye animaciones, síntesis de audio en tiempo real y visualizaciones
+      diseñadas para proyectarse en sala.
+    </p>
+
+    <div class="section-grid">
+
+      <a class="section-card-big" href="sonido/index.html"
+         style="border-color: rgba(0,255,255,0.4);">
+        <div class="sec-icon">🎵</div>
+        <h2 style="color:#00ffff;">Parámetros del Sonido</h2>
+        <p>Círculo unitario, parámetros de una sinusoide, suma de ondas, espectro de frecuencias,
+           armónicos vs parciales, sintetizador aditivo y espectrograma en tiempo real.</p>
+        <div class="sec-count" style="color:#00ffff;">7 módulos interactivos</div>
+      </a>
+
+      <a class="section-card-big" href="acustica/index.html"
+         style="border-color: rgba(255,170,0,0.4);">
+        <div class="sec-icon">🏛</div>
+        <h2 style="color:#ffaa00;">Acústica</h2>
+        <p>Serie armónica, serie musical, formantes, diseño acústico, impulso sonoro,
+           reverberación (Sabine), respuesta al impulso y simulación de sala.</p>
+        <div class="sec-count" style="color:#ffaa00;">8 módulos interactivos</div>
+      </a>
+
+      <a class="section-card-big" href="emision_almacenamiento/index.html"
+         style="border-color: rgba(68,170,255,0.4);">
+        <div class="sec-icon">🎙</div>
+        <h2 style="color:#44aaff;">Emisión, Captura y Almacenamiento</h2>
+        <p>La onda de presión, micrófonos, parlantes/altavoces, almacenamiento analógico
+           y audio digital.</p>
+        <div class="sec-count" style="color:#44aaff;">5 módulos interactivos</div>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Parámetros de la Sinusoide — Parámetros del Sonido</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .module-desc {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .control-group .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+    button.play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    button.play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,229,255,.3); }
+    button.play-btn.playing { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+  </style>
+</head>
+<body class="sec-sonido">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Parámetros del Sonido</a>
+  <a href="../01_circulo_unitario/index.html">1. Círculo Unitario</a>
+  <a href="../02_parametros/index.html" class="active">2. Parámetros</a>
+  <a href="../03_suma_sinusoides/index.html">3. Suma de Sinusoides</a>
+  <a href="../04_espectro/index.html">4. Espectro</a>
+  <a href="../05_armonicos_parciales/index.html">5. Armónicos vs Parciales</a>
+  <a href="../06_sintetizador_aditivo/index.html">6. Sintetizador Aditivo</a>
+  <a href="../07_espectrograma/index.html">7. Espectrograma</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Parámetros de la Sinusoide</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+
+    <div class="module-desc">
+      Toda onda sinusoidal se define por tres parámetros: <strong>Amplitud</strong> (volumen),
+      <strong>Frecuencia</strong> (tono) y <strong>Fase</strong> (desplazamiento temporal).
+      Ajusta los controles para ver y escuchar cómo cada parámetro afecta la onda.
+    </div>
+
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Amplitud</label>
+        <div class="value" id="m2AmpVal">0.70</div>
+        <input type="range" id="m2Amp" min="0" max="1" step="0.01" value="0.7" oninput="m2Update()">
+      </div>
+      <div class="control-group">
+        <label>Frecuencia (Hz)</label>
+        <div class="value" id="m2FreqVal">440 Hz</div>
+        <input type="range" id="m2Freq" min="20" max="2000" step="1" value="440" oninput="m2Update()">
+      </div>
+      <div class="control-group">
+        <label>Fase (grados)</label>
+        <div class="value" id="m2PhaseVal">0°</div>
+        <input type="range" id="m2Phase" min="0" max="360" step="1" value="0" oninput="m2Update()">
+      </div>
+      <div class="control-group" style="flex:0; min-width:auto;">
+        <label>Sonido</label>
+        <button class="play-btn" id="m2PlayBtn" onclick="m2ToggleAudio()">▶ Reproducir</button>
+      </div>
+    </div>
+
+    <div class="canvas-label">Forma de Onda</div>
+    <canvas id="m2Wave" height="300"></canvas>
+
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script>
+const VAR_ACCENT = '#00e5ff';
+let audioCtx = null;
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  for (let y = 0; y < h; y += h / 8) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  for (let x = 0; x < w; x += w / 16) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+}
+
+// ── Module 2 — Sinusoid Parameters ──
+let m2Playing = false, m2Osc = null, m2GainNode = null;
+
+function m2Update() {
+  const amp = parseFloat(document.getElementById('m2Amp').value);
+  const freq = parseFloat(document.getElementById('m2Freq').value);
+  const phase = parseFloat(document.getElementById('m2Phase').value);
+  document.getElementById('m2AmpVal').textContent = amp.toFixed(2);
+  document.getElementById('m2FreqVal').textContent = freq + ' Hz';
+  document.getElementById('m2PhaseVal').textContent = phase + '°';
+  if (m2Osc) {
+    m2Osc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.02);
+    m2GainNode.gain.setTargetAtTime(amp * 0.4, audioCtx.currentTime, 0.02);
+  }
+}
+
+function m2ToggleAudio() {
+  if (!m2Playing) {
+    const ctx = getAudioCtx();
+    m2Osc = ctx.createOscillator();
+    m2GainNode = ctx.createGain();
+    m2Osc.type = 'sine';
+    m2Osc.frequency.value = parseFloat(document.getElementById('m2Freq').value);
+    m2GainNode.gain.value = parseFloat(document.getElementById('m2Amp').value) * 0.4;
+    m2Osc.connect(m2GainNode).connect(masterGain);
+    m2Osc.start();
+    m2Playing = true;
+    document.getElementById('m2PlayBtn').textContent = '⏹ Detener';
+    document.getElementById('m2PlayBtn').classList.add('playing');
+  } else {
+    if (m2Osc) { m2Osc.stop(); m2Osc = null; }
+    m2Playing = false;
+    document.getElementById('m2PlayBtn').textContent = '▶ Reproducir';
+    document.getElementById('m2PlayBtn').classList.remove('playing');
+  }
+}
+
+function m2Draw() {
+  const c = document.getElementById('m2Wave');
+  const ctx = c.getContext('2d');
+  const w = c.width = c.offsetWidth || 900, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  const amp = parseFloat(document.getElementById('m2Amp').value);
+  const freq = parseFloat(document.getElementById('m2Freq').value);
+  const phase = parseFloat(document.getElementById('m2Phase').value) * Math.PI / 180;
+  const cycles = Math.min(freq / 50, 12);
+  ctx.strokeStyle = VAR_ACCENT;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = x / w * cycles * 2 * Math.PI;
+    const y = h / 2 - amp * Math.sin(t + phase) * (h * 0.4);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,183,77,.3)';
+  ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(0, h / 2 - amp * h * 0.4); ctx.lineTo(w, h / 2 - amp * h * 0.4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, h / 2 + amp * h * 0.4); ctx.lineTo(w, h / 2 + amp * h * 0.4); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#ffb74d';
+  ctx.fillText('A = ' + amp.toFixed(2), 10, h / 2 - amp * h * 0.4 - 8);
+  ctx.fillStyle = VAR_ACCENT;
+  ctx.fillText('f = ' + freq + ' Hz', 10, 22);
+  ctx.fillStyle = '#4cff91';
+  ctx.fillText('φ = ' + (phase * 180 / Math.PI).toFixed(0) + '°', 130, 22);
+}
+
+function animate() {
+  m2Draw();
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

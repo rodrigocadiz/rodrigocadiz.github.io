@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Espectro de Frecuencias — Parámetros del Sonido</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .module-desc {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .control-group .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+    button.play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    button.play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,229,255,.3); }
+    button.play-btn.playing { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="sec-sonido">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Parámetros del Sonido</a>
+  <a href="../01_circulo_unitario/index.html">1. Círculo Unitario</a>
+  <a href="../02_parametros/index.html">2. Parámetros</a>
+  <a href="../03_suma_sinusoides/index.html">3. Suma de Sinusoides</a>
+  <a href="../04_espectro/index.html" class="active">4. Espectro</a>
+  <a href="../05_armonicos_parciales/index.html">5. Armónicos vs Parciales</a>
+  <a href="../06_sintetizador_aditivo/index.html">6. Sintetizador Aditivo</a>
+  <a href="../07_espectrograma/index.html">7. Espectrograma</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Espectro de Frecuencias</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+
+    <div class="module-desc">
+      Toda señal sonora puede representarse en el <strong>dominio del tiempo</strong> (forma de onda)
+      y en el <strong>dominio de la frecuencia</strong> (espectro). El espectro muestra qué frecuencias
+      componen el sonido y con qué intensidad.
+    </div>
+
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Componente 1 — Freq (Hz)</label>
+        <div class="value" id="m4F1Val">220 Hz</div>
+        <input type="range" id="m4F1" min="50" max="1200" step="1" value="220" oninput="m4Update()">
+      </div>
+      <div class="control-group">
+        <label>Componente 1 — Amp</label>
+        <div class="value" id="m4A1Val">0.60</div>
+        <input type="range" id="m4A1" min="0" max="1" step="0.01" value="0.6" oninput="m4Update()">
+      </div>
+    </div>
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Componente 2 — Freq (Hz)</label>
+        <div class="value" id="m4F2Val">440 Hz</div>
+        <input type="range" id="m4F2" min="50" max="1200" step="1" value="440" oninput="m4Update()">
+      </div>
+      <div class="control-group">
+        <label>Componente 2 — Amp</label>
+        <div class="value" id="m4A2Val">0.40</div>
+        <input type="range" id="m4A2" min="0" max="1" step="0.01" value="0.4" oninput="m4Update()">
+      </div>
+    </div>
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Componente 3 — Freq (Hz)</label>
+        <div class="value" id="m4F3Val">660 Hz</div>
+        <input type="range" id="m4F3" min="50" max="1200" step="1" value="660" oninput="m4Update()">
+      </div>
+      <div class="control-group">
+        <label>Componente 3 — Amp</label>
+        <div class="value" id="m4A3Val">0.00</div>
+        <input type="range" id="m4A3" min="0" max="1" step="0.01" value="0" oninput="m4Update()">
+      </div>
+    </div>
+    <div class="controls-row">
+      <div class="control-group" style="flex:0; min-width:auto;">
+        <label>Sonido</label>
+        <button class="play-btn" id="m4PlayBtn" onclick="m4ToggleAudio()">▶ Reproducir</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="canvas-label">Dominio del Tiempo (Forma de Onda)</div>
+        <canvas id="m4Time" height="280"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label">Dominio de la Frecuencia (Espectro)</div>
+        <canvas id="m4Spec" height="280"></canvas>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script>
+const VAR_ACCENT = '#00e5ff';
+let audioCtx = null;
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  for (let y = 0; y < h; y += h / 8) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  for (let x = 0; x < w; x += w / 16) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+}
+
+// ── Module 4 — Frequency Spectrum ──
+let m4Playing = false, m4Oscs = [], m4Gains = [];
+
+function m4Update() {
+  for (let i = 1; i <= 3; i++) {
+    const f = parseFloat(document.getElementById('m4F' + i).value);
+    const a = parseFloat(document.getElementById('m4A' + i).value);
+    document.getElementById('m4F' + i + 'Val').textContent = f + ' Hz';
+    document.getElementById('m4A' + i + 'Val').textContent = a.toFixed(2);
+    if (m4Oscs[i - 1]) {
+      m4Oscs[i - 1].frequency.setTargetAtTime(f, audioCtx.currentTime, 0.02);
+      m4Gains[i - 1].gain.setTargetAtTime(a * 0.25, audioCtx.currentTime, 0.02);
+    }
+  }
+}
+
+function m4ToggleAudio() {
+  if (!m4Playing) {
+    const ctx = getAudioCtx();
+    m4Oscs = []; m4Gains = [];
+    for (let i = 1; i <= 3; i++) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = parseFloat(document.getElementById('m4F' + i).value);
+      g.gain.value = parseFloat(document.getElementById('m4A' + i).value) * 0.25;
+      osc.connect(g).connect(masterGain);
+      osc.start();
+      m4Oscs.push(osc); m4Gains.push(g);
+    }
+    m4Playing = true;
+    document.getElementById('m4PlayBtn').textContent = '⏹ Detener';
+    document.getElementById('m4PlayBtn').classList.add('playing');
+  } else {
+    m4Oscs.forEach(o => o.stop());
+    m4Oscs = []; m4Gains = [];
+    m4Playing = false;
+    document.getElementById('m4PlayBtn').textContent = '▶ Reproducir';
+    document.getElementById('m4PlayBtn').classList.remove('playing');
+  }
+}
+
+function m4Draw() {
+  const comps = [];
+  for (let i = 1; i <= 3; i++) {
+    comps.push({
+      f: parseFloat(document.getElementById('m4F' + i).value),
+      a: parseFloat(document.getElementById('m4A' + i).value)
+    });
+  }
+  let c = document.getElementById('m4Time');
+  let ctx = c.getContext('2d');
+  let w = c.width = c.offsetWidth || 500, h = c.height;
+  ctx.clearRect(0, 0, w, h); drawGrid(ctx, w, h);
+  const activeComps = comps.filter(c => c.a > 0);
+  const minF = activeComps.length > 0 ? Math.min(...activeComps.map(c => c.f), 200) : 200;
+  const cycles = Math.min(minF / 25, 8);
+  ctx.strokeStyle = VAR_ACCENT; ctx.lineWidth = 2; ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = x / w * cycles * 2 * Math.PI;
+    let val = 0;
+    comps.forEach(comp => { val += comp.a * Math.sin(t * comp.f / minF); });
+    const y = h / 2 - val * (h * 0.18);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  c = document.getElementById('m4Spec');
+  ctx = c.getContext('2d'); w = c.width = c.offsetWidth || 500; h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.beginPath(); ctx.moveTo(40, h - 30); ctx.lineTo(w - 10, h - 30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(40, 10); ctx.lineTo(40, h - 30); ctx.stroke();
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.4)';
+  ctx.fillText('Frecuencia (Hz)', w / 2 - 30, h - 5);
+  const maxFreq = 1400;
+  for (let f = 0; f <= maxFreq; f += 200) {
+    const x = 40 + (f / maxFreq) * (w - 60);
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fillText(f, x - 10, h - 16);
+    ctx.strokeStyle = 'rgba(255,255,255,.04)';
+    ctx.beginPath(); ctx.moveTo(x, 10); ctx.lineTo(x, h - 30); ctx.stroke();
+  }
+  const colors = ['#00e5ff', '#ff6b6b', '#4cff91'];
+  const barW = 20;
+  comps.forEach((comp, i) => {
+    if (comp.a < 0.01) return;
+    const x = 40 + (comp.f / maxFreq) * (w - 60);
+    const barH = comp.a * (h - 60);
+    const grad = ctx.createLinearGradient(x, h - 30, x, h - 30 - barH);
+    grad.addColorStop(0, colors[i]); grad.addColorStop(1, colors[i] + '44');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - barW / 2, h - 30 - barH, barW, barH);
+    ctx.fillStyle = colors[i];
+    ctx.beginPath(); ctx.arc(x, h - 30 - barH, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '11px sans-serif';
+    ctx.fillText(comp.f + ' Hz', x - 16, h - 35 - barH);
+  });
+}
+
+function animate() {
+  m4Draw();
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

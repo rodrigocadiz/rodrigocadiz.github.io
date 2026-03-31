@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. La onda de presión — Emisión, Captura y Almacenamiento</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-emision">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Emisión, Captura y Almacenamiento</a>
+  <a href="../01_onda_presion/index.html" class="active">1. La onda</a>
+  <a href="../02_microfono/index.html">2. Micrófonos</a>
+  <a href="../03_parlante/index.html">3. Parlantes</a>
+  <a href="../04_almacenamiento_analogico/index.html">4. Almacenamiento</a>
+  <a href="../05_almacenamiento_digital/index.html">5. Audio digital</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>La onda de presión</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1. Concepto central -->
+  <section class="section-card">
+    <h2>¿Qué hay en el aire cuando suena una orquesta?</h2>
+    <p class="description">
+      Cien instrumentos vibran simultáneamente. Cada uno genera su propia onda de presión.
+      Todas se <span class="kw">suman en el aire</span> y llegan al oído — o al micrófono,
+      o a la aguja del fonógrafo — como <span class="kw">una sola función del tiempo</span>:
+      la presión <em>p(t)</em>.
+    </p>
+    <div class="info-box">
+      <strong>p(t)</strong> — variación de presión del aire en un punto ·
+      un único número escalar · sin embargo: <em>contiene todo</em>
+    </div>
+    <p class="description" style="margin-top:10px;">
+      Es lo que captura un micrófono, lo que Edison grabó en estaño en 1877, lo que queda
+      inscrito en los surcos de un vinilo, lo que convierte el ADC en bits.
+      Capturar p(t) con fidelidad <span class="kw">es capturar la sinfonía completa</span>.
+    </p>
+  </section>
+
+  <!-- 2. Construcción de la onda -->
+  <section class="section-card">
+    <h2>Construyendo una sinfonía, frecuencia a frecuencia</h2>
+    <p class="description">
+      Cada instrumento aporta componentes sinusoidales a sus frecuencias características.
+      A medida que activas más instrumentos, la onda compuesta se vuelve progresivamente
+      más compleja e irregular. Eso es exactamente lo que el fonógrafo registra en el surco.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Instrumentos activos: <span id="nCompLabel" class="val">1</span></label>
+        <input type="range" id="nComp" min="1" max="16" step="1" value="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" onclick="playWave()">▶ Escuchar</button>
+        <button class="btn stop" onclick="stopWave()">■ Detener</button>
+      </div>
+    </div>
+    <div class="canvas-label">Onda de presión p(t)</div>
+    <canvas id="waveCanvas" height="250"></canvas>
+    <div id="compList" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px;"></div>
+  </section>
+
+  <!-- 3. Espectro -->
+  <section class="section-card">
+    <h2>Lo que contiene: espectro de frecuencias</h2>
+    <p class="description">
+      La <span class="kw">Transformada de Fourier</span> descompone p(t) en sus sinusoides
+      constituyentes. Cada barra del espectro es una frecuencia presente en la onda —
+      un instrumento, un armónico. En una sinfonía real hay miles de componentes activas,
+      variando continuamente en amplitud y fase.
+    </p>
+    <div class="canvas-label">Espectro de amplitud</div>
+    <canvas id="specCanvas" height="190"></canvas>
+    <p class="description" style="margin-top:10px;">
+      Un sistema de captura de audio ideal registra <span class="kw">todas</span> estas
+      componentes sin perder ninguna. Esa es la definición de fidelidad.
+    </p>
+  </section>
+
+  <!-- 4. La hazaña del fonógrafo -->
+  <section class="section-card">
+    <h2>La hazaña del fonógrafo — 1877</h2>
+    <p class="description">
+      Edison no necesitó entender la Transformada de Fourier. Simplemente convirtió la
+      <span class="kw">variación de presión en variación de profundidad</span> sobre una
+      lámina de estaño. Sin filtros ni compromisos: toda la onda, tal como llegó.
+    </p>
+    <div class="info-box">
+      p(t) &nbsp;→&nbsp; desplazamiento de la aguja &nbsp;→&nbsp; surco físico
+      &nbsp;→&nbsp; reproducción inversa &nbsp;→&nbsp; p(t) de vuelta
+    </div>
+    <p class="description" style="margin-top:10px;">
+      Inscrita en ese surco de décimas de milímetro estaban todas las frecuencias,
+      todos los timbres, todas las dinámicas. El fonógrafo no sabía cuán complejo era
+      lo que grababa. Solo seguía fielmente las variaciones de presión del aire.
+      <span class="kw">Eso es lo que hace todo sistema de captura de audio hasta hoy.</span>
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script>
+// ── Componentes (simulan instrumentos de orquesta) ────────────────────────
+const COMP = [
+  { f:  110, a: 1.00, p: 0.00, color: '#ff8844', lbl: 'Contrabajo  A2'  },
+  { f:  220, a: 0.85, p: 0.62, color: '#ffaa00', lbl: 'Violonchelo  A3' },
+  { f:  261, a: 0.60, p: 1.50, color: '#44ff88', lbl: 'Oboe  C4'        },
+  { f:  294, a: 0.72, p: 0.90, color: '#44ffcc', lbl: 'Viola  D4'       },
+  { f:  330, a: 0.65, p: 0.30, color: '#00ffff', lbl: 'Violín  E4'      },
+  { f:  392, a: 0.55, p: 1.70, color: '#44aaff', lbl: 'Clarinete  G4'   },
+  { f:  440, a: 0.90, p: 1.10, color: '#aa66ff', lbl: 'Violín  A4'      },
+  { f:  523, a: 0.45, p: 0.80, color: '#ff44aa', lbl: 'Trompeta  C5'    },
+  { f:  587, a: 0.42, p: 2.10, color: '#ffff44', lbl: 'Flauta  D5'      },
+  { f:  659, a: 0.50, p: 0.20, color: '#ff6644', lbl: 'Violín  E5'      },
+  { f:  784, a: 0.32, p: 1.40, color: '#44ffaa', lbl: 'Piccolo  G5'     },
+  { f:  880, a: 0.38, p: 0.20, color: '#ffcc44', lbl: 'Flauta  A5'      },
+  { f: 1047, a: 0.22, p: 1.00, color: '#aaffaa', lbl: 'Piccolo  C6'     },
+  { f: 1175, a: 0.18, p: 0.70, color: '#ffaaff', lbl: 'Armónico  D6'    },
+  { f: 1568, a: 0.12, p: 1.50, color: '#aaaaff', lbl: 'Armónico  G6'    },
+  { f: 2093, a: 0.07, p: 0.40, color: '#ffffff', lbl: 'Armónico  C7'    },
+];
+
+let nActive  = 1;
+let wAnimId  = null;
+let sAnimId  = null;
+let oscNodes = [];
+let audCtx   = null;
+
+// ── Waveform ──────────────────────────────────────────────────────────────
+const waveCanvas = document.getElementById('waveCanvas');
+const wCtx = waveCanvas.getContext('2d');
+
+function initWave() { waveCanvas.width = waveCanvas.offsetWidth || 800; }
+
+function drawWave() {
+  const W = waveCanvas.width, H = waveCanvas.height;
+  wCtx.clearRect(0, 0, W, H);
+
+  const now  = performance.now() * 0.000008;  // scroll muy lento: ~1 ventana cada 4s
+  const tWin = 0.030;   // ventana de 30 ms
+  const cy   = H * 0.50;
+
+  // Normalización por amplitud total activa
+  let maxAmp = 0;
+  for (let i = 0; i < nActive; i++) maxAmp += COMP[i].a;
+  const yScale = (H * 0.44) / (maxAmp || 1);
+
+  // Grilla
+  wCtx.strokeStyle = 'rgba(100,180,255,0.18)';
+  wCtx.lineWidth = 1;
+  wCtx.setLineDash([3, 6]);
+  [-0.5, 0.5].forEach(frac => {
+    const y = cy - frac * H * 0.44;
+    wCtx.beginPath(); wCtx.moveTo(0, y); wCtx.lineTo(W, y); wCtx.stroke();
+  });
+  wCtx.setLineDash([]);
+
+  // Eje cero
+  wCtx.strokeStyle = 'rgba(150,210,255,0.40)';
+  wCtx.lineWidth = 1;
+  wCtx.beginPath(); wCtx.moveTo(0, cy); wCtx.lineTo(W, cy); wCtx.stroke();
+
+  // Onda compuesta
+  wCtx.beginPath();
+  for (let px = 0; px <= W; px++) {
+    const t = now - tWin + (px / W) * tWin;
+    let y = 0;
+    for (let ci = 0; ci < nActive; ci++) {
+      const c = COMP[ci];
+      y += c.a * Math.sin(2 * Math.PI * c.f * t + c.p);
+    }
+    const canvasY = cy - y * yScale;
+    px === 0 ? wCtx.moveTo(px, canvasY) : wCtx.lineTo(px, canvasY);
+  }
+  wCtx.strokeStyle = '#00ffff';
+  wCtx.lineWidth   = nActive === 1 ? 2.5 : 2;
+  wCtx.stroke();
+
+  // Etiquetas de ejes
+  wCtx.fillStyle = '#99ccff';
+  wCtx.font = '11px sans-serif';
+  wCtx.textAlign = 'left';  wCtx.fillText('p(t)', 6, 18);
+  wCtx.textAlign = 'right'; wCtx.fillText('t →', W - 4, cy - 6);
+  wCtx.textAlign = 'left';  wCtx.fillText('0', 4, cy + 14);
+  wCtx.textAlign = 'right'; wCtx.fillText('30 ms', W - 4, cy + 14);
+
+  wAnimId = requestAnimationFrame(drawWave);
+}
+
+// ── Espectro ──────────────────────────────────────────────────────────────
+const specCanvas = document.getElementById('specCanvas');
+const sCtx = specCanvas.getContext('2d');
+
+function initSpec() { specCanvas.width = specCanvas.offsetWidth || 800; }
+
+function drawSpec() {
+  const W = specCanvas.width, H = specCanvas.height;
+  sCtx.clearRect(0, 0, W, H);
+
+  const fMin = 80, fMax = 2600;
+  const pL = 44, pR = 16, pT = 20, pB = 30;
+  const gW = W - pL - pR, gH = H - pT - pB;
+
+  // Ejes
+  sCtx.strokeStyle = 'rgba(150,200,255,0.55)';
+  sCtx.lineWidth = 1;
+  sCtx.beginPath();
+  sCtx.moveTo(pL, pT); sCtx.lineTo(pL, pT + gH); sCtx.lineTo(pL + gW, pT + gH);
+  sCtx.stroke();
+
+  // Grilla vertical (octavas)
+  [100, 200, 400, 800, 1600].forEach(f => {
+    const x = pL + Math.log2(f / fMin) / Math.log2(fMax / fMin) * gW;
+    sCtx.strokeStyle = 'rgba(100,180,255,0.15)';
+    sCtx.setLineDash([3, 5]);
+    sCtx.beginPath(); sCtx.moveTo(x, pT); sCtx.lineTo(x, pT + gH); sCtx.stroke();
+    sCtx.setLineDash([]);
+    sCtx.fillStyle = '#99ccff'; sCtx.font = '9px sans-serif'; sCtx.textAlign = 'center';
+    sCtx.fillText(f < 1000 ? f + ' Hz' : (f / 1000) + ' kHz', x, pT + gH + 14);
+  });
+
+  // Etiqueta eje Y
+  sCtx.fillStyle = '#99ccff'; sCtx.font = '10px sans-serif';
+  sCtx.save();
+  sCtx.translate(13, pT + gH / 2); sCtx.rotate(-Math.PI / 2);
+  sCtx.textAlign = 'center'; sCtx.fillText('Amplitud', 0, 0);
+  sCtx.restore();
+
+  // Barras de componentes
+  const barW = Math.max(8, gW * 0.018);
+  const now  = performance.now() * 0.001;
+
+  COMP.forEach((c, i) => {
+    const x = pL + Math.log2(c.f / fMin) / Math.log2(fMax / fMin) * gW;
+    const active = i < nActive;
+    // Leve pulsación en activos para dar sensación de "vivo"
+    const pulse = active ? 1 + 0.055 * Math.sin(2 * Math.PI * 0.8 * c.f * now * 0.004) : 1;
+    const bH = active ? c.a * gH * 0.90 * pulse : c.a * gH * 0.10;
+    const y  = pT + gH - bH;
+
+    sCtx.fillStyle = active ? c.color : 'rgba(80,100,140,0.30)';
+    sCtx.fillRect(x - barW / 2, y, barW, bH);
+
+    if (active) {
+      sCtx.fillStyle = c.color;
+      sCtx.font = '8px sans-serif';
+      sCtx.textAlign = 'center';
+      sCtx.fillText(c.f + ' Hz', x, y - 4);
+    }
+  });
+
+  sAnimId = requestAnimationFrame(drawSpec);
+}
+
+// ── Lista de activos ──────────────────────────────────────────────────────
+function updateList() {
+  document.getElementById('compList').innerHTML = COMP.slice(0, nActive)
+    .map(c => `<span style="color:${c.color}; background:rgba(255,255,255,0.06);
+      padding:2px 9px; border-radius:4px; font-size:0.78rem;">${c.lbl}</span>`)
+    .join('');
+}
+
+// ── Audio ─────────────────────────────────────────────────────────────────
+function playWave() {
+  stopWave();
+  audCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const master = audCtx.createGain();
+  master.gain.value = 0.20;
+  master.connect(audCtx.destination);
+
+  for (let i = 0; i < nActive; i++) {
+    const c   = COMP[i];
+    const osc = audCtx.createOscillator();
+    const g   = audCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = c.f;
+    g.gain.value = c.a / nActive;
+    osc.connect(g); g.connect(master);
+    osc.start();
+    oscNodes.push(osc);
+  }
+}
+
+function stopWave() {
+  oscNodes.forEach(o => { try { o.stop(); } catch(e){} });
+  oscNodes = [];
+  if (audCtx) { audCtx.close(); audCtx = null; }
+}
+
+// ── Slider ────────────────────────────────────────────────────────────────
+document.getElementById('nComp').addEventListener('input', function() {
+  nActive = +this.value;
+  document.getElementById('nCompLabel').textContent = nActive;
+  updateList();
+  if (oscNodes.length > 0) { stopWave(); playWave(); }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => { initWave(); initSpec(); });
+window.addEventListener('beforeunload', stopWave);
+initWave(); initSpec();
+updateList();
+drawWave();
+drawSpec();
+</script>
+
+</body>
+</html>

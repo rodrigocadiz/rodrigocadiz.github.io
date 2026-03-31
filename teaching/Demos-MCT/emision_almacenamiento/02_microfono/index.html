@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Micrófonos — Emisión, Captura y Almacenamiento</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .polar-grid { stroke: rgba(100,180,255,0.25); fill: none; }
+    .polar-pattern { fill: rgba(0,255,255,0.12); stroke: #00ffff; stroke-width: 2; }
+    .polar-axis { stroke: rgba(100,180,255,0.4); stroke-width: 1; }
+  </style>
+</head>
+<body class="sec-emision">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Emisión, Captura y Almacenamiento</a>
+  <a href="../01_onda_presion/index.html">1. La onda</a>
+  <a href="../02_microfono/index.html" class="active">2. Micrófonos</a>
+  <a href="../03_parlante/index.html">3. Parlantes</a>
+  <a href="../04_almacenamiento_analogico/index.html">4. Almacenamiento</a>
+  <a href="../05_almacenamiento_digital/index.html">5. Audio digital</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Micrófonos</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1. Concepto de transductor -->
+  <section class="section-card">
+    <h2>¿Qué es un micrófono?</h2>
+    <p class="description">
+      Un micrófono es un <span class="kw">transductor</span>: convierte un tipo de energía en otro.
+      Antes de llegar al micrófono la señal es <span class="kw">sonido</span> (presión mecánica en el aire).
+      Después de la conversión se llama <span class="kw">audio</span> (señal eléctrica analógica).
+    </p>
+    <div class="info-box">
+      <strong>Sonido</strong> → [membrana + mecanismo] → <strong>Señal eléctrica (audio)</strong>
+    </div>
+    <p class="description" style="margin-top:10px;">
+      El principio exactamente <span class="kw">inverso</span> al de un parlante: un parlante convierte
+      electricidad en sonido, un micrófono convierte sonido en electricidad.
+    </p>
+  </section>
+
+  <!-- 2. Micrófono dinámico animado -->
+  <section class="section-card">
+    <h2>Micrófono dinámico — principio de Faraday</h2>
+    <p class="description">
+      Una <span class="kw">bobina móvil</span> está unida a la membrana. Un <span class="kw">imán fijo</span>
+      produce un campo magnético. Al vibrar la membrana, la bobina se mueve dentro del campo
+      magnético, induciendo una corriente eléctrica (<span class="kw">Ley de Inducción de Faraday</span>).
+      Robusto, barato y resistente a la humedad — muy usado en escenarios en vivo.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia de la onda sonora</label>
+        <input type="range" id="dynFreq" min="1" max="8" step="0.5" value="3">
+        <span class="val" id="dynFreqVal">3 Hz (visualización)</span>
+      </div>
+      <div class="control-group">
+        <label>Amplitud</label>
+        <input type="range" id="dynAmp" min="5" max="30" value="18">
+        <span class="val" id="dynAmpVal">18</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" onclick="dynPlay()">▶ Escuchar tono</button>
+        <button class="btn stop" onclick="stopAllAudio()">■ Detener</button>
+      </div>
+    </div>
+    <div class="canvas-label">Corte transversal — micrófono dinámico</div>
+    <canvas id="dynCanvas" height="260"></canvas>
+  </section>
+
+  <!-- 3. Micrófono de condensador animado -->
+  <section class="section-card">
+    <h2>Micrófono de condensador (capacitor)</h2>
+    <p class="description">
+      El <span class="kw">diafragma</span> y la <span class="kw">placa trasera</span> forman un condensador de placas.
+      Al vibrar el diafragma, la distancia entre placas cambia → la capacitancia cambia → el
+      <span class="kw">voltaje varía</span> con la presión sonora. Requiere alimentación externa (phantom power +48V).
+      Mayor diafragma → más sensible. Menor tamaño → mayor rango de frecuencias.
+      Tamaño óptimo para medición (hasta 20 kHz): <span class="kw">12.6 mm (½")</span>.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia</label>
+        <input type="range" id="condFreq" min="1" max="8" step="0.5" value="2">
+        <span class="val" id="condFreqVal">2 Hz</span>
+      </div>
+      <div class="control-group">
+        <label>Tamaño diafragma</label>
+        <input type="range" id="condSize" min="20" max="60" value="35">
+        <span class="val" id="condSizeVal">Mediano</span>
+      </div>
+    </div>
+    <div class="canvas-label">Corte transversal — micrófono de condensador</div>
+    <canvas id="condCanvas" height="220"></canvas>
+  </section>
+
+  <!-- 4. Tipos de micrófonos -->
+  <section class="section-card">
+    <h2>Tipos de micrófonos según funcionamiento</h2>
+    <p class="description">Cada tipo usa un mecanismo físico distinto para convertir presión en electricidad.</p>
+    <div class="btn-group" id="typeBtns">
+      <button class="btn active" onclick="showMicType('dynamic')">Dinámico</button>
+      <button class="btn" onclick="showMicType('condenser')">Condensador</button>
+      <button class="btn" onclick="showMicType('electret')">Electret</button>
+      <button class="btn" onclick="showMicType('ribbon')">Cinta</button>
+      <button class="btn" onclick="showMicType('carbon')">Carbono</button>
+      <button class="btn" onclick="showMicType('piezo')">Piezoeléctrico</button>
+      <button class="btn" onclick="showMicType('piston')">Pistón</button>
+      <button class="btn" onclick="showMicType('soundfield')">Campo sonoro</button>
+    </div>
+    <div id="micTypeInfo"></div>
+  </section>
+
+  <!-- 5. Tipos por uso (campo libre, presión, incidencia aleatoria) -->
+  <section class="section-card">
+    <h2>Tipos por condición acústica de uso</h2>
+    <div class="two-col">
+      <div>
+        <h3>Campo libre (Free Field)</h3>
+        <p class="description">Mide la presión <em>como existía antes</em> de introducir el micrófono.
+          Se orienta hacia la fuente. La punta causa un incremento de presión que se compensa con
+          amortiguamiento acústico interno para obtener respuesta plana.</p>
+      </div>
+      <div>
+        <h3>Presión</h3>
+        <p class="description">Mide la presión <em>en una pared</em>. La membrana está expuesta
+          al campo sonoro y a la presión de referencia simultáneamente. Usado típicamente
+          para <span class="kw">calibración</span>.</p>
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <h3>Incidencia aleatoria</h3>
+      <p class="description">El sonido llega desde <span class="kw">varias direcciones distintas</span>,
+        como sucede en la reverberación de una sala. Diseñado para responder igualmente a todas
+        las direcciones de llegada. Útil en mediciones de campo difuso.</p>
+    </div>
+    <div class="canvas-label" style="margin-top:14px;">Comparación visual de los tres tipos</div>
+    <canvas id="fieldTypeCanvas" height="180"></canvas>
+  </section>
+
+  <!-- 6. Patrones de directividad -->
+  <section class="section-card">
+    <h2>Patrones de directividad</h2>
+    <p class="description">
+      La <span class="kw">directividad</span> indica la sensitividad a sonido proveniente de distintas
+      direcciones. Ningún micrófono es perfectamente omnidireccional.
+      Haz clic en un patrón para verlo.
+    </p>
+    <div class="btn-group" id="polarBtns">
+      <button class="btn active" onclick="setPolar('omni')">Omnidireccional</button>
+      <button class="btn" onclick="setPolar('cardioid')">Cardioide</button>
+      <button class="btn" onclick="setPolar('supercardioid')">Supercardioide</button>
+      <button class="btn" onclick="setPolar('hypercardioid')">Hipercardioide</button>
+      <button class="btn" onclick="setPolar('shotgun')">Shotgun</button>
+      <button class="btn" onclick="setPolar('bidirectional')">Bidireccional (figura-8)</button>
+    </div>
+    <div id="polarDesc" class="info-box" style="margin-bottom:10px;"></div>
+    <div class="two-col">
+      <div>
+        <div class="canvas-label">Patrón polar (dB relativo)</div>
+        <canvas id="polarCanvas" height="300"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label">Usos típicos</div>
+        <div id="polarUses" class="description" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Respuesta de frecuencia: condensador vs dinámico -->
+  <section class="section-card">
+    <h2>Respuesta de frecuencia y respuesta transiente</h2>
+    <p class="description">
+      Los micrófonos de <span class="kw">condensador</span> tienen mejor respuesta en altas frecuencias
+      y respuesta transiente más rápida. Los <span class="kw">dinámicos</span> tienen peor respuesta en
+      bajas frecuencias (lo que reduce el ruido de manejo) pero son más robustos.
+    </p>
+    <div class="canvas-label">Curvas comparativas de respuesta de frecuencia</div>
+    <canvas id="freqRespCanvas" height="220"></canvas>
+  </section>
+
+  <!-- 8. Técnicas de microfonía -->
+  <section class="section-card">
+    <h2>Técnicas de microfonía</h2>
+
+    <h3>Distancia crítica</h3>
+    <p class="description">
+      Punto donde el <span class="kw">sonido directo</span> de la fuente es equivalente al
+      <span class="kw">sonido reflejado</span> por la sala. Más cerca: sonido directo domina.
+      Más lejos: reverberación domina → sonido plano, vacío, baja inteligibilidad.
+    </p>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="showTech('ab')">A-B Stereo</div>
+      <div class="tab" onclick="showTech('xy')">X-Y Stereo</div>
+    </div>
+
+    <div class="tab-content active" id="tech-ab">
+      <p class="description">
+        <span class="kw">A-B Stereo:</span> dos micrófonos separados espacialmente.
+        Regla práctica: separar <span class="kw">3 metros</span> por cada metro de distancia a la fuente.
+        Se pueden usar micrófonos omni o cardioides. Debido a la distancia puede haber
+        <span class="kw">problemas de fase</span>.
+      </p>
+      <div class="canvas-label">Diagrama A-B Stereo</div>
+      <canvas id="abCanvas" height="240"></canvas>
+    </div>
+
+    <div class="tab-content" id="tech-xy">
+      <p class="description">
+        <span class="kw">X-Y Stereo:</span> dos micrófonos cardioides uno encima del otro,
+        el inferior apuntando a la derecha y el superior a la izquierda.
+        Al estar cerca, hay <span class="kw">menos problemas de fase</span>.
+      </p>
+      <div class="canvas-label">Diagrama X-Y Stereo</div>
+      <canvas id="xyCanvas" height="240"></canvas>
+    </div>
+  </section>
+
+  <!-- 9. Cables y conectores -->
+  <section class="section-card">
+    <h2>Cables y conectores</h2>
+    <p class="description">
+      La señal de audio del micrófono se transmite por cables.
+      Los <span class="kw">balanceados</span> rechazan el ruido electromagnético en tiradas largas.
+    </p>
+    <div class="canvas-label">Tipos de conectores</div>
+    <canvas id="cableCanvas" height="220"></canvas>
+    <table class="type-table" style="margin-top:14px;">
+      <thead>
+        <tr><th>Conector</th><th>Pines / partes</th><th>Tipo</th><th>Uso típico</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>XLR</td><td>3 pines (GND / Hot / Neg)</td><td>Balanceado</td><td>Micrófonos profesionales, tiradas largas</td></tr>
+        <tr><td>TRS ¼"</td><td>Tip / Ring / Sleeve</td><td>Balanceado</td><td>Instrumentos, línea de estudio</td></tr>
+        <tr><td>TS ¼"</td><td>Tip / Sleeve</td><td>No balanceado</td><td>Guitarras, instrumentos corta distancia</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <p>© Rodrigo F. Cádiz · CITA · PUC · 2026</p>
+</footer>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ─── Datos de tipos de micrófono ───────────────────────────────────────────
+const MIC_TYPES = {
+  dynamic: {
+    name: 'Micrófono dinámico ("espiral móvil")',
+    color: '#ffaa00',
+    desc: 'Una bobina móvil unida a la membrana se mueve en el campo de un imán fijo, induciendo corriente (Ley de Faraday). Principio inverso al parlante.',
+    pros: 'Robusto, barato, resistente a la humedad, no requiere alimentación',
+    cons: 'Peor respuesta en altas frecuencias y baja frecuencia',
+    uses: 'Escenarios en vivo, voces, instrumentos percutidos',
+    year: '~1930s'
+  },
+  condenser: {
+    name: 'Micrófono de condensador (capacitor)',
+    color: '#00ffff',
+    desc: 'Diafragma y placa trasera forman un condensador. El voltaje varía con la distancia entre placas (presión). Requiere phantom power (+48V).',
+    pros: 'Alta sensibilidad, excelente respuesta en frecuencia y transiente',
+    cons: 'Requiere alimentación, frágil, sensible a la humedad',
+    uses: 'Estudio de grabación, instrumentos acústicos, voces de estudio',
+    year: '~1916'
+  },
+  electret: {
+    name: 'Micrófono electret',
+    color: '#44ff88',
+    desc: 'Variante del condensador con diafragma de polarización permanente (imán electrostático). Inventado en Bell Labs, 1962 (Sessler & West).',
+    pros: 'Muy barato, pequeño, no necesita alimentación de polarización',
+    cons: 'Calidad inferior al condensador de estudio',
+    uses: 'El tipo más común: teléfonos, laptops, audífonos, grabadoras',
+    year: '1962'
+  },
+  ribbon: {
+    name: 'Micrófono de cinta (ribbon)',
+    color: '#ff88ff',
+    desc: 'Delgada cinta de metal entre los polos de un imán. Revolucionó la radiodifusión en los años 30. La cinta vibra en el campo magnético.',
+    pros: 'Muy sensible y preciso, respuesta natural y cálida, bidireccional',
+    cons: 'Delicado, costoso, salida de voltaje baja',
+    uses: 'Grabación en estudio, voces, instrumentos de cuerda, brass',
+    year: '~1930s'
+  },
+  carbon: {
+    name: 'Micrófono de carbono',
+    color: '#ffcc44',
+    desc: 'La presión sonora comprime gránulos de carbono, variando su resistencia eléctrica. También actúa como amplificador. Inventado por David Hughes (1878).',
+    pros: 'Muy robusto, económico, funciona como amplificador',
+    cons: 'Muy baja calidad de reproducción, rango de frecuencias muy limitado',
+    uses: 'Telefonía histórica, el primer micrófono práctico',
+    year: '1878'
+  },
+  piezo: {
+    name: 'Micrófono piezoeléctrico',
+    color: '#44aaff',
+    desc: 'Material piezoeléctrico: al deformarse genera voltaje. El diafragma mueve una armadura de cristal piezoeléctrico. Ha reemplazado al micrófono de carbono.',
+    pros: 'Pequeño, barato, puede usarse bajo el agua o en ambientes extremos',
+    cons: 'Baja calidad de audio',
+    uses: 'Micrófonos de contacto para instrumentos, entornos submarinos',
+    year: '~1950s'
+  },
+  piston: {
+    name: 'Micrófono de pistón',
+    color: '#ff6644',
+    desc: 'Acoplador cerrado con un nivel de presión sonora bien definido. Mecánicamente simple y muy estable. Exactitud alrededor de ±0.1 dB.',
+    pros: 'Altísima precisión, muy estable, ideal para calibración',
+    cons: 'No es para grabación de audio general',
+    uses: 'Calibración de otros micrófonos y medidores de nivel sonoro',
+    year: '~1940s'
+  },
+  soundfield: {
+    name: 'Micrófono de campo sonoro',
+    color: '#88ff44',
+    desc: 'Vista 3D del sonido con un solo dispositivo. 4 canales de medición simultáneos. El patrón espacial puede decidirse en posproducción: mono, estéreo, 5.1, etc.',
+    pros: 'Un solo dispositivo reemplaza un arreglo complejo de micrófonos',
+    cons: 'Bastante caro',
+    uses: 'Grabación ambisonics, cine, realidad virtual, investigación',
+    year: '~1970s'
+  }
+};
+
+const POLAR_DATA = {
+  omni: {
+    fn: () => 1,
+    desc: 'Captura sonido desde <strong>todas las direcciones</strong> aproximadamente por igual. Ningún micrófono es perfectamente omnidireccional en la práctica.',
+    uses: '• Grabación de sonido ambiente\n• Conferencias (voz desde cualquier dirección)\n• Mediciones acústicas\n• A-B stereo'
+  },
+  cardioid: {
+    fn: (a) => Math.max(0, (1 + Math.cos(a)) / 2),
+    desc: 'Acepta sonido desde <strong>el frente</strong> y lo rechaza desde atrás. Su patrón polar tiene <strong>forma de corazón</strong>.',
+    uses: '• Grabación de voces\n• Instrumentos en estudio\n• X-Y stereo\n• Evitar feedback en escenarios'
+  },
+  supercardioid: {
+    fn: (a) => Math.max(0, 0.37 + 0.63 * Math.cos(a)),
+    desc: '<strong>Patrón más angosto</strong> que el cardioide. Tiene un pequeño lóbulo trasero. Más direccional que el cardioide.',
+    uses: '• Capturar sonido de un escenario sin captar la audiencia\n• Grabación en salas con reflecciones laterales'
+  },
+  hypercardioid: {
+    fn: (a) => Math.max(0, 0.25 + 0.75 * Math.cos(a)),
+    desc: 'Aún más angosto que el supercardioide. Lóbulo trasero más pronunciado. También llamado <strong>hipercardioide</strong>.',
+    uses: '• Shotgun menos extremo\n• Capturar fuente puntual en ambiente ruidoso'
+  },
+  shotgun: {
+    fn: (a) => {
+      const norm = Math.cos(a);
+      const v = Math.pow(Math.max(0, norm), 8);
+      return v;
+    },
+    desc: 'Patrón muy estrecho. Se usa en el <strong>exterior</strong> y en producción de cine/TV para capturar fuentes distantes.',
+    uses: '• Producción de cine y televisión\n• Naturaleza (wildlife)\n• Periodismo de campo\n• Vigilancia y espionaje'
+  },
+  bidirectional: {
+    fn: (a) => Math.abs(Math.cos(a)),
+    desc: 'Capta igualmente por <strong>delante y por detrás</strong>, rechaza los lados. Patrón de figura-8. Característico de los micrófonos de cinta.',
+    uses: '• Micrófonos de cinta\n• Técnica Mid-Side (MS)\n• Entrevistas cara a cara\n• Grabación de coros'
+  }
+};
+
+// ─── Animación micrófono dinámico ────────────────────────────────────────────
+const dynCanvas = document.getElementById('dynCanvas');
+const dynCtx = dynCanvas.getContext('2d');
+let dynAnimId = null;
+let dynT = 0;
+
+function initDynCanvas() { dynCanvas.width = dynCanvas.offsetWidth || 700; }
+
+// Símbolo de dirección de corriente: ⊙ (sale) o ⊗ (entra)
+
+function drawDynamic(t) {
+  const W = dynCanvas.width, H = dynCanvas.height;
+  dynCtx.clearRect(0, 0, W, H);
+
+  const freq = parseFloat(document.getElementById('dynFreq').value);
+  const amp  = parseFloat(document.getElementById('dynAmp').value);
+  const disp = Math.sin(t * freq * 0.05) * amp;
+  const vel  = Math.cos(t * freq * 0.05); // velocidad normalizada [-1,1] → proporcional a la corriente
+
+  const cy = H * 0.5;
+
+  // ── Geometría ─────────────────────────────────────────────────────────────
+  const innerR    = 18;                       // semialtura del polo central
+  const gapMidR   = 30;                       // posición radial media del entrehierro (donde van los conductores)
+  const outerR    = 43;                       // semialtura del yugo exterior (cara interior)
+  const plateH    = 15;                       // grosor de las placas del yugo exterior
+  const gapFrontX = Math.round(W * 0.46);    // cara frontal del ensamble de imán (boca del entrehierro)
+  const backYokeX = Math.round(W * 0.86);    // borde derecho del ensamble
+  const memX0     = Math.round(W * 0.20);    // posición de reposo de la membrana
+  const coilX0    = gapFrontX + 38;          // posición de reposo de la bobina (dentro del entrehierro)
+  const memX      = memX0 + disp;
+  const coilX     = coilX0 + disp;           // bobina solidaria a membrana
+
+  // ── Ondas sonoras ─────────────────────────────────────────────────────────
+  const memArg = t * freq * 0.05;  // mismo argumento que disp → sincronizado
+  for (let i = 0; i < 5; i++) {
+    const phase   = memArg + i * (Math.PI * 2 / 5);
+    const r       = 25 + i * 20 + Math.sin(phase) * (amp * 0.35);
+    const opacity = (0.65 - i * 0.1) * (0.35 + 0.65 * (amp / 30));
+    dynCtx.beginPath();
+    dynCtx.arc(W * 0.06, cy, r, -Math.PI * 0.5, Math.PI * 0.5);
+    dynCtx.strokeStyle = `rgba(255,170,0,${opacity.toFixed(2)})`;
+    dynCtx.lineWidth = 1.5;
+    dynCtx.stroke();
+  }
+  dynCtx.fillStyle = '#ffaa00';
+  dynCtx.font = '11px sans-serif';
+  dynCtx.fillText('Onda sonora', W * 0.01, cy - 68);
+
+  // ── Ensamble de imán FIJO ─────────────────────────────────────────────────
+  // Polo central (el imán atraviesa el interior de la bobina, eje axial)
+  dynCtx.fillStyle = '#c03030';
+  dynCtx.fillRect(gapFrontX, cy - innerR, backYokeX - gapFrontX - 16, innerR * 2);
+
+  // Placa exterior superior del yugo
+  dynCtx.fillStyle = '#a02020';
+  dynCtx.fillRect(gapFrontX, cy - outerR - plateH, backYokeX - gapFrontX - 16, plateH);
+
+  // Placa exterior inferior del yugo
+  dynCtx.fillRect(gapFrontX, cy + outerR, backYokeX - gapFrontX - 16, plateH);
+
+  // Yugo trasero (cierra el circuito magnético)
+  dynCtx.fillStyle = '#c03030';
+  dynCtx.fillRect(backYokeX - 16, cy - outerR - plateH, 16, (outerR + plateH) * 2);
+
+  // Etiquetas N/S en la cara del entrehierro
+  dynCtx.fillStyle = '#ffffff';
+  dynCtx.font = 'bold 10px sans-serif';
+  dynCtx.fillText('N', gapFrontX + 3, cy - innerR - 2);   // cara sup. polo central
+  dynCtx.fillText('S', gapFrontX + 3, cy + innerR + 11);  // cara inf. polo central
+  dynCtx.fillText('S', gapFrontX + 3, cy - outerR - 2);   // cara inf. placa sup.
+  dynCtx.fillText('N', gapFrontX + 3, cy + outerR + 11);  // cara sup. placa inf.
+
+  dynCtx.fillStyle = '#ff7777';
+  dynCtx.font = '10px sans-serif';
+  dynCtx.fillText('Imán permanente', backYokeX - 105, cy + outerR + plateH + 14);
+
+  // Líneas de campo magnético en el entrehierro (radiales = verticales)
+  dynCtx.setLineDash([2, 4]);
+  dynCtx.lineWidth = 1;
+  for (let fx = gapFrontX + 12; fx < backYokeX - 22; fx += 16) {
+    dynCtx.strokeStyle = 'rgba(255,120,120,0.40)';
+    dynCtx.beginPath();
+    dynCtx.moveTo(fx, cy - innerR - 3);
+    dynCtx.lineTo(fx, cy - outerR + 3);
+    dynCtx.stroke();
+    dynCtx.beginPath();
+    dynCtx.moveTo(fx, cy + innerR + 3);
+    dynCtx.lineTo(fx, cy + outerR - 3);
+    dynCtx.stroke();
+  }
+  dynCtx.setLineDash([]);
+
+  // ── Portabobina / former (tubo que conecta membrana con bobina) ───────────
+  // El former termina donde empieza la bobina (coilX - coilHalfW)
+  const coilHalfW = 20;
+  dynCtx.strokeStyle = 'rgba(160,160,160,0.75)';
+  dynCtx.lineWidth = 2;
+  dynCtx.beginPath();
+  dynCtx.moveTo(memX, cy - gapMidR);
+  dynCtx.lineTo(coilX - coilHalfW, cy - gapMidR);
+  dynCtx.stroke();
+  dynCtx.beginPath();
+  dynCtx.moveTo(memX, cy + gapMidR);
+  dynCtx.lineTo(coilX - coilHalfW, cy + gapMidR);
+  dynCtx.stroke();
+
+  // ── Membrana (diafragma) ──────────────────────────────────────────────────
+  dynCtx.beginPath();
+  dynCtx.moveTo(memX, cy - outerR - plateH + 5);
+  dynCtx.lineTo(memX, cy + outerR + plateH - 5);
+  dynCtx.strokeStyle = '#00ffff';
+  dynCtx.lineWidth = 4;
+  dynCtx.stroke();
+  dynCtx.fillStyle = '#00ffff';
+  dynCtx.font = '10px sans-serif';
+  dynCtx.fillText('Membrana', memX - 36, cy - outerR - plateH - 4);
+
+  // ── Bobina de voz completa ────────────────────────────────────────────────
+  // Vista lateral de una bobina helicoidal enrollada en un cilindro de eje
+  // horizontal: cada vuelta aparece como una elipse vertical estrecha.
+  // Se dibujan primero las medias-elipses traseras (punteadas) y luego las
+  // delanteras (sólidas) para dar sensación de profundidad.
+  const nTurns = 8;
+  const coilR   = gapMidR;
+  const turnW   = (coilHalfW * 2) / nTurns;
+  const ellRX   = turnW * 0.88;  // solapamiento leve entre vueltas
+
+  // Mitades traseras (arcos izquierdos — parte oculta)
+  for (let i = 0; i < nTurns; i++) {
+    const ex = coilX - coilHalfW + (i + 0.5) * turnW;
+    dynCtx.save();
+    dynCtx.setLineDash([2, 3]);
+    dynCtx.beginPath();
+    dynCtx.ellipse(ex, cy, ellRX, coilR, 0, Math.PI / 2, 3 * Math.PI / 2);
+    dynCtx.strokeStyle = 'rgba(255,204,68,0.22)';
+    dynCtx.lineWidth = 1.5;
+    dynCtx.stroke();
+    dynCtx.restore();
+  }
+
+  // Mitades delanteras (arcos derechos — parte visible)
+  for (let i = 0; i < nTurns; i++) {
+    const ex = coilX - coilHalfW + (i + 0.5) * turnW;
+    dynCtx.beginPath();
+    dynCtx.ellipse(ex, cy, ellRX, coilR, 0, -Math.PI / 2, Math.PI / 2);
+    dynCtx.strokeStyle = '#ffcc44';
+    dynCtx.lineWidth = 2;
+    dynCtx.stroke();
+  }
+
+  // Líneas de cierre superior e inferior de la bobina
+  dynCtx.beginPath();
+  dynCtx.moveTo(coilX - coilHalfW, cy - coilR);
+  dynCtx.lineTo(coilX + coilHalfW, cy - coilR);
+  dynCtx.moveTo(coilX - coilHalfW, cy + coilR);
+  dynCtx.lineTo(coilX + coilHalfW, cy + coilR);
+  dynCtx.strokeStyle = 'rgba(255,204,68,0.35)';
+  dynCtx.lineWidth = 1;
+  dynCtx.stroke();
+
+  dynCtx.fillStyle = '#ffaa00';
+  dynCtx.font = '10px sans-serif';
+  dynCtx.fillText('Bobina', coilX - 16, cy + coilR + 17);
+
+  // ── Flecha de desplazamiento ──────────────────────────────────────────────
+  const arrowY = cy + outerR + plateH + 18;
+  dynCtx.strokeStyle = '#00ff44';
+  dynCtx.lineWidth = 2;
+  dynCtx.beginPath();
+  dynCtx.moveTo(memX0, arrowY);
+  dynCtx.lineTo(memX, arrowY);
+  dynCtx.stroke();
+  if (Math.abs(disp) > 2) {
+    const ad = disp >= 0 ? 1 : -1;
+    dynCtx.beginPath();
+    dynCtx.moveTo(memX + ad * 5, arrowY - 4);
+    dynCtx.lineTo(memX + ad * 5, arrowY + 4);
+    dynCtx.lineTo(memX + ad * 11, arrowY);
+    dynCtx.fillStyle = '#00ff44';
+    dynCtx.fill();
+  }
+
+  // ── Corriente inducida (proporcional a velocidad, no a posición) ──────────
+  dynCtx.fillStyle = vel >= 0 ? '#00ff44' : '#ff4444';
+  dynCtx.font = 'bold 13px sans-serif';
+  dynCtx.fillText(`I = ${(vel * 2).toFixed(2)} (rel.)`, W - 150, 28);
+  dynCtx.fillStyle = '#99ccff';
+  dynCtx.font = '11px sans-serif';
+  dynCtx.fillText('Corriente inducida', W - 150, 44);
+
+  const barW = 100, barH = 12, barX = W - 155, barY = 52;
+  dynCtx.fillStyle = 'rgba(100,180,255,0.2)';
+  dynCtx.fillRect(barX, barY, barW, barH);
+  const cw = Math.abs(vel) * barW / 2;
+  dynCtx.fillStyle = vel >= 0 ? '#00ff44' : '#ff4444';
+  if (vel >= 0) dynCtx.fillRect(barX + barW/2, barY, cw, barH);
+  else          dynCtx.fillRect(barX + barW/2 - cw, barY, cw, barH);
+
+  dynT = t;
+  dynAnimId = requestAnimationFrame(tt => drawDynamic(tt * 0.05));
+}
+
+// ─── Animación micrófono condensador ─────────────────────────────────────────
+const condCanvas = document.getElementById('condCanvas');
+const condCtx = condCanvas.getContext('2d');
+let condAnimId = null;
+
+function initCondCanvas() { condCanvas.width = condCanvas.offsetWidth || 700; }
+
+function drawCondenser(t) {
+  const W = condCanvas.width, H = condCanvas.height;
+  condCtx.clearRect(0, 0, W, H);
+
+  const freq  = parseFloat(document.getElementById('condFreq').value);
+  const size  = parseFloat(document.getElementById('condSize').value);
+  const disp  = Math.sin(t * 0.003 * freq) * 22;
+
+  const cx = W * 0.5, cy = H * 0.5;
+
+  // Ondas entrantes
+  for (let i = 0; i < 4; i++) {
+    const r = 30 + i * 35 + (t * 0.04) % 35;
+    condCtx.beginPath();
+    condCtx.arc(cx - 200, cy, r, -1.2, 1.2);
+    condCtx.strokeStyle = `rgba(255,170,0,${0.5 - i * 0.1})`;
+    condCtx.lineWidth = 1.5;
+    condCtx.stroke();
+  }
+
+  // Diafragma (placa izquierda)
+  const diagX = cx - 40 + disp;
+  condCtx.fillStyle = '#00ffff';
+  condCtx.fillRect(diagX - 3, cy - size, 6, size * 2);
+  condCtx.fillStyle = '#00ffff';
+  condCtx.font = '10px sans-serif';
+  condCtx.fillText('Diafragma', diagX - 35, cy - size - 8);
+
+  // Placa trasera (fija)
+  condCtx.fillStyle = '#88bbee';
+  condCtx.fillRect(cx + 40 - 3, cy - size * 0.8, 6, size * 1.6);
+  condCtx.fillStyle = '#88bbee';
+  condCtx.fillText('Placa trasera', cx + 46, cy - size * 0.8 - 8);
+
+  // Perforaciones en placa trasera
+  for (let i = 0; i < 5; i++) {
+    const py = cy - size * 0.6 + i * size * 0.3;
+    condCtx.beginPath();
+    condCtx.arc(cx + 40, py, 3, 0, Math.PI * 2);
+    condCtx.fillStyle = '#0a1520';
+    condCtx.fill();
+  }
+
+  // Distancia entre placas
+  const gap = (cx + 40) - (diagX + 3);
+  condCtx.beginPath();
+  condCtx.moveTo(diagX + 3, cy + size + 15);
+  condCtx.lineTo(cx + 40 - 3, cy + size + 15);
+  condCtx.strokeStyle = '#ffaa00';
+  condCtx.lineWidth = 1.5;
+  condCtx.stroke();
+  condCtx.fillStyle = '#ffaa00';
+  condCtx.font = '10px sans-serif';
+  condCtx.fillText(`d = ${gap.toFixed(0)} px`, cx - 20, cy + size + 28);
+
+  // Capacitancia (C ∝ 1/d)
+  const C = (1000 / Math.max(gap, 5)).toFixed(2);
+  const V = (disp * -1).toFixed(1);
+  condCtx.fillStyle = '#00ff44';
+  condCtx.font = 'bold 12px sans-serif';
+  condCtx.fillText(`C ∝ 1/d = ${C}`, W - 180, 30);
+  condCtx.fillStyle = '#ff88ff';
+  condCtx.fillText(`ΔV = ${V} (rel.)`, W - 180, 50);
+
+  // Phantom power label
+  condCtx.fillStyle = '#99ccff';
+  condCtx.font = '11px sans-serif';
+  condCtx.fillText('⚡ Phantom +48V requerido', W - 200, H - 15);
+
+  condAnimId = requestAnimationFrame(tt => drawCondenser(tt));
+}
+
+// ─── Tipos de micrófono ────────────────────────────────────────────────────
+function showMicType(key) {
+  document.querySelectorAll('#typeBtns .btn').forEach((b,i) => {
+    b.classList.toggle('active', Object.keys(MIC_TYPES)[i] === key);
+  });
+  const d = MIC_TYPES[key];
+  document.getElementById('micTypeInfo').innerHTML = `
+    <div class="info-box" style="border-color:${d.color}; margin-top:8px;">
+      <strong style="color:${d.color}">${d.name}</strong> <span style="color:#99ccff;font-size:0.78rem;">(${d.year})</span><br><br>
+      <span style="color:#fff">${d.desc}</span><br><br>
+      <span style="color:#00ff44">✓ ${d.pros}</span><br>
+      <span style="color:#ff4444">✗ ${d.cons}</span><br><br>
+      <span style="color:#ffaa00">Usos: ${d.uses}</span>
+    </div>`;
+}
+
+// ─── Campo libre / presión / incidencia aleatoria ─────────────────────────
+const ftCanvas = document.getElementById('fieldTypeCanvas');
+const ftCtx = ftCanvas.getContext('2d');
+
+function drawFieldTypes() {
+  ftCanvas.width = ftCanvas.offsetWidth || 800;
+  const W = ftCanvas.width, H = ftCanvas.height;
+  ftCtx.clearRect(0, 0, W, H);
+
+  const panels = [
+    { x: W*0.17, label: 'Campo libre', color: '#ffaa00',
+      drawFn: (px, py) => {
+        // micrófono apuntando a fuente
+        ftCtx.fillStyle = '#ffaa00';
+        ftCtx.fillRect(px-6, py-22, 12, 44);
+        ftCtx.beginPath();
+        ftCtx.arc(px, py - 22, 12, Math.PI, 0);
+        ftCtx.fill();
+        // flecha desde fuente
+        ftCtx.beginPath();
+        ftCtx.moveTo(px - 70, py);
+        ftCtx.lineTo(px - 20, py);
+        ftCtx.strokeStyle = '#ffaa00'; ftCtx.lineWidth=2; ftCtx.stroke();
+        ftCtx.fillStyle='#ffaa00';
+        ftCtx.fillText('↑ fuente', px-70, py-8);
+      }
+    },
+    { x: W*0.5, label: 'Presión', color: '#00ffff',
+      drawFn: (px, py) => {
+        // micrófono contra pared
+        ftCtx.fillStyle = '#88aacc';
+        ftCtx.fillRect(px + 30, py - 50, 14, 100);
+        ftCtx.fillStyle = '#00ffff';
+        ftCtx.fillRect(px - 6, py - 22, 12, 44);
+        ftCtx.beginPath();
+        ftCtx.arc(px, py - 22, 12, Math.PI, 0);
+        ftCtx.fill();
+        ftCtx.fillStyle = '#99ccff';
+        ftCtx.font = '10px sans-serif';
+        ftCtx.fillText('pared', px + 34, py - 52);
+      }
+    },
+    { x: W*0.83, label: 'Inc. aleatoria', color: '#00ff44',
+      drawFn: (px, py) => {
+        // flechas desde múltiples ángulos
+        const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+        angles.forEach(deg => {
+          const rad = deg * Math.PI / 180;
+          ftCtx.beginPath();
+          ftCtx.moveTo(px + Math.cos(rad) * 55, py + Math.sin(rad) * 55);
+          ftCtx.lineTo(px + Math.cos(rad) * 25, py + Math.sin(rad) * 25);
+          ftCtx.strokeStyle = 'rgba(0,255,68,0.5)'; ftCtx.lineWidth=1.5; ftCtx.stroke();
+        });
+        ftCtx.fillStyle = '#00ff44';
+        ftCtx.fillRect(px-6, py-15, 12, 30);
+        ftCtx.beginPath();
+        ftCtx.arc(px, py-15, 10, Math.PI, 0);
+        ftCtx.fill();
+      }
+    }
+  ];
+
+  panels.forEach(p => {
+    ftCtx.save();
+    ftCtx.font = 'bold 12px sans-serif';
+    ftCtx.fillStyle = p.color;
+    ftCtx.textAlign = 'center';
+    ftCtx.fillText(p.label, p.x, H - 12);
+    p.drawFn(p.x, H * 0.48);
+    ftCtx.restore();
+  });
+}
+
+// ─── Patrones polares ─────────────────────────────────────────────────────
+const polarCanvas = document.getElementById('polarCanvas');
+const polarCtx = polarCanvas.getContext('2d');
+let currentPolar = 'omni';
+
+function initPolarCanvas() { polarCanvas.width = polarCanvas.offsetWidth || 400; }
+
+function drawPolar(key) {
+  polarCanvas.width = polarCanvas.offsetWidth || 400;
+  const W = polarCanvas.width, H = polarCanvas.height;
+  polarCtx.clearRect(0, 0, W, H);
+
+  const cx = W * 0.5, cy = H * 0.5;
+  const maxR = Math.min(W, H) * 0.42;
+  const data = POLAR_DATA[key];
+
+  // Círculos de referencia (0, -6, -12 dB)
+  [-0, -6, -12].forEach((db, i) => {
+    const r = maxR * (1 - i * 0.18);
+    polarCtx.beginPath();
+    polarCtx.arc(cx, cy, r, 0, Math.PI * 2);
+    polarCtx.strokeStyle = 'rgba(100,180,255,0.25)';
+    polarCtx.lineWidth = 1;
+    polarCtx.stroke();
+    polarCtx.fillStyle = '#99ccff';
+    polarCtx.font = '9px sans-serif';
+    polarCtx.fillText(`${db}dB`, cx + r + 3, cy - 3);
+  });
+
+  // Ejes
+  [0, 45, 90, 135].forEach(deg => {
+    const rad = deg * Math.PI / 180;
+    polarCtx.beginPath();
+    polarCtx.moveTo(cx - Math.cos(rad) * maxR, cy - Math.sin(rad) * maxR);
+    polarCtx.lineTo(cx + Math.cos(rad) * maxR, cy + Math.sin(rad) * maxR);
+    polarCtx.strokeStyle = 'rgba(100,180,255,0.20)';
+    polarCtx.lineWidth = 1;
+    polarCtx.stroke();
+  });
+
+  // Etiquetas de ángulo
+  const labels = ['0°', '45°', '90°', '135°', '180°', '225°', '270°', '315°'];
+  labels.forEach((lbl, i) => {
+    const rad = i * Math.PI / 4 - Math.PI / 2;
+    polarCtx.fillStyle = '#99ccff';
+    polarCtx.font = '10px sans-serif';
+    polarCtx.textAlign = 'center';
+    polarCtx.fillText(lbl, cx + Math.cos(rad) * (maxR + 16), cy + Math.sin(rad) * (maxR + 16));
+  });
+
+  // Patrón
+  polarCtx.beginPath();
+  for (let deg = 0; deg <= 360; deg++) {
+    const rad = deg * Math.PI / 180 - Math.PI / 2;
+    const val = data.fn(deg * Math.PI / 180);
+    const r = val * maxR;
+    const x = cx + Math.cos(rad) * r;
+    const y = cy + Math.sin(rad) * r;
+    if (deg === 0) polarCtx.moveTo(x, y);
+    else polarCtx.lineTo(x, y);
+  }
+  polarCtx.closePath();
+  polarCtx.fillStyle = 'rgba(0,255,255,0.12)';
+  polarCtx.fill();
+  polarCtx.strokeStyle = '#00ffff';
+  polarCtx.lineWidth = 2.5;
+  polarCtx.stroke();
+
+  // Punto frente (0°)
+  polarCtx.beginPath();
+  polarCtx.arc(cx, cy - maxR, 5, 0, Math.PI * 2);
+  polarCtx.fillStyle = '#ffaa00';
+  polarCtx.fill();
+  polarCtx.fillStyle = '#ffaa00';
+  polarCtx.font = '10px sans-serif';
+  polarCtx.textAlign = 'center';
+  polarCtx.fillText('frente', cx, cy - maxR - 10);
+
+  polarCtx.textAlign = 'left';
+}
+
+function setPolar(key) {
+  currentPolar = key;
+  document.querySelectorAll('#polarBtns .btn').forEach((b, i) => {
+    b.classList.toggle('active', Object.keys(POLAR_DATA)[i] === key);
+  });
+  const d = POLAR_DATA[key];
+  document.getElementById('polarDesc').innerHTML = d.desc;
+  document.getElementById('polarUses').innerHTML =
+    d.uses.split('\n').map(l => `<p style="margin-bottom:6px;">${l}</p>`).join('');
+  drawPolar(key);
+}
+
+// ─── Respuesta de frecuencia ──────────────────────────────────────────────
+const frCanvas = document.getElementById('freqRespCanvas');
+const frCtx = frCanvas.getContext('2d');
+
+function drawFreqResp() {
+  frCanvas.width = frCanvas.offsetWidth || 800;
+  const W = frCanvas.width, H = frCanvas.height;
+  frCtx.clearRect(0, 0, W, H);
+
+  const padL = 50, padR = 20, padT = 20, padB = 40;
+  const gW = W - padL - padR, gH = H - padT - padB;
+
+  // Ejes
+  frCtx.strokeStyle = 'rgba(150,200,255,0.7)';
+  frCtx.lineWidth = 1.5;
+  frCtx.beginPath();
+  frCtx.moveTo(padL, padT); frCtx.lineTo(padL, padT + gH);
+  frCtx.lineTo(padL + gW, padT + gH);
+  frCtx.stroke();
+
+  // Etiquetas eje X (frecuencia logarítmica)
+  const freqs = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+  const labels = ['20', '50', '100', '200', '500', '1k', '2k', '5k', '10k', '20k'];
+  frCtx.fillStyle = '#99ccff';
+  frCtx.font = '9px sans-serif';
+  frCtx.textAlign = 'center';
+  freqs.forEach((f, i) => {
+    const x = padL + (Math.log10(f / 20) / Math.log10(20000 / 20)) * gW;
+    frCtx.beginPath();
+    frCtx.moveTo(x, padT + gH);
+    frCtx.lineTo(x, padT + gH + 4);
+    frCtx.strokeStyle = 'rgba(150,200,255,0.4)';
+    frCtx.lineWidth = 1;
+    frCtx.stroke();
+    frCtx.fillText(labels[i], x, padT + gH + 14);
+
+    frCtx.beginPath();
+    frCtx.moveTo(x, padT);
+    frCtx.lineTo(x, padT + gH);
+    frCtx.strokeStyle = 'rgba(100,180,255,0.12)';
+    frCtx.stroke();
+  });
+  frCtx.fillText('Hz', padL + gW + 5, padT + gH + 14);
+
+  // Etiquetas eje Y (dB)
+  frCtx.textAlign = 'right';
+  [-20, -10, 0, 10].forEach(db => {
+    const y = padT + gH * 0.5 - db * (gH / 50);
+    frCtx.fillText(`${db}dB`, padL - 5, y + 4);
+    frCtx.beginPath();
+    frCtx.moveTo(padL, y); frCtx.lineTo(padL + gW, y);
+    frCtx.strokeStyle = 'rgba(100,180,255,0.15)';
+    frCtx.lineWidth = 1;
+    frCtx.stroke();
+  });
+
+  // Función para trazar curva
+  function plotCurve(responseFn, color, label) {
+    frCtx.beginPath();
+    for (let px = 0; px <= gW; px++) {
+      const f = 20 * Math.pow(20000 / 20, px / gW);
+      const db = responseFn(f);
+      const x = padL + px;
+      const y = padT + gH * 0.5 - db * (gH / 50);
+      if (px === 0) frCtx.moveTo(x, y);
+      else frCtx.lineTo(x, y);
+    }
+    frCtx.strokeStyle = color;
+    frCtx.lineWidth = 2.5;
+    frCtx.stroke();
+
+    // Etiqueta
+    const lx = padL + gW - 5;
+    const lf = 18000;
+    const ly = padT + gH * 0.5 - responseFn(lf) * (gH / 50);
+    frCtx.fillStyle = color;
+    frCtx.font = 'bold 10px sans-serif';
+    frCtx.textAlign = 'right';
+    frCtx.fillText(label, lx, ly - 6);
+  }
+
+  // Condensador: plano hasta ~18kHz, luego cae suave
+  plotCurve(f => {
+    if (f < 40) return -15 + (f - 20) * 0.5;
+    if (f > 15000) return -(f - 15000) * 0.0008;
+    return 0.5 * Math.sin(f * 0.0003);
+  }, '#00ffff', 'Condensador');
+
+  // Dinámico: cae en graves (<100Hz) y en agudos (>8kHz)
+  plotCurve(f => {
+    const bass = f < 100 ? -12 * (1 - f / 100) : 0;
+    const mid  = f > 2000 && f < 6000 ? 3 * Math.sin((f - 2000) / 4000 * Math.PI) : 0;
+    const hi   = f > 8000 ? -(f - 8000) * 0.002 : 0;
+    return bass + mid + hi;
+  }, '#ffaa00', 'Dinámico');
+
+  // Cinta: respuesta suave, caída en agudos
+  plotCurve(f => {
+    const hi = f > 6000 ? -(f - 6000) * 0.0015 : 0;
+    return hi - 1;
+  }, '#ff88ff', 'Cinta');
+
+  frCtx.textAlign = 'left';
+}
+
+// ─── Técnicas estéreo ─────────────────────────────────────────────────────
+function showTech(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tech-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'ab') drawAB();
+  else drawXY();
+}
+
+const abCanvas = document.getElementById('abCanvas');
+const abCtx = abCanvas.getContext('2d');
+
+function drawAB() {
+  abCanvas.width = abCanvas.offsetWidth || 700;
+  const W = abCanvas.width, H = abCanvas.height;
+  abCtx.clearRect(0, 0, W, H);
+
+  // Posiciones clave
+  const srcCX = W * 0.50, srcCY = H * 0.20;   // fuente central (naranja)
+  const srcLX = W * 0.68, srcLY = H * 0.20;   // fuente lateral (verde)
+  const mLx   = W * 0.15, mRx = W * 0.85;
+  const mY    = H * 0.70;
+
+  // ── Fuente central ──────────────────────────────────────────────────────
+  abCtx.beginPath();
+  abCtx.arc(srcCX, srcCY, 13, 0, Math.PI * 2);
+  abCtx.fillStyle = '#ffaa00';
+  abCtx.fill();
+  abCtx.fillStyle = '#ffaa00';
+  abCtx.font = 'bold 11px sans-serif';
+  abCtx.textAlign = 'center';
+  abCtx.fillText('Fuente central', srcCX, srcCY - 18);
+
+  // ── Fuente lateral ──────────────────────────────────────────────────────
+  abCtx.beginPath();
+  abCtx.arc(srcLX, srcLY, 11, 0, Math.PI * 2);
+  abCtx.fillStyle = '#44ff88';
+  abCtx.fill();
+  abCtx.fillStyle = '#44ff88';
+  abCtx.font = 'bold 11px sans-serif';
+  abCtx.textAlign = 'center';
+  abCtx.fillText('Fuente lateral', srcLX, srcLY - 18);
+
+  // ── Micrófonos L y R ────────────────────────────────────────────────────
+  function drawMicAB(mx) {
+    abCtx.fillStyle = '#00ffff';
+    abCtx.fillRect(mx - 7, mY - 26, 14, 38);
+    abCtx.beginPath();
+    abCtx.arc(mx, mY - 26, 13, Math.PI, 0);
+    abCtx.fill();
+  }
+  drawMicAB(mLx); drawMicAB(mRx);
+  abCtx.fillStyle = '#00ffff';
+  abCtx.font = '11px sans-serif';
+  abCtx.textAlign = 'center';
+  abCtx.fillText('Mic L', mLx, mY + 24);
+  abCtx.fillText('Mic R', mRx, mY + 24);
+
+  // ── Desde fuente central: caminos iguales → Δt = 0 ─────────────────────
+  [mLx, mRx].forEach(mx => {
+    abCtx.beginPath();
+    abCtx.moveTo(srcCX, srcCY + 13);
+    abCtx.lineTo(mx, mY - 26);
+    abCtx.strokeStyle = 'rgba(255,170,0,0.55)';
+    abCtx.lineWidth = 1.5;
+    abCtx.setLineDash([5, 4]);
+    abCtx.stroke();
+    abCtx.setLineDash([]);
+  });
+  abCtx.fillStyle = 'rgba(255,200,80,0.80)';
+  abCtx.font = '9px sans-serif';
+  abCtx.textAlign = 'center';
+  abCtx.fillText('Δt = 0', srcCX, srcCY + (mY - srcCY) * 0.48 - 6);
+
+  // ── Desde fuente lateral: camino corto a Mic R (azul), largo a Mic L (verde) ──
+  // Mic R (camino corto, azul)
+  abCtx.beginPath();
+  abCtx.moveTo(srcLX, srcLY + 11);
+  abCtx.lineTo(mRx, mY - 26);
+  abCtx.strokeStyle = '#4488ff';
+  abCtx.lineWidth = 2;
+  abCtx.stroke();
+
+  // Mic L (camino largo, verde + flecha indicando retraso)
+  abCtx.beginPath();
+  abCtx.moveTo(srcLX, srcLY + 11);
+  abCtx.lineTo(mLx, mY - 26);
+  abCtx.strokeStyle = '#44ff88';
+  abCtx.lineWidth = 2.5;
+  abCtx.stroke();
+  // Flecha en el punto medio de la línea verde
+  const mx2 = (srcLX + mLx) * 0.5, my2 = (srcLY + mY) * 0.5;
+  const ang = Math.atan2(mY - srcLY, mLx - srcLX);
+  abCtx.save();
+  abCtx.translate(mx2, my2);
+  abCtx.rotate(ang);
+  abCtx.beginPath();
+  abCtx.moveTo(-7, -5); abCtx.lineTo(0, 0); abCtx.lineTo(-7, 5);
+  abCtx.strokeStyle = '#44ff88';
+  abCtx.lineWidth = 2;
+  abCtx.stroke();
+  abCtx.restore();
+  // Etiqueta de retraso
+  abCtx.fillStyle = '#44ff88';
+  abCtx.font = 'bold 10px sans-serif';
+  abCtx.textAlign = 'left';
+  abCtx.fillText('Δt > 0 (retraso ITD)', mLx + 14, mY - 36);
+
+  // ── Regla de separación ─────────────────────────────────────────────────
+  const ruleY = H * 0.88;
+  abCtx.beginPath();
+  abCtx.moveTo(mLx, ruleY); abCtx.lineTo(mRx, ruleY);
+  abCtx.strokeStyle = '#ff4444'; abCtx.lineWidth = 2; abCtx.stroke();
+  [mLx, mRx].forEach(mx => {
+    abCtx.beginPath();
+    abCtx.moveTo(mx, ruleY - 5); abCtx.lineTo(mx, ruleY + 5);
+    abCtx.strokeStyle = '#ff4444'; abCtx.lineWidth = 2; abCtx.stroke();
+  });
+  abCtx.fillStyle = '#ff4444';
+  abCtx.font = '10px sans-serif';
+  abCtx.textAlign = 'center';
+  abCtx.fillText('separación ≥ 3× distancia fuente–mic  (posibles problemas de fase)', W * 0.5, ruleY + 16);
+
+  abCtx.textAlign = 'left';
+}
+
+const xyCanvas = document.getElementById('xyCanvas');
+const xyCtx = xyCanvas.getContext('2d');
+
+function drawXY() {
+  xyCanvas.width = xyCanvas.offsetWidth || 700;
+  const W = xyCanvas.width, H = xyCanvas.height;
+  xyCtx.clearRect(0, 0, W, H);
+
+  const cx = W * 0.5;
+  const srcCX = cx,        srcCY = H * 0.20;   // fuente central (naranja)
+  const srcLX = W * 0.72,  srcLY = H * 0.20;   // fuente lateral (verde)
+  const micX  = cx,        micY  = H * 0.68;   // posición coincidente de ambos mics
+
+  // ── Fuente central ──────────────────────────────────────────────────────
+  xyCtx.beginPath();
+  xyCtx.arc(srcCX, srcCY, 13, 0, Math.PI * 2);
+  xyCtx.fillStyle = '#ffaa00';
+  xyCtx.fill();
+  xyCtx.fillStyle = '#ffaa00';
+  xyCtx.font = 'bold 11px sans-serif';
+  xyCtx.textAlign = 'center';
+  xyCtx.fillText('Fuente central', srcCX, srcCY - 18);
+
+  // ── Fuente lateral ──────────────────────────────────────────────────────
+  xyCtx.beginPath();
+  xyCtx.arc(srcLX, srcLY, 11, 0, Math.PI * 2);
+  xyCtx.fillStyle = '#44ff88';
+  xyCtx.fill();
+  xyCtx.fillStyle = '#44ff88';
+  xyCtx.font = 'bold 11px sans-serif';
+  xyCtx.textAlign = 'center';
+  xyCtx.fillText('Fuente lateral', srcLX, srcLY - 18);
+
+  // ── Ambos micrófonos coincidentes, cruzados en X ─────────────────────
+  // Mic L: apunta hacia arriba-izquierda (−45°)
+  xyCtx.save();
+  xyCtx.translate(micX, micY);
+  xyCtx.rotate(-Math.PI / 4);
+  xyCtx.fillStyle = '#00ffff';
+  xyCtx.fillRect(-6, -32, 12, 36);
+  xyCtx.beginPath();
+  xyCtx.arc(0, -32, 12, Math.PI, 0);
+  xyCtx.fill();
+  xyCtx.restore();
+
+  // Mic R: apunta hacia arriba-derecha (+45°)
+  xyCtx.save();
+  xyCtx.translate(micX, micY);
+  xyCtx.rotate(Math.PI / 4);
+  xyCtx.fillStyle = '#44aaff';
+  xyCtx.fillRect(-6, -32, 12, 36);
+  xyCtx.beginPath();
+  xyCtx.arc(0, -32, 12, Math.PI, 0);
+  xyCtx.fill();
+  xyCtx.restore();
+
+  // Ángulo entre los mics
+  xyCtx.beginPath();
+  xyCtx.arc(micX, micY, 26, -Math.PI * 0.75, -Math.PI * 0.25);
+  xyCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+  xyCtx.lineWidth = 1.5;
+  xyCtx.stroke();
+  xyCtx.fillStyle = 'rgba(255,255,255,0.6)';
+  xyCtx.font = '9px sans-serif';
+  xyCtx.textAlign = 'center';
+  xyCtx.fillText('90°', micX, micY - 32);
+
+  // Etiquetas de mics
+  xyCtx.fillStyle = '#00ffff';
+  xyCtx.font = '11px sans-serif';
+  xyCtx.textAlign = 'right';
+  xyCtx.fillText('Mic L', micX - 32, micY + 24);
+  xyCtx.fillStyle = '#44aaff';
+  xyCtx.textAlign = 'left';
+  xyCtx.fillText('Mic R', micX + 32, micY + 24);
+
+  // ── Desde fuente central: igual distancia a ambos mics → Δt = 0 ────────
+  xyCtx.beginPath();
+  xyCtx.moveTo(srcCX, srcCY + 13);
+  xyCtx.lineTo(micX, micY);
+  xyCtx.strokeStyle = 'rgba(255,170,0,0.65)';
+  xyCtx.lineWidth = 2;
+  xyCtx.setLineDash([5, 4]);
+  xyCtx.stroke();
+  xyCtx.setLineDash([]);
+  xyCtx.fillStyle = 'rgba(255,200,80,0.80)';
+  xyCtx.font = '9px sans-serif';
+  xyCtx.textAlign = 'right';
+  xyCtx.fillText('L = R (Δt = 0)', srcCX - 8, srcCY + (micY - srcCY) * 0.45);
+
+  // ── Desde fuente lateral: misma distancia física pero distinta amplitud ──
+  // Línea desde fuente lateral hasta los mics (mismo punto → mismo tiempo)
+  xyCtx.beginPath();
+  xyCtx.moveTo(srcLX, srcLY + 11);
+  xyCtx.lineTo(micX, micY);
+  xyCtx.strokeStyle = '#44ff88';
+  xyCtx.lineWidth = 2;
+  xyCtx.stroke();
+  xyCtx.fillStyle = '#44ff88';
+  xyCtx.font = '9px sans-serif';
+  xyCtx.textAlign = 'center';
+  xyCtx.fillText('Δt = 0', (srcLX + micX) / 2 + 14, (srcLY + micY) / 2 - 6);
+
+  // Indicadores de amplitud diferente: R capta más (fuente lateral está hacia la derecha)
+  xyCtx.fillStyle = '#44aaff';
+  xyCtx.font = 'bold 10px sans-serif';
+  xyCtx.textAlign = 'left';
+  xyCtx.fillText('R: amp. ↑ (fuente más al frente)', micX + 36, micY - 14);
+  xyCtx.fillStyle = '#00ffff';
+  xyCtx.textAlign = 'right';
+  xyCtx.fillText('L: amp. ↓', micX - 36, micY - 14);
+
+  // ── Leyenda inferior ────────────────────────────────────────────────────
+  xyCtx.fillStyle = '#00ff44';
+  xyCtx.font = '10px sans-serif';
+  xyCtx.textAlign = 'center';
+  xyCtx.fillText('Mics coincidentes → ΔITD = 0 siempre · diferencia de amplitud (ΔIID) según dirección', cx, H - 10);
+
+  xyCtx.textAlign = 'left';
+}
+
+// ─── Cables ───────────────────────────────────────────────────────────────
+const cableCanvas = document.getElementById('cableCanvas');
+const cableCtx = cableCanvas.getContext('2d');
+
+function drawCables() {
+  cableCanvas.width = cableCanvas.offsetWidth || 800;
+  const W = cableCanvas.width, H = cableCanvas.height;
+  cableCtx.clearRect(0, 0, W, H);
+
+  const panels = [
+    { x: W*0.18, label:'XLR (balanceado)', color:'#00ffff',
+      draw:(px,py)=>{
+        // cuerpo circular
+        cableCtx.beginPath(); cableCtx.arc(px,py,28,0,Math.PI*2);
+        cableCtx.fillStyle='#1a3050'; cableCtx.fill();
+        cableCtx.strokeStyle='#00ffff'; cableCtx.lineWidth=2; cableCtx.stroke();
+        // 3 pines
+        const pins=[[-10,-12],[10,-12],[0,10]];
+        pins.forEach(([ox,oy],i)=>{
+          cableCtx.beginPath(); cableCtx.arc(px+ox,py+oy,4,0,Math.PI*2);
+          cableCtx.fillStyle=['#88aacc','#00ff44','#ff4444'][i]; cableCtx.fill();
+        });
+        cableCtx.fillStyle='#99ccff'; cableCtx.font='9px sans-serif'; cableCtx.textAlign='center';
+        cableCtx.fillText('1:GND',px-14,py+32);
+        cableCtx.fillText('2:Hot',px+10,py+42);
+        cableCtx.fillText('3:Neg',px+5,py+52);
+      }
+    },
+    { x: W*0.5, label:'TRS ¼" (balanceado)', color:'#ffaa00',
+      draw:(px,py)=>{
+        // plug cilíndrico
+        cableCtx.fillStyle='#888'; cableCtx.fillRect(px-8,py-40,16,80);
+        // Tip
+        cableCtx.fillStyle='#00ff44'; cableCtx.fillRect(px-8,py-40,16,16);
+        cableCtx.fillStyle='#0a1520'; cableCtx.fillRect(px-10,py-24,20,4);
+        // Ring
+        cableCtx.fillStyle='#ff4444'; cableCtx.fillRect(px-8,py-20,16,14);
+        cableCtx.fillStyle='#0a1520'; cableCtx.fillRect(px-10,py-6,20,4);
+        // Sleeve
+        cableCtx.fillStyle='#888'; cableCtx.fillRect(px-8,py-2,16,38);
+        cableCtx.fillStyle='#99ccff'; cableCtx.font='9px sans-serif'; cableCtx.textAlign='right';
+        cableCtx.fillText('Tip (Hot)',px-12,py-30);
+        cableCtx.fillText('Ring (Neg)',px-12,py-10);
+        cableCtx.fillText('Sleeve (GND)',px-12,py+22);
+      }
+    },
+    { x: W*0.82, label:'TS ¼" (no balanceado)', color:'#ff4444',
+      draw:(px,py)=>{
+        cableCtx.fillStyle='#888'; cableCtx.fillRect(px-8,py-40,16,80);
+        cableCtx.fillStyle='#00ff44'; cableCtx.fillRect(px-8,py-40,16,20);
+        cableCtx.fillStyle='#0a1520'; cableCtx.fillRect(px-10,py-20,20,4);
+        cableCtx.fillStyle='#888'; cableCtx.fillRect(px-8,py-16,16,56);
+        cableCtx.fillStyle='#99ccff'; cableCtx.font='9px sans-serif'; cableCtx.textAlign='right';
+        cableCtx.fillText('Tip (Hot)',px-12,py-28);
+        cableCtx.fillText('Sleeve (GND)',px-12,py+18);
+        cableCtx.fillStyle='#ff4444'; cableCtx.textAlign='center';
+        cableCtx.fillText('Susceptible a ruido', px, py+70);
+      }
+    }
+  ];
+
+  panels.forEach(p=>{
+    cableCtx.fillStyle = p.color;
+    cableCtx.font='bold 11px sans-serif'; cableCtx.textAlign='center';
+    cableCtx.fillText(p.label, p.x, 20);
+    p.draw(p.x, H*0.5);
+  });
+  cableCtx.textAlign='left';
+}
+
+// ─── Controles y eventos ──────────────────────────────────────────────────
+let _dynAudio = null;
+
+document.getElementById('dynFreq').addEventListener('input', function(){
+  document.getElementById('dynFreqVal').textContent = this.value + ' Hz (visualización)';
+  if (_dynAudio) _dynAudio.osc.frequency.value = parseFloat(this.value) * 110;
+});
+document.getElementById('dynAmp').addEventListener('input', function(){
+  document.getElementById('dynAmpVal').textContent = this.value;
+  if (_dynAudio) _dynAudio.gainNode.gain.value = parseFloat(this.value) / 30 * 0.4;
+});
+document.getElementById('condFreq').addEventListener('input', function(){
+  document.getElementById('condFreqVal').textContent = this.value + ' Hz';
+});
+document.getElementById('condSize').addEventListener('input', function(){
+  const v = parseFloat(this.value);
+  document.getElementById('condSizeVal').textContent = v < 30 ? 'Pequeño (mayor rango freq.)' : v > 45 ? 'Grande (más sensible)' : 'Mediano';
+});
+
+function dynPlay() {
+  stopAllAudio();
+  const freq = parseFloat(document.getElementById('dynFreq').value) * 110;
+  const gain = parseFloat(document.getElementById('dynAmp').value) / 30 * 0.4;
+  _dynAudio = playTone(freq, 0, 'sine', gain);
+  _dynAudio.osc.onended = () => { _dynAudio = null; };
+}
+
+// ─── Inicialización ───────────────────────────────────────────────────────
+function init() {
+  initDynCanvas();
+  initCondCanvas();
+  initPolarCanvas();
+  drawDynamic(0);
+  drawCondenser(0);
+  drawFieldTypes();
+  setPolar('omni');
+  drawFreqResp();
+  drawAB();
+  drawCables();
+  showMicType('dynamic');
+}
+
+window.addEventListener('resize', () => {
+  initDynCanvas();
+  initCondCanvas();
+  initPolarCanvas();
+  drawFieldTypes();
+  drawPolar(currentPolar);
+  drawFreqResp();
+  drawCables();
+});
+
+init();
+</script>
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+</body>
+</html>

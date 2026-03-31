@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. El Impulso Sonoro — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    /* Clases del monolito usadas en esta viñeta */
+    .bullets {
+      list-style: none;
+      margin-bottom: 20px;
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bullets li {
+      padding: 8px 12px 8px 28px;
+      position: relative;
+      color: var(--text-dim);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      background: rgba(255,255,255,.02);
+      border-radius: 6px;
+    }
+    .bullets li::before {
+      content: "▸";
+      position: absolute;
+      left: 10px;
+      color: var(--accent-2);
+    }
+    .bullets li strong { color: var(--text-primary); }
+
+    .value-display {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    .info-display {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 14px;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+    }
+    .info-display strong { color: var(--text-primary); }
+
+    .play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    .play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,229,255,.35); }
+    .play-btn.stop-btn {
+      background: linear-gradient(135deg, #ff6b6b, #c0392b);
+      color: #fff;
+    }
+    .play-btn.stop-btn:hover { box-shadow: 0 4px 14px rgba(255,107,107,.35); }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 200px;
+    }
+    .control-group label {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body class="sec-acustica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Acústica</a>
+  <a href="../01_serie_armonica/index.html">1. Serie Armónica</a>
+  <a href="../02_serie_musical/index.html">2. Serie Musical</a>
+  <a href="../03_formantes/index.html">3. Formantes</a>
+  <a href="../04_diseno_acustico/index.html">4. Diseño Acústico</a>
+  <a href="../05_impulso_sonoro/index.html" class="active">5. Impulso Sonoro</a>
+  <a href="../06_reverberacion/index.html">6. Reverberación</a>
+  <a href="../07_respuesta_impulso/index.html">7. Respuesta al Impulso</a>
+  <a href="../08_simulacion_sala/index.html">8. Simulación de Sala</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. El Impulso Sonoro</h1>
+      <p class="subtitle">Delta de Dirac como límite de la suma de cosenos — Núcleo de Dirichlet</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>5. El Impulso Sonoro</h2>
+    <p class="description">
+      Un <span class="kw">impulso sonoro</span> es una señal de duración infinitesimal — el
+      <span class="kw">delta de Dirac δ(t)</span>. Su propiedad más importante: contiene
+      <span class="kw">todas las frecuencias con la misma amplitud</span> (espectro plano).
+      Aquí puedes construirlo como una suma de sinusoides: cada componente es un coseno de
+      frecuencia k·f₀. A medida que agregas más, la suma se parece cada vez más a un impulso —
+      todas las sinusoides se suman constructivamente en <em>t = 0</em> y se cancelan en el resto.
+    </p>
+    <ul class="bullets">
+      <li><strong>Suma de N cosenos:</strong> f(t) = (1/N) · Σ cos(2πk·f₀·t), k = 1…N</li>
+      <li><strong>Espectro plano:</strong> cada armónico tiene igual amplitud → espectro completamente uniforme</li>
+      <li><strong>Convergencia al impulso:</strong> conforme N → ∞, la función converge al núcleo de Dirichlet y finalmente a δ(t)</li>
+      <li><strong>Fenómeno de Gibbs:</strong> los lóbulos laterales nunca desaparecen del todo, solo se hacen más estrechos</li>
+    </ul>
+
+    <div class="controls" style="margin-bottom:1rem;">
+      <div class="control-group">
+        <label for="impulse_n">Número de sinusoides (N):</label>
+        <input type="range" id="impulse_n" min="1" max="100" value="3" step="1">
+        <span class="value-display" id="impulse_n_val">3</span>
+      </div>
+      <div class="control-group" style="flex:0 0 auto;min-width:auto;">
+        <label>Escuchar</label>
+        <div style="display:flex;gap:8px;">
+          <button class="play-btn" id="impulse_play">▶ Reproducir</button>
+          <button class="play-btn stop-btn" id="impulse_stop">■ Detener</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-label">Suma de N sinusoides — cuanto mayor N, más se parece a un impulso</div>
+    <canvas id="impulseCanvas" height="220"></canvas>
+
+    <div class="canvas-label" style="margin-top:1.2rem;">Espectro de amplitud — todas las frecuencias con igual amplitud</div>
+    <canvas id="impulseSpecCanvas" height="130"></canvas>
+
+    <div class="info-display" id="impulse_info">
+      Con N=3 sinusoides la forma es suave y periódica — muy lejos de un impulso.
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+
+  // ── Audio local ────────────────────────────────────────────────────────────
+  let _audioCtx = null;
+  let _activeOscillators = [];
+  let _masterGain = null;
+
+  function getLocalAudioContext() {
+    if (!_audioCtx || _audioCtx.state === 'closed') {
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    return _audioCtx;
+  }
+
+  function stopLocalAudio() {
+    _activeOscillators.forEach(osc => { try { osc.stop(); } catch(e){} });
+    _activeOscillators.length = 0;
+    if (_masterGain) {
+      try { _masterGain.disconnect(); } catch(e){}
+      _masterGain = null;
+    }
+  }
+
+  // ── Dibujo: dominio temporal ───────────────────────────────────────────────
+  const timeCanvas = document.getElementById('impulseCanvas');
+  const specCanvas = document.getElementById('impulseSpecCanvas');
+  const tCtx = timeCanvas.getContext('2d');
+  const sCtx = specCanvas.getContext('2d');
+
+  function getN() { return parseInt(document.getElementById('impulse_n').value); }
+
+  function drawTimeDomain(N) {
+    timeCanvas.width = timeCanvas.offsetWidth || 800;
+    const W = timeCanvas.width, H = timeCanvas.height;
+    tCtx.fillStyle = '#0d1b2a';
+    tCtx.fillRect(0, 0, W, H);
+
+    const padL = 54, padR = 20, padT = 18, padB = 28;
+    const dW = W - padL - padR;
+    const midY = padT + (H - padT - padB) / 2;
+    const amp = (H - padT - padB) * 0.44;
+
+    // yScale: maps signal amplitude → canvas pixels
+    // Peak of sum at t=0 is N → maps to amp px
+    const yScale = amp / N;
+
+    // Grid lines
+    tCtx.strokeStyle = 'rgba(100,150,200,0.18)';
+    tCtx.lineWidth = 1;
+    tCtx.setLineDash([4, 4]);
+    for (let frac = -1; frac <= 1; frac += 0.5) {
+      const gy = midY - frac * amp;
+      tCtx.beginPath(); tCtx.moveTo(padL, gy); tCtx.lineTo(padL + dW, gy); tCtx.stroke();
+    }
+    tCtx.setLineDash([]);
+
+    // Axes
+    tCtx.strokeStyle = 'rgba(150,190,230,0.45)';
+    tCtx.lineWidth = 1.5;
+    tCtx.beginPath(); tCtx.moveTo(padL, midY); tCtx.lineTo(padL + dW, midY); tCtx.stroke();
+    tCtx.beginPath(); tCtx.moveTo(padL + dW / 2, padT); tCtx.lineTo(padL + dW / 2, padT + H - padT - padB); tCtx.stroke();
+
+    // Axis labels — y-axis top shows "N" (actual peak value)
+    tCtx.fillStyle = 'rgba(180,210,240,0.55)';
+    tCtx.font = '11px sans-serif';
+    tCtx.textAlign = 'center';
+    tCtx.fillText('−T/2', padL + 4, midY + 14);
+    tCtx.fillText('0', padL + dW / 2, midY + 14);
+    tCtx.fillText('+T/2', padL + dW - 4, midY + 14);
+    tCtx.textAlign = 'right';
+    tCtx.fillText(N, padL - 4, midY - amp + 4);
+    tCtx.fillText('0', padL - 4, midY + 4);
+
+    // Draw individual sinusoids (up to 5) as faint colored lines
+    const palette = ['#ff6b6b', '#ffd700', '#00e5ff', '#a29bfe', '#55efc4'];
+    const showComps = Math.min(N, 5);
+    for (let k = 1; k <= showComps; k++) {
+      tCtx.globalAlpha = 0.28;
+      tCtx.strokeStyle = palette[(k - 1) % palette.length];
+      tCtx.lineWidth = 1;
+      tCtx.beginPath();
+      for (let px = 0; px <= dW; px++) {
+        const t = -0.5 + px / dW;
+        const y = Math.cos(2 * Math.PI * k * t);
+        const cy = midY - y * yScale;
+        px === 0 ? tCtx.moveTo(padL + px, cy) : tCtx.lineTo(padL + px, cy);
+      }
+      tCtx.stroke();
+    }
+    tCtx.globalAlpha = 1;
+
+    // Draw the un-normalized sum (amplitude grows with N)
+    tCtx.strokeStyle = '#e0f0ff';
+    tCtx.lineWidth = 2.2;
+    tCtx.beginPath();
+    for (let px = 0; px <= dW; px++) {
+      const t = -0.5 + px / dW;
+      let sum = 0;
+      for (let k = 1; k <= N; k++) sum += Math.cos(2 * Math.PI * k * t);
+      const cy = midY - sum * yScale;
+      px === 0 ? tCtx.moveTo(padL + px, cy) : tCtx.lineTo(padL + px, cy);
+    }
+    tCtx.stroke();
+
+    // Highlight the peak at t=0
+    const peakX = padL + dW / 2;
+    tCtx.strokeStyle = 'rgba(255,215,0,0.7)';
+    tCtx.lineWidth = 1;
+    tCtx.setLineDash([3, 3]);
+    tCtx.beginPath(); tCtx.moveTo(peakX, padT); tCtx.lineTo(peakX, midY - amp); tCtx.stroke();
+    tCtx.setLineDash([]);
+
+    // N and peak-value label
+    tCtx.fillStyle = 'rgba(255,215,0,0.85)';
+    tCtx.font = 'bold 12px monospace';
+    tCtx.textAlign = 'left';
+    tCtx.fillText('N = ' + N + '  (pico = ' + N + ')', padL + 8, padT + 16);
+  }
+
+  // ── Dibujo: espectro ───────────────────────────────────────────────────────
+  function drawSpectrum(N) {
+    specCanvas.width = specCanvas.offsetWidth || 800;
+    const W = specCanvas.width, H = specCanvas.height;
+    sCtx.fillStyle = '#0d1b2a';
+    sCtx.fillRect(0, 0, W, H);
+
+    const padL = 50, padR = 15, padT = 12, padB = 28;
+    const dW = W - padL - padR;
+    const dH = H - padT - padB;
+    const baseY = padT + dH;
+
+    // Axes
+    sCtx.strokeStyle = 'rgba(150,190,230,0.4)';
+    sCtx.lineWidth = 1.2;
+    sCtx.beginPath();
+    sCtx.moveTo(padL, padT); sCtx.lineTo(padL, baseY);
+    sCtx.lineTo(padL + dW, baseY);
+    sCtx.stroke();
+
+    // Labels
+    sCtx.fillStyle = 'rgba(180,210,240,0.55)';
+    sCtx.font = '11px sans-serif';
+    sCtx.textAlign = 'center';
+    sCtx.fillText('Frecuencia (armónico k)', padL + dW / 2, H - 4);
+    sCtx.textAlign = 'right';
+    sCtx.fillText('|Ck|', padL - 4, padT + 10);
+
+    const maxBars = Math.min(N, 100);
+    const barW = Math.max(2, dW / (maxBars + 1));
+    const barH = dH * 0.72;
+
+    for (let k = 1; k <= maxBars; k++) {
+      const x = padL + (k - 0.5) * (dW / (maxBars + 1));
+      const hue = 210 + (k / maxBars) * 60;
+      sCtx.fillStyle = `hsla(${hue}, 75%, 58%, 0.88)`;
+      sCtx.fillRect(x - barW * 0.4, baseY - barH, barW * 0.8, barH);
+    }
+
+    // Annotation
+    sCtx.fillStyle = 'rgba(200,230,255,0.5)';
+    sCtx.font = '11px sans-serif';
+    sCtx.textAlign = 'right';
+    sCtx.fillText('← todas con igual amplitud (espectro plano)', padL + dW - 4, padT + 11);
+  }
+
+  // ── Info text ──────────────────────────────────────────────────────────────
+  function updateInfo(N) {
+    const el = document.getElementById('impulse_info');
+    if (!el) return;
+    if (N <= 3)
+      el.innerHTML = `<strong>N=${N}:</strong> forma suave y periódica — lejos de un impulso. Solo bajas frecuencias.`;
+    else if (N <= 10)
+      el.innerHTML = `<strong>N=${N}:</strong> el pico en t=0 empieza a distinguirse del resto de la onda.`;
+    else if (N <= 25)
+      el.innerHTML = `<strong>N=${N}:</strong> pico nítido. Los lóbulos laterales (fenómeno de Gibbs) son visibles.`;
+    else if (N <= 45)
+      el.innerHTML = `<strong>N=${N}:</strong> muy concentrado en t=0. El espectro tiene ${N} frecuencias iguales.`;
+    else
+      el.innerHTML = `<strong>N=${N}:</strong> aproximación muy cercana a δ(t). Con N → ∞ converge al impulso ideal.`;
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function render() {
+    const N = getN();
+    drawTimeDomain(N);
+    drawSpectrum(N);
+    updateInfo(N);
+  }
+
+  // ── Eventos ────────────────────────────────────────────────────────────────
+  document.getElementById('impulse_n').addEventListener('input', (e) => {
+    document.getElementById('impulse_n_val').textContent = e.target.value;
+    render();
+  });
+
+  document.getElementById('impulse_play').addEventListener('click', () => {
+    stopLocalAudio();
+    const actx = getLocalAudioContext();
+    const N = getN();
+    const f0 = 110;
+    const master = actx.createGain();
+    master.gain.setValueAtTime(0.18 / Math.sqrt(N), actx.currentTime);
+    master.connect(actx.destination);
+    _masterGain = master;
+    for (let k = 1; k <= N; k++) {
+      const osc = actx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = f0 * k;
+      const g = actx.createGain();
+      g.gain.setValueAtTime(1, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 1.2);
+      osc.connect(g); g.connect(master);
+      osc.start(actx.currentTime);
+      osc.stop(actx.currentTime + 1.2);
+      _activeOscillators.push(osc);
+    }
+  });
+
+  document.getElementById('impulse_stop').addEventListener('click', stopLocalAudio);
+
+  window.addEventListener('resize', render);
+
+  // Renderizar al cargar
+  setTimeout(render, 80);
+</script>
+</body>
+</html>

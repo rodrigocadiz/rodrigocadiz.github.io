@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Círculo Unitario — Parámetros del Sonido</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .module-desc {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .control-group .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+    button.play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    button.play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,229,255,.3); }
+    button.play-btn.playing { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+    .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .flex-row > div { flex: 1; min-width: 280px; }
+  </style>
+</head>
+<body class="sec-sonido">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Parámetros del Sonido</a>
+  <a href="../01_circulo_unitario/index.html" class="active">1. Círculo Unitario</a>
+  <a href="../02_parametros/index.html">2. Parámetros</a>
+  <a href="../03_suma_sinusoides/index.html">3. Suma de Sinusoides</a>
+  <a href="../04_espectro/index.html">4. Espectro</a>
+  <a href="../05_armonicos_parciales/index.html">5. Armónicos vs Parciales</a>
+  <a href="../06_sintetizador_aditivo/index.html">6. Sintetizador Aditivo</a>
+  <a href="../07_espectrograma/index.html">7. Espectrograma</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Círculo Unitario</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+
+    <div class="module-desc">
+      El <strong>círculo unitario</strong> es la base geométrica de las funciones seno y coseno.
+      Un punto que gira a velocidad constante proyecta una onda sinusoidal. La velocidad de
+      rotación determina la <strong>frecuencia</strong> de la oscilación.<br><br>
+      El slider de <span class="kw">velocidad angular</span> controla únicamente la animación visual.
+      El slider de <span class="kw">frecuencia de audio</span> controla el tono del sonido de forma
+      independiente — ambos parámetros no están acoplados.<br><br>
+      A partir de aproximadamente <strong style="color:#ffaa00;">20 Hz</strong>, este movimiento
+      oscilatorio se convierte en un <strong style="color:#ffaa00;">sonido audible</strong>. Por debajo
+      de esa frecuencia solo percibimos el movimiento, no un tono.
+    </div>
+
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Frecuencia (velocidad angular)</label>
+        <div class="value" id="m1FreqVal">0.1 Hz</div>
+        <input type="range" id="m1Freq" min="0.1" max="10" step="0.1" value="0.1" oninput="m1UpdateFreq()">
+      </div>
+      <div class="control-group">
+        <label>Frecuencia de audio</label>
+        <div class="value" id="m1AudioFreqVal">220 Hz</div>
+        <input type="range" id="m1AudioFreq" min="55" max="880" step="1" value="220" oninput="m1UpdateAudioFreq()">
+      </div>
+      <div class="control-group" style="flex:0; min-width:auto;">
+        <label>Sonido</label>
+        <button class="play-btn" id="m1PlayBtn" onclick="m1ToggleAudio()">▶ Reproducir</button>
+      </div>
+    </div>
+
+    <div class="flex-row">
+      <div style="flex:0 0 280px; min-width:280px;">
+        <div class="canvas-label">Círculo Unitario</div>
+        <canvas id="m1Circle" width="280" height="280"></canvas>
+        <div class="canvas-label" style="color:#4cff91;">Coseno (proyección vertical → abajo)</div>
+        <canvas id="m1CosWave" width="280" height="280"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label" style="color:#00e5ff;">Seno (proyección horizontal → derecha)</div>
+        <canvas id="m1Wave" width="700" height="280"></canvas>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+const VAR_ACCENT = '#00e5ff';
+
+let audioCtx = null;
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  for (let y = 0; y < h; y += h / 8) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  for (let x = 0; x < w; x += w / 16) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+}
+
+// ── Module 1 — Unit Circle ──
+let m1Angle = 0;
+let m1Playing = false;
+let m1Osc = null, m1Gain = null;
+const m1HistorySin = [];
+const m1HistoryCos = [];
+const m1HistoryLen = 350;
+
+function m1UpdateFreq() {
+  document.getElementById('m1FreqVal').textContent =
+    parseFloat(document.getElementById('m1Freq').value).toFixed(1) + ' Hz';
+}
+function m1UpdateAudioFreq() {
+  const f = parseFloat(document.getElementById('m1AudioFreq').value);
+  document.getElementById('m1AudioFreqVal').textContent = f + ' Hz';
+  if (m1Osc) m1Osc.frequency.setTargetAtTime(f, audioCtx.currentTime, 0.02);
+}
+
+function m1ToggleAudio() {
+  if (!m1Playing) {
+    const ctx = getAudioCtx();
+    m1Osc = ctx.createOscillator();
+    m1Gain = ctx.createGain();
+    m1Osc.type = 'sine';
+    m1Osc.frequency.value = parseFloat(document.getElementById('m1AudioFreq').value);
+    m1Gain.gain.value = 0.3;
+    m1Osc.connect(m1Gain).connect(masterGain);
+    m1Osc.start();
+    m1Playing = true;
+    document.getElementById('m1PlayBtn').textContent = '⏹ Detener';
+    document.getElementById('m1PlayBtn').classList.add('playing');
+  } else {
+    if (m1Osc) { m1Osc.stop(); m1Osc = null; }
+    m1Playing = false;
+    document.getElementById('m1PlayBtn').textContent = '▶ Reproducir';
+    document.getElementById('m1PlayBtn').classList.remove('playing');
+  }
+}
+
+function m1Draw() {
+  const freq = parseFloat(document.getElementById('m1Freq').value);
+  const speed = freq * 2 * Math.PI / 60;
+  m1Angle += speed;
+
+  const sinV = Math.sin(m1Angle);
+  const cosV = Math.cos(m1Angle);
+  m1HistorySin.unshift(sinV);
+  m1HistoryCos.unshift(cosV);
+  if (m1HistorySin.length > m1HistoryLen) m1HistorySin.pop();
+  if (m1HistoryCos.length > m1HistoryLen) m1HistoryCos.pop();
+
+  const cc = document.getElementById('m1Circle');
+  const cctx = cc.getContext('2d');
+  const cw = cc.width = cc.offsetWidth || cc.width, ch = cc.height;
+  const cx = cw / 2, cy = ch / 2, r = Math.min(cw, ch) * 0.36;
+  cctx.clearRect(0, 0, cw, ch);
+
+  cctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  cctx.beginPath(); cctx.moveTo(0, cy); cctx.lineTo(cw, cy); cctx.stroke();
+  cctx.beginPath(); cctx.moveTo(cx, 0); cctx.lineTo(cx, ch); cctx.stroke();
+
+  cctx.strokeStyle = 'rgba(150,200,255,0.70)';
+  cctx.lineWidth = 1.5;
+  cctx.beginPath(); cctx.arc(cx, cy, r, 0, Math.PI * 2); cctx.stroke();
+
+  const px = cx + cosV * r;
+  const py = cy - sinV * r;
+  cctx.strokeStyle = 'rgba(255,255,255,0.70)';
+  cctx.beginPath(); cctx.moveTo(cx, cy); cctx.lineTo(px, py); cctx.stroke();
+
+  cctx.strokeStyle = 'rgba(0,229,255,0.65)';
+  cctx.setLineDash([4,4]);
+  cctx.beginPath(); cctx.moveTo(px, py); cctx.lineTo(cw, py); cctx.stroke();
+  cctx.setLineDash([]);
+
+  cctx.strokeStyle = 'rgba(76,255,145,0.65)';
+  cctx.setLineDash([4,4]);
+  cctx.beginPath(); cctx.moveTo(px, py); cctx.lineTo(px, ch); cctx.stroke();
+  cctx.setLineDash([]);
+
+  cctx.strokeStyle = 'rgba(0,229,255,.6)';
+  cctx.lineWidth = 2.5;
+  cctx.beginPath(); cctx.moveTo(px, cy); cctx.lineTo(px, py); cctx.stroke();
+  cctx.lineWidth = 1;
+
+  cctx.fillStyle = '#fff';
+  cctx.beginPath(); cctx.arc(px, py, 7, 0, Math.PI * 2); cctx.fill();
+  cctx.fillStyle = VAR_ACCENT;
+  cctx.beginPath(); cctx.arc(px, py, 5, 0, Math.PI * 2); cctx.fill();
+
+  cctx.fillStyle = VAR_ACCENT;
+  cctx.beginPath(); cctx.arc(cw - 5, py, 4, 0, Math.PI * 2); cctx.fill();
+  cctx.fillStyle = '#4cff91';
+  cctx.beginPath(); cctx.arc(px, ch - 5, 4, 0, Math.PI * 2); cctx.fill();
+
+  cctx.font = '11px sans-serif';
+  cctx.fillStyle = VAR_ACCENT;
+  cctx.fillText('sen=' + sinV.toFixed(2), cw - 70, py - 10);
+  cctx.fillStyle = '#4cff91';
+  cctx.fillText('cos=' + cosV.toFixed(2), px - 20, ch - 14);
+
+  const wc = document.getElementById('m1Wave');
+  const wctx = wc.getContext('2d');
+  const ww = wc.width = wc.offsetWidth || wc.width, wh = wc.height;
+  wctx.clearRect(0, 0, ww, wh);
+  drawGrid(wctx, ww, wh);
+
+  wctx.strokeStyle = VAR_ACCENT;
+  wctx.lineWidth = 2.5;
+  wctx.beginPath();
+  for (let i = 0; i < m1HistorySin.length; i++) {
+    const x = i * (ww / m1HistoryLen);
+    const y = wh / 2 - m1HistorySin[i] * (wh * 0.38);
+    if (i === 0) wctx.moveTo(x, y); else wctx.lineTo(x, y);
+  }
+  wctx.stroke();
+
+  wctx.font = '12px sans-serif';
+  wctx.fillStyle = VAR_ACCENT;
+  wctx.fillText('● Seno = proyección vertical del punto', 10, 20);
+
+  const cosC = document.getElementById('m1CosWave');
+  const cosCtx = cosC.getContext('2d');
+  const cosW = cosC.width = cosC.offsetWidth || cosC.width, cosH = cosC.height;
+  cosCtx.clearRect(0, 0, cosW, cosH);
+  cosCtx.strokeStyle = 'rgba(150,200,255,0.70)';
+  cosCtx.lineWidth = 1;
+  cosCtx.beginPath(); cosCtx.moveTo(cosW / 2, 0); cosCtx.lineTo(cosW / 2, cosH); cosCtx.stroke();
+  cosCtx.strokeStyle = 'rgba(100,180,255,0.35)';
+  for (let x = 0; x < cosW; x += cosW / 8) {
+    cosCtx.beginPath(); cosCtx.moveTo(x, 0); cosCtx.lineTo(x, cosH); cosCtx.stroke();
+  }
+  for (let y = 0; y < cosH; y += cosH / 8) {
+    cosCtx.beginPath(); cosCtx.moveTo(0, y); cosCtx.lineTo(cosW, y); cosCtx.stroke();
+  }
+  cosCtx.strokeStyle = '#4cff91';
+  cosCtx.lineWidth = 2;
+  cosCtx.beginPath();
+  const cosHistLen = Math.min(m1HistoryCos.length, m1HistoryLen);
+  for (let i = 0; i < cosHistLen; i++) {
+    const y = i * (cosH / m1HistoryLen);
+    const x = cosW / 2 + m1HistoryCos[i] * (cosW * 0.4);
+    if (i === 0) cosCtx.moveTo(x, y); else cosCtx.lineTo(x, y);
+  }
+  cosCtx.stroke();
+  if (m1HistoryCos.length > 0) {
+    cosCtx.fillStyle = '#4cff91';
+    cosCtx.beginPath();
+    cosCtx.arc(cosW / 2 + m1HistoryCos[0] * (cosW * 0.4), 0, 5, 0, Math.PI * 2);
+    cosCtx.fill();
+  }
+}
+
+function animate() {
+  m1Draw();
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

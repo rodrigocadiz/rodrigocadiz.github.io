@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Almacenamiento Digital — Emisión, Captura y Almacenamiento</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-emision">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Emisión, Captura y Almacenamiento</a>
+  <a href="../01_onda_presion/index.html">1. La onda</a>
+  <a href="../02_microfono/index.html">2. Micrófonos</a>
+  <a href="../03_parlante/index.html">3. Parlantes</a>
+  <a href="../04_almacenamiento_analogico/index.html">4. Almacenamiento</a>
+  <a href="../05_almacenamiento_digital/index.html" class="active">5. Almacenamiento digital</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Almacenamiento Digital</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1. Concepto ADC -->
+  <section class="section-card">
+    <h2>Conversión analógica-digital (ADC)</h2>
+    <p class="description">
+      Para almacenar o procesar audio en una computadora, la señal continua debe convertirse
+      a números discretos. Esto implica dos procesos independientes:
+      <span class="kw">muestreo</span> (sampling) y <span class="kw">cuantización</span> (quantization).
+    </p>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00">Muestreo (sampling)</strong><br>
+        Tomar el valor de la señal analógica a intervalos regulares.
+        La frecuencia de muestreo f<sub>s</sub> debe ser al menos el
+        <span class="kw">doble de la frecuencia máxima</span> de la señal
+        (<span class="kw">Teorema de Nyquist</span>).
+        f<sub>s</sub> &lt; 2·f<sub>max</sub> → <span style="color:#ff4444">aliasing</span>.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff">Cuantización</strong><br>
+        Redondear cada muestra al nivel más cercano de una escala discreta.
+        Con <span class="kw">N bits</span> hay 2<sup>N</sup> niveles posibles.
+        El error de redondeo produce <span class="kw">ruido de cuantización</span>
+        (≈ 6 dB de SNR por bit).
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Demo muestreo y cuantización -->
+  <section class="section-card">
+    <h2>Muestreo y cuantización — demostración interactiva</h2>
+    <p class="description">
+      Ajusta la frecuencia de muestreo y la profundidad de bits para ver cómo afectan
+      la representación digital de la señal.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia de muestreo (f<sub>s</sub>)</label>
+        <input type="range" id="fsRate" min="0" max="5" step="1" value="3">
+        <span class="val" id="fsRateVal">44.1 kHz</span>
+      </div>
+      <div class="control-group">
+        <label>Profundidad de bits</label>
+        <input type="range" id="bitDepth" min="0" max="4" step="1" value="0">
+        <span class="val" id="bitDepthVal">2 bits — 4 niveles</span>
+      </div>
+      <div class="control-group">
+        <label>Frecuencia señal fuente (kHz)</label>
+        <input type="range" id="sigFreq" min="0.5" max="6" step="0.25" value="2">
+        <span class="val" id="sigFreqVal">2.0 kHz</span>
+      </div>
+    </div>
+    <div id="adcWarning" class="info-box warn" style="display:none; margin-bottom:8px;"></div>
+    <div class="canvas-label">Señal analógica → muestras → señal reconstruida</div>
+    <canvas id="adcCanvas" height="280"></canvas>
+    <div id="adcStats" class="info-box" style="margin-top:8px; font-size:0.82rem;"></div>
+  </section>
+
+  <!-- 3. CD Compact Disc -->
+  <section class="section-card">
+    <h2>CD Compact Disc</h2>
+    <p class="description">
+      El CD (Sony/Philips, 1982) almacena audio digital como una serie de <span class="kw">pits</span>
+      (hoyos) y <span class="kw">lands</span> (zonas planas) en una espiral microscópica.
+      Un <span class="kw">láser de 780 nm</span> lee la superficie: la transición pit↔land representa
+      un <span class="kw">1</span>, sin transición representa un <span class="kw">0</span>.
+      Estándar: <strong>44100 Hz / 16 bits / estéreo → 1.4 Mbps</strong>.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Velocidad del láser</label>
+        <input type="range" id="cdSpeed" min="0.2" max="3" step="0.1" value="1">
+        <span class="val" id="cdSpeedVal">1×</span>
+      </div>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="canvas-label">Vista del CD y lectura con láser</div>
+        <canvas id="cdCanvas" height="280"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label">Pits y lands → bits → señal de audio</div>
+        <canvas id="cdBitsCanvas" height="280"></canvas>
+      </div>
+    </div>
+    <div class="canvas-label" style="margin-top:14px;">De bits a sonido: agrupación en muestras → valores → señal continua reconstruida</div>
+    <canvas id="cdDacCanvas" height="200"></canvas>
+  </section>
+
+  <!-- 4. CD vs DVD -->
+  <section class="section-card">
+    <h2>CD vs DVD — comparación</h2>
+    <p class="description">
+      El DVD usa un <span class="kw">láser de menor longitud de onda</span> (640 nm vs 780 nm),
+      lo que permite pistas más estrechas y por lo tanto más datos en el mismo espacio físico.
+    </p>
+    <div class="info-box" style="margin-bottom:8px;">
+      El diagrama muestra una sección de la superficie de cada disco vista desde arriba.
+      Cada franja horizontal es una <strong>pista</strong> (surco espiral donde se graban los bits).
+      Con un láser más corto, el punto focal es más pequeño y las pistas pueden estar más juntas
+      (<strong>menor pitch</strong>), por lo que caben más pistas en el mismo área física
+      → más datos → mayor capacidad.
+    </div>
+    <div class="canvas-label">Sección de superficie: densidad de pistas CD vs DVD</div>
+    <canvas id="cdVsDvdCanvas" height="180"></canvas>
+    <table class="type-table" style="margin-top:14px;">
+      <thead>
+        <tr><th>Formato</th><th>Longitud de onda láser</th><th>Capacidad</th><th>Ancho de pista</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CD</td><td>780 nm (infrarrojo)</td><td>~660 MB / 74 min audio</td><td>~1.6 μm</td></tr>
+        <tr><td>DVD</td><td>640 nm (rojo visible)</td><td>~4.7 GB (simple capa)</td><td>~0.74 μm</td></tr>
+        <tr><td>Blu-ray</td><td>405 nm (azul-violeta)</td><td>~25 GB</td><td>~0.32 μm</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5. Estándares digitales -->
+  <section class="section-card">
+    <h2>Estándares digitales de audio</h2>
+    <p class="description">
+      La calidad perceptiva del audio digital comprimido depende del
+      <span class="kw">bit rate</span> (kbps) y la <span class="kw">frecuencia máxima</span>
+      reproducible. Selecciona un estándar para ver sus características.
+    </p>
+    <div class="btn-group" id="stdBtns"></div>
+    <div id="stdInfo" class="info-box" style="margin-bottom:8px;"></div>
+    <div class="info-box" style="margin-bottom:10px; font-size:0.85em;">
+      El botón <strong>▶ Escuchar</strong> reproduce <strong>ruido blanco</strong> filtrado
+      hasta la frecuencia máxima del estándar. El ruido blanco contiene todas las frecuencias
+      por igual; el filtro corta todo lo que está sobre f<sub>max</sub>.
+      Teléfono (5 kHz) suena angosto y apagado; CD (22 kHz) suena amplio y brillante.
+      Al seleccionar otro estándar el filtro se actualiza en tiempo real — no hace falta detener.
+      <button class="btn play" style="margin-left:12px;" onclick="playCurrentStd()">▶ Escuchar estándar</button>
+      <button class="btn stop" style="margin-left:4px;" onclick="stopAllAudio(); _activeNoiseFilters=null;">■ Detener</button>
+    </div>
+    <div class="canvas-label">Comparativa de estándares digitales</div>
+    <canvas id="stdCanvas" height="220"></canvas>
+  </section>
+
+  <!-- 6. Internet y formatos -->
+  <section class="section-card">
+    <h2>Audio en internet y formatos digitales</h2>
+    <p class="description">
+      Los formatos de audio digital se dividen en <span class="kw">sin pérdida</span> (lossless)
+      y <span class="kw">con pérdida</span> (lossy). Los formatos lossy usan modelos psicoacústicos
+      para descartar información que el oído humano no puede percibir fácilmente.
+    </p>
+    <table class="type-table">
+      <thead>
+        <tr><th>Formato</th><th>Tipo</th><th>Bit rate típico</th><th>Características</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>WAV / AIFF</td><td>Lossless (PCM)</td><td>1411 kbps (CD)</td><td>Sin compresión, calidad máxima, archivos grandes</td></tr>
+        <tr><td>FLAC</td><td>Lossless comprimido</td><td>700–1200 kbps</td><td>Compresión sin pérdida (~50% del tamaño WAV)</td></tr>
+        <tr><td>MP3</td><td>Lossy (MPEG-1 Layer 3)</td><td>128–320 kbps</td><td>Codificación psicoacústica, el más extendido históricamente</td></tr>
+        <tr><td>AAC</td><td>Lossy</td><td>128–256 kbps</td><td>Mejor calidad que MP3 al mismo bit rate. Usado por Apple/Spotify</td></tr>
+        <tr><td>OGG Vorbis</td><td>Lossy (libre)</td><td>96–320 kbps</td><td>Formato libre de patentes, popular en juegos y streaming</td></tr>
+        <tr><td>Opus</td><td>Lossy (libre)</td><td>6–510 kbps</td><td>Óptimo para voz y música en streaming de baja latencia</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ─── Datos de estándares ──────────────────────────────────────────────────
+const STANDARDS = [
+  { label: 'Teléfono',  kbps: 16,  fmax:  5000, color: '#ff4444' },
+  { label: 'FM radio',  kbps: 112, fmax: 15000, color: '#ffaa00' },
+  { label: 'Cinta',     kbps: 128, fmax: 17000, color: '#ffff44' },
+  { label: '"HiFi"',    kbps: 160, fmax: 18000, color: '#00ff44' },
+  { label: 'CD',        kbps: 192, fmax: 22050, color: '#00ffff' },
+  { label: '"Estudio"', kbps: 256, fmax: 22050, color: '#44aaff' },
+];
+
+const FS_RATES = [4000, 8000, 11025, 22050, 44100, 96000];
+const FS_LABELS = ['4 kHz', '8 kHz', '11 kHz', '22 kHz', '44.1 kHz', '96 kHz'];
+const BIT_DEPTHS = [2, 3, 4, 6, 8];
+
+// ─── ADC Canvas ───────────────────────────────────────────────────────────
+const adcCanvas = document.getElementById('adcCanvas');
+const adcCtx = adcCanvas.getContext('2d');
+
+function initAdcCanvas() { adcCanvas.width = adcCanvas.offsetWidth || 900; }
+
+function drawADC() {
+  adcCanvas.width = adcCanvas.offsetWidth || 900;
+  const W = adcCanvas.width, H = adcCanvas.height;
+  adcCtx.clearRect(0, 0, W, H);
+
+  const fsIdx   = parseInt(document.getElementById('fsRate').value);
+  const bdIdx   = parseInt(document.getElementById('bitDepth').value);
+  const sigFreq = parseFloat(document.getElementById('sigFreq').value);
+
+  const fs     = FS_RATES[fsIdx];
+  const bits   = BIT_DEPTHS[bdIdx];
+  const levels = Math.pow(2, bits);
+  const fmax_sig = sigFreq * 1000; // señal en kHz para propósitos visuales
+
+  document.getElementById('fsRateVal').textContent = FS_LABELS[fsIdx];
+  document.getElementById('bitDepthVal').textContent = `${bits} bits — ${levels.toLocaleString()} niveles`;
+  document.getElementById('sigFreqVal').textContent = `${sigFreq.toFixed(2)} kHz`;
+
+  // Aliasing: Nyquist exige fs ≥ 2 × f_señal
+  const aliasing = fs < fmax_sig * 2;
+  const warnEl = document.getElementById('adcWarning');
+  warnEl.style.display = aliasing ? 'block' : 'none';
+  if (aliasing) {
+    warnEl.innerHTML =
+      `⚠ <strong>Aliasing!</strong> f<sub>s</sub> = ${(fs/1000).toFixed(1)} kHz &lt; ` +
+      `2 × ${sigFreq.toFixed(2)} kHz = <strong>${(fmax_sig*2/1000).toFixed(2)} kHz</strong> ` +
+      `— la señal reconstruida no es fiel al original.`;
+  }
+
+  const pL = 30, pR = 30, pT = 25, pB = 35;
+  const gW = W - pL - pR, gH = H - pT - pB;
+  const cy = pT + gH * 0.5;
+
+  // Amplitud máxima de la señal en píxeles
+  const sigAmp = gH * 0.42;
+  const qTop = cy - sigAmp;   // y que corresponde a v = +1
+  const qBot = cy + sigAmp;   // y que corresponde a v = -1
+  const qRange = qBot - qTop; // = 2 * sigAmp
+
+  // Función de señal: sinusoide PURA (sin armónicos adicionales)
+  function sig(t) {
+    return Math.sin(t * Math.PI * 2 * sigFreq) * 0.9;
+  }
+  // Función v → y en pantalla
+  function vToY(v) { return cy - v * sigAmp; }
+  // Cuantizar v a `levels` niveles dentro de [-1, 1]
+  function quantize(v) {
+    const normalized = (v + 1) / 2;                        // [0, 1]
+    const step       = Math.round(normalized * (levels - 1)); // entero [0, levels-1]
+    return (step / (levels - 1)) * 2 - 1;                  // devuelve a [-1, 1]
+  }
+
+  // Grilla de niveles de cuantización — hasta 256 (8 bits), densidad visualmente distinta
+  {
+    // Alpha inversamente proporcional a la densidad: más niveles → líneas más tenues
+    const alpha = bits <= 2 ? 0.65 : bits <= 3 ? 0.50 : bits <= 4 ? 0.35 : bits <= 6 ? 0.18 : 0.08;
+    adcCtx.strokeStyle = `rgba(100,180,255,${alpha})`;
+    adcCtx.lineWidth = 0.5;
+    for (let i = 0; i <= levels; i++) {
+      const y = qTop + (i / levels) * qRange;
+      adcCtx.beginPath();
+      adcCtx.moveTo(pL, y);
+      adcCtx.lineTo(pL + gW, y);
+      adcCtx.stroke();
+    }
+  }
+
+  // Señal analógica original
+  adcCtx.beginPath();
+  for (let px = 0; px <= gW; px++) {
+    const y = vToY(sig(px / gW));
+    px === 0 ? adcCtx.moveTo(pL + px, y) : adcCtx.lineTo(pL + px, y);
+  }
+  adcCtx.strokeStyle = '#ffaa00';
+  adcCtx.lineWidth = 2;
+  adcCtx.stroke();
+
+  // Muestras: proporcional a fs/1000 → condición visual de Nyquist = condición de audio
+  // sigFreq > samplesPerWidth/2 ⟺ fs < 2*f_signal  (aliasing visual ↔ aliasing real)
+  const samplesPerWidth = Math.min(Math.round(fs / 1000), 60);
+  const sampleInterval = gW / Math.max(samplesPerWidth, 2);
+
+  const samples = [];
+  for (let i = 0; i <= samplesPerWidth; i++) {
+    const px = i * sampleInterval;
+    const v  = sig(px / gW);
+    const qv = quantize(v);
+    samples.push({ px: pL + px, v, qv });
+  }
+
+  // Señal cuantizada continua pixel-a-pixel → escalones siempre visibles según bit depth
+  // (la densidad de escalones cambia con bits; el ancho de cada escalon con la señal)
+  {
+    adcCtx.beginPath();
+    let prevY = null;
+    for (let px = 0; px <= gW; px++) {
+      const qv = quantize(sig(px / gW));
+      const y  = vToY(qv);
+      if (px === 0) {
+        adcCtx.moveTo(pL, y);
+      } else if (prevY !== null && y !== prevY) {
+        adcCtx.lineTo(pL + px, prevY);  // hold horizontal
+        adcCtx.lineTo(pL + px, y);       // salto vertical al nuevo nivel
+      } else {
+        adcCtx.lineTo(pL + px, y);
+      }
+      prevY = y;
+    }
+    adcCtx.strokeStyle = '#00ffff';
+    adcCtx.lineWidth = 2;
+    adcCtx.stroke();
+  }
+
+  // Señal alias (punteada) — solo cuando hay aliasing visual (sigFreq > Nyquist visual)
+  // Los mismos puntos de muestra son compatibles con una frecuencia más baja: la alias
+  const visualNyquist = samplesPerWidth / 2;
+  const visualAliasing = sigFreq > visualNyquist;
+  if (visualAliasing) {
+    // Plegar alrededor de samplesPerWidth para obtener la frecuencia alias
+    const fWrapped = sigFreq % samplesPerWidth;
+    let fAlias, aliasSign;
+    if (fWrapped <= samplesPerWidth / 2) {
+      fAlias = fWrapped; aliasSign = 1;
+    } else {
+      fAlias = samplesPerWidth - fWrapped; aliasSign = -1;
+    }
+    adcCtx.setLineDash([10, 6]);
+    adcCtx.beginPath();
+    for (let px = 0; px <= gW; px++) {
+      const v = aliasSign * Math.sin(px / gW * Math.PI * 2 * fAlias) * 0.9;
+      const y = vToY(v);
+      px === 0 ? adcCtx.moveTo(pL, y) : adcCtx.lineTo(pL + px, y);
+    }
+    adcCtx.strokeStyle = '#ff44aa';
+    adcCtx.lineWidth = 2.5;
+    adcCtx.stroke();
+    adcCtx.setLineDash([]);
+  }
+
+  // Puntos de muestra y error de cuantización
+  samples.forEach(s => {
+    const y    = vToY(s.qv);
+    const origY = vToY(s.v);
+    // Error de cuantización (línea roja entre valor real y cuantizado)
+    if (Math.abs(y - origY) > 0.5) {
+      adcCtx.beginPath();
+      adcCtx.moveTo(s.px, origY);
+      adcCtx.lineTo(s.px, y);
+      adcCtx.strokeStyle = 'rgba(255,68,68,0.7)';
+      adcCtx.lineWidth = 1.5;
+      adcCtx.stroke();
+    }
+    // Stem desde eje central
+    adcCtx.beginPath();
+    adcCtx.moveTo(s.px, cy);
+    adcCtx.lineTo(s.px, y);
+    adcCtx.strokeStyle = 'rgba(0,255,68,0.4)';
+    adcCtx.lineWidth = 1;
+    adcCtx.stroke();
+    // Punto de muestra
+    adcCtx.beginPath();
+    adcCtx.arc(s.px, y, 4, 0, Math.PI * 2);
+    adcCtx.fillStyle = '#00ff44';
+    adcCtx.fill();
+  });
+
+  // Leyenda
+  const items = [
+    { color: '#ffaa00', label: 'Señal original' },
+    { color: '#00ff44', label: `Muestras (${samplesPerWidth})` },
+    { color: '#00ffff', label: `Reconstruida (${bits} bits)` },
+    { color: '#ff4444', label: 'Error cuantización' },
+  ];
+  if (visualAliasing) items.push({ color: '#ff44aa', label: '⚠ Señal alias (fantasma)', dashed: true });
+  items.forEach((item, i) => {
+    adcCtx.fillStyle = item.color;
+    adcCtx.font = '10px sans-serif';
+    if (item.dashed) adcCtx.setLineDash([6, 3]);
+    adcCtx.fillText((item.dashed ? '╌ ' : '━ ') + item.label, pL + 5 + i * (gW / 5), pT - 8);
+    adcCtx.setLineDash([]);
+  });
+
+  // Stats
+  const snr = 6.02 * bits + 1.76;
+  const nyquist = fs / 2;
+  document.getElementById('adcStats').innerHTML =
+    `<strong style="color:#ffaa00">f<sub>s</sub> = ${fs.toLocaleString()} Hz</strong> | ` +
+    `<strong style="color:#00ffff">${bits} bits</strong> | ` +
+    `<strong style="color:#00ff44">2<sup>${bits}</sup> = ${levels.toLocaleString()} niveles</strong> | ` +
+    `SNR ≈ <strong style="color:#ff88ff">${snr.toFixed(1)} dB</strong> | ` +
+    `Nyquist f<sub>max</sub> = <strong style="color:#ffaa00">${(nyquist/1000).toFixed(1)} kHz</strong>`;
+}
+
+document.getElementById('fsRate').addEventListener('input', drawADC);
+document.getElementById('bitDepth').addEventListener('input', drawADC);
+document.getElementById('sigFreq').addEventListener('input', drawADC);
+
+// ─── CD Canvas ────────────────────────────────────────────────────────────
+const cdCanvas = document.getElementById('cdCanvas');
+const cdCtx = cdCanvas.getContext('2d');
+let cdAngle = 0;
+let cdOffset = 0;
+let cdLastTs = 0;      // throttle CD a ~24fps
+let bitsLastTs = 0;
+
+function initCDCanvas() {
+  cdCanvas.width = cdCanvas.offsetWidth || 400;
+  document.getElementById('cdBitsCanvas').width = document.getElementById('cdBitsCanvas').offsetWidth || 400;
+}
+
+function drawCD(ts) {
+  requestAnimationFrame(drawCD);
+  if (ts - cdLastTs < 42) return;   // ~24fps cap
+  cdLastTs = ts;
+
+  const W = cdCanvas.width, H = cdCanvas.height;
+  cdCtx.clearRect(0, 0, W, H);
+
+  const speed = parseFloat(document.getElementById('cdSpeed').value);
+  cdAngle += speed * 0.008;
+  cdOffset += speed * 2.5;
+
+  const cx = W * 0.5, cy = H * 0.48;
+  const R = Math.min(W, H) * 0.38;
+
+  // Disco CD
+  cdCtx.beginPath();
+  cdCtx.arc(cx, cy, R, 0, Math.PI * 2);
+  const grad = cdCtx.createRadialGradient(cx, cy, R*0.2, cx, cy, R);
+  grad.addColorStop(0, '#cccccc');
+  grad.addColorStop(0.3, '#aaaacc');
+  grad.addColorStop(0.6, '#88aacc');
+  grad.addColorStop(1, '#446688');
+  cdCtx.fillStyle = grad;
+  cdCtx.fill();
+
+  // Espiral de pistas (reducido a 18 para aligerar el render)
+  const numTracks = 18;
+  for (let i = 0; i < numTracks; i++) {
+    const r = R * 0.25 + (R * 0.68) * (i / numTracks);
+    cdCtx.beginPath();
+    cdCtx.arc(cx, cy, r, 0, Math.PI * 2);
+    cdCtx.strokeStyle = `rgba(30,50,80,0.5)`;
+    cdCtx.lineWidth = 0.8;
+    cdCtx.stroke();
+  }
+
+  // Agujero central
+  cdCtx.beginPath();
+  cdCtx.arc(cx, cy, R * 0.1, 0, Math.PI * 2);
+  cdCtx.fillStyle = '#0a1520';
+  cdCtx.fill();
+
+  // Brazo del láser
+  const laserR = R * 0.6 + ((cdOffset * 0.01) % (R * 0.45));
+  const laserAngle = cdAngle;
+  const lx = cx + Math.cos(laserAngle) * laserR;
+  const ly = cy + Math.sin(laserAngle) * laserR;
+
+  cdCtx.strokeStyle = '#88ccff';
+  cdCtx.lineWidth = 1.5;
+  cdCtx.beginPath();
+  cdCtx.moveTo(cx + R * 1.05, cy);
+  cdCtx.lineTo(lx, ly);
+  cdCtx.stroke();
+
+  // Punto láser
+  cdCtx.beginPath();
+  cdCtx.arc(lx, ly, 4, 0, Math.PI * 2);
+  cdCtx.fillStyle = '#ff4444';
+  cdCtx.fill();
+  // Halo
+  cdCtx.beginPath();
+  cdCtx.arc(lx, ly, 8, 0, Math.PI * 2);
+  cdCtx.fillStyle = 'rgba(255,50,50,0.25)';
+  cdCtx.fill();
+
+  cdCtx.fillStyle = '#ff4444';
+  cdCtx.font = '9px sans-serif';
+  cdCtx.textAlign = 'left';
+  cdCtx.fillText('Láser 780nm', cx + R * 1.05 + 5, cy + 4);
+
+  cdCtx.fillStyle = '#99ccff';
+  cdCtx.font = '10px sans-serif';
+  cdCtx.textAlign = 'center';
+  cdCtx.fillText('44100 Hz · 16 bits · Estéreo → 1.4 Mbps', cx, H - 8);
+  cdCtx.textAlign = 'left';
+  // RAF ya está al inicio de drawCD
+}
+
+// ─── CD bits canvas ───────────────────────────────────────────────────────
+const cdBitsCanvas = document.getElementById('cdBitsCanvas');
+const cbCtx = cdBitsCanvas.getContext('2d');
+let bitsOffset = 0;
+
+function drawCDBits(ts) {
+  requestAnimationFrame(drawCDBits);
+  if (ts - bitsLastTs < 42) return;  // ~24fps cap
+  bitsLastTs = ts;
+
+  const W = cdBitsCanvas.width, H = cdBitsCanvas.height;
+  cbCtx.clearRect(0, 0, W, H);
+
+  const speed = parseFloat(document.getElementById('cdSpeed').value);
+  bitsOffset += speed * 2;
+
+  const pL = 10, pR = 10, pT = 25, pB = 30;
+  const gW = W - pL - pR, gH = H - pT - pB;
+
+  cbCtx.fillStyle = '#99ccff';
+  cbCtx.font = 'bold 10px sans-serif';
+  cbCtx.textAlign = 'center';
+  cbCtx.fillText('Superficie del CD (pits y lands)', W/2, 16);
+
+  // Fondo de la pista
+  cbCtx.fillStyle = '#334455';
+  cbCtx.fillRect(pL, pT, gW, gH * 0.45);
+
+  // Bits simulados
+  const bitSeq = [1,0,0,1,1,0,1,0,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,0,1,1,0,1,0,1,0,0,1];
+  const bitW = 24;
+  const numVisible = Math.ceil(gW / bitW) + 2;
+  const startIdx = Math.floor(bitsOffset / bitW);
+
+  for (let i = 0; i < numVisible; i++) {
+    const bidx = (startIdx + i) % bitSeq.length;
+    const bitVal = bitSeq[bidx];
+    const x = pL + i * bitW - (bitsOffset % bitW);
+
+    if (bitVal === 0) {
+      // Land (plano)
+      cbCtx.fillStyle = '#8899aa';
+      cbCtx.fillRect(x, pT, bitW - 1, gH * 0.45);
+    } else {
+      // Pit (hoyo)
+      cbCtx.fillStyle = '#1a2a3a';
+      cbCtx.fillRect(x + 3, pT + gH * 0.08, bitW - 7, gH * 0.3);
+    }
+  }
+
+  // Láser leyendo
+  const laserX = pL + gW * 0.35;
+  cbCtx.fillStyle = 'rgba(255,50,50,0.3)';
+  cbCtx.beginPath();
+  cbCtx.moveTo(laserX - 8, pT - 5);
+  cbCtx.lineTo(laserX + 8, pT - 5);
+  cbCtx.lineTo(laserX + 3, pT + gH * 0.45);
+  cbCtx.lineTo(laserX - 3, pT + gH * 0.45);
+  cbCtx.closePath(); cbCtx.fill();
+  cbCtx.fillStyle = '#ff4444';
+  cbCtx.font = '9px sans-serif';
+  cbCtx.textAlign = 'center';
+  cbCtx.fillText('láser', laserX, pT - 8);
+
+  // Reflexión
+  const curBitIdx = Math.floor(((laserX - pL) + bitsOffset % bitW) / bitW + startIdx) % bitSeq.length;
+  const curBit = bitSeq[Math.abs(curBitIdx) % bitSeq.length];
+  const reflected = curBit === 0; // land → refleja
+  cbCtx.fillStyle = reflected ? 'rgba(255,200,50,0.4)' : 'rgba(50,50,100,0.2)';
+  cbCtx.beginPath();
+  cbCtx.moveTo(laserX - 4, pT - 5);
+  cbCtx.lineTo(laserX + 4, pT - 5);
+  cbCtx.lineTo(laserX + 12, pT - 30);
+  cbCtx.lineTo(laserX - 12, pT - 30);
+  cbCtx.closePath(); cbCtx.fill();
+
+  // Señal de bits decodificada
+  const bitY = pT + gH * 0.62;
+  cbCtx.fillStyle = '#99ccff';
+  cbCtx.font = '9px sans-serif';
+  cbCtx.textAlign = 'left';
+  cbCtx.fillText('Señal decodificada:', pL, bitY - 4);
+
+  cbCtx.strokeStyle = '#00ff44';
+  cbCtx.lineWidth = 2;
+  cbCtx.beginPath();
+  let prevBit = 0;
+  for (let i = 0; i < numVisible; i++) {
+    const bidx = (startIdx + i) % bitSeq.length;
+    const bit = bitSeq[bidx];
+    const x = pL + i * bitW - (bitsOffset % bitW);
+    const y = bitY + (bit === 1 ? 0 : gH * 0.3);
+    if (i === 0) cbCtx.moveTo(x, y);
+    else {
+      if (bit !== prevBit) {
+        cbCtx.lineTo(x, bitY + (prevBit === 1 ? 0 : gH * 0.3));
+        cbCtx.lineTo(x, y);
+      } else cbCtx.lineTo(x + bitW, y);
+    }
+    prevBit = bit;
+  }
+  cbCtx.stroke();
+
+  // Etiquetas
+  cbCtx.fillStyle = '#ffaa00';
+  cbCtx.textAlign = 'right';
+  cbCtx.fillText('land →', pL + gW * 0.28, pT + gH * 0.25);
+  cbCtx.fillStyle = '#88aacc';
+  cbCtx.fillText('pit →', pL + gW * 0.28, pT + gH * 0.1);
+  cbCtx.fillStyle = reflected ? '#00ff44' : '#ff4444';
+  cbCtx.textAlign = 'center';
+  cbCtx.font = 'bold 10px sans-serif';
+  cbCtx.fillText(reflected ? '↑ Reflexión alta → 0' : '↓ Reflexión baja → (transición = 1)', laserX, pT + gH * 0.55);
+  cbCtx.textAlign = 'left';
+
+  // RAF ya está al inicio de drawCDBits
+}
+
+document.getElementById('cdSpeed').addEventListener('input', function(){
+  document.getElementById('cdSpeedVal').textContent = parseFloat(this.value).toFixed(1) + '×';
+});
+
+// ─── CD DAC: bits → muestras → señal continua ─────────────────────────────
+const cdDacCanvas = document.getElementById('cdDacCanvas');
+const dacCtx = cdDacCanvas.getContext('2d');
+let dacLastTs = 0;
+
+// Secuencia de bits agrupada en muestras de 8 bits (visual; CD usa 16 bits reales)
+// Los valores reproducen una sinusoide suavizada
+const DAC_BITS_PER_SAMPLE = 8;  // visual: 8 bits por muestra (256 niveles)
+const DAC_SAMPLES = [200, 230, 245, 240, 220, 185, 145, 108, 80, 65, 68, 85, 115, 152, 188, 218, 235, 243, 238, 222, 195, 160, 120, 88, 68, 66, 80, 108, 143, 180, 212, 232, 244, 242, 228, 205, 173, 136, 100, 74];
+
+function sampleToBits(val) {
+  let bits = [];
+  for (let b = DAC_BITS_PER_SAMPLE - 1; b >= 0; b--) bits.push((val >> b) & 1);
+  return bits;
+}
+
+function drawCDDac(ts) {
+  requestAnimationFrame(drawCDDac);
+  if (ts - dacLastTs < 42) return;
+  dacLastTs = ts;
+
+  cdDacCanvas.width = cdDacCanvas.offsetWidth || 900;
+  const W = cdDacCanvas.width, H = cdDacCanvas.height;
+  dacCtx.clearRect(0, 0, W, H);
+
+  const speed = parseFloat(document.getElementById('cdSpeed').value);
+  // dacOffset avanza con bitsOffset (ya actualizado en drawCDBits)
+  const sampleOffset = bitsOffset / (DAC_BITS_PER_SAMPLE * 18); // 18px por bit en el panel de bits
+
+  const pL = 10, pR = 10, pT = 18, pB = 30;
+  const gW = W - pL - pR, gH = H - pT - pB;
+
+  // ── Cuántas muestras caben ──
+  const NSAMP = 8;                        // muestras visibles
+  const sampW = gW / NSAMP;              // píxeles por muestra
+  const bitsW = sampW / DAC_BITS_PER_SAMPLE; // píxeles por bit
+
+  // índice de la primera muestra visible (desplazado con la animación)
+  const firstSamp = Math.floor(sampleOffset) % DAC_SAMPLES.length;
+
+  // ── Zona superior: bits agrupados en muestras ──
+  const bitsH = gH * 0.40;
+  const bitsY = pT;
+
+  dacCtx.fillStyle = '#99ccff';
+  dacCtx.font = 'bold 9px sans-serif';
+  dacCtx.textAlign = 'left';
+  dacCtx.fillText('Bits leídos del disco (agrupados en muestras de 8 bits):', pL, bitsY - 4);
+
+  for (let s = 0; s < NSAMP; s++) {
+    const sIdx = (firstSamp + s) % DAC_SAMPLES.length;
+    const val  = DAC_SAMPLES[sIdx];
+    const bits = sampleToBits(val);
+    const sx   = pL + s * sampW;
+    // fondo alternado por muestra
+    dacCtx.fillStyle = s % 2 === 0 ? 'rgba(0,180,255,0.08)' : 'rgba(0,100,180,0.06)';
+    dacCtx.fillRect(sx, bitsY, sampW - 1, bitsH);
+
+    // bits individuales
+    bits.forEach((bit, b) => {
+      const bx = sx + b * bitsW;
+      dacCtx.fillStyle = bit ? '#ffaa00' : '#336688';
+      dacCtx.fillRect(bx + 0.5, bitsY + 2, bitsW - 1, bitsH - 4);
+      if (bitsW > 10) {
+        dacCtx.fillStyle = bit ? '#000' : '#99ccff';
+        dacCtx.font = '8px sans-serif';
+        dacCtx.textAlign = 'center';
+        dacCtx.fillText(bit, bx + bitsW / 2, bitsY + bitsH * 0.62);
+      }
+    });
+
+    // valor decimal + flecha
+    const amplitude = (val / 255) * 2 - 1; // [-1, 1]
+    dacCtx.fillStyle = '#ffaa00';
+    dacCtx.font = 'bold 9px sans-serif';
+    dacCtx.textAlign = 'center';
+    dacCtx.fillText(`${val}`, sx + sampW / 2, bitsY + bitsH + 10);
+    dacCtx.fillStyle = '#aaccff';
+    dacCtx.fillText('↓', sx + sampW / 2, bitsY + bitsH + 20);
+
+    // separador vertical entre muestras
+    dacCtx.strokeStyle = 'rgba(100,180,255,0.3)';
+    dacCtx.lineWidth = 1;
+    dacCtx.beginPath();
+    dacCtx.moveTo(sx, bitsY); dacCtx.lineTo(sx, bitsY + bitsH);
+    dacCtx.stroke();
+  }
+
+  // ── Zona inferior: escalera DAC + sinusoide reconstruida ──
+  const waveY  = pT + bitsH + 28;
+  const waveH  = H - waveY - pB;
+  const wavecy = waveY + waveH / 2;
+  const amp    = waveH * 0.42;
+
+  // Eje central
+  dacCtx.strokeStyle = 'rgba(150,200,255,0.4)';
+  dacCtx.lineWidth = 1;
+  dacCtx.beginPath();
+  dacCtx.moveTo(pL, wavecy); dacCtx.lineTo(pL + gW, wavecy);
+  dacCtx.stroke();
+
+  // Escalera (sample & hold — valor cuantizado mantenido entre muestras)
+  dacCtx.beginPath();
+  for (let s = 0; s < NSAMP; s++) {
+    const sIdx = (firstSamp + s) % DAC_SAMPLES.length;
+    const val  = DAC_SAMPLES[sIdx];
+    const amplitude = (val / 255) * 2 - 1;
+    const y    = wavecy - amplitude * amp;
+    const x0   = pL + s * sampW;
+    const x1   = x0 + sampW;
+    if (s === 0) dacCtx.moveTo(x0, y);
+    else         dacCtx.lineTo(x0, y);
+    dacCtx.lineTo(x1, y);
+  }
+  dacCtx.strokeStyle = '#00ffff';
+  dacCtx.lineWidth = 2;
+  dacCtx.stroke();
+
+  // Sinusoide continua reconstruida (suavizado sobre la escalera)
+  dacCtx.beginPath();
+  for (let px = 0; px <= gW; px++) {
+    const t    = px / gW * NSAMP;
+    const s0   = Math.floor(t) % DAC_SAMPLES.length;
+    const s1   = (s0 + 1) % DAC_SAMPLES.length;
+    const frac = t - Math.floor(t);
+    // interpolación cúbica suave (coseno)
+    const mu   = (1 - Math.cos(frac * Math.PI)) / 2;
+    const sIdx0 = (firstSamp + Math.floor(t)) % DAC_SAMPLES.length;
+    const sIdx1 = (firstSamp + Math.floor(t) + 1) % DAC_SAMPLES.length;
+    const v0   = (DAC_SAMPLES[sIdx0] / 255) * 2 - 1;
+    const v1   = (DAC_SAMPLES[sIdx1] / 255) * 2 - 1;
+    const v    = v0 * (1 - mu) + v1 * mu;
+    const y    = wavecy - v * amp;
+    px === 0 ? dacCtx.moveTo(pL, y) : dacCtx.lineTo(pL + px, y);
+  }
+  dacCtx.strokeStyle = '#ffaa00';
+  dacCtx.lineWidth = 2;
+  dacCtx.stroke();
+
+  // Puntos de muestra
+  for (let s = 0; s < NSAMP; s++) {
+    const sIdx = (firstSamp + s) % DAC_SAMPLES.length;
+    const val  = DAC_SAMPLES[sIdx];
+    const amplitude = (val / 255) * 2 - 1;
+    const y    = wavecy - amplitude * amp;
+    const x    = pL + s * sampW + sampW / 2;
+    dacCtx.beginPath();
+    dacCtx.arc(x, y, 4, 0, Math.PI * 2);
+    dacCtx.fillStyle = '#00ff44';
+    dacCtx.fill();
+  }
+
+  // Leyenda
+  dacCtx.font = '9px sans-serif'; dacCtx.textAlign = 'left';
+  dacCtx.fillStyle = '#00ffff';  dacCtx.fillText('━ Escalera DAC (sample & hold)', pL + 4, H - 16);
+  dacCtx.fillStyle = '#ffaa00';  dacCtx.fillText('━ Señal continua reconstruida (filtro)', pL + 4 + gW * 0.38, H - 16);
+  dacCtx.fillStyle = '#00ff44';  dacCtx.fillText('● Muestras', pL + 4 + gW * 0.76, H - 16);
+}
+
+// ─── CD vs DVD ────────────────────────────────────────────────────────────
+const cdDvdCanvas = document.getElementById('cdVsDvdCanvas');
+const cdvCtx = cdDvdCanvas.getContext('2d');
+
+function drawCDvsDVD() {
+  cdDvdCanvas.width = cdDvdCanvas.offsetWidth || 800;
+  const W = cdDvdCanvas.width, H = cdDvdCanvas.height;
+  cdvCtx.clearRect(0, 0, W, H);
+
+  const formats = [
+    { label: 'CD  (780 nm)', trackPitch: 1.0, color: '#ffaa00', x: W * 0.25 },
+    { label: 'DVD (640 nm)', trackPitch: 0.46, color: '#00ffff', x: W * 0.75 },
+  ];
+
+  formats.forEach(f => {
+    cdvCtx.fillStyle = f.color;
+    cdvCtx.font = 'bold 12px sans-serif';
+    cdvCtx.textAlign = 'center';
+    cdvCtx.fillText(f.label, f.x, 18);
+
+    const stripW = 120, stripH = 100;
+    const sx = f.x - stripW / 2, sy = 30;
+
+    cdvCtx.fillStyle = '#1a2a40';
+    cdvCtx.fillRect(sx, sy, stripW, stripH);
+
+    // Surcos con el pitch correspondiente
+    const numTracks = Math.floor(stripH / (f.trackPitch * 12));
+    for (let i = 0; i < numTracks; i++) {
+      const ty = sy + i * (f.trackPitch * 12);
+      cdvCtx.fillStyle = i % 2 === 0 ? '#334455' : '#1a2a40';
+      cdvCtx.fillRect(sx + 1, ty, stripW - 2, f.trackPitch * 12 * 0.6);
+    }
+    cdvCtx.strokeStyle = f.color;
+    cdvCtx.lineWidth = 1.5;
+    cdvCtx.strokeRect(sx, sy, stripW, stripH);
+
+    cdvCtx.fillStyle = f.color;
+    cdvCtx.font = '10px sans-serif';
+    cdvCtx.textAlign = 'center';
+    cdvCtx.fillText(`${numTracks} pistas visibles`, f.x, sy + stripH + 16);
+    cdvCtx.fillText(`Pitch: ${f.trackPitch === 1 ? '1.6 μm' : '0.74 μm'}`, f.x, sy + stripH + 30);
+  });
+
+  // Flecha comparativa
+  cdvCtx.fillStyle = '#99ccff';
+  cdvCtx.font = 'bold 12px sans-serif';
+  cdvCtx.textAlign = 'center';
+  cdvCtx.fillText('→ 2× más pistas por área → ~7× más capacidad', W * 0.5, H - 10);
+  cdvCtx.textAlign = 'left';
+}
+
+// ─── Estándares ───────────────────────────────────────────────────────────
+const stdCanvas = document.getElementById('stdCanvas');
+const stCtx = stdCanvas.getContext('2d');
+let selectedStd = 4;
+let _activeNoiseFilters = null;  // referencia a filtros del ruido activo
+
+function buildStdButtons() {
+  const container = document.getElementById('stdBtns');
+  STANDARDS.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn' + (i === selectedStd ? ' active' : '');
+    btn.textContent = `${s.label} (${s.kbps} kbps)`;
+    btn.onclick = () => { selectedStd = i; updateStd(); };
+    container.appendChild(btn);
+  });
+}
+
+function updateStd() {
+  document.querySelectorAll('#stdBtns .btn').forEach((b, i) => b.classList.toggle('active', i === selectedStd));
+  const s = STANDARDS[selectedStd];
+  document.getElementById('stdInfo').innerHTML =
+    `<strong style="color:${s.color}">${s.label}</strong> — ${s.kbps} kbps | ` +
+    `Frecuencia máxima: <strong style="color:#ffaa00">${(s.fmax/1000).toFixed(1)} kHz</strong>`;
+  drawStandards();
+  // Si hay ruido activo, actualizar el cutoff en vivo sin detener el audio
+  if (_activeNoiseFilters) {
+    _activeNoiseFilters.forEach(f => {
+      f.frequency.setTargetAtTime(s.fmax, f.context.currentTime, 0.05);
+    });
+  }
+}
+
+function playCurrentStd() {
+  stopAllAudio();
+  _activeNoiseFilters = null;
+  const s = STANDARDS[selectedStd];
+  const result = playNoise(s.fmax, 0.35);
+  _activeNoiseFilters = result.filters;
+}
+
+function drawStandards() {
+  stdCanvas.width = stdCanvas.offsetWidth || 800;
+  const W = stdCanvas.width, H = stdCanvas.height;
+  stCtx.clearRect(0, 0, W, H);
+
+  const pL = 80, pR = 20, pT = 20, pB = 35;
+  const gW = W - pL - pR, gH = H - pT - pB;
+
+  // Ejes
+  stCtx.strokeStyle = 'rgba(150,200,255,0.6)'; stCtx.lineWidth = 1.5;
+  stCtx.beginPath();
+  stCtx.moveTo(pL, pT); stCtx.lineTo(pL, pT + gH); stCtx.lineTo(pL + gW, pT + gH);
+  stCtx.stroke();
+
+  const maxKbps = 280;
+  const barH = (gH - 10) / STANDARDS.length;
+
+  STANDARDS.forEach((s, i) => {
+    const y = pT + i * barH + 3;
+    const bW = (s.kbps / maxKbps) * gW;
+    const isSelected = i === selectedStd;
+
+    stCtx.fillStyle = isSelected ? s.color + 'cc' : s.color + '44';
+    stCtx.fillRect(pL, y, bW, barH - 4);
+    stCtx.strokeStyle = isSelected ? s.color : s.color + '88';
+    stCtx.lineWidth = isSelected ? 2 : 1;
+    stCtx.strokeRect(pL, y, bW, barH - 4);
+
+    stCtx.fillStyle = isSelected ? '#ffffff' : '#99ccff';
+    stCtx.font = isSelected ? 'bold 11px sans-serif' : '10px sans-serif';
+    stCtx.textAlign = 'right';
+    stCtx.fillText(s.label, pL - 6, y + barH * 0.6);
+
+    stCtx.fillStyle = isSelected ? s.color : s.color + 'aa';
+    stCtx.font = '10px sans-serif';
+    stCtx.textAlign = 'left';
+    stCtx.fillText(`${s.kbps} kbps — hasta ${(s.fmax/1000).toFixed(1)} kHz`, pL + bW + 6, y + barH * 0.6);
+  });
+
+  // Eje X
+  [50, 100, 150, 200, 250].forEach(kb => {
+    const x = pL + (kb / maxKbps) * gW;
+    stCtx.fillStyle = '#99ccff'; stCtx.font = '9px sans-serif'; stCtx.textAlign = 'center';
+    stCtx.fillText(kb + ' kbps', x, pT + gH + 14);
+    stCtx.beginPath(); stCtx.moveTo(x, pT); stCtx.lineTo(x, pT + gH);
+    stCtx.strokeStyle = 'rgba(100,180,255,0.12)'; stCtx.lineWidth = 1; stCtx.stroke();
+  });
+  stCtx.textAlign = 'left';
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+function init() {
+  initAdcCanvas();
+  initCDCanvas();
+  drawADC();
+  drawCD(0);
+  drawCDBits();
+  drawCDDac(0);
+  drawCDvsDVD();
+  buildStdButtons();
+  drawStandards();
+  updateStd();
+}
+
+window.addEventListener('resize', () => {
+  initAdcCanvas();
+  initCDCanvas();
+  drawADC();
+  drawCDvsDVD();
+  drawStandards();
+});
+
+init();
+</script>
+</body>
+</html>

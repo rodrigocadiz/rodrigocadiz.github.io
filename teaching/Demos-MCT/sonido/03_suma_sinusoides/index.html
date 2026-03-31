@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Suma de Sinusoides — Parámetros del Sonido</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .module-desc {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .control-group .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+    button.play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    button.play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,229,255,.3); }
+    button.play-btn.playing { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+  </style>
+</head>
+<body class="sec-sonido">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Parámetros del Sonido</a>
+  <a href="../01_circulo_unitario/index.html">1. Círculo Unitario</a>
+  <a href="../02_parametros/index.html">2. Parámetros</a>
+  <a href="../03_suma_sinusoides/index.html" class="active">3. Suma de Sinusoides</a>
+  <a href="../04_espectro/index.html">4. Espectro</a>
+  <a href="../05_armonicos_parciales/index.html">5. Armónicos vs Parciales</a>
+  <a href="../06_sintetizador_aditivo/index.html">6. Sintetizador Aditivo</a>
+  <a href="../07_espectrograma/index.html">7. Espectrograma</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Suma de Sinusoides</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+
+    <div class="module-desc">
+      Cuando dos o más ondas se combinan, el resultado depende de sus fases relativas.
+      Ondas <strong>en fase</strong> se refuerzan (interferencia constructiva), mientras que
+      ondas <strong>en contrafase</strong> se cancelan (interferencia destructiva).
+    </div>
+
+    <div class="controls-row">
+      <div class="control-group" style="border-color: #00e5ff;">
+        <label style="color:#00e5ff;">Onda 1 — Frecuencia</label>
+        <div class="value" id="m3F1Val">440 Hz</div>
+        <input type="range" id="m3F1" min="20" max="2000" step="1" value="440" oninput="m3Update()">
+      </div>
+      <div class="control-group" style="border-color: #00e5ff;">
+        <label style="color:#00e5ff;">Onda 1 — Amplitud</label>
+        <div class="value" id="m3A1Val">0.50</div>
+        <input type="range" id="m3A1" min="0" max="1" step="0.01" value="0.5" oninput="m3Update()">
+      </div>
+      <div class="control-group" style="border-color: #00e5ff;">
+        <label style="color:#00e5ff;">Onda 1 — Fase</label>
+        <div class="value" id="m3P1Val">0°</div>
+        <input type="range" id="m3P1" min="0" max="360" step="1" value="0" oninput="m3Update()">
+      </div>
+    </div>
+    <div class="controls-row">
+      <div class="control-group" style="border-color: #ff6b6b;">
+        <label style="color:#ff6b6b;">Onda 2 — Frecuencia</label>
+        <div class="value" id="m3F2Val">440 Hz</div>
+        <input type="range" id="m3F2" min="20" max="2000" step="1" value="440" oninput="m3Update()">
+      </div>
+      <div class="control-group" style="border-color: #ff6b6b;">
+        <label style="color:#ff6b6b;">Onda 2 — Amplitud</label>
+        <div class="value" id="m3A2Val">0.50</div>
+        <input type="range" id="m3A2" min="0" max="1" step="0.01" value="0.5" oninput="m3Update()">
+      </div>
+      <div class="control-group" style="border-color: #ff6b6b;">
+        <label style="color:#ff6b6b;">Onda 2 — Fase</label>
+        <div class="value" id="m3P2Val">0°</div>
+        <input type="range" id="m3P2" min="0" max="360" step="1" value="0" oninput="m3Update()">
+      </div>
+    </div>
+    <div class="controls-row">
+      <div class="control-group" style="flex:0; min-width:auto;">
+        <label>Sonido</label>
+        <button class="play-btn" id="m3PlayBtn" onclick="m3ToggleAudio()">▶ Reproducir</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" style="color:#00e5ff;">Onda 1</div>
+    <canvas id="m3Wave1" height="90"></canvas>
+    <div class="canvas-label" style="color:#ff6b6b;">Onda 2</div>
+    <canvas id="m3Wave2" height="90"></canvas>
+    <div class="canvas-label" style="color:#4cff91;">Suma</div>
+    <canvas id="m3Sum" height="110"></canvas>
+
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script>
+let audioCtx = null;
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  for (let y = 0; y < h; y += h / 8) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  for (let x = 0; x < w; x += w / 16) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+}
+
+// ── Module 3 — Sum of Sinusoids ──
+let m3Playing = false, m3AudioSrc = null;
+
+function m3Update() {
+  const f1 = parseFloat(document.getElementById('m3F1').value);
+  const a1 = parseFloat(document.getElementById('m3A1').value);
+  const p1 = parseFloat(document.getElementById('m3P1').value);
+  const f2 = parseFloat(document.getElementById('m3F2').value);
+  const a2 = parseFloat(document.getElementById('m3A2').value);
+  const p2 = parseFloat(document.getElementById('m3P2').value);
+  document.getElementById('m3F1Val').textContent = f1 + ' Hz';
+  document.getElementById('m3A1Val').textContent = a1.toFixed(2);
+  document.getElementById('m3P1Val').textContent = p1 + '°';
+  document.getElementById('m3F2Val').textContent = f2 + ' Hz';
+  document.getElementById('m3A2Val').textContent = a2.toFixed(2);
+  document.getElementById('m3P2Val').textContent = p2 + '°';
+  if (m3Playing) m3StartBuffer();
+}
+
+function m3StartBuffer() {
+  if (m3AudioSrc) { try { m3AudioSrc.stop(); } catch(e){} m3AudioSrc = null; }
+  const ctx = getAudioCtx();
+  const sr  = ctx.sampleRate;
+  const f1  = parseFloat(document.getElementById('m3F1').value);
+  const a1  = parseFloat(document.getElementById('m3A1').value);
+  const ph1 = parseFloat(document.getElementById('m3P1').value) * Math.PI / 180;
+  const f2  = parseFloat(document.getElementById('m3F2').value);
+  const a2  = parseFloat(document.getElementById('m3A2').value);
+  const ph2 = parseFloat(document.getElementById('m3P2').value) * Math.PI / 180;
+  const len  = sr;
+  const data = new Float32Array(len);
+  for (let i = 0; i < len; i++) {
+    const t = i / sr;
+    data[i] = (a1 * Math.sin(2 * Math.PI * f1 * t + ph1) +
+               a2 * Math.sin(2 * Math.PI * f2 * t + ph2)) * 0.35;
+  }
+  const buf = ctx.createBuffer(1, len, sr);
+  buf.getChannelData(0).set(data);
+  m3AudioSrc = ctx.createBufferSource();
+  m3AudioSrc.buffer = buf;
+  m3AudioSrc.loop = true;
+  m3AudioSrc.connect(masterGain);
+  m3AudioSrc.start();
+}
+
+function m3ToggleAudio() {
+  if (!m3Playing) {
+    m3Playing = true;
+    m3StartBuffer();
+    document.getElementById('m3PlayBtn').textContent = '⏹ Detener';
+    document.getElementById('m3PlayBtn').classList.add('playing');
+  } else {
+    if (m3AudioSrc) { try { m3AudioSrc.stop(); } catch(e){} m3AudioSrc = null; }
+    m3Playing = false;
+    document.getElementById('m3PlayBtn').textContent = '▶ Reproducir';
+    document.getElementById('m3PlayBtn').classList.remove('playing');
+  }
+}
+
+function m3Draw() {
+  const f1 = parseFloat(document.getElementById('m3F1').value);
+  const a1 = parseFloat(document.getElementById('m3A1').value);
+  const p1 = parseFloat(document.getElementById('m3P1').value) * Math.PI / 180;
+  const f2 = parseFloat(document.getElementById('m3F2').value);
+  const a2 = parseFloat(document.getElementById('m3A2').value);
+  const p2 = parseFloat(document.getElementById('m3P2').value) * Math.PI / 180;
+  const minF = Math.min(f1, f2, 100);
+  const cycles = Math.min(minF / 30, 10);
+
+  let c = document.getElementById('m3Wave1');
+  let ctx = c.getContext('2d');
+  let w = c.width = c.offsetWidth || 900, h = c.height;
+  ctx.clearRect(0, 0, w, h); drawGrid(ctx, w, h);
+  ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2; ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = x / w * cycles * 2 * Math.PI;
+    const y = h / 2 - a1 * Math.sin(t * f1 / minF + p1) * (h * 0.4);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  c = document.getElementById('m3Wave2');
+  ctx = c.getContext('2d'); w = c.width = c.offsetWidth || 900; h = c.height;
+  ctx.clearRect(0, 0, w, h); drawGrid(ctx, w, h);
+  ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2; ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = x / w * cycles * 2 * Math.PI;
+    const y = h / 2 - a2 * Math.sin(t * f2 / minF + p2) * (h * 0.4);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  c = document.getElementById('m3Sum');
+  ctx = c.getContext('2d'); w = c.width = c.offsetWidth || 900; h = c.height;
+  ctx.clearRect(0, 0, w, h); drawGrid(ctx, w, h);
+  ctx.strokeStyle = '#4cff91'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = x / w * cycles * 2 * Math.PI;
+    const val = a1 * Math.sin(t * f1 / minF + p1) + a2 * Math.sin(t * f2 / minF + p2);
+    const y = h / 2 - val * (h * 0.22);
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function animate() {
+  m3Draw();
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

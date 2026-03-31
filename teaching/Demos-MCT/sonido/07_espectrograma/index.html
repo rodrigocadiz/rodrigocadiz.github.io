@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Espectrograma — Parámetros del Sonido</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .module-desc {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .control-group .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+    button.play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    button.play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,229,255,.3); }
+    button.play-btn.playing { background: linear-gradient(135deg, #ff6b6b, #c0392b); color: #fff; }
+  </style>
+</head>
+<body class="sec-sonido">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Parámetros del Sonido</a>
+  <a href="../01_circulo_unitario/index.html">1. Círculo Unitario</a>
+  <a href="../02_parametros/index.html">2. Parámetros</a>
+  <a href="../03_suma_sinusoides/index.html">3. Suma de Sinusoides</a>
+  <a href="../04_espectro/index.html">4. Espectro</a>
+  <a href="../05_armonicos_parciales/index.html">5. Armónicos vs Parciales</a>
+  <a href="../06_sintetizador_aditivo/index.html">6. Sintetizador Aditivo</a>
+  <a href="../07_espectrograma/index.html" class="active">7. Espectrograma</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Espectrograma</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+
+    <div class="module-desc">
+      El <strong>espectrograma</strong> muestra cómo la amplitud de cada sinusoide cambia en el tiempo.
+      El eje horizontal es el tiempo, el eje vertical es la frecuencia, y el brillo del color representa
+      la amplitud instantánea. Cada sinusoide tiene amplitudes en 4 puntos de control que varían linealmente.
+    </div>
+
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Duración (s)</label>
+        <div class="value" id="m7DurVal">4.0 s</div>
+        <input type="range" id="m7Dur" min="1" max="8" step="0.5" value="4" oninput="m7UpdateUI()">
+      </div>
+    </div>
+
+    <div id="m7Components"></div>
+
+    <div class="controls-row" style="margin-top:12px;">
+      <div class="control-group" style="flex:0; min-width:auto;">
+        <button class="play-btn" id="m7PlayBtn" onclick="m7ToggleAudio()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label">Espectrograma (Tiempo × Frecuencia) — eje Y fijo 0–2500 Hz</div>
+    <canvas id="m7Spectro" height="300"></canvas>
+    <div class="canvas-label">Forma de Onda (suma de sinusoides)</div>
+    <canvas id="m7WaveCanvas" height="150"></canvas>
+
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script>
+let audioCtx = null;
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  for (let y = 0; y < h; y += h / 8) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+}
+
+// ── Module 7 — Spectrogram ──
+const M7_NUM = 4;
+const M7_AMP_POINTS = 4;
+const M7_COLORS = [[0,229,255],[255,107,107],[76,255,145],[255,183,77]];
+const M7_DEFAULT_FREQS  = [220,  550,  880, 1320];
+const M7_DEFAULT_AMPS   = [
+  [0.8, 0.4, 0.1, 0.6],
+  [0.1, 0.8, 0.8, 0.1],
+  [0.5, 0.0, 0.5, 0.0],
+  [0.3, 0.6, 0.3, 0.9],
+];
+const M7_DEFAULT_ACTIVE = [true, true, true, false];
+const M7_AMP_LABELS = ['t=0', 't=⅓', 't=⅔', 't=1'];
+
+let m7Playing = false;
+let m7Source  = null;
+
+function m7GetAmp(ci, tNorm) {
+  const n   = M7_AMP_POINTS;
+  const seg = tNorm * (n - 1);
+  const i   = Math.min(Math.floor(seg), n - 2);
+  const u   = seg - i;
+  const a0  = parseFloat(document.getElementById('m7A' + ci + '_' + i).value);
+  const a1  = parseFloat(document.getElementById('m7A' + ci + '_' + (i + 1)).value);
+  return a0 + (a1 - a0) * u;
+}
+
+function m7Init() {
+  const container = document.getElementById('m7Components');
+  container.innerHTML = '';
+  const labels = ['Sinusoide 1','Sinusoide 2','Sinusoide 3','Sinusoide 4'];
+  for (let ci = 0; ci < M7_NUM; ci++) {
+    const [cr,cg,cb] = M7_COLORS[ci];
+    const col = `rgb(${cr},${cg},${cb})`;
+    const row = document.createElement('div');
+    row.className = 'controls-row';
+    row.style.cssText = `border-left:3px solid ${col};padding:8px 8px 8px 14px;margin-bottom:8px;background:rgba(${cr},${cg},${cb},0.05);border-radius:0 8px 8px 0;flex-wrap:wrap;`;
+    let html =
+      `<div class="control-group" style="flex:0;min-width:100px;">` +
+        `<label style="color:${col};font-weight:600;">${labels[ci]}</label>` +
+        `<input type="checkbox" id="m7Chk${ci}" ${M7_DEFAULT_ACTIVE[ci]?'checked':''} onchange="m7UpdateUI()" style="width:22px;height:22px;cursor:pointer;margin-top:6px;">` +
+      `</div>` +
+      `<div class="control-group" style="min-width:130px;">` +
+        `<label>Frecuencia</label>` +
+        `<div class="value" id="m7FreqV${ci}">${M7_DEFAULT_FREQS[ci]} Hz</div>` +
+        `<input type="range" id="m7Freq${ci}" min="50" max="2400" step="10" value="${M7_DEFAULT_FREQS[ci]}" oninput="m7UpdateUI()">` +
+      `</div>`;
+    for (let k = 0; k < M7_AMP_POINTS; k++) {
+      const v = M7_DEFAULT_AMPS[ci][k];
+      html +=
+        `<div class="control-group" style="min-width:100px;">` +
+          `<label>Amp <span style="opacity:.7;font-size:.8em;">${M7_AMP_LABELS[k]}</span></label>` +
+          `<div class="value" id="m7AV${ci}_${k}">${v.toFixed(2)}</div>` +
+          `<input type="range" id="m7A${ci}_${k}" min="0" max="1" step="0.05" value="${v}" oninput="m7UpdateUI()">` +
+        `</div>`;
+    }
+    row.innerHTML = html;
+    container.appendChild(row);
+  }
+}
+
+function m7UpdateUI() {
+  const duration = parseFloat(document.getElementById('m7Dur').value);
+  document.getElementById('m7DurVal').textContent = duration.toFixed(1) + ' s';
+  for (let ci = 0; ci < M7_NUM; ci++) {
+    document.getElementById('m7FreqV'+ci).textContent = document.getElementById('m7Freq'+ci).value + ' Hz';
+    for (let k = 0; k < M7_AMP_POINTS; k++) {
+      document.getElementById('m7AV'+ci+'_'+k).textContent =
+        parseFloat(document.getElementById('m7A'+ci+'_'+k).value).toFixed(2);
+    }
+  }
+  m7DrawAll();
+}
+
+function m7DrawAll() {
+  m7DrawSpectrogram();
+  m7DrawWaveform();
+}
+
+function m7DrawSpectrogram() {
+  const c = document.getElementById('m7Spectro');
+  if (!c) return;
+  const ctx2 = c.getContext('2d');
+  const W = c.width = c.offsetWidth || 900, H = c.height;
+  const ML = 52, MR = 16, MT = 10, MB = 32;
+  const plotW = W - ML - MR;
+  const plotH = H - MT - MB;
+  const duration = parseFloat(document.getElementById('m7Dur').value);
+  const fMin = 0, fMax = 2500;
+  const imgData = ctx2.createImageData(plotW, plotH);
+  const buf = imgData.data;
+  for (let k = 0; k < buf.length; k += 4) {
+    buf[k] = 8; buf[k+1] = 12; buf[k+2] = 22; buf[k+3] = 255;
+  }
+  const bandSigma = 2.8;
+  const bandReach = Math.ceil(bandSigma * 3.5);
+  for (let ci = 0; ci < M7_NUM; ci++) {
+    const active = document.getElementById('m7Chk'+ci).checked;
+    if (!active) continue;
+    const freq  = parseFloat(document.getElementById('m7Freq'+ci).value);
+    const [cr, cg, cb] = M7_COLORS[ci];
+    const freqNorm = (freq - fMin) / (fMax - fMin);
+    const centerPy = Math.round((1 - freqNorm) * (plotH - 1));
+    for (let px = 0; px < plotW; px++) {
+      const tNorm = plotW > 1 ? px / (plotW - 1) : 0;
+      const amp = m7GetAmp(ci, tNorm);
+      if (amp <= 0.001) continue;
+      const rowMin = Math.max(0, centerPy - bandReach);
+      const rowMax = Math.min(plotH - 1, centerPy + bandReach);
+      for (let py = rowMin; py <= rowMax; py++) {
+        const dy = py - centerPy;
+        const falloff = Math.exp(-0.5 * (dy / bandSigma) * (dy / bandSigma));
+        const intensity = amp * falloff;
+        const k = (py * plotW + px) * 4;
+        buf[k]   = Math.min(255, buf[k]   + Math.round(cr * intensity));
+        buf[k+1] = Math.min(255, buf[k+1] + Math.round(cg * intensity));
+        buf[k+2] = Math.min(255, buf[k+2] + Math.round(cb * intensity));
+      }
+    }
+  }
+  ctx2.putImageData(imgData, ML, MT);
+  ctx2.strokeStyle = 'rgba(255,255,255,.35)';
+  ctx2.lineWidth = 1;
+  ctx2.beginPath();
+  ctx2.moveTo(ML, MT); ctx2.lineTo(ML, H - MB); ctx2.lineTo(W - MR, H - MB);
+  ctx2.stroke();
+  ctx2.font = '10px sans-serif';
+  for (let fTick = 0; fTick <= 2500; fTick += 500) {
+    const y = MT + (1 - (fTick - fMin) / (fMax - fMin)) * plotH;
+    ctx2.fillStyle = 'rgba(255,255,255,.55)';
+    ctx2.fillText(fTick + ' Hz', 2, y + 4);
+    ctx2.strokeStyle = 'rgba(255,255,255,.07)';
+    ctx2.beginPath(); ctx2.moveTo(ML, y); ctx2.lineTo(W - MR, y); ctx2.stroke();
+  }
+  for (let ci = 0; ci < M7_NUM; ci++) {
+    const active = document.getElementById('m7Chk'+ci).checked;
+    if (!active) continue;
+    const freq = parseFloat(document.getElementById('m7Freq'+ci).value);
+    const freqNorm = (freq - fMin) / (fMax - fMin);
+    const y = MT + (1 - freqNorm) * plotH;
+    const [cr, cg, cb] = M7_COLORS[ci];
+    ctx2.strokeStyle = `rgb(${cr},${cg},${cb})`;
+    ctx2.lineWidth = 1.5;
+    ctx2.beginPath(); ctx2.moveTo(ML - 6, y); ctx2.lineTo(ML, y); ctx2.stroke();
+  }
+  for (let i = 0; i <= 5; i++) {
+    const tl = duration * i / 5;
+    const x = ML + plotW * i / 5;
+    ctx2.fillStyle = 'rgba(255,255,255,.5)';
+    ctx2.fillText(tl.toFixed(1) + 's', x - 8, H - 10);
+    ctx2.strokeStyle = 'rgba(255,255,255,.06)';
+    ctx2.lineWidth = 1;
+    ctx2.beginPath(); ctx2.moveTo(x, MT); ctx2.lineTo(x, H - MB); ctx2.stroke();
+  }
+  ctx2.setLineDash([4, 4]);
+  ctx2.strokeStyle = 'rgba(255,255,255,.22)';
+  ctx2.lineWidth = 1;
+  for (let k = 1; k < M7_AMP_POINTS - 1; k++) {
+    const x = ML + plotW * k / (M7_AMP_POINTS - 1);
+    ctx2.beginPath(); ctx2.moveTo(x, MT); ctx2.lineTo(x, H - MB); ctx2.stroke();
+    ctx2.fillStyle = 'rgba(255,255,255,.35)';
+    ctx2.fillText(M7_AMP_LABELS[k], x - 8, MT + 10);
+  }
+  ctx2.setLineDash([]);
+  ctx2.fillStyle = 'rgba(255,255,255,.3)';
+  ctx2.fillText('Tiempo →', W / 2 - 22, H - 2);
+  ctx2.save(); ctx2.translate(10, H / 2 + 35); ctx2.rotate(-Math.PI / 2);
+  ctx2.fillText('↑ Frecuencia', -32, 0); ctx2.restore();
+}
+
+function m7DrawWaveform() {
+  const c = document.getElementById('m7WaveCanvas');
+  if (!c) return;
+  const ctx2 = c.getContext('2d');
+  const W = c.width = c.offsetWidth || 900, H = c.height;
+  ctx2.clearRect(0, 0, W, H);
+  drawGrid(ctx2, W, H);
+  const duration = parseFloat(document.getElementById('m7Dur').value);
+  for (let ci = 0; ci < M7_NUM; ci++) {
+    const active = document.getElementById('m7Chk'+ci).checked;
+    if (!active) continue;
+    const freq = parseFloat(document.getElementById('m7Freq'+ci).value);
+    const [cr, cg, cb] = M7_COLORS[ci];
+    ctx2.strokeStyle = `rgba(${cr},${cg},${cb},0.35)`;
+    ctx2.lineWidth = 1;
+    ctx2.beginPath();
+    for (let px = 0; px < W; px++) {
+      const tNorm = W > 1 ? px / (W - 1) : 0;
+      const t   = tNorm * duration;
+      const amp = m7GetAmp(ci, tNorm);
+      const y   = H / 2 - amp * Math.sin(2 * Math.PI * freq * t) * (H * 0.28);
+      if (px === 0) ctx2.moveTo(px, y); else ctx2.lineTo(px, y);
+    }
+    ctx2.stroke();
+  }
+  ctx2.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx2.lineWidth = 1.5;
+  ctx2.beginPath();
+  for (let px = 0; px < W; px++) {
+    const tNorm = W > 1 ? px / (W - 1) : 0;
+    const t = tNorm * duration;
+    let val = 0;
+    for (let ci = 0; ci < M7_NUM; ci++) {
+      const active = document.getElementById('m7Chk'+ci).checked;
+      if (!active) continue;
+      const freq = parseFloat(document.getElementById('m7Freq'+ci).value);
+      val += m7GetAmp(ci, tNorm) * Math.sin(2 * Math.PI * freq * t);
+    }
+    const y = H / 2 - val * (H * 0.22);
+    if (px === 0) ctx2.moveTo(px, y); else ctx2.lineTo(px, y);
+  }
+  ctx2.stroke();
+  ctx2.font = '10px sans-serif';
+  ctx2.fillStyle = 'rgba(255,255,255,.4)';
+  for (let i = 0; i <= 5; i++) {
+    ctx2.fillText((duration * i / 5).toFixed(1) + 's', W * i / 5 + 3, H - 4);
+  }
+}
+
+function m7ToggleAudio() {
+  if (m7Playing) {
+    if (m7Source) { try { m7Source.stop(); } catch(e){} m7Source = null; }
+    m7Playing = false;
+    const btn = document.getElementById('m7PlayBtn');
+    btn.textContent = '▶ Escuchar';
+    btn.classList.remove('playing');
+    return;
+  }
+  const actx = getAudioCtx();
+  const sampleRate = actx.sampleRate;
+  const duration   = parseFloat(document.getElementById('m7Dur').value);
+  const len = Math.floor(sampleRate * duration);
+  const rawBuf = new Float32Array(len);
+  for (let i = 0; i < len; i++) {
+    const t     = i / sampleRate;
+    const tNorm = len > 1 ? i / (len - 1) : 0;
+    let val = 0;
+    for (let ci = 0; ci < M7_NUM; ci++) {
+      const active = document.getElementById('m7Chk'+ci).checked;
+      if (!active) continue;
+      const freq = parseFloat(document.getElementById('m7Freq'+ci).value);
+      val += m7GetAmp(ci, tNorm) * Math.sin(2 * Math.PI * freq * t);
+    }
+    rawBuf[i] = val * 0.28;
+  }
+  const audioBuf = actx.createBuffer(1, len, sampleRate);
+  audioBuf.getChannelData(0).set(rawBuf);
+  m7Source = actx.createBufferSource();
+  m7Source.buffer = audioBuf;
+  m7Source.connect(masterGain);
+  m7Source.start();
+  m7Playing = true;
+  const btn = document.getElementById('m7PlayBtn');
+  btn.textContent = '⏹ Detener';
+  btn.classList.add('playing');
+  m7Source.onended = () => {
+    m7Playing = false; m7Source = null;
+    btn.textContent = '▶ Escuchar';
+    btn.classList.remove('playing');
+  };
+}
+
+m7Init();
+m7DrawAll();
+window.addEventListener('resize', () => m7DrawAll());
+</script>
+</body>
+</html>

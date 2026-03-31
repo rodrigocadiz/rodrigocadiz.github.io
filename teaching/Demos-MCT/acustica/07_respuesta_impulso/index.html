@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Respuesta al Impulso — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    /* INFO DISPLAY */
+    .info-display {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 14px;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+    }
+    .info-display strong { color: var(--text-primary); }
+
+    /* TAB BAR */
+    .tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all .2s;
+    }
+    .tab-btn:hover { border-color: var(--accent-2); color: var(--accent-2); }
+    .tab-btn.active {
+      background: rgba(0,229,255,.1);
+      border-color: var(--accent-2);
+      color: var(--accent-2);
+      font-weight: 600;
+    }
+    .ir-tab-content { display: none; }
+    .ir-tab-content.active { display: block; }
+
+    /* PRESET BUTTONS */
+    .preset-btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all .2s;
+    }
+    .preset-btn:hover { border-color: var(--accent-2); color: var(--accent-2); }
+    .preset-btn.active {
+      background: rgba(0,229,255,.08);
+      border-color: var(--accent-2);
+      color: var(--accent-2);
+      font-weight: 600;
+    }
+
+    /* PLAY BUTTONS */
+    .play-btn {
+      background: linear-gradient(135deg, #00e5ff, #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    .play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,229,255,.35); }
+    .play-btn.stop-btn {
+      background: linear-gradient(135deg, #ff6b6b, #c0392b);
+      color: #fff;
+    }
+    .play-btn.stop-btn:hover { box-shadow: 0 4px 14px rgba(255,107,107,.35); }
+
+    /* BULLETS */
+    .bullets {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bullets li {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      padding-left: 16px;
+      position: relative;
+    }
+    .bullets li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent-2);
+    }
+    .bullets li strong { color: var(--text-primary); }
+
+    /* Select */
+    select {
+      background: var(--panel);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 700px) {
+      .two-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body class="sec-acustica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">Acústica</a>
+  <a href="../01_serie_armonica/index.html">1. Serie Armónica</a>
+  <a href="../02_serie_musical/index.html">2. Serie Musical</a>
+  <a href="../03_formantes/index.html">3. Formantes</a>
+  <a href="../04_diseno_acustico/index.html">4. Diseño Acústico</a>
+  <a href="../05_impulso_sonoro/index.html">5. Impulso Sonoro</a>
+  <a href="../06_reverberacion/index.html">6. Reverberación</a>
+  <a href="../07_respuesta_impulso/index.html" class="active">7. Respuesta al Impulso</a>
+  <a href="../08_simulacion_sala/index.html">8. Simulación de Sala</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Respuesta al Impulso</h1>
+      <p class="subtitle">h(t) de sala — eco, flutter, convolución acústica</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Introducción -->
+  <section class="section-card">
+    <h2>¿Qué es la Respuesta al Impulso?</h2>
+    <p class="description">
+      La <span class="kw">Respuesta al Impulso</span> (RI) de una sala describe cómo ésta responde a un sonido impulsivo
+      instantáneo —como un disparo o un aplauso—. Captura toda la información acústica:
+      <span class="kw">sonido directo</span>, <span class="kw">reflexiones tempranas</span> y la
+      <span class="kw">cola de reverberación</span>. Cualquier sonido procesado por la sala puede simularse mediante
+      <span class="kw">convolución</span>: y(t) = x(t) ★ h(t).
+    </p>
+    <ul class="bullets">
+      <li><strong>Sonido directo:</strong> el primer frente de onda que llega al oyente, sin reflexiones.</li>
+      <li><strong>Reflexiones tempranas (0–80 ms):</strong> primeras reflexiones en paredes/techo; definen intimidad y claridad.</li>
+      <li><strong>Cola de reverberación:</strong> decaimiento exponencial suave; determina TR60 y vivacidad.</li>
+      <li><strong>Eco:</strong> reflexión tardía y discreta, audible como repetición separada del original.</li>
+      <li><strong>Flutter echo:</strong> ecos periódicos entre superficies paralelas (indeseable en salas).</li>
+      <li><strong>Convolución acústica:</strong> h(t) caracteriza completamente la sala; usada en reverbs convolutivos profesionales.</li>
+    </ul>
+  </section>
+
+  <!-- TABS -->
+  <section class="section-card">
+    <div class="tab-bar" id="ir-tabs">
+      <button class="tab-btn active" data-ir-tab="0">Tipos de Eco y Reverberación</button>
+      <button class="tab-btn" data-ir-tab="1">Respuesta al Impulso</button>
+      <button class="tab-btn" data-ir-tab="2">Convolución / Simulación</button>
+    </div>
+
+    <!-- TAB 0: TIPOS DE ECO -->
+    <div class="ir-tab-content active" id="ir-tab-0">
+      <p style="color:var(--text-dim); margin-bottom:1rem; font-size:0.95rem;">
+        Selecciona un tipo de espacio acústico para ver su respuesta al impulso y su espectro de amplitud.
+      </p>
+      <div class="controls" style="margin-bottom:1rem;">
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center;">
+          <button class="preset-btn active" data-ir-type="anechoic">Anecóica</button>
+          <button class="preset-btn" data-ir-type="single_echo">Eco Simple</button>
+          <button class="preset-btn" data-ir-type="flutter">Flutter Echo</button>
+          <button class="preset-btn" data-ir-type="studio">Estudio (TR≈0.3s)</button>
+          <button class="preset-btn" data-ir-type="concert">Sala de Conciertos (TR≈1.8s)</button>
+          <button class="preset-btn" data-ir-type="cathedral">Catedral (TR≈5s)</button>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;" class="two-grid">
+        <div>
+          <div class="canvas-label">Respuesta al Impulso h(t)</div>
+          <canvas id="canvas_ir_ht" height="180"></canvas>
+        </div>
+        <div>
+          <div class="canvas-label">Espectro de Amplitud |H(f)|</div>
+          <canvas id="canvas_ir_hf" height="180"></canvas>
+        </div>
+      </div>
+      <div class="info-display" id="ir_type_info">
+        <strong>Sala Anecóica:</strong> Sin reflexiones. Solo sonido directo. h(t) = δ(t). Usada para mediciones y grabaciones de referencia.
+      </div>
+      <div style="text-align:center; margin-top:1rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <button class="play-btn" id="btn_play_ir_dry">▶ Escuchar Seco</button>
+        <button class="play-btn" id="btn_play_ir_wet">▶ Escuchar con IR (Convolucionado)</button>
+        <button class="play-btn stop-btn" id="btn_stop_ir">■ Detener</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: RESPUESTA AL IMPULSO DETALLADA -->
+    <div class="ir-tab-content" id="ir-tab-1">
+      <p style="color:var(--text-dim); margin-bottom:1rem; font-size:0.95rem;">
+        Análisis detallado de los componentes temporales de la respuesta al impulso.
+      </p>
+      <div class="controls">
+        <div class="control-group">
+          <label>Sala:</label>
+          <select id="ir_room_select">
+            <option value="anechoic">Sala Anecóica (TR≈0s)</option>
+            <option value="single_echo">Eco Simple (reflexión única)</option>
+            <option value="flutter">Flutter Echo (reflexiones periódicas)</option>
+            <option value="studio">Estudio de Grabación (TR≈0.3s)</option>
+            <option value="concert" selected>Sala de Conciertos (TR≈1.8s)</option>
+            <option value="cathedral">Catedral (TR≈5.0s)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>TR60: <span id="ir_tr60_display">1.8</span> s</label>
+          <input type="range" id="ir_tr60_slider" min="0.1" max="6.0" step="0.1" value="1.8">
+        </div>
+        <div class="control-group">
+          <label>Retardo 1ª reflexión: <span id="ir_delay_display">25</span> ms</label>
+          <input type="range" id="ir_delay_slider" min="5" max="100" step="1" value="25">
+        </div>
+      </div>
+      <div class="canvas-label">Respuesta al Impulso h(t) — componentes coloreados</div>
+      <canvas id="canvas_ir_detail" height="220"></canvas>
+      <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:0.75rem; font-size:0.9rem;">
+        <span><span style="display:inline-block;width:14px;height:14px;background:#FFD700;border-radius:2px;margin-right:4px;"></span>Sonido directo</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#00E5FF;border-radius:2px;margin-right:4px;"></span>Reflexiones tempranas (0–80ms)</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#FF6B6B;border-radius:2px;margin-right:4px;"></span>Cola de reverberación</span>
+      </div>
+      <div class="info-display" id="ir_detail_info">
+        <strong>Sala de Conciertos:</strong> TR60 ≈ 1.8 s · Primeras reflexiones: 20–50 ms · Difusión alta · Ideal para música sinfónica.
+      </div>
+    </div>
+
+    <!-- TAB 2: CONVOLUCION / SIMULACION -->
+    <div class="ir-tab-content" id="ir-tab-2">
+      <p style="color:var(--text-dim); margin-bottom:1rem; font-size:0.95rem;">
+        La convolución y(t) = x(t) ★ h(t) permite simular cómo sonaría una fuente en cualquier sala conocida su RI.
+      </p>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center; margin-bottom:1rem;">
+        <button class="preset-btn active" data-conv-room="anechoic">Anecóica</button>
+        <button class="preset-btn" data-conv-room="studio">Estudio</button>
+        <button class="preset-btn" data-conv-room="concert">Conciertos</button>
+        <button class="preset-btn" data-conv-room="cathedral">Catedral</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr; gap:0.6rem;">
+        <div>
+          <div class="canvas-label">Entrada x(t) — señal seca (sinusoide pulsada)</div>
+          <canvas id="canvas_conv_x" height="100"></canvas>
+        </div>
+        <div>
+          <div class="canvas-label">Respuesta al Impulso h(t) de la sala</div>
+          <canvas id="canvas_conv_h" height="100"></canvas>
+        </div>
+        <div>
+          <div class="canvas-label">Salida y(t) = x(t) ★ h(t) — señal convolucionada</div>
+          <canvas id="canvas_conv_y" height="100"></canvas>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:1rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <button class="play-btn" id="btn_conv_dry">▶ Reproducir Seco</button>
+        <button class="play-btn" id="btn_conv_wet">▶ Reproducir con Sala</button>
+        <button class="play-btn stop-btn" id="btn_conv_stop">■ Detener</button>
+      </div>
+      <div class="info-display" id="conv_room_info">
+        <strong>Anecóica:</strong> Sin reflexiones. y(t) = x(t). La señal de salida es idéntica a la entrada.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+
+<script>
+  // ── Audio context local ──────────────────────────────────────────────────
+  let _audioCtx = null;
+  const _activeNodes = [];
+
+  function getAudioContext() {
+    if (!_audioCtx || _audioCtx.state === 'closed') {
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    return _audioCtx;
+  }
+
+  function stopAllAudio() {
+    _activeNodes.forEach(n => { try { n.stop(); } catch(e){} });
+    _activeNodes.length = 0;
+  }
+
+  // ── IR Generation ────────────────────────────────────────────────────────
+  // Returns a Float32Array representing h(t) normalized to [-1,1]
+  function generateIR(type, numSamples, sampleRate) {
+    const h = new Float32Array(numSamples);
+    const sr = sampleRate || 44100;
+
+    switch (type) {
+      case 'anechoic':
+        h[0] = 1.0;
+        break;
+
+      case 'single_echo': {
+        const echoDelay = Math.floor(0.20 * sr);
+        h[0] = 1.0;
+        if (echoDelay < numSamples) h[echoDelay] = 0.7;
+        break;
+      }
+
+      case 'flutter': {
+        h[0] = 1.0;
+        const period = Math.floor(0.04 * sr);
+        for (let k = 1; k <= 10; k++) {
+          const idx = k * period;
+          if (idx < numSamples) h[idx] = Math.pow(0.75, k);
+        }
+        break;
+      }
+
+      case 'studio': {
+        const tr = 0.30;
+        h[0] = 1.0;
+        const earlyDelays = [0.008, 0.013, 0.019, 0.025, 0.031, 0.040];
+        const earlyGains  = [0.60,  0.50,  0.45,  0.40,  0.35,  0.30];
+        earlyDelays.forEach((d, i) => {
+          const idx = Math.floor(d * sr);
+          if (idx < numSamples) h[idx] += earlyGains[i];
+        });
+        for (let n = Math.floor(0.04 * sr); n < numSamples; n++) {
+          const t = n / sr;
+          const env = Math.exp(-6.9078 * t / tr);
+          h[n] += env * (Math.random() * 2 - 1) * 0.4;
+        }
+        break;
+      }
+
+      case 'concert': {
+        const tr = 1.80;
+        h[0] = 1.0;
+        const earlyDelays = [0.020, 0.030, 0.042, 0.058, 0.070, 0.085];
+        const earlyGains  = [0.70,  0.65,  0.60,  0.55,  0.50,  0.45];
+        earlyDelays.forEach((d, i) => {
+          const idx = Math.floor(d * sr);
+          if (idx < numSamples) h[idx] += earlyGains[i];
+        });
+        for (let n = Math.floor(0.08 * sr); n < numSamples; n++) {
+          const t = n / sr;
+          const env = Math.exp(-6.9078 * t / tr);
+          h[n] += env * (Math.random() * 2 - 1) * 0.6;
+        }
+        break;
+      }
+
+      case 'cathedral': {
+        const tr = 5.0;
+        h[0] = 1.0;
+        const earlyDelays = [0.040, 0.070, 0.100, 0.140, 0.180, 0.230];
+        const earlyGains  = [0.75,  0.72,  0.68,  0.63,  0.58,  0.52];
+        earlyDelays.forEach((d, i) => {
+          const idx = Math.floor(d * sr);
+          if (idx < numSamples) h[idx] += earlyGains[i];
+        });
+        for (let n = Math.floor(0.20 * sr); n < numSamples; n++) {
+          const t = n / sr;
+          const env = Math.exp(-6.9078 * t / tr);
+          h[n] += env * (Math.random() * 2 - 1) * 0.7;
+        }
+        break;
+      }
+    }
+
+    // Normalize to [-1, 1]
+    let maxVal = 0;
+    for (let i = 0; i < h.length; i++) if (Math.abs(h[i]) > maxVal) maxVal = Math.abs(h[i]);
+    if (maxVal > 0) for (let i = 0; i < h.length; i++) h[i] /= maxVal;
+    return h;
+  }
+
+  // ── Draw h(t) canvas ─────────────────────────────────────────────────────
+  function drawIRCanvas(canvasEl, irData, opts) {
+    const w = canvasEl.width = canvasEl.offsetWidth || 800;
+    const h = canvasEl.height;
+    const ctx2 = canvasEl.getContext('2d');
+    ctx2.fillStyle = '#0a1520';
+    ctx2.fillRect(0, 0, w, h);
+
+    const pad = 30;
+    const drawW = w - pad * 2;
+    const midY = pad + (h - pad * 2) / 2;
+    const ampH = (h - pad * 2) / 2 - 4;
+
+    // Axes
+    ctx2.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx2.lineWidth = 1;
+    ctx2.beginPath();
+    ctx2.moveTo(pad, h - pad);
+    ctx2.lineTo(w - pad, h - pad);
+    ctx2.moveTo(pad, pad);
+    ctx2.lineTo(pad, h - pad);
+    ctx2.stroke();
+
+    // Axis labels
+    ctx2.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx2.font = '10px sans-serif';
+    ctx2.fillText('0', pad - 8, h - pad + 12);
+    ctx2.fillText('t', w - pad + 4, h - pad);
+
+    // Color regions if requested
+    if (opts && opts.colorRegions) {
+      const sr = opts.sampleRate || 44100;
+      const n = irData.length;
+      // Direct sound: first ~3ms
+      const r1 = Math.floor(0.003 * sr);
+      // Early reflections: 3ms to 80ms
+      const r2 = Math.floor(0.080 * sr);
+
+      const x1 = pad + (Math.min(r1, n - 1) / n) * drawW;
+      const x2 = pad + (Math.min(r2, n - 1) / n) * drawW;
+
+      // Late reverb region
+      ctx2.fillStyle = 'rgba(255,107,107,0.12)';
+      ctx2.fillRect(x2, pad, (w - pad) - x2, h - pad * 2);
+      ctx2.fillStyle = 'rgba(255,107,107,0.4)';
+      ctx2.font = '10px sans-serif';
+      ctx2.fillText('Cola reverb', x2 + 4, pad + 12);
+
+      // Early reflections region
+      ctx2.fillStyle = 'rgba(0,229,255,0.12)';
+      ctx2.fillRect(x1, pad, x2 - x1, h - pad * 2);
+      ctx2.fillStyle = 'rgba(0,229,255,0.6)';
+      ctx2.fillText('Reflexiones', x1 + 4, pad + 12);
+
+      // Direct sound region
+      ctx2.fillStyle = 'rgba(255,215,0,0.15)';
+      ctx2.fillRect(pad, pad, x1 - pad, h - pad * 2);
+      ctx2.fillStyle = 'rgba(255,215,0,0.9)';
+      ctx2.fillText('Directo', pad + 2, pad + 12);
+    }
+
+    // Draw waveform
+    const n = irData.length;
+    const color = (opts && opts.color) ? opts.color : '#42a5f5';
+    ctx2.strokeStyle = color;
+    ctx2.lineWidth = 1.5;
+    ctx2.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = pad + (i / n) * drawW;
+      const y = midY - irData[i] * ampH;
+      if (i === 0) ctx2.moveTo(x, y); else ctx2.lineTo(x, y);
+    }
+    ctx2.stroke();
+
+    // Zero line
+    ctx2.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx2.lineWidth = 1;
+    ctx2.setLineDash([4, 4]);
+    ctx2.beginPath();
+    ctx2.moveTo(pad, midY);
+    ctx2.lineTo(w - pad, midY);
+    ctx2.stroke();
+    ctx2.setLineDash([]);
+  }
+
+  // ── Draw |H(f)| canvas using simplified DFT ──────────────────────────────
+  function drawFreqCanvas(canvasEl, irData) {
+    const w = canvasEl.width = canvasEl.offsetWidth || 800;
+    const h = canvasEl.height;
+    const ctx2 = canvasEl.getContext('2d');
+    ctx2.fillStyle = '#0a1520';
+    ctx2.fillRect(0, 0, w, h);
+
+    const pad = 30;
+    const drawW = w - pad * 2;
+    const drawH = h - pad * 2;
+
+    // Axes
+    ctx2.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx2.lineWidth = 1;
+    ctx2.beginPath();
+    ctx2.moveTo(pad, pad);
+    ctx2.lineTo(pad, h - pad);
+    ctx2.lineTo(w - pad, h - pad);
+    ctx2.stroke();
+
+    // Labels
+    ctx2.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx2.font = '10px sans-serif';
+    ctx2.fillText('|H(f)|', pad - 28, pad + 6);
+    ctx2.fillText('f', w - pad + 4, h - pad);
+
+    // Compute magnitude spectrum (simplified, 128 bins)
+    const N = Math.min(irData.length, 4096);
+    const nBins = 128;
+    const mag = new Float32Array(nBins);
+
+    for (let k = 0; k < nBins; k++) {
+      let re = 0, im = 0;
+      for (let n = 0; n < N; n++) {
+        const angle = -2 * Math.PI * k * n / N;
+        re += irData[n] * Math.cos(angle);
+        im += irData[n] * Math.sin(angle);
+      }
+      mag[k] = Math.sqrt(re * re + im * im);
+    }
+
+    // Normalize
+    let maxMag = 0;
+    for (let k = 0; k < nBins; k++) if (mag[k] > maxMag) maxMag = mag[k];
+    if (maxMag === 0) maxMag = 1;
+
+    // Draw as filled area
+    const grad = ctx2.createLinearGradient(pad, pad, pad, h - pad);
+    grad.addColorStop(0, 'rgba(0,229,255,0.8)');
+    grad.addColorStop(1, 'rgba(0,229,255,0.1)');
+    ctx2.fillStyle = grad;
+    ctx2.beginPath();
+    ctx2.moveTo(pad, h - pad);
+    for (let k = 0; k < nBins; k++) {
+      const x = pad + (k / (nBins - 1)) * drawW;
+      const y = h - pad - (mag[k] / maxMag) * drawH;
+      ctx2.lineTo(x, y);
+    }
+    ctx2.lineTo(pad + drawW, h - pad);
+    ctx2.closePath();
+    ctx2.fill();
+
+    ctx2.strokeStyle = '#00E5FF';
+    ctx2.lineWidth = 1.5;
+    ctx2.beginPath();
+    for (let k = 0; k < nBins; k++) {
+      const x = pad + (k / (nBins - 1)) * drawW;
+      const y = h - pad - (mag[k] / maxMag) * drawH;
+      if (k === 0) ctx2.moveTo(x, y); else ctx2.lineTo(x, y);
+    }
+    ctx2.stroke();
+  }
+
+  // ── Create AudioBuffer IR for ConvolverNode ───────────────────────────────
+  function createAudioBuffer(type, audioCtx) {
+    const sr = audioCtx.sampleRate;
+    const durations = { anechoic: 0.05, single_echo: 0.5, flutter: 0.6, studio: 0.8, concert: 3.0, cathedral: 7.0 };
+    const dur = durations[type] || 2.0;
+    const numSamples = Math.floor(sr * dur);
+    const buffer = audioCtx.createBuffer(1, numSamples, sr);
+    const data = buffer.getChannelData(0);
+    const h = generateIR(type, numSamples, sr);
+    for (let i = 0; i < numSamples; i++) data[i] = h[i];
+    return buffer;
+  }
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let currentIRType = 'anechoic';
+  let currentConvRoom = 'anechoic';
+  let irSource = null, irConvSource = null;
+
+  // ── Info text ────────────────────────────────────────────────────────────
+  const irTypeInfo = {
+    anechoic:    '<strong>Sala Anecóica:</strong> Sin reflexiones. h(t) = δ(t). Solo sonido directo. Usada para mediciones y grabaciones de referencia.',
+    single_echo: '<strong>Eco Simple:</strong> Reflexión única a ~200ms. Se percibe como una repetición discreta del sonido original. Común en espacios grandes con una pared reflectante.',
+    flutter:     '<strong>Flutter Echo:</strong> Serie de reflexiones periódicas (cada ~40ms). Producido por reflexiones entre paredes paralelas. Indeseable en salas; produce coloración tímbrica.',
+    studio:      '<strong>Estudio de Grabación:</strong> TR60 ≈ 0.3s. Reflexiones tempranas densas y cola corta. Ambiente seco y controlado. Ideal para grabación de voz e instrumentos.',
+    concert:     '<strong>Sala de Conciertos:</strong> TR60 ≈ 1.8s. Reflexiones tempranas espaciadas y cola larga difusa. Calidez y envolvimiento óptimos para música sinfónica.',
+    cathedral:   '<strong>Catedral:</strong> TR60 ≈ 5.0s. Cola de reverberación muy larga y densa. Crea una sensación de grandiosidad. Ideal para música de órgano y coro.'
+  };
+
+  const irDetailInfo = {
+    anechoic:    '<strong>Sala Anecóica:</strong> TR60 ≈ 0s · Solo sonido directo · Sin reflexiones · Ambiente completamente absorbente.',
+    single_echo: '<strong>Eco Simple:</strong> Reflexión única · Delay ≈ 200ms · Coeficiente de reflexión ≈ 0.7 · Produce efecto de doble ataque.',
+    flutter:     '<strong>Flutter Echo:</strong> Reflexiones periódicas cada ~40ms · Coeficiente ≈ 0.75 por rebote · Perceptible como "zumbido" metálico.',
+    studio:      '<strong>Estudio de Grabación:</strong> TR60 ≈ 0.3s · Reflexiones tempranas a 8–40ms · Difusión moderada · Ideal para voces e instrumentos.',
+    concert:     '<strong>Sala de Conciertos:</strong> TR60 ≈ 1.8s · Primeras reflexiones: 20–85ms · Difusión alta · Ideal para música sinfónica.',
+    cathedral:   '<strong>Catedral:</strong> TR60 ≈ 5.0s · Primeras reflexiones: 40–230ms · Difusión muy alta · Fusión de sonidos; problemas de inteligibilidad.'
+  };
+
+  const convRoomInfo = {
+    anechoic: '<strong>Anecóica:</strong> Sin reflexiones. y(t) = x(t). La señal de salida es idéntica a la entrada.',
+    studio:   '<strong>Estudio:</strong> TR60 ≈ 0.3s. Leve reverberación. Añade cuerpo sin ensuciar la señal.',
+    concert:  '<strong>Sala de Conciertos:</strong> TR60 ≈ 1.8s. Cola larga y difusa. La señal se envuelve en reverberación natural.',
+    cathedral:'<strong>Catedral:</strong> TR60 ≈ 5.0s. Reverberación masiva. Los ataques se difuminan; los sostenidos se funden.'
+  };
+
+  // ── Display durations for canvas ─────────────────────────────────────────
+  const irDisplayDuration  = { anechoic: 0.05, single_echo: 0.55, flutter: 0.65, studio: 0.7, concert: 2.5, cathedral: 6.0 };
+  const convDisplayDuration = { anechoic: 0.05, studio: 0.8, concert: 2.5, cathedral: 6.0 };
+
+  // ── Tab 0: Render IR and spectrum ─────────────────────────────────────────
+  function renderIRTab0(type) {
+    const sr = 44100;
+    const dur = irDisplayDuration[type] || 1.0;
+    const numSamples = Math.floor(sr * dur);
+    const h = generateIR(type, numSamples, sr);
+
+    const c1 = document.getElementById('canvas_ir_ht');
+    const c2 = document.getElementById('canvas_ir_hf');
+    if (!c1 || !c2) return;
+
+    drawIRCanvas(c1, h, { color: '#42a5f5' });
+    drawFreqCanvas(c2, h);
+
+    document.getElementById('ir_type_info').innerHTML = irTypeInfo[type] || '';
+  }
+
+  // ── Tab 1: Render detailed IR with color regions ──────────────────────────
+  function renderIRTab1() {
+    const type = document.getElementById('ir_room_select').value;
+    const tr60 = parseFloat(document.getElementById('ir_tr60_slider').value);
+    const delayMs = parseFloat(document.getElementById('ir_delay_slider').value);
+    document.getElementById('ir_tr60_display').textContent = tr60.toFixed(1);
+    document.getElementById('ir_delay_display').textContent = delayMs.toFixed(0);
+
+    const sr = 44100;
+    const dur = Math.max(tr60 * 1.5, 0.3);
+    const numSamples = Math.min(Math.floor(sr * dur), sr * 7);
+    const h = generateIR(type, numSamples, sr);
+
+    const c = document.getElementById('canvas_ir_detail');
+    if (!c) return;
+    drawIRCanvas(c, h, { color: '#42a5f5', colorRegions: true, sampleRate: sr });
+
+    document.getElementById('ir_detail_info').innerHTML = irDetailInfo[type] || '';
+  }
+
+  // ── Tab 2: Convolution display ────────────────────────────────────────────
+  function renderConvTab(roomType) {
+    const sr = 44100;
+    const xDur = 0.15;
+    const numX = Math.floor(sr * xDur);
+    const xSignal = new Float32Array(numX);
+    const freq = 440;
+    for (let i = 0; i < numX; i++) {
+      const t = i / sr;
+      const env = (t < 0.05) ? (t / 0.05) : Math.exp(-8 * (t - 0.05));
+      xSignal[i] = env * Math.sin(2 * Math.PI * freq * t);
+    }
+
+    const hDur = convDisplayDuration[roomType] || 0.5;
+    const numH = Math.min(Math.floor(sr * hDur), sr * 7);
+    const hSignal = generateIR(roomType, numH, sr);
+
+    // Compute convolution (truncated for display: show first 3s max)
+    const convLen = Math.min(numX + numH - 1, sr * 3);
+    const ySignal = new Float32Array(convLen);
+    for (let n = 0; n < convLen; n++) {
+      let sum = 0;
+      const kMax = Math.min(n, numX - 1);
+      for (let k = 0; k <= kMax; k++) {
+        const hIdx = n - k;
+        if (hIdx < numH) sum += xSignal[k] * hSignal[hIdx];
+      }
+      ySignal[n] = sum;
+    }
+
+    // Normalize y
+    let maxY = 0;
+    for (let i = 0; i < ySignal.length; i++) if (Math.abs(ySignal[i]) > maxY) maxY = Math.abs(ySignal[i]);
+    if (maxY > 0) for (let i = 0; i < ySignal.length; i++) ySignal[i] /= maxY;
+
+    const cx = document.getElementById('canvas_conv_x');
+    const ch = document.getElementById('canvas_conv_h');
+    const cy = document.getElementById('canvas_conv_y');
+    if (!cx || !ch || !cy) return;
+
+    drawIRCanvas(cx, xSignal, { color: '#FFD700' });
+    drawIRCanvas(ch, hSignal, { color: '#42a5f5' });
+    drawIRCanvas(cy, ySignal, { color: '#66BB6A' });
+
+    document.getElementById('conv_room_info').innerHTML = convRoomInfo[roomType] || '';
+  }
+
+  // ── Audio: play dry signal ────────────────────────────────────────────────
+  function playDrySignal() {
+    const actx = getAudioContext();
+    if (!actx) return null;
+    const sr = actx.sampleRate;
+    const dur = 1.5;
+    const buf = actx.createBuffer(1, Math.floor(sr * dur), sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / sr;
+      const burstLen = 0.3;
+      if (t < burstLen) {
+        const env = Math.sin(Math.PI * t / burstLen);
+        data[i] = env * Math.sin(2 * Math.PI * 440 * t) * 0.8;
+      }
+    }
+    const src = actx.createBufferSource();
+    src.buffer = buf;
+    const gain = actx.createGain();
+    gain.gain.value = 0.7;
+    src.connect(gain);
+    gain.connect(actx.destination);
+    _activeNodes.push(src);
+    src.start();
+    return src;
+  }
+
+  // ── Audio: play wet signal via ConvolverNode ──────────────────────────────
+  function playWetSignal(irType) {
+    const actx = getAudioContext();
+    if (!actx) return null;
+    const sr = actx.sampleRate;
+    const dur = 0.3;
+    const buf = actx.createBuffer(1, Math.floor(sr * dur), sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / sr;
+      const env = Math.sin(Math.PI * t / dur);
+      data[i] = env * Math.sin(2 * Math.PI * 440 * t) * 0.8;
+    }
+    const src = actx.createBufferSource();
+    src.buffer = buf;
+
+    const convolver = actx.createConvolver();
+    convolver.normalize = true;
+    convolver.buffer = createAudioBuffer(irType, actx);
+
+    // ConvolverNode.normalize=true lowers energy; compensate with gain
+    const gain = actx.createGain();
+    gain.gain.value = 2.8;
+    src.connect(convolver);
+    convolver.connect(gain);
+    gain.connect(actx.destination);
+    _activeNodes.push(src);
+    src.start();
+    return src;
+  }
+
+  // ── Stop IR audio ─────────────────────────────────────────────────────────
+  function stopIRAudio() {
+    if (irSource) { try { irSource.stop(); } catch(e){} irSource = null; }
+    if (irConvSource) { try { irConvSource.stop(); } catch(e){} irConvSource = null; }
+    stopAllAudio();
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelectorAll('[data-ir-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-ir-tab]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.ir-tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const idx = btn.dataset.irTab;
+      document.getElementById('ir-tab-' + idx).classList.add('active');
+      if (idx === '0') renderIRTab0(currentIRType);
+      if (idx === '1') renderIRTab1();
+      if (idx === '2') renderConvTab(currentConvRoom);
+    });
+  });
+
+  // ── IR type selector (Tab 0) ──────────────────────────────────────────────
+  document.querySelectorAll('[data-ir-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-ir-type]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentIRType = btn.dataset.irType;
+      renderIRTab0(currentIRType);
+    });
+  });
+
+  // ── Play buttons Tab 0 ────────────────────────────────────────────────────
+  document.getElementById('btn_play_ir_dry').addEventListener('click', () => {
+    stopIRAudio();
+    irSource = playDrySignal();
+  });
+
+  document.getElementById('btn_play_ir_wet').addEventListener('click', () => {
+    stopIRAudio();
+    irSource = playWetSignal(currentIRType);
+  });
+
+  document.getElementById('btn_stop_ir').addEventListener('click', stopIRAudio);
+
+  // ── Tab 1 controls ────────────────────────────────────────────────────────
+  document.getElementById('ir_room_select').addEventListener('change', renderIRTab1);
+  document.getElementById('ir_tr60_slider').addEventListener('input', renderIRTab1);
+  document.getElementById('ir_delay_slider').addEventListener('input', renderIRTab1);
+
+  // ── Convolution room selector (Tab 2) ─────────────────────────────────────
+  document.querySelectorAll('[data-conv-room]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-conv-room]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentConvRoom = btn.dataset.convRoom;
+      renderConvTab(currentConvRoom);
+    });
+  });
+
+  // ── Play buttons Tab 2 ────────────────────────────────────────────────────
+  document.getElementById('btn_conv_dry').addEventListener('click', () => {
+    stopIRAudio();
+    irConvSource = playDrySignal();
+  });
+
+  document.getElementById('btn_conv_wet').addEventListener('click', () => {
+    stopIRAudio();
+    irConvSource = playWetSignal(currentConvRoom);
+  });
+
+  document.getElementById('btn_conv_stop').addEventListener('click', stopIRAudio);
+
+  // ── Initial render ────────────────────────────────────────────────────────
+  function init() {
+    renderIRTab0('anechoic');
+    // Tab 1 and Tab 2 render when their tab becomes active (or on DOMContentLoaded)
+  }
+
+  // Render after layout settles so canvas.offsetWidth > 0
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 50));
+  } else {
+    setTimeout(init, 50);
+  }
+
+  // Footer year
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+</body>
+</html>

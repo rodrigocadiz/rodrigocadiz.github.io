@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Reverberación — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    /* ── Layout de dos canvas en fila ── */
+    .canvas-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 900px) { .canvas-row { grid-template-columns: 1fr; } }
+
+    /* ── Bullet list ── */
+    .bullets {
+      list-style: none;
+      margin-bottom: 16px;
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .bullets li {
+      padding: 7px 12px 7px 26px;
+      position: relative;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.55;
+      background: rgba(255,255,255,.02);
+      border-radius: 6px;
+    }
+    .bullets li::before {
+      content: "▸";
+      position: absolute;
+      left: 9px;
+      color: var(--accent-2);
+    }
+    .bullets li strong { color: var(--text-primary); }
+
+    /* ── Controles con fondo de tarjeta ── */
+    .control-group-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 180px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .control-group-card label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 2px;
+    }
+    .value-display {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    /* ── Button group ── */
+    .button-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Caja de info ── */
+    .info-display {
+      background: rgba(0,255,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 14px;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+    }
+    .info-display strong { color: var(--text-primary); }
+
+    /* ── TR grande ── */
+    .tr-hero {
+      text-align: center;
+      margin: 1.8rem 0;
+    }
+    .tr-hero .tr-value {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent-2);
+      line-height: 1;
+    }
+    .tr-hero .tr-label {
+      font-size: 1rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+    .tr-hero .tr-meta {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+    .tr-hero .tr-meta strong { color: var(--text-primary); }
+  </style>
+</head>
+<body class="sec-acustica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Acústica</a>
+  <a href="../01_serie_armonica/index.html">1. Serie Armónica</a>
+  <a href="../02_serie_musical/index.html">2. Serie Musical</a>
+  <a href="../03_formantes/index.html">3. Formantes</a>
+  <a href="../04_diseno_acustico/index.html">4. Diseño Acústico</a>
+  <a href="../05_impulso_sonoro/index.html">5. Impulso Sonoro</a>
+  <a href="../06_reverberacion/index.html" class="active">6. Reverberación</a>
+  <a href="../07_respuesta_impulso/index.html">7. Respuesta al Impulso</a>
+  <a href="../08_simulacion_sala/index.html">8. Simulación de Sala</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Reverberación</h1>
+      <p class="subtitle">Fórmula de Sabine · TR60 por tipo de sala · Curva de decaimiento energético</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Tiempo de Reverberación — Ecuación de Sabine</h2>
+    <p class="description">
+      El <span class="kw">tiempo de reverberación TR</span> es el tiempo en que la intensidad decae 60 dB
+      tras cesar la fuente sonora.
+      La ecuación de <span class="kw">Wallace Sabine</span> (1900) lo relaciona con el volumen V y la
+      absorción efectiva Se de la sala:
+      <strong>TR = 0.16 × V / Se</strong>
+    </p>
+    <ul class="bullets">
+      <li>TR = 0.16 × V / Se &nbsp;(V en m³, Se en m²)</li>
+      <li>Se = Σ αᵢ × Sᵢ es el área de absorción efectiva (suma ponderada de superficies)</li>
+      <li>Sala "viva": TR largo (música clásica). Sala "muerta": TR corto (estudio de grabación)</li>
+      <li><strong>TR ideal:</strong> música clásica 1.7–2.0 s · música de cámara 1.2–1.5 s · habla 0.8–1.0 s · estudio 0.3–0.5 s</li>
+      <li><strong>Salas famosas:</strong> Musikvereinsaal Viena 2.05 s · Symphony Hall Boston 1.8 s · Carnegie Hall NY 1.7 s</li>
+    </ul>
+
+    <div class="controls" style="align-items: flex-end;">
+      <div class="control-group-card">
+        <label for="reverbroom_length">Largo (m):</label>
+        <input type="range" id="reverbroom_length" min="5" max="30" value="15">
+        <span class="value-display" id="reverbroom_length_val">15 m</span>
+      </div>
+      <div class="control-group-card">
+        <label for="reverbroom_width">Ancho (m):</label>
+        <input type="range" id="reverbroom_width" min="5" max="30" value="12">
+        <span class="value-display" id="reverbroom_width_val">12 m</span>
+      </div>
+      <div class="control-group-card">
+        <label for="reverbroom_height">Alto (m):</label>
+        <input type="range" id="reverbroom_height" min="2" max="10" value="4">
+        <span class="value-display" id="reverbroom_height_val">4 m</span>
+      </div>
+      <div class="control-group-card" style="min-width:220px;">
+        <label>Material Dominante:</label>
+        <div class="button-group">
+          <button class="btn active" data-reverb-material="concrete">Concreto</button>
+          <button class="btn" data-reverb-material="wood">Madera</button>
+          <button class="btn" data-reverb-material="carpet">Alfombra</button>
+          <button class="btn" data-reverb-material="acoustic">Panel Acústico</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-row">
+      <div>
+        <div class="canvas-label">Curva de decaimiento energético (60 dB)</div>
+        <canvas id="decayCanvas" height="300"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label">Comparación TR según uso de sala</div>
+        <canvas id="trComparisonCanvas" height="300"></canvas>
+      </div>
+    </div>
+
+    <div class="tr-hero">
+      <div class="tr-value"><span id="tr_display">2.5</span> s</div>
+      <div class="tr-label">Tiempo de Reverberación (TR 60)</div>
+      <div class="tr-meta">
+        α promedio: <strong id="alpha_avg_display">0.02</strong> &nbsp;·&nbsp;
+        Volumen: <strong id="volume_display">720</strong> m³ &nbsp;·&nbsp;
+        Se: <strong id="se_display">86</strong> m²
+      </div>
+    </div>
+
+    <div class="info-display">
+      <strong>Tipo de Sala Recomendado:</strong> <span id="room_type_display">Música Clásica (1.7–2.0 s)</span>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+
+<script>
+  // ── Footer year ──
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+
+  // ── Canvas refs ──
+  const decayCanvas        = document.getElementById('decayCanvas');
+  const trComparisonCanvas = document.getElementById('trComparisonCanvas');
+  const decayCtx           = decayCanvas.getContext('2d');
+  const trComparisonCtx    = trComparisonCanvas.getContext('2d');
+
+  // ── Coeficientes de absorción por material ──
+  const materialAbsorption = {
+    'concrete': 0.02,
+    'wood':     0.13,
+    'carpet':   0.35,
+    'acoustic': 0.90
+  };
+
+  // ── Fórmula de Sabine ──
+  function calculateRT(volume, avgAlpha, totalArea) {
+    const Se = avgAlpha * totalArea;
+    if (Se === 0) return 0;
+    return 0.16 * volume / Se;
+  }
+
+  // ── Actualizar todo ──
+  function updateReverberation() {
+    const length   = parseInt(document.getElementById('reverbroom_length').value);
+    const width    = parseInt(document.getElementById('reverbroom_width').value);
+    const height   = parseInt(document.getElementById('reverbroom_height').value);
+    const material = document.querySelector('[data-reverb-material].active')?.dataset.reverbMaterial || 'concrete';
+
+    document.getElementById('reverbroom_length_val').textContent = length + ' m';
+    document.getElementById('reverbroom_width_val').textContent  = width  + ' m';
+    document.getElementById('reverbroom_height_val').textContent = height + ' m';
+
+    const volume    = length * width * height;
+    const totalArea = 2 * (length * width + length * height + width * height);
+    const alpha     = materialAbsorption[material];
+    const tr        = calculateRT(volume, alpha, totalArea);
+    const Se        = alpha * totalArea;
+
+    document.getElementById('tr_display').textContent        = tr.toFixed(2);
+    document.getElementById('volume_display').textContent    = volume.toFixed(0);
+    document.getElementById('se_display').textContent        = Se.toFixed(0);
+    document.getElementById('alpha_avg_display').textContent = alpha.toFixed(2);
+
+    // Clasificación de sala
+    let roomType = 'Música Clásica (1.7–2.0 s)';
+    let color    = '#4caf50';
+    if (tr < 0.5) {
+      roomType = 'Estudio de Grabación (0.3–0.5 s)';
+      color    = '#ff9800';
+    } else if (tr < 1.0) {
+      roomType = 'Habla (0.8–1.0 s)';
+      color    = '#ffff44';
+    } else if (tr < 1.5) {
+      roomType = 'Música de Cámara (1.2–1.5 s)';
+      color    = '#95e1d3';
+    }
+
+    const roomTypeEl = document.getElementById('room_type_display');
+    roomTypeEl.textContent = roomType;
+    roomTypeEl.style.color = color;
+
+    drawDecayCurve(tr);
+    drawTRComparison(tr);
+  }
+
+  // ── Curva de decaimiento ──
+  function drawDecayCurve(tr) {
+    decayCanvas.width = decayCanvas.offsetWidth || 500;
+    const w       = decayCanvas.width;
+    const h       = decayCanvas.height;
+    const padding = 40;
+    const maxTime = 5;
+
+    decayCtx.fillStyle = '#0a1520';
+    decayCtx.fillRect(0, 0, w, h);
+
+    // Ejes
+    decayCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+    decayCtx.lineWidth = 2;
+    decayCtx.beginPath();
+    decayCtx.moveTo(padding, h - padding);
+    decayCtx.lineTo(w - padding, h - padding);
+    decayCtx.moveTo(padding, padding);
+    decayCtx.lineTo(padding, h - padding);
+    decayCtx.stroke();
+
+    // Etiquetas de ejes
+    decayCtx.fillStyle = 'rgba(255,255,255,0.7)';
+    decayCtx.font = '11px Arial';
+    decayCtx.textAlign = 'center';
+    decayCtx.fillText('Tiempo (s)', w / 2, h - 8);
+    decayCtx.save();
+    decayCtx.translate(15, h / 2);
+    decayCtx.rotate(-Math.PI / 2);
+    decayCtx.fillText('Intensidad (dB)', 0, 0);
+    decayCtx.restore();
+
+    // Marcas del eje X
+    decayCtx.fillStyle = 'rgba(150,190,225,0.55)';
+    decayCtx.font = '9px Arial';
+    decayCtx.textAlign = 'center';
+    for (let t = 0; t <= maxTime; t += 1) {
+      const x = padding + (t / maxTime) * (w - 2 * padding);
+      decayCtx.fillText(t.toFixed(0), x, h - padding + 14);
+    }
+
+    // Curva de decaimiento 60 dB
+    decayCtx.strokeStyle = '#42a5f5';
+    decayCtx.lineWidth = 3;
+    decayCtx.beginPath();
+    for (let t = 0; t <= maxTime; t += 0.05) {
+      const intensity = Math.pow(10, -6 * t / tr) * 60;
+      const x = padding + (t / maxTime) * (w - 2 * padding);
+      const y = h - padding - (intensity / 60) * (h - 2 * padding);
+      if (t === 0) decayCtx.moveTo(x, y);
+      else         decayCtx.lineTo(x, y);
+    }
+    decayCtx.stroke();
+
+    // Línea de −60 dB
+    const y60 = h - padding - (h - 2 * padding);
+    decayCtx.strokeStyle = '#ff9800';
+    decayCtx.lineWidth = 2;
+    decayCtx.setLineDash([5, 5]);
+    decayCtx.beginPath();
+    decayCtx.moveTo(padding, y60);
+    decayCtx.lineTo(w - padding, y60);
+    decayCtx.stroke();
+    decayCtx.setLineDash([]);
+
+    // Etiqueta −60 dB
+    decayCtx.fillStyle = '#ff9800';
+    decayCtx.font = '10px Arial';
+    decayCtx.textAlign = 'left';
+    decayCtx.fillText('−60 dB', padding + 4, y60 - 4);
+
+    // Marcador vertical TR
+    const xTR = padding + (tr / maxTime) * (w - 2 * padding);
+    if (xTR <= w - padding) {
+      decayCtx.strokeStyle = 'white';
+      decayCtx.lineWidth = 2;
+      decayCtx.beginPath();
+      decayCtx.moveTo(xTR, h - padding);
+      decayCtx.lineTo(xTR, padding);
+      decayCtx.stroke();
+
+      decayCtx.fillStyle = 'white';
+      decayCtx.font = 'bold 12px Arial';
+      decayCtx.textAlign = 'center';
+      decayCtx.fillText('TR=' + tr.toFixed(2) + 's', xTR, h - padding - 20);
+    }
+  }
+
+  // ── Gráfico de comparación ──
+  function drawTRComparison(currentTR) {
+    trComparisonCanvas.width = trComparisonCanvas.offsetWidth || 500;
+    const w = trComparisonCanvas.width;
+    const h = trComparisonCanvas.height;
+
+    const uses = [
+      { name: 'Estudio grabación', min: 0.2, max: 0.5,  color: '#ff6b6b' },
+      { name: 'Sala de habla',     min: 0.6, max: 1.0,  color: '#ffd166' },
+      { name: 'Música cámara',     min: 1.0, max: 1.5,  color: '#95e1d3' },
+      { name: 'Música clásica',    min: 1.5, max: 2.2,  color: '#4caf50' },
+    ];
+
+    const PAD_L   = 130;
+    const PAD_R   = 50;
+    const PAD_T   = 28;
+    const PAD_B   = 30;
+    const SEP     = 14;
+    const drawW   = w - PAD_L - PAD_R;
+    const maxVal  = Math.max(currentTR * 1.1, 2.4);
+    const scale   = drawW / maxVal;
+
+    trComparisonCtx.fillStyle = '#0a1520';
+    trComparisonCtx.fillRect(0, 0, w, h);
+
+    // Título
+    trComparisonCtx.fillStyle = 'rgba(200,220,255,0.9)';
+    trComparisonCtx.font = 'bold 12px Arial';
+    trComparisonCtx.textAlign = 'center';
+    trComparisonCtx.fillText('TR ideal según el uso de la sala', w / 2, 15);
+    trComparisonCtx.fillStyle = 'rgba(160,180,210,0.65)';
+    trComparisonCtx.font = '10px Arial';
+    trComparisonCtx.fillText('La barra naranja es tu sala actual', w / 2, 26);
+
+    const refAreaH  = h - PAD_T - PAD_B - SEP - 26;
+    const barH      = Math.floor(refAreaH / uses.length);
+    const actualRowH = 26;
+
+    // Barras de referencia
+    for (let i = 0; i < uses.length; i++) {
+      const u    = uses[i];
+      const y    = PAD_T + i * barH + barH / 2;
+      const bTop = y - barH * 0.28;
+      const bHt  = barH * 0.56;
+      const xMin = PAD_L + u.min * scale;
+      const xMax = Math.min(PAD_L + u.max * scale, PAD_L + drawW);
+      const bW   = Math.max(xMax - xMin, 4);
+
+      trComparisonCtx.fillStyle   = u.color + '55';
+      trComparisonCtx.fillRect(xMin, bTop, bW, bHt);
+      trComparisonCtx.strokeStyle = u.color;
+      trComparisonCtx.lineWidth   = 1.5;
+      trComparisonCtx.strokeRect(xMin, bTop, bW, bHt);
+
+      trComparisonCtx.fillStyle  = u.color;
+      trComparisonCtx.font       = '9px Arial';
+      trComparisonCtx.textAlign  = 'center';
+      trComparisonCtx.fillText(u.min.toFixed(1), xMin, bTop - 2);
+      trComparisonCtx.fillText(u.max.toFixed(1), xMax, bTop - 2);
+
+      trComparisonCtx.fillStyle  = 'rgba(230,240,255,0.88)';
+      trComparisonCtx.font       = '11px Arial';
+      trComparisonCtx.textAlign  = 'right';
+      trComparisonCtx.fillText(u.name, PAD_L - 6, y + 4);
+    }
+
+    // Separador
+    const sepY = PAD_T + uses.length * barH + SEP / 2;
+    trComparisonCtx.strokeStyle = 'rgba(100,150,200,0.3)';
+    trComparisonCtx.lineWidth   = 1;
+    trComparisonCtx.setLineDash([4, 4]);
+    trComparisonCtx.beginPath();
+    trComparisonCtx.moveTo(PAD_L - 80, sepY);
+    trComparisonCtx.lineTo(w - 10, sepY);
+    trComparisonCtx.stroke();
+    trComparisonCtx.setLineDash([]);
+
+    // Barra actual
+    const yAct      = sepY + SEP / 2 + actualRowH / 2;
+    const bTopAct   = yAct - actualRowH * 0.45;
+    const bHtAct    = actualRowH * 0.9;
+    const actualBarW = Math.min(currentTR * scale, drawW);
+
+    trComparisonCtx.fillStyle = '#ff9800';
+    trComparisonCtx.fillRect(PAD_L, bTopAct, actualBarW, bHtAct);
+
+    trComparisonCtx.fillStyle  = 'rgba(230,240,255,0.88)';
+    trComparisonCtx.font       = 'bold 11px Arial';
+    trComparisonCtx.textAlign  = 'right';
+    trComparisonCtx.fillText('Tu sala', PAD_L - 6, yAct + 4);
+
+    const valX = Math.min(PAD_L + actualBarW + 6, w - 4);
+    trComparisonCtx.fillStyle  = '#ff9800';
+    trComparisonCtx.font       = 'bold 12px Arial';
+    trComparisonCtx.textAlign  = 'left';
+    trComparisonCtx.fillText(currentTR.toFixed(2) + 's', valX, yAct + 4);
+
+    // Ticks del eje X
+    const axisY = h - PAD_B + 6;
+    trComparisonCtx.strokeStyle = 'rgba(150,180,220,0.2)';
+    trComparisonCtx.lineWidth   = 1;
+    for (let t = 0; t <= maxVal + 0.01; t += 0.5) {
+      const tx = PAD_L + t * scale;
+      if (tx > PAD_L + drawW + 1) break;
+      trComparisonCtx.beginPath();
+      trComparisonCtx.moveTo(tx, PAD_T);
+      trComparisonCtx.lineTo(tx, h - PAD_B + 2);
+      trComparisonCtx.stroke();
+      trComparisonCtx.fillStyle  = 'rgba(160,190,225,0.55)';
+      trComparisonCtx.font       = '9px Arial';
+      trComparisonCtx.textAlign  = 'center';
+      trComparisonCtx.fillText(t.toFixed(1) + 's', tx, axisY + 8);
+    }
+  }
+
+  // ── Event listeners ──
+  document.getElementById('reverbroom_length').addEventListener('input', updateReverberation);
+  document.getElementById('reverbroom_width').addEventListener('input', updateReverberation);
+  document.getElementById('reverbroom_height').addEventListener('input', updateReverberation);
+
+  document.querySelectorAll('[data-reverb-material]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-reverb-material]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateReverberation();
+    });
+  });
+
+  // Redibuja al cambiar tamaño de ventana
+  window.addEventListener('resize', updateReverberation);
+
+  // Dibuja al cargar
+  updateReverberation();
+</script>
+</body>
+</html>

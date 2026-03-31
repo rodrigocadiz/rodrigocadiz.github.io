@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Serie Armónica Musical — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .value-display {
+      font-size: 0.82rem;
+      color: var(--accent-1);
+      font-weight: 700;
+      min-height: 1.2em;
+    }
+    select {
+      background: var(--panel);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      width: 100%;
+      cursor: pointer;
+    }
+    select:focus { outline: 1px solid var(--accent-2); }
+    .play-btn {
+      background: rgba(0,255,68,0.08);
+      border: 1px solid var(--accent-src);
+      color: var(--accent-src);
+      padding: 7px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all .18s;
+      white-space: nowrap;
+    }
+    .play-btn:hover { background: rgba(0,255,68,0.18); }
+    .stop-btn {
+      background: rgba(255,68,68,0.08);
+      border: 1px solid var(--accent-3);
+      color: var(--accent-3);
+    }
+    .stop-btn:hover { background: rgba(255,68,68,0.18); }
+    .info-display {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(0,229,255,0.05);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 7px;
+      font-size: 0.84rem;
+      color: var(--text-dim);
+      min-height: 2.2em;
+    }
+    .bullets {
+      margin: 0 0 14px 18px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    .bullets li { margin-bottom: 2px; }
+    .bullets strong { color: var(--text-primary); }
+  </style>
+</head>
+<body class="sec-acustica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Acústica</a>
+  <a href="../01_serie_armonica/index.html">1. Serie Armónica</a>
+  <a href="../02_serie_musical/index.html" class="active">2. Serie Musical</a>
+  <a href="../03_formantes/index.html">3. Formantes</a>
+  <a href="../04_diseno_acustico/index.html">4. Diseño Acústico</a>
+  <a href="../05_impulso_sonoro/index.html">5. Impulso Sonoro</a>
+  <a href="../06_reverberacion/index.html">6. Reverberación</a>
+  <a href="../07_respuesta_impulso/index.html">7. Respuesta al Impulso</a>
+  <a href="../08_simulacion_sala/index.html">8. Simulación de Sala</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Serie Armónica Musical</h1>
+      <p class="subtitle">Correspondencia entre armónicos e intervalos musicales · Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Serie Armónica Musical — Pentagrama</h2>
+    <p class="description">
+      Cada armónico corresponde a una <span class="kw">nota musical específica</span>.
+      Partiendo de Do2 (65 Hz) como fundamental, la serie revela los
+      <span class="kw">intervalos de la escala musical occidental</span>: octavas, quintas, terceras y séptimas.
+      Los armónicos 7° y 11° (marcados en rojo) son <span class="kw">entonaciones naturales</span>
+      que no coinciden exactamente con el temperamento igual.
+    </p>
+    <ul class="bullets">
+      <li><strong>Armónicos 1–2:</strong> octava (2:1) — el intervalo más consonante</li>
+      <li><strong>Armónicos 2–3:</strong> quinta justa (3:2) — base de la armonía tonal</li>
+      <li><strong>Armónicos 4–5:</strong> tercera mayor natural (5:4) — ligeramente más grave que en temperamento igual</li>
+      <li><strong>Armónico 7:</strong> séptima menor natural — 31 cents más baja que el Si♭ temperado</li>
+      <li><strong>Armónico 11:</strong> "tritono natural" — entre Fa y Fa♯, fuera del temperamento</li>
+    </ul>
+
+    <div class="controls" style="margin-bottom:1rem;">
+      <div class="control-group">
+        <label>Fundamental</label>
+        <div class="value-display" id="staff_fund_display">Do2 (C2) — 65 Hz</div>
+        <select id="staff_root_select">
+          <option value="65.41">Do2 (C2) — 65 Hz</option>
+          <option value="82.41">Mi2 (E2) — 82 Hz</option>
+          <option value="87.31">Fa2 (F2) — 87 Hz</option>
+          <option value="98.00">Sol2 (G2) — 98 Hz</option>
+          <option value="110.00">La2 (A2) — 110 Hz</option>
+          <option value="130.81">Do3 (C3) — 131 Hz</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Hasta el armónico Nº</label>
+        <div class="value-display" id="staff_nharm_display">16</div>
+        <input type="range" id="staff_nharm" min="4" max="16" value="16" step="1">
+      </div>
+      <div class="control-group" style="flex:0 0 auto; min-width:auto;">
+        <label>Escuchar</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="play-btn" id="btn_staff_play_all">▶ Serie completa</button>
+          <button class="play-btn" id="btn_staff_play_chord">♩ Acorde</button>
+          <button class="play-btn stop-btn" id="btn_staff_stop">■ Detener</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-label">Pentagrama — Serie Armónica Natural</div>
+    <canvas id="staffCanvas" height="260"></canvas>
+    <div class="info-display" id="staff_note_info">
+      Pasa el cursor sobre una nota para ver su información.
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+
+  // ============================================
+  // AUDIO — contexto y utilidades locales
+  // ============================================
+  let audioCtx = null;
+  let audioEnabled = true;
+  const activeOscillators = [];
+  let activeMasterGain = null;
+
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function stopAllAudio() {
+    activeOscillators.forEach(osc => { try { osc.stop(0); } catch (e) {} });
+    activeOscillators.length = 0;
+    if (activeMasterGain) {
+      try { activeMasterGain.disconnect(); } catch (e) {}
+      activeMasterGain = null;
+    }
+  }
+
+  // ============================================
+  // SERIE ARMÓNICA — VISTA MUSICAL (PENTAGRAMA)
+  // ============================================
+
+  // Equal temperament reference: MIDI note 36 = C2 = 65.406 Hz
+  const NOTE_NAMES_ES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+  const NOTE_NAMES_EN = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+
+  // Chromatic-to-diatonic step (for staff Y position):
+  const CHROMATIC_TO_DIATONIC = [0,0,1,1,2,3,3,4,4,5,5,6]; // C,C#,D,D#,E,F,F#,G,G#,A,A#,B
+
+  function freqToMidi(freq) {
+    return 69 + 12 * Math.log2(freq / 440);
+  }
+
+  function getNoteInfo(freq) {
+    const midi = freqToMidi(freq);
+    const midiRound = Math.round(midi);
+    const cents = Math.round((midi - midiRound) * 100);
+    const octave = Math.floor(midiRound / 12) - 1;
+    const chroma = ((midiRound % 12) + 12) % 12;
+    return {
+      midi: midiRound,
+      cents,
+      noteName: NOTE_NAMES_ES[chroma],
+      noteEn: NOTE_NAMES_EN[chroma],
+      octave,
+      chroma,
+      label: NOTE_NAMES_ES[chroma] + octave,
+      diatonicStep: CHROMATIC_TO_DIATONIC[chroma] + (octave - 2) * 7 // steps above C2
+    };
+  }
+
+  // Interval names for common harmonic ratios
+  const INTERVAL_NAMES = {
+    1:  'Fundamental',
+    2:  'Octava',
+    3:  'Quinta (8va+)',
+    4:  '2ª Octava',
+    5:  'Tercera mayor (2ª oct+)',
+    6:  'Quinta (2ª oct+)',
+    7:  '7ª menor natural ⚠',
+    8:  '3ª Octava',
+    9:  'Segunda mayor (3ª oct+)',
+    10: 'Tercera mayor (3ª oct+)',
+    11: 'Cuarta aumentada ⚠',
+    12: 'Quinta (3ª oct+)',
+    13: 'Sexta mayor natural ⚠',
+    14: 'Séptima menor (3ª oct+) ⚠',
+    15: 'Séptima mayor natural',
+    16: '4ª Octava'
+  };
+
+  const staffCanvas = document.getElementById('staffCanvas');
+  const staffCtx = staffCanvas.getContext('2d');
+  let staffHoveredNote = -1;
+  let staffNoteRects = []; // { n, x, y, freq, info }
+
+  function drawStaff() {
+    const rootFreq = parseFloat(document.getElementById('staff_root_select').value);
+    const nHarm = parseInt(document.getElementById('staff_nharm').value);
+
+    staffCanvas.width = staffCanvas.offsetWidth || 800;
+    const W = staffCanvas.width;
+    const H = staffCanvas.height;
+    staffCtx.clearRect(0, 0, W, H);
+    staffCtx.fillStyle = '#060a14';
+    staffCtx.fillRect(0, 0, W, H);
+
+    // Staff layout: grand staff (bass + treble)
+    const LSPACE = 11;  // space between staff lines (px)
+    const NR = 5;       // number of staff lines
+
+    const sysTop = 60;
+    const bassTop = sysTop;
+    const trebleTop = bassTop + (NR - 1) * LSPACE + 48; // gap for middle C ledger
+
+    // Unified vertical mapping:
+    // Reference: C4 (middle C) = diatonic step 14 above C2
+    const midY = (bassTop + (NR - 1) * LSPACE + trebleTop) / 2;
+    const stepPx = LSPACE / 2;
+    const C4step = 14;
+
+    function stepToY(dStep) {
+      return midY - (dStep - C4step) * stepPx;
+    }
+
+    // Bass staff lines: G2=4, B2=6, D3=8, F3=10, A3=12
+    const bassLines   = [4, 6, 8, 10, 12];
+    // Treble staff lines: E4=16, G4=18, B4=20, D5=22, F5=24
+    const trebleLines = [16, 18, 20, 22, 24];
+
+    const staffLeft  = 80;
+    const staffRight = W - 20;
+
+    // Draw stave lines
+    [bassLines, trebleLines].forEach(lines => {
+      lines.forEach(step => {
+        const y = Math.round(stepToY(step)) + 0.5;
+        staffCtx.strokeStyle = 'rgba(200,220,255,0.5)';
+        staffCtx.lineWidth = 1;
+        staffCtx.beginPath();
+        staffCtx.moveTo(staffLeft, y);
+        staffCtx.lineTo(staffRight, y);
+        staffCtx.stroke();
+      });
+    });
+
+    // Draw brace on left
+    staffCtx.strokeStyle = 'rgba(200,220,255,0.4)';
+    staffCtx.lineWidth = 1;
+    staffCtx.beginPath();
+    staffCtx.moveTo(staffLeft, stepToY(bassLines[0]));
+    staffCtx.lineTo(staffLeft, stepToY(trebleLines[4]));
+    staffCtx.stroke();
+
+    // Clef symbols
+    staffCtx.fillStyle = 'rgba(180,210,255,0.7)';
+    staffCtx.font = 'bold 34px serif';
+    staffCtx.textAlign = 'center';
+    staffCtx.fillText('𝄢', staffLeft - 30, stepToY(bassLines[3]) + 8);
+    staffCtx.font = 'bold 38px serif';
+    staffCtx.fillText('𝄞', staffLeft - 30, stepToY(trebleLines[3]) + 14);
+
+    // Middle C label
+    staffCtx.fillStyle = 'rgba(0,229,255,0.3)';
+    staffCtx.font = '10px sans-serif';
+    staffCtx.textAlign = 'left';
+    staffCtx.fillText('Do4 (central)', staffLeft + 2, stepToY(C4step) + 3);
+
+    // Compute note positions and draw
+    staffNoteRects = [];
+    const noteR = LSPACE * 0.55;
+
+    for (let n = 1; n <= nHarm; n++) {
+      const freq = rootFreq * n;
+      const info = getNoteInfo(freq);
+      const dStep = info.diatonicStep;
+      const noteY = stepToY(dStep);
+      const noteX = staffLeft + 30 + (n - 0.5) * ((staffRight - staffLeft - 40) / nHarm);
+
+      const outOfTune = Math.abs(info.cents) > 15;
+      const isHovered = (n === staffHoveredNote);
+      let fillColor, strokeColor;
+      if (outOfTune) {
+        fillColor   = isHovered ? '#ff9966' : '#ff6b6b';
+        strokeColor = '#ff4444';
+      } else {
+        fillColor   = isHovered ? '#88ffcc' : '#4cff91';
+        strokeColor = '#00cc66';
+      }
+
+      // Ledger lines below bass staff
+      staffCtx.strokeStyle = 'rgba(200,220,255,0.5)';
+      staffCtx.lineWidth = 1;
+      if (dStep < bassLines[0]) {
+        for (let ls = bassLines[0] - (bassLines[0] % 2 === dStep % 2 ? 0 : 1); ls >= dStep; ls -= 2) {
+          if (!bassLines.includes(ls)) {
+            const ly = Math.round(stepToY(ls)) + 0.5;
+            staffCtx.beginPath();
+            staffCtx.moveTo(noteX - noteR - 4, ly);
+            staffCtx.lineTo(noteX + noteR + 4, ly);
+            staffCtx.stroke();
+          }
+        }
+      }
+      // Middle C ledger line
+      if (dStep === C4step) {
+        const ly = Math.round(stepToY(C4step)) + 0.5;
+        staffCtx.beginPath();
+        staffCtx.moveTo(noteX - noteR - 4, ly);
+        staffCtx.lineTo(noteX + noteR + 4, ly);
+        staffCtx.stroke();
+      }
+      // Ledger lines above treble staff
+      if (dStep > trebleLines[4]) {
+        for (let ls = trebleLines[4] + 2; ls <= dStep; ls += 2) {
+          const ly = Math.round(stepToY(ls)) + 0.5;
+          staffCtx.beginPath();
+          staffCtx.moveTo(noteX - noteR - 4, ly);
+          staffCtx.lineTo(noteX + noteR + 4, ly);
+          staffCtx.stroke();
+        }
+      }
+
+      // Note head (ellipse)
+      staffCtx.fillStyle = fillColor;
+      staffCtx.strokeStyle = strokeColor;
+      staffCtx.lineWidth = 1.5;
+      staffCtx.beginPath();
+      staffCtx.ellipse(noteX, noteY, noteR, noteR * 0.72, -0.2, 0, Math.PI * 2);
+      staffCtx.fill();
+      staffCtx.stroke();
+
+      // Stem
+      const stemUp  = dStep < 20;
+      const stemLen = LSPACE * 3.5;
+      staffCtx.strokeStyle = fillColor;
+      staffCtx.lineWidth = 1.5;
+      staffCtx.beginPath();
+      if (stemUp) {
+        staffCtx.moveTo(noteX + noteR * 0.85, noteY);
+        staffCtx.lineTo(noteX + noteR * 0.85, noteY - stemLen);
+      } else {
+        staffCtx.moveTo(noteX - noteR * 0.85, noteY);
+        staffCtx.lineTo(noteX - noteR * 0.85, noteY + stemLen);
+      }
+      staffCtx.stroke();
+
+      // Accidental (♯)
+      const isSharp = info.chroma === 1 || info.chroma === 3 || info.chroma === 6
+                   || info.chroma === 8 || info.chroma === 10;
+      if (isSharp) {
+        staffCtx.fillStyle = fillColor;
+        staffCtx.font = `${LSPACE * 1.5}px serif`;
+        staffCtx.textAlign = 'center';
+        staffCtx.fillText('♯', noteX - noteR * 2, noteY + LSPACE * 0.5);
+      }
+
+      // Harmonic number label
+      staffCtx.fillStyle = outOfTune ? '#ff9966' : 'rgba(255,255,255,0.7)';
+      staffCtx.font = `bold ${LSPACE * 1.1}px sans-serif`;
+      staffCtx.textAlign = 'center';
+      staffCtx.fillText(n, noteX, H - 30);
+
+      // Note name label
+      staffCtx.fillStyle = outOfTune ? '#ff6b6b' : 'rgba(0,229,255,0.8)';
+      staffCtx.font = `${LSPACE}px sans-serif`;
+      staffCtx.fillText(info.label, noteX, H - 18);
+
+      // Store for hover detection
+      staffNoteRects.push({ n, x: noteX, y: noteY, freq, info });
+    }
+
+    // Legend
+    staffCtx.fillStyle = 'rgba(255,107,107,0.6)';
+    staffCtx.font = '10px sans-serif';
+    staffCtx.textAlign = 'left';
+    staffCtx.fillText('⚠ = entonación natural ≠ temperamento igual', staffLeft, H - 4);
+  }
+
+  // Hover interaction
+  staffCanvas.addEventListener('mousemove', (e) => {
+    const rect = staffCanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (staffCanvas.width / rect.width);
+    const my = (e.clientY - rect.top)  * (staffCanvas.height / rect.height);
+    let found = -1;
+    for (const note of staffNoteRects) {
+      if (Math.abs(mx - note.x) < 14 && Math.abs(my - note.y) < 12) {
+        found = note.n;
+        break;
+      }
+    }
+    if (found !== staffHoveredNote) {
+      staffHoveredNote = found;
+      drawStaff();
+      if (found > 0) {
+        const note = staffNoteRects.find(r => r.n === found);
+        const cents = note.info.cents;
+        const centsStr = cents === 0
+          ? 'afinación perfecta'
+          : (cents > 0 ? `+${cents} cents sobre` : `${cents} cents bajo`) + ' el temperamento igual';
+        document.getElementById('staff_note_info').innerHTML =
+          `<strong>Armónico ${found}</strong> · ${Math.round(note.freq)} Hz · ` +
+          `<strong>${note.info.label}</strong> · ${centsStr} · ` +
+          `<em>${INTERVAL_NAMES[found] || ''}</em>`;
+      }
+    }
+  });
+
+  staffCanvas.addEventListener('mouseleave', () => {
+    staffHoveredNote = -1;
+    drawStaff();
+    document.getElementById('staff_note_info').textContent =
+      'Pasa el cursor sobre una nota para ver su información.';
+  });
+
+  // Play full harmonic series arpeggio
+  document.getElementById('btn_staff_play_all').addEventListener('click', () => {
+    stopAllAudio();
+    const actx = getAudioContext();
+    if (!actx) return;
+    const rootFreq = parseFloat(document.getElementById('staff_root_select').value);
+    const nHarm   = parseInt(document.getElementById('staff_nharm').value);
+    const masterGain = actx.createGain();
+    masterGain.gain.value = 0.3;
+    masterGain.connect(actx.destination);
+    activeMasterGain = masterGain;
+    const noteDur = 0.35, gap = 0.05;
+    for (let n = 1; n <= nHarm; n++) {
+      const osc = actx.createOscillator();
+      const g   = actx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = rootFreq * n;
+      const t0 = actx.currentTime + (n - 1) * (noteDur + gap);
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(0.5, t0 + 0.02);
+      g.gain.setValueAtTime(0.5, t0 + noteDur - 0.05);
+      g.gain.linearRampToValueAtTime(0, t0 + noteDur);
+      osc.connect(g); g.connect(masterGain);
+      osc.start(t0); osc.stop(t0 + noteDur + 0.05);
+      activeOscillators.push(osc);
+    }
+  });
+
+  // Play all harmonics as chord
+  document.getElementById('btn_staff_play_chord').addEventListener('click', () => {
+    stopAllAudio();
+    const actx = getAudioContext();
+    if (!actx) return;
+    const rootFreq = parseFloat(document.getElementById('staff_root_select').value);
+    const nHarm   = parseInt(document.getElementById('staff_nharm').value);
+    const masterGain = actx.createGain();
+    masterGain.gain.value = 0.25;
+    masterGain.connect(actx.destination);
+    activeMasterGain = masterGain;
+    for (let n = 1; n <= nHarm; n++) {
+      const osc = actx.createOscillator();
+      const g   = actx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = rootFreq * n;
+      g.gain.value = 0.7 / n; // louder for lower harmonics
+      osc.connect(g); g.connect(masterGain);
+      osc.start(actx.currentTime);
+      activeOscillators.push(osc);
+    }
+  });
+
+  document.getElementById('btn_staff_stop').addEventListener('click', stopAllAudio);
+
+  document.getElementById('staff_root_select').addEventListener('change', () => {
+    const opts = document.getElementById('staff_root_select');
+    document.getElementById('staff_fund_display').textContent =
+      opts.options[opts.selectedIndex].text;
+    drawStaff();
+  });
+
+  document.getElementById('staff_nharm').addEventListener('input', (e) => {
+    document.getElementById('staff_nharm_display').textContent = e.target.value;
+    drawStaff();
+  });
+
+  // Initial draw (delayed to ensure canvas has width)
+  setTimeout(drawStaff, 80);
+  window.addEventListener('resize', drawStaff);
+</script>
+</body>
+</html>

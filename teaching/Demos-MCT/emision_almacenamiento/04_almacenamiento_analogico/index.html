@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Almacenamiento analógico — Emisión, Captura y Almacenamiento</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-emision">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Emisión, Captura y Almacenamiento</a>
+  <a href="../01_onda_presion/index.html">1. La onda</a>
+  <a href="../02_microfono/index.html">2. Micrófonos</a>
+  <a href="../03_parlante/index.html">3. Parlantes</a>
+  <a href="../04_almacenamiento_analogico/index.html" class="active">4. Almacenamiento</a>
+  <a href="../05_almacenamiento_digital/index.html">5. Audio digital</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Almacenamiento analógico</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1. Línea de tiempo -->
+  <section class="section-card">
+    <h2>Evolución del almacenamiento analógico</h2>
+    <p class="description">El almacenamiento de sonido evolucionó desde surcos mecánicos en
+      cilindros de estaño hasta la magnetización de partículas en cinta plástica —
+      siempre representando la señal acústica como una variación <span class="kw">continua</span>
+      de una magnitud física.</p>
+    <div class="canvas-label">Línea de tiempo</div>
+    <canvas id="timelineCanvas" height="140"></canvas>
+  </section>
+
+  <!-- 2. Fonógrafo de Edison -->
+  <section class="section-card">
+    <h2>Fonógrafo de estaño (Tinfoil Phonograph, 1877)</h2>
+    <p class="description">
+      Inventado por <span class="kw">Thomas Edison</span> en 1877. El primer dispositivo capaz de
+      grabar y reproducir sonido. Una aguja graba un surco en un cilindro cubierto de <span class="kw">papel
+      de estaño (tinfoil)</span>. Las variaciones de presión del diafragma crean variaciones en la
+      profundidad del surco (<span class="kw">grabación vertical o de profundidad</span>).
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Velocidad de rotación</label>
+        <input type="range" id="phonoSpeed" min="0.3" max="3" step="0.1" value="1">
+        <span class="val" id="phonoSpeedVal">1×</span>
+      </div>
+      <div class="control-group">
+        <label>Ondulaciones del surco</label>
+        <input type="range" id="phonoFreq" min="1" max="8" step="0.5" value="3">
+        <span class="val" id="phonoFreqVal">3 ciclos</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" onclick="playPhono()">▶ Escuchar tono</button>
+        <button class="btn stop" onclick="stopAllAudio()">■ Detener</button>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:8px; margin-bottom:8px;">
+      <strong>Velocidad de rotación</strong> controla qué tan rápido gira el cilindro — a mayor velocidad,
+      el surco pasa más rápido bajo la aguja, produciendo un <strong>tono más agudo</strong>.
+      <strong>Ondulaciones del surco</strong> controla cuántos ciclos de onda están grabados en
+      la superficie del cilindro — más ciclos = frecuencia más alta de la señal original.
+      Ambos parámetros juntos determinan la frecuencia del sonido reproducido.
+    </div>
+    <div class="canvas-label">Fonógrafo de cilindro — vista lateral (animado)</div>
+    <canvas id="phonoCanvas" height="240"></canvas>
+  </section>
+
+  <!-- 3. Gramófono y disco de vinilo -->
+  <section class="section-card">
+    <h2>Gramófono y discos de vinilo</h2>
+    <p class="description">
+      El <span class="kw">gramófono</span> (Emile Berliner, 1887) reemplazó el cilindro por un
+      <span class="kw">disco plano</span>. El surco en el disco es lateral (no de profundidad),
+      lo que permitió la reproducción masiva por prensado.
+      Los discos de <span class="kw">vinilo</span> modernos giran a 33⅓ o 45 RPM.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Velocidad del disco</label>
+        <input type="range" id="vinylSpeed" min="0.2" max="3" step="0.1" value="1">
+        <span class="val" id="vinylSpeedVal">1× (33⅓ RPM)</span>
+      </div>
+      <div class="control-group">
+        <label>Frecuencia del surco</label>
+        <input type="range" id="vinylFreq" min="1" max="10" step="1" value="4">
+        <span class="val" id="vinylFreqVal">4</span>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:8px; margin-bottom:8px;">
+      <strong>Velocidad del disco</strong> simula las RPM reales: 33⅓ RPM para LPs, 45 RPM para singles.
+      A mayor velocidad, el surco pasa más rápido bajo la aguja y el tono sube.
+      <strong>Frecuencia del surco</strong> controla cuántas ondulaciones hay por vuelta del disco —
+      más ondulaciones representan una frecuencia más alta grabada en el vinilo.
+      En el disco real, las pistas más externas (mayor velocidad lineal) reproducen los agudos
+      con mayor fidelidad que las pistas internas.
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="canvas-label">Vista superior del disco girando</div>
+        <canvas id="vinylTopCanvas" height="260"></canvas>
+      </div>
+      <div>
+        <div class="canvas-label">Sección transversal del surco estéreo</div>
+        <canvas id="vinylGrooveCanvas" height="260"></canvas>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:10px;">
+      El surco estéreo usa una ranura en <strong>V</strong> a 45°: la pared izquierda codifica el canal L
+      y la pared derecha el canal R. Una señal mono mueve la aguja lateralmente;
+      la información estéreo añade movimiento vertical.
+    </div>
+  </section>
+
+  <!-- 4. Cinta magnética -->
+  <section class="section-card">
+    <h2>Cinta magnética</h2>
+    <p class="description">
+      La cinta magnética (<span class="kw">~1930s</span>, AEG/BASF en Alemania) usa partículas
+      magnéticas (<span class="kw">óxido de hierro</span>) recubiertas en una cinta plástica.
+      Una <span class="kw">cabeza magnética</span> crea un campo magnético proporcional a la señal
+      de audio, alineando los dominios magnéticos. Al reproducir, el proceso se invierte:
+      los dominios alineados inducen una corriente en la cabeza.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Amplitud de la señal grabada</label>
+        <input type="range" id="tapeSignal" min="0" max="1" step="0.05" value="0.7">
+        <span class="val" id="tapeSignalVal">70%</span>
+      </div>
+      <div class="control-group">
+        <label>Velocidad de la cinta</label>
+        <input type="range" id="tapeSpeed" min="0.3" max="3" step="0.1" value="1">
+        <span class="val" id="tapeSpeedVal">1×</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn active" id="tapeModeBtn" onclick="toggleTapeMode()">Modo: GRABANDO</button>
+        <button class="btn play" onclick="playTapeDemo()">▶ Escuchar tono</button>
+        <button class="btn stop" onclick="stopAllAudio()">■ Detener</button>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:8px; margin-bottom:8px;">
+      <strong>Amplitud de la señal grabada</strong> controla qué tan fuerte es la señal de audio
+      que entra a la cabeza magnética. La señal de audio es <em>oscilatoria</em> (sube y baja
+      continuamente — como una sinusoide). Al pasar por la cabeza, cada trozo de cinta queda
+      magnetizado según el valor instantáneo de la señal en ese momento: a veces hacia un lado
+      (naranja), a veces hacia el otro (cyan). El resultado es un patrón alternado de dominios
+      impreso en la cinta. Con amplitud 0, la cabeza no imprime nada y los dominios quedan
+      caóticos (ruido hiss). A la derecha de la cabeza: dominios aleatorios (aún sin grabar).
+      A la izquierda: el patrón ya grabado, alternando con la frecuencia de la señal.<br><br>
+      <strong>Velocidad de la cinta</strong> controla qué tan rápido pasa la cinta por la
+      cabeza. Mayor velocidad = más cinta consumida por segundo = mayor resolución temporal
+      = mejor respuesta en frecuencias altas. Las grabaciones profesionales usan
+      38 cm/s; los cassettes domésticos, 4,75 cm/s.<br><br>
+      <strong>Modo GRABANDO / REPRODUCIENDO</strong>: en grabación, la cabeza imprime los
+      dominios según la señal de audio. En reproducción, los dominios ya impresos inducen
+      una corriente en la cabeza — el proceso inverso.
+    </div>
+    <div class="canvas-label">Dominios magnéticos en la cinta (animado)</div>
+    <canvas id="tapeCanvas" height="220"></canvas>
+  </section>
+
+  <!-- 5. Ruido hiss y Dolby -->
+  <section class="section-card">
+    <h2>Ruido Hiss y reducción de ruido</h2>
+    <p class="description">
+      Los dominios magnéticos tienen orientaciones <span class="kw">aleatorias residuales</span>
+      que producen un ruido de fondo constante: el <span class="kw">hiss</span> (sss...).
+      Las técnicas de reducción de ruido procesan la señal antes de grabar y la decodifican
+      al reproducir.
+    </p>
+    <table class="type-table">
+      <thead>
+        <tr><th>Técnica</th><th>Principio</th><th>Mejora</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Pre-énfasis / Ecualización</td><td>Realza agudos al grabar, los atenúa al reproducir — el hiss en agudos queda suprimido</td><td>~10 dB</td></tr>
+        <tr><td>Dolby A (1966)</td><td>Compander de 4 bandas: comprime al grabar, expande al reproducir</td><td>~15 dB</td></tr>
+        <tr><td>Dolby B (1968)</td><td>Versión simplificada de una banda, para cassettes</td><td>~10 dB</td></tr>
+        <tr><td>Dolby C (1980)</td><td>Dos etapas de Dolby B en cascada</td><td>~20 dB</td></tr>
+        <tr><td>dBx Compander</td><td>Compresión 2:1 de rango dinámico total al grabar, expansión 1:2 al reproducir</td><td>~30 dB</td></tr>
+      </tbody>
+    </table>
+    <div class="info-box" style="margin-top:14px; margin-bottom:8px;">
+      El gráfico muestra el <strong>nivel en dB</strong> (eje vertical: 0 dB arriba = más fuerte,
+      −60 dB abajo = muy débil) en función de la <strong>frecuencia</strong> (eje horizontal, escala logarítmica).
+      La curva <span style="color:#00ff44">verde</span> es la <strong>señal de audio útil</strong>
+      — idealmente plana. La curva <span style="color:#ff4444">roja</span> es el
+      <strong>piso de ruido hiss</strong> sin procesar: sube en los agudos porque las partículas
+      magnéticas son más ruidosas a alta frecuencia. La curva <span style="color:#00ffff">cyan</span>
+      muestra el hiss <strong>con Dolby B</strong>: el piso baja ~12 dB, especialmente en agudos.
+      La zona sombreada entre la señal y el hiss es la <strong>relación señal/ruido (S/N)</strong>
+      — cuanto más ancha, mejor se escucha la señal sobre el ruido.
+    </div>
+    <div class="canvas-label">Espectro de nivel: señal de audio vs piso de ruido (hiss)</div>
+    <canvas id="hissCanvas" height="220"></canvas>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ─── Línea de tiempo ──────────────────────────────────────────────────────
+const tlCanvas = document.getElementById('timelineCanvas');
+const tlCtx = tlCanvas.getContext('2d');
+
+function drawTimeline() {
+  tlCanvas.width = tlCanvas.offsetWidth || 900;
+  const W = tlCanvas.width, H = tlCanvas.height;
+  tlCtx.clearRect(0, 0, W, H);
+
+  const events = [
+    { year: 1877, label: 'Fonógrafo\n(Edison)', color: '#ffaa00' },
+    { year: 1887, label: 'Gramófono\n(Berliner)', color: '#ff8844' },
+    { year: 1930, label: 'Cinta magnética\n(AEG/BASF)', color: '#44aaff' },
+    { year: 1958, label: 'Vinilo estéreo\n(RIAA)', color: '#00ff44' },
+    { year: 1966, label: 'Dolby A\n(reducción ruido)', color: '#ff88ff' },
+    { year: 1979, label: 'Walkman / cassette\nmainstream', color: '#ffff44' },
+  ];
+
+  const minY = 1870, maxY = 1990;
+  const pL = 30, pR = 30;
+  const gW = W - pL - pR;
+
+  // Línea de tiempo
+  tlCtx.beginPath();
+  tlCtx.moveTo(pL, H * 0.50);
+  tlCtx.lineTo(pL + gW, H * 0.50);
+  tlCtx.strokeStyle = 'rgba(100,180,255,0.5)';
+  tlCtx.lineWidth = 2;
+  tlCtx.stroke();
+
+  events.forEach((ev, i) => {
+    const x = pL + (ev.year - minY) / (maxY - minY) * gW;
+    // Línea vertical
+    tlCtx.beginPath();
+    tlCtx.moveTo(x, H * 0.50);
+    tlCtx.lineTo(x, i % 2 === 0 ? H * 0.22 : H * 0.78);
+    tlCtx.strokeStyle = ev.color;
+    tlCtx.lineWidth = 1.5;
+    tlCtx.stroke();
+    // Punto
+    tlCtx.beginPath();
+    tlCtx.arc(x, H * 0.50, 5, 0, Math.PI * 2);
+    tlCtx.fillStyle = ev.color;
+    tlCtx.fill();
+    // Etiqueta
+    const lines = ev.label.split('\n');
+    tlCtx.fillStyle = ev.color;
+    tlCtx.font = 'bold 9px sans-serif';
+    tlCtx.textAlign = 'center';
+    const ty = i % 2 === 0 ? H * 0.05 : H * 0.82;
+    tlCtx.fillText(ev.year, x, ty);
+    lines.forEach((l, li) => tlCtx.fillText(l, x, ty + 10 + li * 10));
+  });
+  tlCtx.textAlign = 'left';
+}
+
+// ─── Fonógrafo ────────────────────────────────────────────────────────────
+const phonoCanvas = document.getElementById('phonoCanvas');
+const phonoCtx = phonoCanvas.getContext('2d');
+let phonoAnimId = null;
+let phonoAngle = 0;
+
+function initPhonoCanvas() { phonoCanvas.width = phonoCanvas.offsetWidth || 700; }
+
+function drawPhono(t) {
+  const W = phonoCanvas.width, H = phonoCanvas.height;
+  phonoCtx.clearRect(0, 0, W, H);
+
+  const speed = parseFloat(document.getElementById('phonoSpeed').value);
+  const freq  = parseFloat(document.getElementById('phonoFreq').value);
+  phonoAngle += speed * 0.015;
+
+  // Cilindro (vista lateral)
+  const cylX = W * 0.3, cylY = H * 0.55;
+  const cylW = 220, cylH = 60;
+
+  // Fondo del cilindro
+  phonoCtx.fillStyle = '#1a2a40';
+  phonoCtx.fillRect(cylX - cylW/2, cylY - cylH/2, cylW, cylH);
+  phonoCtx.strokeStyle = '#ffaa00';
+  phonoCtx.lineWidth = 2;
+  phonoCtx.strokeRect(cylX - cylW/2, cylY - cylH/2, cylW, cylH);
+
+  // Función del surco: dada una posición X en el cilindro, devuelve el desplazamiento Y
+  // El surco se mueve con phonoAngle (rotación) y la freq controla las ondulaciones
+  const cylLeft = cylX - cylW/2;
+  const cylRight = cylX + cylW/2;
+  function grooveAt(gx) {
+    // Posición normalizada [0,1] a lo largo del cilindro
+    const norm = (gx - cylLeft) / cylW;
+    return Math.sin((phonoAngle + norm * Math.PI * 2 * freq)) * 8;
+  }
+
+  // Líneas verticales tenues (marcas del cilindro)
+  const numMarks = 20;
+  for (let i = 0; i < numMarks; i++) {
+    const gx = cylLeft + 10 + i * ((cylW - 20) / numMarks);
+    phonoCtx.beginPath();
+    phonoCtx.moveTo(gx, cylY - cylH/2);
+    phonoCtx.lineTo(gx, cylY + cylH/2);
+    phonoCtx.strokeStyle = 'rgba(255,170,0,0.15)';
+    phonoCtx.lineWidth = 1;
+    phonoCtx.stroke();
+  }
+
+  // Surco como onda continua centrada en el cilindro
+  phonoCtx.beginPath();
+  for (let px = 0; px <= cylW; px += 2) {
+    const gx = cylLeft + px;
+    const gy = cylY + grooveAt(gx);  // centrado en cylY (medio del cilindro)
+    px === 0 ? phonoCtx.moveTo(gx, gy) : phonoCtx.lineTo(gx, gy);
+  }
+  phonoCtx.strokeStyle = '#ffcc44';
+  phonoCtx.lineWidth = 2;
+  phonoCtx.stroke();
+
+  // Etiqueta cilindro
+  phonoCtx.fillStyle = '#ffaa00';
+  phonoCtx.font = '11px sans-serif';
+  phonoCtx.textAlign = 'center';
+  phonoCtx.fillText('Cilindro de estaño (tinfoil)', cylX, cylY + cylH/2 + 18);
+
+  // Eje de rotación
+  phonoCtx.strokeStyle = '#88aacc';
+  phonoCtx.lineWidth = 3;
+  phonoCtx.beginPath();
+  phonoCtx.moveTo(cylX - cylW/2 - 20, cylY);
+  phonoCtx.lineTo(cylX + cylW/2 + 20, cylY);
+  phonoCtx.stroke();
+
+  // ── Sistema mecánico: aguja + brazo + diafragma (todo conectado) ──
+
+  // La aguja lee el surco exactamente en su posición X
+  const needleTipX = cylX + 60;                          // X fija de la aguja sobre el cilindro
+  const grooveDisp = grooveAt(needleTipX);                // desplazamiento del surco en ese punto
+  const needleTipY = cylY + grooveDisp;                   // Y sigue el surco (centrado en cylY)
+
+  const pivotX = needleTipX + 80;                 // pivote fijo (soporte del brazo)
+  const pivotY = H * 0.12;
+
+  const diaX = pivotX + 30;                        // centro del diafragma
+  const diaY = pivotY;
+
+  // El brazo rota levemente alrededor del pivote según el desplazamiento de la aguja
+  // Ángulo del brazo: desde pivote hasta punta de aguja
+  const armAngle = Math.atan2(needleTipY - pivotY, needleTipX - pivotX);
+
+  // ── Soporte / marco (fijo) ────────────────────────────────────────────
+  phonoCtx.strokeStyle = 'rgba(136,170,204,0.4)';
+  phonoCtx.lineWidth = 3;
+  phonoCtx.beginPath();
+  phonoCtx.moveTo(pivotX, pivotY - 20);
+  phonoCtx.lineTo(pivotX, pivotY + 20);
+  phonoCtx.stroke();
+  // Punto del pivote
+  phonoCtx.beginPath();
+  phonoCtx.arc(pivotX, pivotY, 4, 0, Math.PI * 2);
+  phonoCtx.fillStyle = '#88aacc';
+  phonoCtx.fill();
+
+  // ── Brazo rígido: pivote → aguja ─────────────────────────────────────
+  phonoCtx.strokeStyle = '#88ccff';
+  phonoCtx.lineWidth = 2.5;
+  phonoCtx.beginPath();
+  phonoCtx.moveTo(pivotX, pivotY);
+  phonoCtx.lineTo(needleTipX, needleTipY);
+  phonoCtx.stroke();
+
+  // ── Punta de la aguja (sobre el cilindro) ─────────────────────────────
+  phonoCtx.beginPath();
+  phonoCtx.moveTo(needleTipX, needleTipY);
+  phonoCtx.lineTo(needleTipX - 3, needleTipY + 10);
+  phonoCtx.lineTo(needleTipX + 3, needleTipY + 10);
+  phonoCtx.closePath();
+  phonoCtx.fillStyle = '#ff4444';
+  phonoCtx.fill();
+  // Etiqueta aguja
+  phonoCtx.fillStyle = '#ff4444';
+  phonoCtx.textAlign = 'center';
+  phonoCtx.font = '10px sans-serif';
+  phonoCtx.fillText('Aguja (stylus)', needleTipX, needleTipY - 12);
+
+  // ── Brazo corto: pivote → diafragma (lado opuesto) ────────────────────
+  // El diafragma está al otro lado del pivote, así que se mueve en sentido opuesto
+  const diaDisp = -grooveDisp * 0.6;  // movimiento opuesto y amplificado/reducido por palanca
+  const diaCenter = diaY + diaDisp;
+
+  phonoCtx.strokeStyle = '#88ccff';
+  phonoCtx.lineWidth = 2.5;
+  phonoCtx.beginPath();
+  phonoCtx.moveTo(pivotX, pivotY);
+  phonoCtx.lineTo(diaX, diaCenter);
+  phonoCtx.stroke();
+
+  // ── Diafragma (membrana que vibra) ────────────────────────────────────
+  // Dibujar como un disco/membrana con deformación
+  const diaR = 22;
+  // Marco fijo del diafragma
+  phonoCtx.strokeStyle = 'rgba(0,255,255,0.3)';
+  phonoCtx.lineWidth = 1.5;
+  phonoCtx.beginPath();
+  phonoCtx.ellipse(diaX, diaY, 4, diaR + 4, 0, 0, Math.PI * 2);
+  phonoCtx.stroke();
+
+  // Membrana deformada (se curva según el desplazamiento)
+  phonoCtx.beginPath();
+  const steps = 20;
+  for (let s = 0; s <= steps; s++) {
+    const frac = s / steps;
+    const angle = -Math.PI / 2 + frac * Math.PI;
+    const ey = diaY + (diaR) * Math.sin(angle);
+    // Deformación: máxima en el centro, cero en los bordes
+    const bulge = diaDisp * Math.cos(angle);
+    const ex = diaX + bulge;
+    s === 0 ? phonoCtx.moveTo(ex, ey) : phonoCtx.lineTo(ex, ey);
+  }
+  phonoCtx.strokeStyle = '#00ffff';
+  phonoCtx.lineWidth = 2.5;
+  phonoCtx.stroke();
+  phonoCtx.fillStyle = 'rgba(0,255,255,0.08)';
+  phonoCtx.fill();
+
+  // Etiqueta diafragma
+  phonoCtx.fillStyle = '#00ffff';
+  phonoCtx.textAlign = 'center';
+  phonoCtx.font = '10px sans-serif';
+  phonoCtx.fillText('Diafragma', diaX + 20, diaY - diaR - 8);
+
+  // ── Ondas sonoras desde el diafragma ──────────────────────────────────
+  const waveIntensity = Math.abs(grooveDisp) / 8;
+  for (let i = 1; i <= 3; i++) {
+    const r = i * 14;
+    const alpha = (0.3 - i * 0.08) * waveIntensity;
+    if (alpha > 0.02) {
+      phonoCtx.beginPath();
+      phonoCtx.arc(diaX + 10, diaCenter, r, -Math.PI * 0.4, Math.PI * 0.4);
+      phonoCtx.strokeStyle = `rgba(0,255,255,${alpha.toFixed(2)})`;
+      phonoCtx.lineWidth = 1.5;
+      phonoCtx.stroke();
+    }
+  }
+
+  // ── Etiqueta "pivote" ─────────────────────────────────────────────────
+  phonoCtx.fillStyle = '#99ccff';
+  phonoCtx.font = '9px sans-serif';
+  phonoCtx.textAlign = 'center';
+  phonoCtx.fillText('pivote', pivotX, pivotY + 30);
+
+  // Flecha dirección
+  phonoCtx.fillStyle = '#99ccff';
+  phonoCtx.font = '10px sans-serif';
+  phonoCtx.textAlign = 'center';
+  phonoCtx.fillText(`↻ ${(speed * 60).toFixed(0)} RPM`, cylX, H - 12);
+
+  phonoCtx.textAlign = 'left';
+  phonoAnimId = requestAnimationFrame(tt => drawPhono(tt));
+}
+
+let _phonoAudio = null;
+document.getElementById('phonoSpeed').addEventListener('input', function(){
+  document.getElementById('phonoSpeedVal').textContent = parseFloat(this.value).toFixed(1) + '×';
+  if (_phonoAudio) {
+    const freq = parseFloat(document.getElementById('phonoFreq').value) * 55 * parseFloat(this.value);
+    _phonoAudio.osc.frequency.value = Math.max(20, freq);
+  }
+});
+document.getElementById('phonoFreq').addEventListener('input', function(){
+  document.getElementById('phonoFreqVal').textContent = this.value + ' ciclos';
+  if (_phonoAudio) {
+    const freq = parseFloat(this.value) * 55 * parseFloat(document.getElementById('phonoSpeed').value);
+    _phonoAudio.osc.frequency.value = Math.max(20, freq);
+  }
+});
+function playPhono() {
+  stopAllAudio();
+  const freq = parseFloat(document.getElementById('phonoFreq').value) * 55 *
+    parseFloat(document.getElementById('phonoSpeed').value);
+  _phonoAudio = playTone(Math.max(20, freq), 0, 'sine', 0.3);
+  _phonoAudio.osc.onended = () => { _phonoAudio = null; };
+}
+
+// ─── Disco de vinilo (vista superior) ────────────────────────────────────
+const vinylTopCanvas = document.getElementById('vinylTopCanvas');
+const vtCtx = vinylTopCanvas.getContext('2d');
+let vinylAngle = 0;
+let vinylAnimId = null;
+
+function initVinylCanvas() {
+  vinylTopCanvas.width = vinylTopCanvas.offsetWidth || 400;
+  document.getElementById('vinylGrooveCanvas').width = document.getElementById('vinylGrooveCanvas').offsetWidth || 400;
+}
+
+function drawVinylTop(t) {
+  const W = vinylTopCanvas.width, H = vinylTopCanvas.height;
+  vtCtx.clearRect(0, 0, W, H);
+
+  const speed = parseFloat(document.getElementById('vinylSpeed').value);
+  const freq  = parseFloat(document.getElementById('vinylFreq').value);
+  vinylAngle += speed * 0.012;
+
+  const cx = W * 0.5, cy = H * 0.5;
+  const R = Math.min(W, H) * 0.42;
+
+  // Disco base
+  vtCtx.beginPath();
+  vtCtx.arc(cx, cy, R, 0, Math.PI * 2);
+  vtCtx.fillStyle = '#0d0d18';
+  vtCtx.fill();
+  vtCtx.strokeStyle = '#556677';
+  vtCtx.lineWidth = 1;
+  vtCtx.stroke();
+
+  // Surcos espirales (animados)
+  const numTracks = 28;
+  for (let i = 0; i < numTracks; i++) {
+    const r = R * 0.3 + (R * 0.6) * (i / numTracks);
+    vtCtx.beginPath();
+    vtCtx.arc(cx, cy, r, 0, Math.PI * 2);
+    vtCtx.strokeStyle = `rgba(60,100,130,0.5)`;
+    vtCtx.lineWidth = 1;
+    vtCtx.stroke();
+    // Ondulación del surco — cyan brillante para que se vea en proyector
+    const numPts = 120;
+    vtCtx.beginPath();
+    for (let j = 0; j <= numPts; j++) {
+      const angle = (j / numPts) * Math.PI * 2 + vinylAngle;
+      const ripple = Math.sin(j * freq * 0.5 + i) * (R * 0.008);
+      const rx = cx + Math.cos(angle) * (r + ripple);
+      const ry = cy + Math.sin(angle) * (r + ripple);
+      j === 0 ? vtCtx.moveTo(rx, ry) : vtCtx.lineTo(rx, ry);
+    }
+    vtCtx.strokeStyle = `rgba(0,200,255,0.45)`;
+    vtCtx.lineWidth = 0.8;
+    vtCtx.stroke();
+  }
+
+  // Etiqueta central
+  vtCtx.beginPath();
+  vtCtx.arc(cx, cy, R * 0.28, 0, Math.PI * 2);
+  vtCtx.fillStyle = '#cc2244';
+  vtCtx.fill();
+  vtCtx.fillStyle = '#ffffff';
+  vtCtx.font = 'bold 10px sans-serif';
+  vtCtx.textAlign = 'center';
+  vtCtx.fillText('33⅓ RPM', cx, cy - 5);
+  vtCtx.font = '9px sans-serif';
+  vtCtx.fillText('VINYL', cx, cy + 8);
+
+  // Aguja/stylus
+  const stylusR = R * 0.72;
+  const stylusAngle = Math.PI * 0.15 + vinylAngle * 0.005; // avance lento
+  const sx = cx + Math.cos(stylusAngle) * stylusR;
+  const sy = cy + Math.sin(stylusAngle) * stylusR;
+  // Brazo del tono-arm
+  vtCtx.strokeStyle = '#88ccff';
+  vtCtx.lineWidth = 2;
+  vtCtx.beginPath();
+  vtCtx.moveTo(cx + R * 0.85, cy - R * 0.92);
+  vtCtx.lineTo(sx, sy);
+  vtCtx.stroke();
+  vtCtx.beginPath();
+  vtCtx.arc(sx, sy, 5, 0, Math.PI * 2);
+  vtCtx.fillStyle = '#ff4444';
+  vtCtx.fill();
+  vtCtx.fillStyle = '#ff4444';
+  vtCtx.font = '9px sans-serif';
+  vtCtx.fillText('stylus', sx + 8, sy - 6);
+
+  vtCtx.fillStyle = '#99ccff';
+  vtCtx.font = '10px sans-serif';
+  vtCtx.fillText(`↻ ${(speed * 33.3).toFixed(1)} RPM`, cx, H - 8);
+  vtCtx.textAlign = 'left';
+
+  vinylAnimId = requestAnimationFrame(tt => drawVinylTop(tt));
+}
+
+// ─── Sección transversal del surco ───────────────────────────────────────
+const vinylGrooveCanvas = document.getElementById('vinylGrooveCanvas');
+const vgCtx = vinylGrooveCanvas.getContext('2d');
+
+function drawGrooveCrossSection() {
+  const W = vinylGrooveCanvas.width, H = vinylGrooveCanvas.height;
+  vgCtx.clearRect(0, 0, W, H);
+
+  const cx = W * 0.5, cy = H * 0.45;
+  const grooveW = 80, grooveH = 60;
+
+  // Material del vinilo (fondo)
+  vgCtx.fillStyle = '#1a0a20';
+  vgCtx.fillRect(20, cy - 30, W - 40, 80);
+
+  // Ranura V
+  vgCtx.beginPath();
+  vgCtx.moveTo(cx - grooveW / 2, cy - 28);
+  vgCtx.lineTo(cx, cy + grooveH * 0.4);
+  vgCtx.lineTo(cx + grooveW / 2, cy - 28);
+  vgCtx.fillStyle = '#0a1520';
+  vgCtx.fill();
+  vgCtx.strokeStyle = '#aaddff';
+  vgCtx.lineWidth = 2;
+  vgCtx.stroke();
+
+  // Ángulo 45°
+  vgCtx.strokeStyle = 'rgba(150,200,255,0.4)';
+  vgCtx.lineWidth = 1;
+  vgCtx.setLineDash([3, 4]);
+  vgCtx.beginPath();
+  vgCtx.moveTo(cx, cy + grooveH * 0.4);
+  vgCtx.lineTo(cx, cy - 28);
+  vgCtx.stroke();
+  vgCtx.setLineDash([]);
+  vgCtx.fillStyle = '#99ccff';
+  vgCtx.font = '9px sans-serif';
+  vgCtx.textAlign = 'center';
+  vgCtx.fillText('45°', cx + 24, cy - 18);
+  vgCtx.fillText('45°', cx - 24, cy - 18);
+
+  // Etiquetas canal L y R
+  vgCtx.fillStyle = '#00ffff';
+  vgCtx.font = 'bold 11px sans-serif';
+  vgCtx.textAlign = 'center';
+  vgCtx.fillText('Canal L', cx - grooveW * 0.45, cy - 35);
+  vgCtx.fillStyle = '#ffaa00';
+  vgCtx.fillText('Canal R', cx + grooveW * 0.45, cy - 35);
+
+  // Aguja diamond
+  vgCtx.beginPath();
+  vgCtx.moveTo(cx, cy + grooveH * 0.35);
+  vgCtx.lineTo(cx - 7, cy + grooveH * 0.1);
+  vgCtx.lineTo(cx + 7, cy + grooveH * 0.1);
+  vgCtx.closePath();
+  vgCtx.fillStyle = '#aaddff';
+  vgCtx.fill();
+  vgCtx.strokeStyle = '#ffffff';
+  vgCtx.lineWidth = 1;
+  vgCtx.stroke();
+  vgCtx.fillStyle = '#aaddff';
+  vgCtx.textAlign = 'center';
+  vgCtx.fillText('Aguja (diamond)', cx, cy + grooveH * 0.1 - 10);
+
+  // Señal mono vs estéreo
+  vgCtx.fillStyle = '#99ccff';
+  vgCtx.font = '10px sans-serif';
+  vgCtx.fillText('Señal MONO → movimiento lateral', cx, H * 0.82);
+  vgCtx.fillText('Info ESTÉREO → movimiento vertical + lateral', cx, H * 0.82 + 16);
+
+  // Movimiento L y R (ondas en las paredes)
+  const freq = parseFloat(document.getElementById('vinylFreq').value);
+  const t = performance.now() * 0.001;
+  const lAmp = Math.sin(t * freq * 2) * 12;
+  const rAmp = Math.cos(t * freq * 2) * 12;
+
+  // Pared L animada
+  vgCtx.strokeStyle = '#00ffff';
+  vgCtx.lineWidth = 2.5;
+  vgCtx.beginPath();
+  const lx1 = cx - grooveW / 2 + lAmp * 0.3;
+  vgCtx.moveTo(lx1, cy - 28);
+  vgCtx.lineTo(cx + lAmp * 0.1, cy + grooveH * 0.4);
+  vgCtx.stroke();
+
+  // Pared R animada
+  vgCtx.strokeStyle = '#ffaa00';
+  vgCtx.lineWidth = 2.5;
+  vgCtx.beginPath();
+  const rx1 = cx + grooveW / 2 + rAmp * 0.3;
+  vgCtx.moveTo(rx1, cy - 28);
+  vgCtx.lineTo(cx + rAmp * 0.1, cy + grooveH * 0.4);
+  vgCtx.stroke();
+
+  vgCtx.textAlign = 'left';
+}
+
+document.getElementById('vinylSpeed').addEventListener('input', function(){
+  document.getElementById('vinylSpeedVal').textContent =
+    parseFloat(this.value).toFixed(1) + '× (' + (parseFloat(this.value) * 33.3).toFixed(1) + ' RPM)';
+});
+document.getElementById('vinylFreq').addEventListener('input', function(){
+  document.getElementById('vinylFreqVal').textContent = this.value;
+});
+
+function vinylGrooveLoop() {
+  drawGrooveCrossSection();
+  requestAnimationFrame(vinylGrooveLoop);
+}
+
+// ─── Cinta magnética ──────────────────────────────────────────────────────
+const tapeCanvas = document.getElementById('tapeCanvas');
+const tapeCtx = tapeCanvas.getContext('2d');
+let tapeOffset = 0;
+let tapeRecording = true;
+
+function initTapeCanvas() { tapeCanvas.width = tapeCanvas.offsetWidth || 700; }
+
+function toggleTapeMode() {
+  tapeRecording = !tapeRecording;
+  document.getElementById('tapeModeBtn').textContent =
+    'Modo: ' + (tapeRecording ? 'GRABANDO' : 'REPRODUCIENDO');
+  document.getElementById('tapeModeBtn').style.borderColor = tapeRecording ? '#00ff44' : '#00ffff';
+  document.getElementById('tapeModeBtn').style.color       = tapeRecording ? '#00ff44' : '#00ffff';
+}
+
+function drawTape(t) {
+  const W = tapeCanvas.width, H = tapeCanvas.height;
+  tapeCtx.clearRect(0, 0, W, H);
+
+  const signal = parseFloat(document.getElementById('tapeSignal').value);
+  const speed  = parseFloat(document.getElementById('tapeSpeed').value);
+  tapeOffset += speed * 1.8;
+
+  const tapeY = H * 0.4, tapeH = 50;
+  const headX = W * 0.35;
+
+  // Cinta (fondo)
+  tapeCtx.fillStyle = '#2a1a10';
+  tapeCtx.fillRect(0, tapeY, W, tapeH);
+  tapeCtx.strokeStyle = '#664422';
+  tapeCtx.lineWidth = 1;
+  tapeCtx.strokeRect(0, tapeY, W, tapeH);
+
+  // Partículas magnéticas
+  // La señal de audio es OSCILATORIA: cada trozo de cinta queda magnetizado
+  // según el valor instantáneo de la señal en el momento en que pasó por la cabeza.
+  // Coordenada de cinta = posición en pantalla + desplazamiento total → fija en la cinta.
+  const particleW = 14;
+  const spatialFreq = 0.09;  // ciclos por pixel de cinta (densidad de la onda grabada)
+  const numParticles = Math.ceil(W / particleW) + 4;
+  for (let i = 0; i < numParticles; i++) {
+    const px = (i * particleW - tapeOffset % particleW + particleW) % (W + particleW) - particleW;
+    const isRecorded = tapeRecording ? px < headX : true;
+
+    let angle, color;
+    if (isRecorded) {
+      // Coordenada absoluta en la cinta: se mueve con la cinta, no con la pantalla
+      const tapeCoord = px + tapeOffset;
+      // Señal oscilatoria grabada: seno de la posición en la cinta
+      const recordedSignal = Math.sin(tapeCoord * spatialFreq) * signal;
+      angle = recordedSignal * Math.PI * 0.48;
+      // Color según dirección de magnetización
+      color = recordedSignal > 0.05 ? '#ffaa00' : (recordedSignal < -0.05 ? '#00ffff' : '#aaaaaa');
+    } else {
+      // Dominios aleatorios (aún no grabados): orientación caótica
+      angle = ((i * 137.5 + px * 0.31) % (Math.PI * 2)) - Math.PI;
+      color = '#664444';
+    }
+
+    const py = tapeY + tapeH * 0.5;
+    tapeCtx.save();
+    tapeCtx.translate(px + particleW / 2, py);
+    tapeCtx.rotate(angle);
+    // Flecha de dominio magnético
+    tapeCtx.strokeStyle = color;
+    tapeCtx.lineWidth = 2;
+    tapeCtx.beginPath();
+    tapeCtx.moveTo(-4, 0);
+    tapeCtx.lineTo(4, 0);
+    tapeCtx.stroke();
+    tapeCtx.beginPath();
+    tapeCtx.moveTo(2, -3);
+    tapeCtx.lineTo(4, 0);
+    tapeCtx.lineTo(2, 3);
+    tapeCtx.strokeStyle = color;
+    tapeCtx.stroke();
+    tapeCtx.restore();
+  }
+
+  // Cabeza magnética
+  const headH = tapeH + 30;
+  tapeCtx.fillStyle = '#334455';
+  tapeCtx.fillRect(headX - 14, tapeY - 16, 28, headH);
+  tapeCtx.strokeStyle = tapeRecording ? '#00ff44' : '#00ffff';
+  tapeCtx.lineWidth = 2.5;
+  tapeCtx.strokeRect(headX - 14, tapeY - 16, 28, headH);
+
+  // Hueco de la cabeza (gap)
+  tapeCtx.fillStyle = '#0a1520';
+  tapeCtx.fillRect(headX - 2, tapeY, 4, tapeH);
+
+  tapeCtx.fillStyle = tapeRecording ? '#00ff44' : '#00ffff';
+  tapeCtx.font = 'bold 10px sans-serif';
+  tapeCtx.textAlign = 'center';
+  tapeCtx.fillText(tapeRecording ? 'REC' : 'PLAY', headX, tapeY - 20);
+  tapeCtx.fillText('Cabeza', headX, tapeY + tapeH + 28);
+
+  // Campo magnético de la cabeza (pulsa con la señal oscilatoria)
+  if (tapeRecording) {
+    // El campo en la cabeza es el valor instantáneo de la señal en ese momento
+    const instantSignal = Math.sin(tapeOffset * spatialFreq) * signal;
+    const fieldStrength = Math.abs(instantSignal);
+    const fieldColor = instantSignal > 0 ? '255,170,0' : '0,200,255';
+    for (let r = 1; r <= 3; r++) {
+      tapeCtx.beginPath();
+      tapeCtx.arc(headX, tapeY + tapeH / 2, r * 16 * fieldStrength + 4, 0, Math.PI * 2);
+      tapeCtx.strokeStyle = `rgba(${fieldColor},${0.35 - r * 0.09})`;
+      tapeCtx.lineWidth = 1.5;
+      tapeCtx.stroke();
+    }
+  }
+
+  // Carrete izquierdo y derecho
+  [W * 0.1, W * 0.85].forEach((cx, i) => {
+    tapeCtx.beginPath();
+    tapeCtx.arc(cx, tapeY + tapeH / 2, 25, 0, Math.PI * 2);
+    tapeCtx.fillStyle = '#223344';
+    tapeCtx.fill();
+    tapeCtx.strokeStyle = '#44aaff';
+    tapeCtx.lineWidth = 2;
+    tapeCtx.stroke();
+    // Radio animado
+    const rAngle = tapeOffset * 0.05 * (i === 0 ? -1 : 1);
+    for (let s = 0; s < 4; s++) {
+      tapeCtx.beginPath();
+      tapeCtx.moveTo(cx, tapeY + tapeH / 2);
+      tapeCtx.lineTo(
+        cx + Math.cos(rAngle + s * Math.PI / 2) * 22,
+        tapeY + tapeH / 2 + Math.sin(rAngle + s * Math.PI / 2) * 22
+      );
+      tapeCtx.strokeStyle = '#44aaff';
+      tapeCtx.lineWidth = 1.5;
+      tapeCtx.stroke();
+    }
+  });
+
+  // Leyenda
+  tapeCtx.fillStyle = '#ffaa00';
+  tapeCtx.font = '10px sans-serif';
+  tapeCtx.textAlign = 'left';
+  tapeCtx.fillText('■ Zonas alineadas (grabadas)', 20, H * 0.88);
+  tapeCtx.fillStyle = '#664444';
+  tapeCtx.fillText('■ Zonas aleatorias (ruido hiss)', 20, H * 0.88 + 14);
+  tapeCtx.fillStyle = '#99ccff';
+  tapeCtx.fillText(`Señal: ${signal >= 0 ? '+' : ''}${signal.toFixed(2)}`, W - 130, H * 0.88);
+
+  requestAnimationFrame(tt => drawTape(tt));
+}
+
+let _tapeAudio = null;
+document.getElementById('tapeSignal').addEventListener('input', function(){
+  document.getElementById('tapeSignalVal').textContent =
+    Math.round(parseFloat(this.value) * 100) + '%';
+  if (_tapeAudio) _tapeAudio.gainNode.gain.value = Math.max(0.02, parseFloat(this.value)) * 0.35;
+});
+document.getElementById('tapeSpeed').addEventListener('input', function(){
+  document.getElementById('tapeSpeedVal').textContent = parseFloat(this.value).toFixed(1) + '×';
+  if (_tapeAudio) _tapeAudio.osc.frequency.value = 220 * parseFloat(this.value);
+});
+function playTapeDemo() {
+  stopAllAudio();
+  const signal = parseFloat(document.getElementById('tapeSignal').value);
+  const speed  = parseFloat(document.getElementById('tapeSpeed').value);
+  // El volumen corresponde a la amplitud grabada; la frecuencia a la velocidad de la cinta
+  const gain   = Math.max(0.05, signal) * 0.4;
+  const freq   = Math.max(80, 220 * speed);
+  _tapeAudio   = playTone(freq, 0, 'sawtooth', gain);
+}
+
+// ─── Ruido hiss ───────────────────────────────────────────────────────────
+const hissCanvas = document.getElementById('hissCanvas');
+const hissCtx = hissCanvas.getContext('2d');
+
+function drawHiss() {
+  hissCanvas.width = hissCanvas.offsetWidth || 800;
+  const W = hissCanvas.width, H = hissCanvas.height;
+  hissCtx.clearRect(0, 0, W, H);
+
+  const pL = 58, pR = 20, pT = 24, pH = 38;
+  const gW = W - pL - pR, gH = H - pT - pH;
+
+  // Rango de dB: 0 dB arriba (fuerte), -65 dB abajo (silencio)
+  const minDB = -65, maxDB = 0;
+  function dbToY(db) {
+    return pT + ((maxDB - db) / (maxDB - minDB)) * gH;
+  }
+
+  // Grid y eje X (frecuencia logarítmica)
+  const freqs   = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+  const fLabels = ['20', '50', '100', '200', '500', '1k', '2k', '5k', '10k', '20k'];
+  hissCtx.fillStyle = '#99ccff'; hissCtx.font = '9px sans-serif'; hissCtx.textAlign = 'center';
+  freqs.forEach((f, i) => {
+    const x = pL + (Math.log10(f / 20) / Math.log10(20000 / 20)) * gW;
+    hissCtx.fillText(fLabels[i], x, pT + gH + 14);
+    hissCtx.beginPath(); hissCtx.moveTo(x, pT); hissCtx.lineTo(x, pT + gH);
+    hissCtx.strokeStyle = 'rgba(100,180,255,0.12)'; hissCtx.lineWidth = 1; hissCtx.stroke();
+  });
+  hissCtx.fillStyle = '#99ccff'; hissCtx.textAlign = 'center';
+  hissCtx.fillText('Frecuencia (Hz)', pL + gW / 2, pT + gH + 28);
+
+  // Grid y eje Y (nivel dB)
+  hissCtx.textAlign = 'right';
+  [0, -10, -20, -30, -40, -50, -60].forEach(db => {
+    const y = dbToY(db);
+    if (y < pT - 2 || y > pT + gH + 2) return;
+    hissCtx.fillStyle = '#99ccff'; hissCtx.font = '9px sans-serif';
+    hissCtx.fillText(db + ' dB', pL - 4, y + 3);
+    hissCtx.beginPath(); hissCtx.moveTo(pL, y); hissCtx.lineTo(pL + gW, y);
+    hissCtx.strokeStyle = db === 0 ? 'rgba(100,180,255,0.35)' : 'rgba(100,180,255,0.13)';
+    hissCtx.lineWidth = db === 0 ? 1.5 : 1; hissCtx.stroke();
+  });
+
+  // Etiqueta eje Y
+  hissCtx.save();
+  hissCtx.translate(13, pT + gH / 2);
+  hissCtx.rotate(-Math.PI / 2);
+  hissCtx.textAlign = 'center';
+  hissCtx.fillStyle = '#99ccff'; hissCtx.font = '9px sans-serif';
+  hissCtx.fillText('Nivel (dB)', 0, 0);
+  hissCtx.restore();
+
+  // Ejes principales
+  hissCtx.strokeStyle = 'rgba(150,200,255,0.6)'; hissCtx.lineWidth = 1.5;
+  hissCtx.beginPath();
+  hissCtx.moveTo(pL, pT); hissCtx.lineTo(pL, pT + gH); hissCtx.lineTo(pL + gW, pT + gH);
+  hissCtx.stroke();
+
+  // Curvas: precomputar puntos para poder rellenar zona S/N
+  function buildPoints(noiseFn) {
+    const pts = [];
+    for (let px = 0; px <= gW; px += 2) {
+      const f = 20 * Math.pow(20000 / 20, px / gW);
+      pts.push({ x: pL + px, y: dbToY(noiseFn(f)) });
+    }
+    return pts;
+  }
+
+  const signalFn   = ()  => -10;
+  const hissNoFn   = f  => -38 + (f > 1000 ? Math.log10(f / 1000) * 12 : 0);
+  const hissDolbyFn= f  => -50 + (f > 1000 ? Math.log10(f / 1000) * 4  : 0);
+
+  const signalPts  = buildPoints(signalFn);
+  const hissPts    = buildPoints(hissNoFn);
+  const dolbyPts   = buildPoints(hissDolbyFn);
+
+  // Zona sombreada S/N: entre señal y hiss sin procesar
+  hissCtx.beginPath();
+  signalPts.forEach((p, i) => i === 0 ? hissCtx.moveTo(p.x, p.y) : hissCtx.lineTo(p.x, p.y));
+  for (let i = hissPts.length - 1; i >= 0; i--) hissCtx.lineTo(hissPts[i].x, hissPts[i].y);
+  hissCtx.closePath();
+  hissCtx.fillStyle = 'rgba(0,255,68,0.07)';
+  hissCtx.fill();
+
+  // Zona S/N con Dolby (sombreado adicional entre ambos hiss)
+  hissCtx.beginPath();
+  hissPts.forEach((p, i) => i === 0 ? hissCtx.moveTo(p.x, p.y) : hissCtx.lineTo(p.x, p.y));
+  for (let i = dolbyPts.length - 1; i >= 0; i--) hissCtx.lineTo(dolbyPts[i].x, dolbyPts[i].y);
+  hissCtx.closePath();
+  hissCtx.fillStyle = 'rgba(0,255,255,0.07)';
+  hissCtx.fill();
+
+  // Trazar curvas
+  function plotPts(pts, color, lw) {
+    hissCtx.beginPath();
+    pts.forEach((p, i) => i === 0 ? hissCtx.moveTo(p.x, p.y) : hissCtx.lineTo(p.x, p.y));
+    hissCtx.strokeStyle = color; hissCtx.lineWidth = lw; hissCtx.stroke();
+  }
+  plotPts(hissPts,   '#ff4444', 2);
+  plotPts(dolbyPts,  '#00ffff', 2);
+  plotPts(signalPts, '#00ff44', 2.5);
+
+  // Etiquetas sobre las curvas (al final derecho)
+  const labelX = pL + gW - 4;
+  hissCtx.font = 'bold 10px sans-serif'; hissCtx.textAlign = 'right';
+  [
+    { pts: signalPts,  color: '#00ff44', label: 'Señal útil' },
+    { pts: hissPts,    color: '#ff4444', label: 'Hiss sin procesar' },
+    { pts: dolbyPts,   color: '#00ffff', label: 'Hiss con Dolby B' },
+  ].forEach(({ pts, color, label }) => {
+    const lastY = pts[pts.length - 1].y;
+    hissCtx.fillStyle = color;
+    hissCtx.fillText(label, labelX, lastY - 5);
+  });
+
+  // Flecha + etiqueta "S/N ratio"
+  const snX = pL + gW * 0.55;
+  const snTop = dbToY(-10), snBot = dbToY(-38);
+  hissCtx.strokeStyle = 'rgba(255,255,255,0.4)'; hissCtx.lineWidth = 1;
+  hissCtx.setLineDash([2, 3]);
+  hissCtx.beginPath(); hissCtx.moveTo(snX, snTop); hissCtx.lineTo(snX, snBot); hissCtx.stroke();
+  hissCtx.setLineDash([]);
+  hissCtx.fillStyle = 'rgba(255,255,255,0.7)'; hissCtx.font = 'bold 9px sans-serif';
+  hissCtx.textAlign = 'left';
+  hissCtx.fillText('S/N ≈ 28 dB', snX + 4, (snTop + snBot) / 2 + 4);
+
+  hissCtx.textAlign = 'left';
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+function init() {
+  initPhonoCanvas();
+  initVinylCanvas();
+  initTapeCanvas();
+  drawTimeline();
+  drawPhono(0);
+  drawVinylTop(0);
+  vinylGrooveLoop();
+  drawTape(0);
+  drawHiss();
+}
+
+window.addEventListener('resize', () => {
+  initPhonoCanvas();
+  initVinylCanvas();
+  initTapeCanvas();
+  drawTimeline();
+  drawHiss();
+});
+
+init();
+</script>
+</body>
+</html>

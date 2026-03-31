@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Serie Armónica — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    /* Estilos locales complementarios al monolito */
+    .bullets {
+      list-style: none;
+      margin-bottom: 18px;
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bullets li {
+      padding: 8px 12px 8px 28px;
+      position: relative;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      background: rgba(255,255,255,.02);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .bullets li::before {
+      content: "▸";
+      position: absolute;
+      left: 10px;
+      color: var(--accent-2);
+    }
+    .bullets li strong { color: var(--text-primary); }
+
+    .description {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 18px;
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 18px;
+      align-items: flex-end;
+    }
+    .control-group {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      min-width: 180px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 2px;
+    }
+    .value-display {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0,229,255,.4);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      cursor: pointer;
+      border: none;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    button, .btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all .2s;
+    }
+    button:hover, .btn:hover {
+      border-color: var(--accent-2);
+      color: var(--accent-2);
+    }
+    button.active, .btn.active {
+      background: rgba(0,229,255,.1);
+      border-color: var(--accent-2);
+      color: var(--accent-2);
+      font-weight: 600;
+    }
+
+    .canvas-container {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    canvas {
+      display: block;
+      border-radius: 10px;
+      background: #0d1b2a;
+      border: 1px solid var(--border);
+      margin-bottom: 4px;
+      width: 100%;
+    }
+
+    .info-display {
+      background: rgba(0,229,255,.05);
+      border-left: 3px solid var(--accent-2);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 14px;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+    }
+    .info-display strong { color: var(--text-primary); }
+
+    .play-btn {
+      background: linear-gradient(135deg, var(--accent-2), #0091a1);
+      border: none;
+      color: #000;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all .2s;
+    }
+    .play-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,229,255,.35); }
+    .play-btn.stop-btn {
+      background: linear-gradient(135deg, #ff6b6b, #c0392b);
+      color: #fff;
+    }
+    .play-btn.stop-btn:hover { box-shadow: 0 4px 14px rgba(255,107,107,.35); }
+
+    @media (max-width: 768px) {
+      .controls { flex-direction: column; }
+      .control-group { min-width: 100%; }
+    }
+  </style>
+</head>
+<body class="sec-acustica">
+
+  <nav class="top-nav">
+    <a href="../../index.html" class="home">← Inicio</a>
+    <a href="../index.html">← Acústica</a>
+    <a href="../01_serie_armonica/index.html" class="active">1. Serie Armónica</a>
+    <a href="../02_serie_musical/index.html">2. Serie Musical</a>
+    <a href="../03_formantes/index.html">3. Formantes</a>
+    <a href="../04_diseno_acustico/index.html">4. Diseño Acústico</a>
+    <a href="../05_impulso_sonoro/index.html">5. Impulso Sonoro</a>
+    <a href="../06_reverberacion/index.html">6. Reverberación</a>
+    <a href="../07_respuesta_impulso/index.html">7. Respuesta al Impulso</a>
+    <a href="../08_simulacion_sala/index.html">8. Simulación de Sala</a>
+  </nav>
+
+  <header>
+    <div class="header-left">
+      <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+      <div>
+        <h1>1. Serie Armónica</h1>
+        <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-card">
+      <h2>Serie Armónica</h2>
+      <p class="description">
+        Los armónicos son <span class="kw">múltiplos enteros de f₁</span>: f₁, 2f₁, 3f₁...
+        Una cuerda puede oscilar en diferentes modos de vibración. La visualización muestra cómo
+        una cuerda vibra en el modo N, formando ondas estacionarias con nodos (puntos fijos)
+        y antinodos (puntos de máxima vibración).
+      </p>
+      <ul class="bullets">
+        <li><strong>Cuerda / Tubo abierto:</strong> modo N → armónico N, fₙ = N × f₁ (todos los armónicos)</li>
+        <li><strong>Tubo cerrado (un extremo):</strong> modo N → armónico (2N−1), f = (2N−1) × f₁ (solo armónicos impares: 1°, 3°, 5°...)</li>
+        <li>Nodos = puntos sin desplazamiento; Antinodos = puntos de máxima vibración</li>
+        <li>La serie armónica forma la base de la percepción del timbre musical</li>
+      </ul>
+
+      <div class="controls">
+        <div class="control-group">
+          <label for="harmonic_mode">Modo (N):</label>
+          <input type="range" id="harmonic_mode" min="1" max="8" value="1">
+          <span class="value-display" id="harmonic_mode_val">1</span>
+        </div>
+        <div class="control-group">
+          <label for="harmonic_freq">Frecuencia Base (Hz):</label>
+          <input type="range" id="harmonic_freq" min="55" max="440" value="110">
+          <span class="value-display" id="harmonic_freq_val">110 Hz</span>
+        </div>
+        <div class="control-group">
+          <label>Tipo:</label>
+          <div class="button-group">
+            <button class="btn active" data-harmonic-type="string">Cuerda</button>
+            <button class="btn" data-harmonic-type="open">Tubo Abierto</button>
+            <button class="btn" data-harmonic-type="closed">Tubo Cerrado</button>
+          </div>
+        </div>
+        <button class="play-btn" id="harmonic_play">▶ Reproducir</button>
+        <button class="play-btn stop-btn" id="harmonic_stop">⏹ Detener</button>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="harmonicCanvas" width="800" height="300"></canvas>
+      </div>
+
+      <div class="info-display">
+        <strong>Fundamental (f₁):</strong> <span id="harmonic_f1">110</span> Hz ·
+        <strong>Armónico seleccionado (<span id="harmonic_n_label">N=1</span>):</strong> <span id="harmonic_fn">110</span> Hz
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; <span class="footer-year">2026</span> Rodrigo F. Cádiz &nbsp;·&nbsp; CITA &nbsp;·&nbsp; PUC</p>
+  </footer>
+
+  <script>
+    // ── Audio local ──────────────────────────────────────────────────────────
+    let _audioCtx = null;
+    let _activeOscillators = [];
+
+    function getAudioCtx() {
+      if (!_audioCtx || _audioCtx.state === 'closed') {
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (_audioCtx.state === 'suspended') _audioCtx.resume();
+      return _audioCtx;
+    }
+
+    function stopLocalAudio() {
+      _activeOscillators.forEach(n => { try { n.stop(); } catch(e){} });
+      _activeOscillators = [];
+    }
+
+    // ── Estado de la viñeta ──────────────────────────────────────────────────
+    const harmonicModeInput = document.getElementById('harmonic_mode');
+    const harmonicFreqInput = document.getElementById('harmonic_freq');
+    const harmonicCanvas    = document.getElementById('harmonicCanvas');
+    const harmonicCtx       = harmonicCanvas.getContext('2d');
+
+    let harmonicType        = 'string';
+    let harmonicAnimationId = null;
+    let harmonicOsc         = null;
+    let harmonicGainNode    = null;
+    let harmonicPlaying     = false;
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function getHarmonicEffectiveFreq() {
+      const mode = parseInt(harmonicModeInput.value);
+      const freq = parseInt(harmonicFreqInput.value);
+      if (harmonicType === 'closed') return freq * (2 * mode - 1);
+      return freq * mode;
+    }
+
+    function updateHarmonicValues() {
+      const mode = parseInt(harmonicModeInput.value);
+      const freq = parseInt(harmonicFreqInput.value);
+      document.getElementById('harmonic_mode_val').textContent =
+        (harmonicType === 'closed') ? (2 * mode - 1) : mode;
+      document.getElementById('harmonic_freq_val').textContent = freq + ' Hz';
+      document.getElementById('harmonic_f1').textContent = freq;
+      const harmNumDisplay = (harmonicType === 'closed') ? (2 * mode - 1) : mode;
+      const fMode = freq * harmNumDisplay;
+      document.getElementById('harmonic_fn').textContent = fMode;
+      document.getElementById('harmonic_n_label').textContent =
+        (harmonicType === 'closed') ? `Armónico ${harmNumDisplay}` : `N=${mode}`;
+    }
+
+    function updateHarmonicAudioFreq() {
+      if (!harmonicPlaying || !harmonicOsc) return;
+      const actx = getAudioCtx();
+      harmonicOsc.frequency.setTargetAtTime(getHarmonicEffectiveFreq(), actx.currentTime, 0.02);
+    }
+
+    // ── Canvas / Animación ───────────────────────────────────────────────────
+    function drawHarmonicWave(elapsed) {
+      const mode = parseInt(harmonicModeInput.value);
+      const freq = parseInt(harmonicFreqInput.value);
+      const w = harmonicCanvas.width = harmonicCanvas.offsetWidth || 800;
+      const h = harmonicCanvas.height;
+      const centerY = h / 2;
+      const amplitude = h * 0.28;
+
+      let effectiveHarmonic, label, kFunc, nodePositions;
+
+      if (harmonicType === 'string') {
+        effectiveHarmonic = mode;
+        kFunc = xNorm => Math.sin(mode * Math.PI * xNorm);
+        nodePositions = [];
+        for (let i = 0; i <= mode; i++) nodePositions.push(i / mode);
+        label = `Cuerda · N=${mode} · f${mode} = ${freq * mode} Hz`;
+
+      } else if (harmonicType === 'open') {
+        effectiveHarmonic = mode;
+        kFunc = xNorm => Math.cos(mode * Math.PI * xNorm);
+        nodePositions = [];
+        for (let i = 1; i <= mode; i++) nodePositions.push((2 * i - 1) / (2 * mode));
+        label = `Tubo Abierto · N=${mode} · f${mode} = ${freq * mode} Hz`;
+
+      } else if (harmonicType === 'closed') {
+        const harmNum = 2 * mode - 1;
+        effectiveHarmonic = harmNum;
+        kFunc = xNorm => Math.sin(harmNum * Math.PI * xNorm / 2);
+        nodePositions = [];
+        for (let i = 0; i < mode; i++) nodePositions.push((2 * i) / harmNum);
+        label = `Tubo Cerrado · Armónico ${harmNum} · f = ${freq * harmNum} Hz`;
+
+      } else {
+        effectiveHarmonic = mode;
+        kFunc = xNorm => Math.sin(mode * Math.PI * xNorm);
+        nodePositions = [];
+        for (let i = 0; i <= mode; i++) nodePositions.push(i / mode);
+        label = `Cuerda · N=${mode} · f${mode} = ${freq * mode} Hz`;
+      }
+
+      const fMode = freq * effectiveHarmonic;
+      const visualHz = fMode * (2.0 / 110);
+      const phase = 2 * Math.PI * visualHz * elapsed;
+
+      // Fondo
+      harmonicCtx.fillStyle = '#0d1b2a';
+      harmonicCtx.fillRect(0, 0, w, h);
+
+      // Línea base
+      harmonicCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+      harmonicCtx.lineWidth = 1;
+      harmonicCtx.beginPath();
+      harmonicCtx.moveTo(0, centerY);
+      harmonicCtx.lineTo(w, centerY);
+      harmonicCtx.stroke();
+
+      // Envelope (líneas punteadas naranjas)
+      harmonicCtx.save();
+      harmonicCtx.strokeStyle = 'rgba(255,180,50,0.35)';
+      harmonicCtx.lineWidth = 1.5;
+      harmonicCtx.setLineDash([5, 5]);
+      for (const sign of [1, -1]) {
+        harmonicCtx.beginPath();
+        for (let px = 0; px <= w; px++) {
+          const xNorm = px / w;
+          const env = amplitude * Math.abs(kFunc(xNorm));
+          const y = centerY - sign * env;
+          px === 0 ? harmonicCtx.moveTo(px, y) : harmonicCtx.lineTo(px, y);
+        }
+        harmonicCtx.stroke();
+      }
+      harmonicCtx.setLineDash([]);
+      harmonicCtx.restore();
+
+      // Paredes del tubo
+      if (harmonicType !== 'string') {
+        const tubeH = amplitude + 22;
+        harmonicCtx.strokeStyle = 'rgba(100,180,255,0.5)';
+        harmonicCtx.lineWidth = 2;
+        harmonicCtx.beginPath();
+        harmonicCtx.moveTo(0, centerY - tubeH);
+        harmonicCtx.lineTo(w, centerY - tubeH);
+        harmonicCtx.stroke();
+        harmonicCtx.beginPath();
+        harmonicCtx.moveTo(0, centerY + tubeH);
+        harmonicCtx.lineTo(w, centerY + tubeH);
+        harmonicCtx.stroke();
+
+        if (harmonicType === 'closed') {
+          harmonicCtx.fillStyle = 'rgba(100,180,255,0.6)';
+          harmonicCtx.fillRect(0, centerY - tubeH, 10, tubeH * 2);
+          harmonicCtx.strokeStyle = 'rgba(100,255,180,0.7)';
+          harmonicCtx.lineWidth = 3;
+          harmonicCtx.setLineDash([6, 4]);
+          harmonicCtx.beginPath();
+          harmonicCtx.moveTo(w, centerY - tubeH);
+          harmonicCtx.lineTo(w, centerY + tubeH);
+          harmonicCtx.stroke();
+          harmonicCtx.setLineDash([]);
+          harmonicCtx.fillStyle = 'rgba(100,255,180,0.8)';
+          harmonicCtx.font = '11px sans-serif';
+          harmonicCtx.textAlign = 'right';
+          harmonicCtx.fillText('ABIERTO', w - 4, centerY - tubeH - 4);
+          harmonicCtx.textAlign = 'left';
+          harmonicCtx.fillStyle = 'rgba(100,180,255,0.8)';
+          harmonicCtx.fillText('CERRADO', 12, centerY - tubeH - 4);
+        } else {
+          // Tubo abierto-abierto
+          harmonicCtx.strokeStyle = 'rgba(100,255,180,0.7)';
+          harmonicCtx.lineWidth = 3;
+          harmonicCtx.setLineDash([6, 4]);
+          for (const xEnd of [0, w]) {
+            harmonicCtx.beginPath();
+            harmonicCtx.moveTo(xEnd, centerY - tubeH);
+            harmonicCtx.lineTo(xEnd, centerY + tubeH);
+            harmonicCtx.stroke();
+          }
+          harmonicCtx.setLineDash([]);
+          harmonicCtx.fillStyle = 'rgba(100,255,180,0.8)';
+          harmonicCtx.font = '11px sans-serif';
+          harmonicCtx.textAlign = 'left';
+          harmonicCtx.fillText('ABIERTO', 4, centerY - tubeH - 4);
+          harmonicCtx.textAlign = 'right';
+          harmonicCtx.fillText('ABIERTO', w - 4, centerY - tubeH - 4);
+        }
+      }
+
+      // Onda estacionaria con gradiente
+      const grad = harmonicCtx.createLinearGradient(0, 0, w, 0);
+      grad.addColorStop(0, '#42a5f5');
+      grad.addColorStop(0.5, '#00E5FF');
+      grad.addColorStop(1, '#42a5f5');
+      harmonicCtx.strokeStyle = grad;
+      harmonicCtx.lineWidth = 3;
+      harmonicCtx.beginPath();
+      for (let px = 0; px <= w; px++) {
+        const xNorm = px / w;
+        const y = centerY - amplitude * kFunc(xNorm) * Math.cos(phase);
+        px === 0 ? harmonicCtx.moveTo(px, y) : harmonicCtx.lineTo(px, y);
+      }
+      harmonicCtx.stroke();
+
+      // Nodos (círculos dorados)
+      harmonicCtx.fillStyle = '#FFD700';
+      for (const pos of nodePositions) {
+        const nx = pos * w;
+        harmonicCtx.beginPath();
+        harmonicCtx.arc(nx, centerY, 6, 0, Math.PI * 2);
+        harmonicCtx.fill();
+      }
+
+      // Antinodos (tubo cerrado: extremo abierto; tubo abierto: ambos extremos + intermedios)
+      if (harmonicType === 'closed') {
+        harmonicCtx.fillStyle = '#FF6B6B';
+        harmonicCtx.beginPath();
+        harmonicCtx.arc(w, centerY, 6, 0, Math.PI * 2);
+        harmonicCtx.fill();
+      } else if (harmonicType === 'open') {
+        harmonicCtx.fillStyle = '#FF6B6B';
+        const antinodeCount = mode + 1;
+        for (let i = 0; i < antinodeCount; i++) {
+          const ax = (i / mode) * w;
+          harmonicCtx.beginPath();
+          harmonicCtx.arc(ax, centerY, 6, 0, Math.PI * 2);
+          harmonicCtx.fill();
+        }
+      }
+
+      // Leyenda nodos/antinodos
+      harmonicCtx.font = '11px sans-serif';
+      harmonicCtx.textAlign = 'left';
+      if (harmonicType === 'string') {
+        harmonicCtx.fillStyle = '#FFD700';
+        harmonicCtx.fillText('● Nodo', w - 120, h - 10);
+      } else {
+        harmonicCtx.fillStyle = '#FFD700';
+        harmonicCtx.fillText('● Nodo', w - 120, h - 10);
+        harmonicCtx.fillStyle = '#FF6B6B';
+        harmonicCtx.fillText('● Antinodo', w - 120, h - 25);
+      }
+
+      // Etiqueta superior izquierda
+      harmonicCtx.fillStyle = 'rgba(255,255,255,0.9)';
+      harmonicCtx.font = 'bold 14px Arial';
+      harmonicCtx.textAlign = 'left';
+      harmonicCtx.fillText(label, 10, 22);
+
+      // Actualizar info display
+      document.getElementById('harmonic_f1').textContent = freq;
+      document.getElementById('harmonic_fn').textContent = fMode;
+      document.getElementById('harmonic_n_label').textContent =
+        (harmonicType === 'closed') ? `Armónico ${effectiveHarmonic}` : `N=${mode}`;
+    }
+
+    function animateHarmonic() {
+      if (harmonicAnimationId) cancelAnimationFrame(harmonicAnimationId);
+      const startTime = performance.now();
+      const animationLoop = (ts) => {
+        const elapsed = (ts - startTime) / 1000;
+        drawHarmonicWave(elapsed);
+        harmonicAnimationId = requestAnimationFrame(animationLoop);
+      };
+      harmonicAnimationId = requestAnimationFrame(animationLoop);
+    }
+
+    // ── Audio ────────────────────────────────────────────────────────────────
+    function startHarmonicAudio() {
+      stopLocalAudio();
+      const actx = getAudioCtx();
+
+      const effectiveFreq = getHarmonicEffectiveFreq();
+
+      harmonicGainNode = actx.createGain();
+      harmonicGainNode.gain.setValueAtTime(0.35, actx.currentTime);
+      harmonicGainNode.connect(actx.destination);
+
+      harmonicOsc = actx.createOscillator();
+      harmonicOsc.type = 'sine';
+      harmonicOsc.frequency.value = effectiveFreq;
+      harmonicOsc.connect(harmonicGainNode);
+      harmonicOsc.start(actx.currentTime);
+      _activeOscillators.push(harmonicOsc);
+      harmonicPlaying = true;
+    }
+
+    // ── Eventos de controles ─────────────────────────────────────────────────
+    harmonicModeInput.addEventListener('input', () => {
+      updateHarmonicValues();
+      updateHarmonicAudioFreq();
+      if (!harmonicAnimationId) animateHarmonic();
+    });
+
+    harmonicFreqInput.addEventListener('input', () => {
+      updateHarmonicValues();
+      updateHarmonicAudioFreq();
+      if (!harmonicAnimationId) animateHarmonic();
+    });
+
+    document.querySelectorAll('[data-harmonic-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-harmonic-type]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        harmonicType = btn.dataset.harmonicType;
+        animateHarmonic();
+        updateHarmonicValues();
+        updateHarmonicAudioFreq();
+      });
+    });
+
+    document.getElementById('harmonic_play').addEventListener('click', () => {
+      startHarmonicAudio();
+      if (!harmonicAnimationId) animateHarmonic();
+    });
+
+    document.getElementById('harmonic_stop').addEventListener('click', () => {
+      harmonicPlaying = false;
+      harmonicOsc = null;
+      stopLocalAudio();
+      if (harmonicAnimationId) {
+        cancelAnimationFrame(harmonicAnimationId);
+        harmonicAnimationId = null;
+      }
+    });
+
+    // ── Inicialización ───────────────────────────────────────────────────────
+    updateHarmonicValues();
+    animateHarmonic();
+  </script>
+</body>
+</html>

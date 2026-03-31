@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Diseño Acústico — Acústica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    /* ── Tabla de absorción ── */
+    .absorcion-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 0.84rem;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .absorcion-table thead { background: rgba(0,229,255,0.10); }
+    .absorcion-table th, .absorcion-table td {
+      padding: 9px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .absorcion-table th {
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      font-weight: 600;
+    }
+    .absorcion-table td { color: var(--text-dim); }
+    .absorcion-table td:first-child { color: var(--accent-1); font-weight: 600; text-align: left; }
+    .absorcion-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+
+    /* ── value-display para el slider ── */
+    .value-display {
+      font-size: 1.0rem;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    /* ── button-group dentro de controls ── */
+    .button-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body class="sec-acustica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">Acústica</a>
+  <a href="../01_serie_armonica/">1. Serie Armónica</a>
+  <a href="../02_serie_musical/">2. Serie Musical</a>
+  <a href="../03_formantes/">3. Formantes</a>
+  <a href="../04_diseno_acustico/" class="active">4. Diseño Acústico</a>
+  <a href="../05_impulso_sonoro/">5. Impulso Sonoro</a>
+  <a href="../06_reverberacion/">6. Reverberación</a>
+  <a href="../07_respuesta_impulso/">7. Respuesta al Impulso</a>
+  <a href="../08_simulacion_sala/">8. Simulación de Sala</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Diseño Acústico</h1>
+      <p class="subtitle">Ray tracing · Flutter echo · Modos resonantes · Coeficientes de absorción</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Problemas acústicos en recintos</h2>
+    <p class="description">
+      El diseño acústico busca resolver problemas como foco del sonido, ecos, resonancias modales y
+      ruido externo. Los materiales con distintos <span class="kw">coeficientes de absorción α</span>
+      controlan la reverberación y la claridad acústica en recintos.
+    </p>
+    <ul class="bullets" style="font-size:0.84rem; color:var(--text-dim); margin-bottom:14px; padding-left:18px; line-height:1.8;">
+      <li>Foco del sonido: superficies cóncavas o parabólicas concentran el sonido en un punto</li>
+      <li>Flutter echo: ecos repetidos entre paredes paralelas (f<sub>flutter</sub> = c / 2L)</li>
+      <li>Resonancias modales: en recintos rectangulares f<sub>N</sub> = N × c / 2L  donde c = 343 m/s</li>
+      <li>Ruido externo: solución "caja dentro de caja" para aislamiento de ~30–40 dB</li>
+      <li>Coeficiente α: concreto ≈ 0.02, vidrio ≈ 0.06, madera ≈ 0.13, alfombra ≈ 0.35, panel acústico ≈ 0.90</li>
+    </ul>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Problema Acústico:</label>
+        <div class="button-group">
+          <button class="btn active" data-acoustic-problem="normal">Normal</button>
+          <button class="btn" data-acoustic-problem="flutter">Flutter Echo</button>
+          <button class="btn" data-acoustic-problem="resonance">Resonancia Modal</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="acoustic_angle">Ángulo de Paredes (°):</label>
+        <input type="range" id="acoustic_angle" min="0" max="20" value="0">
+        <span class="value-display" id="acoustic_angle_val">Paralelas</span>
+      </div>
+    </div>
+
+    <div class="canvas-label">Trazado de rayos — sala 2D</div>
+    <canvas id="acousticDesignCanvas" height="400"></canvas>
+
+    <h3>Coeficientes de Absorción por Material</h3>
+    <table class="absorcion-table">
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>125 Hz</th>
+          <th>250 Hz</th>
+          <th>500 Hz</th>
+          <th>1000 Hz</th>
+          <th>2000 Hz</th>
+          <th>4000 Hz</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Concreto</strong></td>
+          <td>0.01</td><td>0.01</td><td>0.02</td><td>0.02</td><td>0.03</td><td>0.03</td>
+        </tr>
+        <tr>
+          <td><strong>Vidrio</strong></td>
+          <td>0.04</td><td>0.04</td><td>0.06</td><td>0.08</td><td>0.10</td><td>0.12</td>
+        </tr>
+        <tr>
+          <td><strong>Madera (maciza)</strong></td>
+          <td>0.11</td><td>0.10</td><td>0.13</td><td>0.14</td><td>0.12</td><td>0.07</td>
+        </tr>
+        <tr>
+          <td><strong>Alfombra</strong></td>
+          <td>0.15</td><td>0.22</td><td>0.35</td><td>0.50</td><td>0.55</td><td>0.60</td>
+        </tr>
+        <tr>
+          <td><strong>Panel Acústico</strong></td>
+          <td>0.70</td><td>0.80</td><td>0.90</td><td>0.90</td><td>0.85</td><td>0.80</td>
+        </tr>
+        <tr>
+          <td><strong>Cortina</strong></td>
+          <td>0.05</td><td>0.08</td><td>0.20</td><td>0.30</td><td>0.40</td><td>0.50</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+
+  // ─────────────────────────────────────────────────────────────
+  // RAY TRACER — Diseño Acústico
+  // ─────────────────────────────────────────────────────────────
+  const acousticCanvas = document.getElementById('acousticDesignCanvas');
+  const acousticCtx = acousticCanvas.getContext('2d');
+
+  function drawAcousticDesign() {
+    const angleDeg = parseInt(document.getElementById('acoustic_angle').value);
+    const problem = document.querySelector('[data-acoustic-problem].active')?.dataset.acousticProblem || 'normal';
+
+    acousticCanvas.width = acousticCanvas.offsetWidth || 800;
+    const w = acousticCanvas.width;
+    const h = acousticCanvas.height;
+
+    acousticCtx.fillStyle = '#0d1b2a';
+    acousticCtx.fillRect(0, 0, w, h);
+
+    // Room geometry: TRUE TRAPEZOID
+    //   Bottom wall : always horizontal (y = rY + rH)
+    //   Top wall    : slants from left (y = rY) to right (y = rY + slope)
+    //   Left/Right  : vertical
+    // When angleDeg = 0 → rectangle; when > 0 → wedge (non-parallel top+bottom)
+    const rX = Math.round(w * 0.10);
+    const rY = Math.round(h * 0.18);
+    const rW = Math.round(w * 0.80);
+    const rH = Math.round(h * 0.52);
+    const slope = angleDeg * rH / 20; // top-right corner drops by slope pixels
+
+    const TL = { x: rX,      y: rY };
+    const TR = { x: rX + rW, y: rY + slope };   // top-right is LOWER when slope > 0
+    const BL = { x: rX,      y: rY + rH };
+    const BR = { x: rX + rW, y: rY + rH };      // bottom wall stays horizontal
+
+    // y of top and bottom walls at pixel x
+    function topY(x) { return rY + slope * (x - rX) / rW; }
+    function botY(/*x*/) { return rY + rH; }
+
+    // Fill room
+    acousticCtx.fillStyle = '#0f2233';
+    acousticCtx.beginPath();
+    acousticCtx.moveTo(TL.x, TL.y);
+    acousticCtx.lineTo(TR.x, TR.y);
+    acousticCtx.lineTo(BR.x, BR.y);
+    acousticCtx.lineTo(BL.x, BL.y);
+    acousticCtx.closePath();
+    acousticCtx.fill();
+
+    // Draw walls
+    acousticCtx.strokeStyle = 'rgba(100,180,255,0.75)';
+    acousticCtx.lineWidth = 3;
+    acousticCtx.setLineDash([]);
+    acousticCtx.beginPath();
+    acousticCtx.moveTo(TL.x, TL.y);
+    acousticCtx.lineTo(TR.x, TR.y);
+    acousticCtx.lineTo(BR.x, BR.y);
+    acousticCtx.lineTo(BL.x, BL.y);
+    acousticCtx.closePath();
+    acousticCtx.stroke();
+
+    // Source and listener at mid-height of their x column
+    const srcX2 = rX + rW * 0.10;
+    const srcY2 = (topY(srcX2) + botY(srcX2)) / 2;
+    const obsX2 = rX + rW * 0.88;
+    const obsY2 = (topY(obsX2) + botY(obsX2)) / 2;
+
+    // ─────────────────────────────────────────────────────────
+    // PROPER RAY TRACER
+    // Reflect rays off the actual wall normals
+    // ─────────────────────────────────────────────────────────
+    const wl = Math.sqrt(rW * rW + slope * slope); // top-wall length
+    // Inward wall normals (pointing into room):
+    //   top wall direction = (rW, slope) → inward normal = (-slope, rW)/wl  [rotated 90° CCW]
+    //   bottom wall = horizontal          → inward normal = (0, -1)
+    //   left wall   = vertical            → inward normal = (1,  0)
+    //   right wall  = vertical            → inward normal = (-1, 0)
+    const nTop   = { x: -slope / wl, y: rW / wl };
+    const nBot   = { x: 0,           y: -1 };
+    const nLeft  = { x: 1,           y: 0  };
+    const nRight = { x: -1,          y: 0  };
+
+    function traceRay(startX, startY, dirX, dirY, maxBounces) {
+      const EPS = 2.0; // min travel distance before next wall hit
+      const len0 = Math.sqrt(dirX * dirX + dirY * dirY);
+      let dx = dirX / len0, dy = dirY / len0;
+      let px = startX, py = startY;
+      const pts = [{ x: px, y: py }];
+
+      for (let b = 0; b < maxBounces; b++) {
+        let bestT = Infinity, hitNx = 0, hitNy = 0;
+
+        // Left wall
+        if (dx < -1e-9) {
+          const t = (rX - px) / dx;
+          if (t > EPS) {
+            const hy = py + t * dy;
+            if (hy >= topY(rX) - EPS && hy <= botY(rX) + EPS && t < bestT) {
+              bestT = t; hitNx = nLeft.x; hitNy = nLeft.y;
+            }
+          }
+        }
+        // Right wall
+        if (dx > 1e-9) {
+          const t = (rX + rW - px) / dx;
+          if (t > EPS) {
+            const hy = py + t * dy;
+            if (hy >= topY(rX + rW) - EPS && hy <= botY(rX + rW) + EPS && t < bestT) {
+              bestT = t; hitNx = nRight.x; hitNy = nRight.y;
+            }
+          }
+        }
+        // Top wall  (line: slope·x − rW·y = slope·rX − rW·rY)
+        {
+          const denom = slope * dx - rW * dy;
+          if (Math.abs(denom) > 1e-9) {
+            const t = (slope * (rX - px) + rW * (py - rY)) / denom;
+            if (t > EPS && t < bestT) {
+              const hx = px + t * dx;
+              if (hx >= rX - EPS && hx <= rX + rW + EPS) {
+                bestT = t; hitNx = nTop.x; hitNy = nTop.y;
+              }
+            }
+          }
+        }
+        // Bottom wall  (y = rY + rH)
+        if (dy > 1e-9) {
+          const t = (rY + rH - py) / dy;
+          if (t > EPS && t < bestT) {
+            const hx = px + t * dx;
+            if (hx >= rX - EPS && hx <= rX + rW + EPS) {
+              bestT = t; hitNx = nBot.x; hitNy = nBot.y;
+            }
+          }
+        }
+
+        if (!isFinite(bestT) || bestT > 3000) break;
+
+        px += bestT * dx;
+        py += bestT * dy;
+        pts.push({ x: px, y: py });
+
+        // Law of reflection: d' = d − 2(d·n)n
+        const dot = dx * hitNx + dy * hitNy;
+        dx -= 2 * dot * hitNx;
+        dy -= 2 * dot * hitNy;
+        const rlen = Math.sqrt(dx * dx + dy * dy);
+        if (rlen > 0) { dx /= rlen; dy /= rlen; }
+      }
+      return pts;
+    }
+
+    // Clip all ray drawing to the trapezoid room
+    acousticCtx.save();
+    acousticCtx.beginPath();
+    acousticCtx.moveTo(TL.x, TL.y);
+    acousticCtx.lineTo(TR.x, TR.y);
+    acousticCtx.lineTo(BR.x, BR.y);
+    acousticCtx.lineTo(BL.x, BL.y);
+    acousticCtx.closePath();
+    acousticCtx.clip();
+
+    function drawRayPath(pts, color, lw, dash) {
+      if (pts.length < 2) return;
+      acousticCtx.strokeStyle = color;
+      acousticCtx.lineWidth = lw || 1.8;
+      acousticCtx.setLineDash(dash || [5, 5]);
+      acousticCtx.beginPath();
+      acousticCtx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) acousticCtx.lineTo(pts[i].x, pts[i].y);
+      acousticCtx.stroke();
+      acousticCtx.setLineDash([]);
+    }
+
+    // ── NORMAL: fan of reflected rays ────────────────────────────────────────
+    if (problem === 'normal') {
+      // Direct sound (solid orange)
+      acousticCtx.strokeStyle = '#ff9800';
+      acousticCtx.lineWidth = 2.5;
+      acousticCtx.setLineDash([]);
+      acousticCtx.beginPath();
+      acousticCtx.moveTo(srcX2, srcY2);
+      acousticCtx.lineTo(obsX2, obsY2);
+      acousticCtx.stroke();
+
+      // Fan of rays at various angles — physics determines where they end up
+      const fanAngles = [-55, -35, -18, 0, 18, 35, 55];
+      const fanColors = [
+        'rgba(0,229,255,0.85)', 'rgba(0,229,255,0.75)',
+        'rgba(80,200,255,0.65)', 'rgba(100,200,255,0.55)',
+        'rgba(80,200,255,0.65)', 'rgba(0,229,255,0.75)',
+        'rgba(0,229,255,0.85)',
+      ];
+      fanAngles.forEach((a, i) => {
+        const rad = a * Math.PI / 180;
+        const pts = traceRay(srcX2, srcY2, Math.cos(rad), Math.sin(rad), 7);
+        drawRayPath(pts, fanColors[i], 1.6);
+      });
+    }
+
+    // ── FLUTTER: zigzag between top/bottom walls ──────────────────────────────
+    if (problem === 'flutter') {
+      // Shoot rays nearly vertically — they zigzag between ceiling and floor
+      // Rectangle (angle=0): top & bottom parallel → same angle every bounce → flutter echo
+      // Wedge (angle>0):     top slanted, bottom flat → walls NOT parallel →
+      //                      each ceiling bounce deflects ray further → no flutter
+      const srcFX = rX + rW * 0.12;
+      const srcFY = (topY(srcFX) + botY(srcFX)) / 2;
+      const flutterAngles = [-80, -72, -65];
+      const flColors = [
+        'rgba(255,70,70,0.90)', 'rgba(255,150,50,0.75)', 'rgba(255,210,50,0.60)'
+      ];
+      flutterAngles.forEach((a, i) => {
+        const rad = a * Math.PI / 180;
+        const pts = traceRay(srcFX, srcFY, Math.cos(rad), Math.sin(rad), 12);
+        drawRayPath(pts, flColors[i], 2.0);
+      });
+    }
+
+    // ── RESONANCE: standing wave modes ───────────────────────────────────────
+    if (problem === 'resonance') {
+      acousticCtx.setLineDash([]);
+      const modes = [
+        { n: 1, color: 'rgba(80,200,120,0.85)',  label: 'Modo 1' },
+        { n: 2, color: 'rgba(255,200,80,0.75)',   label: 'Modo 2' },
+        { n: 3, color: 'rgba(100,200,255,0.65)',  label: 'Modo 3' },
+      ];
+      modes.forEach(mode => {
+        acousticCtx.strokeStyle = mode.color;
+        acousticCtx.lineWidth = 2.5;
+        acousticCtx.beginPath();
+        const steps = 200;
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const px = rX + t * rW;
+          const midH = (topY(px) + botY(px)) / 2;
+          const halfH = (botY(px) - topY(px)) * 0.38;
+          const amp = Math.sin(mode.n * Math.PI * t);
+          const py = midH + amp * halfH;
+          i === 0 ? acousticCtx.moveTo(px, py) : acousticCtx.lineTo(px, py);
+        }
+        acousticCtx.stroke();
+        const tLabel = 1 / (2 * mode.n);
+        const pxLabel = rX + tLabel * rW;
+        acousticCtx.fillStyle = mode.color;
+        acousticCtx.font = 'bold 10px sans-serif';
+        acousticCtx.textAlign = 'center';
+        const midHL = (topY(pxLabel) + botY(pxLabel)) / 2;
+        const halfHL = (botY(pxLabel) - topY(pxLabel)) * 0.38;
+        acousticCtx.fillText(mode.label, pxLabel, midHL - halfHL - 6);
+      });
+      acousticCtx.strokeStyle = 'rgba(255,255,255,0.18)';
+      acousticCtx.lineWidth = 1;
+      acousticCtx.setLineDash([3, 3]);
+      for (let n = 0; n <= 3; n++) {
+        const px = rX + (n / 3) * rW;
+        acousticCtx.beginPath();
+        acousticCtx.moveTo(px, topY(px));
+        acousticCtx.lineTo(px, botY(px));
+        acousticCtx.stroke();
+      }
+      acousticCtx.setLineDash([]);
+    }
+
+    acousticCtx.restore(); // end clip
+
+    // Source (S) and Listener (L)
+    const dotSrcX = (problem === 'flutter') ? rX + rW * 0.12 : srcX2;
+    const dotSrcY = (problem === 'flutter') ? (topY(rX + rW * 0.12) + botY(rX + rW * 0.12)) / 2 : srcY2;
+    acousticCtx.fillStyle = '#4caf50';
+    acousticCtx.beginPath();
+    acousticCtx.arc(dotSrcX, dotSrcY, 9, 0, Math.PI * 2);
+    acousticCtx.fill();
+    acousticCtx.fillStyle = 'white';
+    acousticCtx.font = 'bold 11px Arial';
+    acousticCtx.textAlign = 'center';
+    acousticCtx.fillText('S', dotSrcX, dotSrcY + 4);
+
+    if (problem === 'normal') {
+      acousticCtx.fillStyle = '#2196f3';
+      acousticCtx.beginPath();
+      acousticCtx.arc(obsX2, obsY2, 9, 0, Math.PI * 2);
+      acousticCtx.fill();
+      acousticCtx.fillStyle = 'white';
+      acousticCtx.font = 'bold 11px Arial';
+      acousticCtx.textAlign = 'center';
+      acousticCtx.fillText('L', obsX2, obsY2 + 4);
+    }
+
+    // Title + annotation
+    const titles = {
+      normal:    'Reflexiones en sala',
+      flutter:   'Eco de aleteo (flutter echo)',
+      resonance: 'Resonancia modal',
+    };
+    const notes = {
+      normal:    angleDeg === 0 ? 'Sala rectangular — reflexiones simétricas' : 'Sala trapezoidal — mejor difusión, reflexiones asim.',
+      flutter:   angleDeg === 0 ? 'Techo y suelo paralelos → eco periódico regular ⚠️' : 'Techo inclinado → cada rebote cambia dirección ✓',
+      resonance: angleDeg === 0 ? 'Sala rectangular — modos bien definidos' : 'Sala trapezoidal — modos desplazados',
+    };
+    acousticCtx.fillStyle = 'rgba(255,255,255,0.92)';
+    acousticCtx.font = 'bold 14px Arial';
+    acousticCtx.textAlign = 'center';
+    acousticCtx.fillText(titles[problem] || problem, w / 2, 22);
+    acousticCtx.fillStyle = (angleDeg === 0 && problem === 'flutter')
+      ? 'rgba(255,130,80,0.95)' : 'rgba(180,220,255,0.80)';
+    acousticCtx.font = '12px Arial';
+    acousticCtx.fillText(notes[problem] || '', w / 2, 40);
+  }
+
+  // ── Event listeners ─────────────────────────────────────────────────────────
+  document.querySelectorAll('[data-acoustic-problem]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-acoustic-problem]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      drawAcousticDesign();
+    });
+  });
+
+  document.getElementById('acoustic_angle').addEventListener('input', (e) => {
+    const angle = parseInt(e.target.value);
+    document.getElementById('acoustic_angle_val').textContent =
+      angle === 0 ? 'Paralelas' : angle + '°';
+    drawAcousticDesign();
+  });
+
+  // Initial draw + redraw on resize
+  drawAcousticDesign();
+  window.addEventListener('resize', drawAcousticDesign);
+</script>
+</body>
+</html>
