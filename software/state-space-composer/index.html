@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>State Space Composer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- ABCJS & TFJS -->
+    <script src="libs/abcjs-basic-min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+
+    <!-- App modules (load order matters — dependencies first) -->
+    <script src="js/utils.js"></script>
+    <script src="js/knob.js"></script>
+    <script src="js/neural.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/abc_tools.js"></script>
+    <script src="js/kalman.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/musicxml.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-brand">
+            <img src="logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="header-logo" />
+            <div class="header-title-group">
+                <h1>State Space Composer</h1>
+                <span class="header-byline">Rodrigo F. Cádiz &mdash; Pontificia Universidad Católica de Chile</span>
+            </div>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button id="stopAudio" class="btn-secondary">Stop Audio</button>
+            <button id="helpBtn" class="btn-secondary">? Help</button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+
+        <!-- LEFT COLUMN: ORIGINAL MOTIVE + CONTROLS -->
+        <div class="left-column">
+            <div class="panel">
+                <h3 class="section-title">Original Motive</h3>
+                <div id="orig" class="score-preview-large"></div>
+                <div id="origErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px;"></div>
+                <div style="margin-top:8px; display:flex; gap:8px;">
+                    <button id="playOrig" class="btn-secondary" style="flex:1;">Play Original</button>
+                    <button id="exportOrigMXL" class="btn-secondary" style="flex:1;">Export MusicXML</button>
+                </div>
+
+                <details class="abc-input-details" style="margin-top:12px;">
+                    <summary class="details-summary">Edit ABC Notation</summary>
+                    <textarea id="abcIn" spellcheck="false" placeholder="Paste your ABC notation here..." style="margin-top:8px;">X:1
+T:Motive
+K:C
+!mp! ( .C2 D E2 -F3/2 G/2 ) !mf! A2 &gt;B2 !p! c4</textarea>
+                </details>
+            </div>
+
+            <div class="panel" style="margin-top:16px;">
+                <h3 class="section-title">Controls</h3>
+                <div class="knob-grid" id="knobGrid">
+                    <!-- Knobs injected by JS -->
+                </div>
+
+                <details style="margin-top:16px;">
+                    <summary class="details-summary" data-tooltip="Fine-tune pitch quantization, rhythm resolution, ornament style, and other generation parameters.">Advanced Options</summary>
+
+                    <div class="secondary-controls">
+                        <div class="input-row">
+                            <label>Variants Count</label>
+                            <input id="nVar" type="number" min="1" max="50" value="10" />
+                        </div>
+                        <div class="input-row">
+                            <label>Transpose Scale</label>
+                            <input id="tScale" type="number" step="0.1" value="2.0" />
+                        </div>
+
+                        <div class="toggle-row">
+                            <label>Integer Transpose</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="tInt" checked />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="input-row">
+                            <label>Pitch Quantization</label>
+                            <select id="pQuant">
+                                <option value="none">Chromatic</option>
+                                <option value="key" selected>Key Scale</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label>Rhythm Base</label>
+                            <select id="rPalette">
+                                <option value="8">1/8</option>
+                                <option value="16" selected>1/16</option>
+                                <option value="12">Triplet</option>
+                                <option value="32">1/32</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label>Rhythm Quantization</label>
+                            <select id="rQuant">
+                                <option value="none">None</option>
+                                <option value="palette" selected>Snap to Grid</option>
+                            </select>
+                        </div>
+
+                        <div class="toggle-row">
+                            <label>Variable Length</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="varLen" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="input-row">
+                            <label>Ornament Style</label>
+                            <select id="ornStyle">
+                                <option value="passing" selected>Passing</option>
+                                <option value="neighbor">Neighbor</option>
+                                <option value="repeat">Repeat</option>
+                            </select>
+                        </div>
+
+                        <div class="input-row">
+                            <label>Contour Invert Prob</label>
+                            <input id="pInvert" type="number" step="0.1" min="0" max="1" value="0.0" />
+                        </div>
+
+                        <div class="toggle-row">
+                            <label>Expanded Dynamics</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="dynRange" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="input-row">
+                            <label>Expression Handling</label>
+                            <select id="keepExpr">
+                                <option value="follow" selected>Follow + Vary</option>
+                                <option value="lock">Lock Original</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </details>
+            </div>
+
+            <!-- Hidden inputs for knob-driven parameters -->
+            <input type="hidden" id="adv" value="1.0" />
+            <input type="hidden" id="tempPitch" value="1.0" />
+            <input type="hidden" id="tempRhythm" value="1.0" />
+            <input type="hidden" id="tempDyn" value="1.0" />
+            <input type="hidden" id="tempArt" value="1.0" />
+            <input type="hidden" id="tempEdit" value="1.0" />
+            <input type="hidden" id="pSplit" value="20" />
+            <input type="hidden" id="pMerge" value="10" />
+
+            <div class="action-bar">
+                <button id="go" class="btn-primary"
+                    data-tooltip="Generate a new batch of variants from your motive using the current knob settings.">Generate Variations</button>
+                <button id="train" class="btn-accent"
+                    data-tooltip="Train the neural network on your preferred variants. First browse the variants on the right and click Select on the ones you like. Then click here to teach the system your taste — future generations will reflect your preferences.">Train Selection</button>
+            </div>
+
+            <!-- NEURAL MODEL PANEL -->
+            <div class="panel model-panel" style="margin-top:12px;">
+                <h3 class="section-title" style="margin-bottom:6px;">Neural Model</h3>
+                <p class="model-panel-info">
+                    Your trained model lives in this browser's local storage — it persists between page reloads
+                    but is tied to this browser and device.
+                    Use <strong>Download</strong> to export the weights as files (<code>.json</code> + <code>.bin</code>)
+                    so you can back them up or load them in another browser or computer via <strong>Load File</strong>.
+                </p>
+                <div id="modelStatus" class="model-status-line"></div>
+                <div class="button-row" style="margin-top:8px; flex-wrap:wrap; gap:6px;">
+                    <button id="saveModelLs" class="btn-secondary btn-small"
+                        data-tooltip="Save the current trained model to this browser's local storage. Survives page reloads but not clearing browser data.">Save to Browser</button>
+                    <button id="loadModelLs" class="btn-secondary btn-small"
+                        data-tooltip="Load the model previously saved to this browser's local storage.">Load from Browser</button>
+                    <button id="saveModelDl" class="btn-secondary btn-small"
+                        data-tooltip="Download the model weights as two files (.json + .bin). Use this to back up your model or move it to another device.">Download Files</button>
+                    <button id="loadModelFileBtn" class="btn-secondary btn-small"
+                        data-tooltip="Load model weights from downloaded files. Select both the .json and .bin files together.">Load Files</button>
+                    <input type="file" id="loadModelFile" accept=".json,.bin" multiple style="display:none" />
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: VARIANT BROWSER -->
+        <div class="right-column">
+            <div class="panel" id="variantPanel">
+                <div id="outErr" style="color:var(--danger); white-space: pre-wrap;"></div>
+
+                <div id="variantBrowser" style="display:none;">
+                    <div class="variant-nav">
+                        <button id="varPrev" class="btn-icon">&#9664;</button>
+                        <span id="varCounter" class="variant-counter">Variant 1 of 10</span>
+                        <button id="varNext" class="btn-icon">&#9654;</button>
+                    </div>
+                    <div id="variantMain" class="score-preview-large"></div>
+                    <div class="quant-toggle" id="quantToggle"
+                        data-tooltip="Snap this variant's rhythm to a coarser grid for display. Non-destructive — the original durations are preserved and you can switch freely.">
+                        <span class="quant-label">Quantize:</span>
+                        <button class="quant-btn active" data-quant="16">16th</button>
+                        <button class="quant-btn" data-quant="8">8th</button>
+                        <button class="quant-btn" data-quant="4">Quarter</button>
+                    </div>
+                    <div class="variant-actions-bar">
+                        <button id="varPlay" class="btn-secondary">Play</button>
+                        <button id="varSelect" class="btn-primary btn-carousel"
+                            data-tooltip="Mark this variant as preferred. Browse several variants, selecting the ones you like. When done, click Train Selection (bottom left) to adapt the generator to your taste.">Select</button>
+                        <button id="varAddToTimeline" class="btn-secondary"
+                            data-tooltip="Add this variant to the Timeline sequence below. Timeline items can be reordered by dragging and played back-to-back.">Add to Timeline</button>
+                        <button id="varCopy" class="btn-secondary"
+                            data-tooltip="Copy this variant's ABC notation to the clipboard.">Copy ABC</button>
+                        <button id="varExportMXL" class="btn-secondary"
+                            data-tooltip="Download this variant as a MusicXML file, compatible with Finale, Sibelius, MuseScore, and Dorico.">Export MusicXML</button>
+                    </div>
+                    <details class="abc-details" id="varAbcDetails">
+                        <summary>ABC Code</summary>
+                        <pre id="varAbcCode"></pre>
+                    </details>
+                    <div id="variantStrip" class="thumbnail-strip"></div>
+                </div>
+
+                <div id="emptyState" class="empty-state" style="border:2px dashed var(--border); border-radius:12px; padding:40px; text-align:center; color:var(--text-muted);">
+                    <div style="font-size:1rem; font-weight:600; margin-bottom:10px;">Variations will appear here</div>
+                    <ol style="text-align:left; display:inline-block; margin:0; padding-left:1.4em; font-size:0.85rem; line-height:1.9;">
+                        <li>Enter or edit your motive in <strong>ABC notation</strong> (left panel)</li>
+                        <li>Adjust the <strong>knobs</strong> to set how much each dimension may vary</li>
+                        <li>Click <strong>Generate Variations</strong> to produce a batch of variants</li>
+                        <li>Browse variants, click <strong>Select</strong> on the ones you like</li>
+                        <li>Click <strong>Train Selection</strong> — the generator adapts to your taste</li>
+                        <li>Repeat from step 3 to refine further</li>
+                    </ol>
+                </div>
+
+                <div id="learnStatus" style="font-size:0.9rem; color:var(--text-muted); margin-top:12px; min-height:1.2em;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TIMELINE BAR -->
+    <div id="timelineSection" class="timeline-section">
+        <div class="timeline-header">
+            <h3 class="timeline-title">Timeline</h3>
+            <div class="timeline-controls">
+                <button id="tlPlayAll" class="btn-secondary btn-small">&#9654; Play All</button>
+                <button id="tlStop" class="btn-secondary btn-small">&#9632; Stop</button>
+                <button id="tlExportAbc" class="btn-secondary btn-small">Export ABC</button>
+                <button id="tlExportMXL" class="btn-secondary btn-small">Export MusicXML</button>
+                <button id="tlClear" class="btn-secondary btn-small" style="color:var(--danger);">Clear</button>
+            </div>
+        </div>
+        <div id="timelineItems" class="timeline-items"></div>
+    </div>
+
+    <!-- NOTE EDITOR PANEL -->
+    <div id="noteEditorPanel" class="note-editor-panel hidden">
+        <div class="note-editor-header">
+            <span class="note-editor-title">Edit Note</span>
+            <button id="noteEditorClose" class="btn-close">&times;</button>
+        </div>
+        <div class="note-editor-body">
+            <div class="note-editor-row">
+                <span class="note-editor-label">Pitch</span>
+                <div class="note-pitch-controls">
+                    <button id="notePitchDown" class="btn-icon" title="-1 semitone">&#9660;</button>
+                    <span id="notePitchDisplay" class="note-pitch-display">C4</span>
+                    <button id="notePitchUp" class="btn-icon" title="+1 semitone">&#9650;</button>
+                </div>
+            </div>
+            <div class="note-editor-row" style="flex-direction:column; align-items:stretch; gap:4px;">
+                <span class="note-editor-label">Duration <span style="color:var(--text-muted);font-size:0.75rem;">(assuming L:1/8)</span></span>
+                <select id="noteDurSelect">
+                    <option value="/4">1/32 note</option>
+                    <option value="/2">1/16 note</option>
+                    <option value="">1/8 note</option>
+                    <option value="3/2">Dotted 1/8</option>
+                    <option value="2">1/4 note</option>
+                    <option value="3">Dotted 1/4</option>
+                    <option value="4">1/2 note</option>
+                    <option value="6">Dotted 1/2</option>
+                    <option value="8">Whole note</option>
+                </select>
+                <button id="noteDurApply" class="btn-secondary btn-small" style="width:100%;">Apply Duration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div id="statusBar" class="status-bar"></div>
+
+    <!-- ABC HELP DRAWER -->
+    <div id="helpPanel" class="hidden drawer">
+        <div class="drawer-header">
+            <h3>ABC Notation Reference</h3>
+            <button onclick="document.getElementById('helpPanel').classList.add('hidden')"
+                class="btn-close">&times;</button>
+        </div>
+        <div style="font-size:0.85rem; line-height:1.6;">
+            <h4 style="margin-top:0;">Notes</h4>
+            <table class="help-table">
+                <tr><td><code>C D E F G A B</code></td><td>Middle-C octave</td></tr>
+                <tr><td><code>c d e f g a b</code></td><td>One octave up</td></tr>
+                <tr><td><code>c'</code></td><td>Two octaves up</td></tr>
+                <tr><td><code>C, D,</code></td><td>One octave down</td></tr>
+            </table>
+
+            <h4>Accidentals</h4>
+            <table class="help-table">
+                <tr><td><code>^C</code></td><td>C sharp</td></tr>
+                <tr><td><code>_B</code></td><td>B flat</td></tr>
+                <tr><td><code>=C</code></td><td>C natural</td></tr>
+                <tr><td><code>^^C &nbsp; __B</code></td><td>Double sharp / flat</td></tr>
+            </table>
+
+            <h4>Durations</h4>
+            <table class="help-table">
+                <tr><td><code>C2</code></td><td>Double the unit length</td></tr>
+                <tr><td><code>C/2</code></td><td>Half the unit length</td></tr>
+                <tr><td><code>C3/2</code></td><td>Dotted (1.5&times; unit)</td></tr>
+                <tr><td><code>C4</code></td><td>4&times; unit length</td></tr>
+            </table>
+
+            <h4>Rests</h4>
+            <table class="help-table">
+                <tr><td><code>z</code></td><td>Rest (unit length)</td></tr>
+                <tr><td><code>z2</code></td><td>Rest (double)</td></tr>
+            </table>
+
+            <h4>Bar Lines</h4>
+            <table class="help-table">
+                <tr><td><code>|</code></td><td>Bar line</td></tr>
+                <tr><td><code>||</code></td><td>Double bar</td></tr>
+                <tr><td><code>|:</code> &nbsp; <code>:|</code></td><td>Repeat start / end</td></tr>
+            </table>
+
+            <h4>Dynamics</h4>
+            <table class="help-table">
+                <tr><td><code>!pp!</code> <code>!p!</code> <code>!mp!</code></td><td>Soft dynamics</td></tr>
+                <tr><td><code>!mf!</code> <code>!f!</code> <code>!ff!</code></td><td>Loud dynamics</td></tr>
+            </table>
+            <p style="margin:4px 0; color:var(--text-muted);">Place before the note: <code>!mf! C2</code></p>
+
+            <h4>Hairpins (Crescendo / Diminuendo)</h4>
+            <table class="help-table">
+                <tr><td><code>!&lt;(!</code> &hellip; <code>!&lt;)!</code></td><td>Crescendo</td></tr>
+                <tr><td><code>!&gt;(!</code> &hellip; <code>!&gt;)!</code></td><td>Diminuendo</td></tr>
+            </table>
+
+            <h4>Articulation</h4>
+            <table class="help-table">
+                <tr><td><code>.C</code></td><td>Staccato</td></tr>
+                <tr><td><code>-C</code></td><td>Tenuto</td></tr>
+            </table>
+
+            <h4>Slurs &amp; Ties</h4>
+            <table class="help-table">
+                <tr><td><code>(C D E)</code></td><td>Slur over 3 notes</td></tr>
+                <tr><td><code>C- C</code></td><td>Tie (same pitch)</td></tr>
+            </table>
+
+            <h4>Header Fields</h4>
+            <table class="help-table">
+                <tr><td><code>X:1</code></td><td>Tune number (required)</td></tr>
+                <tr><td><code>T:Title</code></td><td>Tune title</td></tr>
+                <tr><td><code>K:C</code></td><td>Key signature</td></tr>
+                <tr><td><code>M:4/4</code></td><td>Time signature</td></tr>
+                <tr><td><code>L:1/8</code></td><td>Default note length</td></tr>
+                <tr><td><code>Q:120</code></td><td>Tempo (BPM)</td></tr>
+            </table>
+
+            <p style="margin-top:12px; color:var(--text-muted); font-size:0.8rem;">
+                Reference: <a href="https://abcnotation.com/wiki/abc:standard:v2.1" target="_blank" rel="noopener">ABC Standard v2.1</a> (Chris Walshaw)
+            </p>
+        </div>
+    </div>
+
+
+</body>
+
+</html>
