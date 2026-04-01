@@ -64,7 +64,7 @@ header {
 }
 
 .header-logo {
-    height: 44px;
+    height: 64px;
     width: auto;
     opacity: 0.92;
     filter: brightness(1.1);
@@ -349,21 +349,37 @@ details summary::-webkit-details-marker {
 
 /* ===== SCORE PREVIEWS ===== */
 
+/* Light background so black ABCJS notation is clearly visible on dark theme */
+/* color: #111 forces currentColor dark for any SVG paths that inherit it */
 .score-preview-large {
     min-height: 80px;
     margin-top: 8px;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 4px 8px;
+    color: #111111;
 }
 
 .score-preview-large svg {
     width: 100%;
+    color: #111111;
 }
 
-/* Invert ABCJS score SVGs so black notation becomes white on dark background */
-.score-preview-large svg,
-.thumb-score svg,
-.timeline-slot-score svg {
-    filter: invert(1);
+.thumb-score {
+    min-height: 40px;
+    overflow: hidden;
+    background: #ffffff;
     border-radius: 4px;
+    color: #111111;
+}
+
+.timeline-slot-score {
+    min-height: 44px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #ffffff;
+    border-radius: 4px;
+    color: #111111;
 }
 
 /* ===== KNOB GRID ===== */
@@ -550,11 +566,6 @@ details summary::-webkit-details-marker {
     color: var(--text-muted);
     text-align: center;
     margin-top: 2px;
-}
-
-.thumb-score {
-    min-height: 40px;
-    overflow: hidden;
 }
 
 .thumb-score svg {
@@ -791,12 +802,6 @@ details summary::-webkit-details-marker {
 .timeline-slot.drag-over {
     border-color: var(--primary);
     box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
-}
-
-.timeline-slot-score {
-    min-height: 44px;
-    overflow: hidden;
-    cursor: pointer;
 }
 
 .timeline-slot-score svg {
@@ -1090,4 +1095,52 @@ details summary::-webkit-details-marker {
     body {
         padding-bottom: 80px;
     }
+}
+
+/* ===== FOOTER ===== */
+
+.app-footer {
+    max-width: 1600px;
+    margin: 24px auto 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+}
+
+.app-footer-inner {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.footer-cite-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--primary);
+    opacity: 0.7;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.footer-cite-ref em {
+    font-style: italic;
+}
+
+.app-footer-meta {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.footer-separator {
+    opacity: 0.5;
 }
