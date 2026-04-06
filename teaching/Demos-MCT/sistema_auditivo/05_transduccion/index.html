@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Transducción Auditiva — Sistema Auditivo</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sistema-auditivo">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_oido_externo_medio/index.html">1. Oído Ext+Med</a>
+  <a href="../02_coclea_tonotopia/index.html">2. Cóclea</a>
+  <a href="../03_membrana_basilar/index.html">3. Membrana Basilar</a>
+  <a href="../04_celulas_ciliares/index.html">4. Células Ciliares</a>
+  <a href="../05_transduccion/index.html" class="active">5. Transducción</a>
+  <a href="../06_perdida_auditiva/index.html">6. Pérdida Auditiva</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. Transducción Auditiva</h1>
+      <p class="subtitle">De la vibración mecánica al impulso nervioso</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>El proceso de transducción</h2>
+    <p class="description">
+      La <span class="kw">transducción</span> convierte la vibración mecánica de los estereocilios
+      en señales eléctricas. El proceso ocurre en microsegundos:
+      (1) La membrana basilar vibra → (2) los estereocilios se <span class="kw">deflectan</span> →
+      (3) se abren canales iónicos de K⁺ → (4) entra K⁺ produciendo
+      <span class="kw">despolarización</span> → (5) se abren canales de Ca²⁺ →
+      (6) se liberan <span class="kw">neurotransmisores</span> →
+      (7) se genera un <span class="kw">potencial de acción</span> en el nervio auditivo.
+      El retardo temporal total es de apenas <span class="kw">1 millonésima de segundo</span>.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn" onclick="prevStep()">◀ Paso anterior</button>
+        <button class="btn play" onclick="nextStep()">▶ Siguiente paso</button>
+        <button class="btn" onclick="autoPlay()">⟳ Auto</button>
+        <button class="btn stop" onclick="resetSteps()">↺ Reiniciar</button>
+      </div>
+      <span id="stepLabel" style="color:#ffaa00; font-size:0.9rem; font-weight:600;"></span>
+    </div>
+    <div class="canvas-label">Célula ciliar interna (IHC) — paso a paso</div>
+    <canvas id="canvasTrans" height="360"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Señal eléctrica resultante</h2>
+    <p class="description">
+      El <span class="kw">potencial de receptor</span> es la señal eléctrica producida en la
+      célula ciliar interna (IHC) como resultado directo de la apertura de canales iónicos.
+      Cuando los estereocilios se deflectan hacia la membrana tectorial, los
+      <span class="kw">canales MET</span> (mecanotransducción) se abren y permiten la entrada
+      masiva de K⁺ y Ca²⁺ desde la endolinfa (que tiene un potencial endococlear de
+      <span class="kw">+80 mV</span>). Esta corriente despolariza la membrana celular desde
+      su potencial de reposo de <span class="kw">−70 mV</span> hasta valores cercanos a
+      <span class="kw">−40 mV</span>. La deflexión en sentido contrario cierra los canales
+      y la célula se repolariza. El resultado es un potencial de receptor que
+      <span class="kw">sigue la fase de la onda sonora</span> — es una señal
+      <span class="kw">semirectificada</span>: la despolarización ocurre solo en el
+      semiciclo positivo (cuando los cilios se doblan en la dirección excitadora).
+      Este potencial de receptor desencadena la liberación de
+      <span class="kw">glutamato</span> en la sinapsis con el nervio auditivo, que dispara
+      <span class="kw">potenciales de acción</span> preferentemente en cada ciclo de la onda,
+      codificando la <span class="kw">frecuencia</span> mediante sincronía temporal
+      (<em>phase-locking</em>, efectivo hasta ~4 kHz) y la
+      <span class="kw">intensidad</span> mediante la tasa de disparos.
+    </p>
+    <canvas id="canvasSignal" height="280"></canvas>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const cT = document.getElementById('canvasTrans');
+const ctxT = cT.getContext('2d');
+const cS = document.getElementById('canvasSignal');
+const ctxS = cS.getContext('2d');
+
+let currentStep = 0;
+let autoTimer = null;
+
+const STEPS = [
+  { label: 'Reposo: estereocilios verticales, canales cerrados', deflection: 0, kOpen: false, caOpen: false, depol: false, nt: false, nerve: false },
+  { label: 'Paso 1 — Sonido: membrana basilar vibra hacia arriba', deflection: 0.3, kOpen: false, caOpen: false, depol: false, nt: false, nerve: false },
+  { label: 'Paso 2 — Estereocilios deflectados, tip-links tensos', deflection: 1, kOpen: false, caOpen: false, depol: false, nt: false, nerve: false },
+  { label: 'Paso 3 — Canales de K⁺ se abren, fluye K⁺ al interior', deflection: 1, kOpen: true, caOpen: false, depol: false, nt: false, nerve: false },
+  { label: 'Paso 4 — Despolarización de la membrana celular', deflection: 1, kOpen: true, caOpen: false, depol: true, nt: false, nerve: false },
+  { label: 'Paso 5 — Canales de Ca²⁺ se abren en la base', deflection: 1, kOpen: true, caOpen: true, depol: true, nt: false, nerve: false },
+  { label: 'Paso 6 — Vesículas liberan neurotransmisores', deflection: 1, kOpen: true, caOpen: true, depol: true, nt: true, nerve: false },
+  { label: 'Paso 7 — Potencial de acción en el nervio auditivo', deflection: 1, kOpen: true, caOpen: true, depol: true, nt: true, nerve: true },
+];
+
+function drawCell(step) {
+  cT.width = cT.offsetWidth || 800;
+  const W = cT.width, H = cT.height;
+  ctxT.clearRect(0, 0, W, H);
+
+  const cx = W * 0.5, cy = H * 0.38;
+  const cellW = 60, cellH = 110;
+  const cellX = cx - cellW / 2, cellY = cy - cellH;
+
+  const s = STEPS[step];
+
+  // ── Cell body ──
+  const depolColor = s.depol ? 'rgba(255,80,80,0.35)' : 'rgba(0,255,255,0.12)';
+  const borderColor = s.depol ? '#ff4444' : '#00ffff';
+  ctxT.beginPath();
+  ctxT.roundRect(cellX, cellY, cellW, cellH, 16);
+  ctxT.fillStyle = depolColor;
+  ctxT.fill();
+  ctxT.strokeStyle = borderColor;
+  ctxT.lineWidth = 2.5;
+  ctxT.stroke();
+
+  // Nucleus
+  ctxT.beginPath();
+  ctxT.ellipse(cx, cy - cellH * 0.5, 14, 18, 0, 0, Math.PI * 2);
+  ctxT.fillStyle = 'rgba(0,200,255,0.4)';
+  ctxT.fill();
+  ctxT.fillStyle = '#00ccff';
+  ctxT.font = '10px sans-serif';
+  ctxT.textAlign = 'center';
+  ctxT.fillText('nucl.', cx, cy - cellH * 0.5 + 4);
+
+  // ── Stereocilia ──
+  const nCilia = 5;
+  const ciliaBaseY = cellY;
+  const ciliaH = 55;
+  const defX = s.deflection * 22;
+
+  for (let i = 0; i < nCilia; i++) {
+    const cx2 = cellX + 8 + i * (cellW - 14) / (nCilia - 1);
+    const tipX = cx2 + defX * (i + 1) / nCilia;
+    const tipY = ciliaBaseY - ciliaH;
+    ctxT.beginPath();
+    ctxT.moveTo(cx2, ciliaBaseY);
+    ctxT.lineTo(tipX, tipY);
+    ctxT.strokeStyle = s.deflection > 0 ? '#ffaa00' : '#ffffff';
+    ctxT.lineWidth = 2.5;
+    ctxT.lineCap = 'round';
+    ctxT.stroke();
+    ctxT.beginPath();
+    ctxT.arc(tipX, tipY - 4, 3.5, 0, Math.PI * 2);
+    ctxT.fillStyle = s.deflection > 0 ? '#ffaa00' : '#ffffff';
+    ctxT.fill();
+  }
+
+  // Tip-links
+  if (s.deflection > 0) {
+    for (let i = 0; i < nCilia - 1; i++) {
+      const cx2 = cellX + 8 + i * (cellW - 14) / (nCilia - 1) + defX * (i + 1) / nCilia;
+      const cx3 = cellX + 8 + (i + 1) * (cellW - 14) / (nCilia - 1) + defX * (i + 2) / nCilia;
+      const y2 = ciliaBaseY - ciliaH * 0.7;
+      ctxT.beginPath();
+      ctxT.moveTo(cx2, y2); ctxT.lineTo(cx3, y2 - 8);
+      ctxT.strokeStyle = '#ffff00';
+      ctxT.lineWidth = 1.5;
+      ctxT.stroke();
+    }
+    ctxT.fillStyle = '#ffff00';
+    ctxT.font = '10px sans-serif';
+    ctxT.textAlign = 'right';
+    ctxT.fillText('tip-links', cellX - 4, ciliaBaseY - ciliaH * 0.7 - 6);
+  }
+
+  // ── K+ ions ──
+  if (s.kOpen) {
+    const ionPositions = [
+      [cellX - 30, cy - cellH * 0.8],
+      [cellX - 15, cy - cellH * 0.65],
+      [cellX - 25, cy - cellH * 0.5],
+    ];
+    ionPositions.forEach(([ix, iy]) => {
+      ctxT.beginPath();
+      ctxT.arc(ix + 10, iy, 9, 0, Math.PI * 2);
+      ctxT.fillStyle = 'rgba(0,255,200,0.8)';
+      ctxT.fill();
+      ctxT.fillStyle = '#ffffff';
+      ctxT.font = 'bold 10px sans-serif';
+      ctxT.textAlign = 'center';
+      ctxT.fillText('K⁺', ix + 10, iy + 4);
+      // Arrow into cell
+      ctxT.strokeStyle = '#00ffcc';
+      ctxT.lineWidth = 1.5;
+      ctxT.beginPath();
+      ctxT.moveTo(ix + 18, iy); ctxT.lineTo(cellX + 2, iy);
+      ctxT.stroke();
+    });
+    ctxT.fillStyle = '#00ffcc';
+    ctxT.font = '11px sans-serif';
+    ctxT.textAlign = 'right';
+    ctxT.fillText('canales K⁺', cellX - 4, cy - cellH * 0.35);
+  }
+
+  // ── Ca2+ ions ──
+  if (s.caOpen) {
+    const caPositions = [
+      [cellX + cellW + 22, cy - 10],
+      [cellX + cellW + 30, cy + 5],
+      [cellX + cellW + 18, cy + 18],
+    ];
+    caPositions.forEach(([ix, iy]) => {
+      ctxT.beginPath();
+      ctxT.arc(ix, iy, 9, 0, Math.PI * 2);
+      ctxT.fillStyle = 'rgba(255,200,50,0.85)';
+      ctxT.fill();
+      ctxT.fillStyle = '#111';
+      ctxT.font = 'bold 9px sans-serif';
+      ctxT.textAlign = 'center';
+      ctxT.fillText('Ca²⁺', ix, iy + 3);
+      ctxT.strokeStyle = '#ffcc00';
+      ctxT.lineWidth = 1.5;
+      ctxT.beginPath();
+      ctxT.moveTo(ix - 8, iy); ctxT.lineTo(cellX + cellW, iy);
+      ctxT.stroke();
+    });
+  }
+
+  // ── Vesicles ──
+  const vesY = cy + 12;
+  const nVes = 6;
+  for (let i = 0; i < nVes; i++) {
+    const vx = cellX + 8 + i * (cellW - 14) / (nVes - 1);
+    ctxT.beginPath();
+    ctxT.arc(vx, vesY, 7, 0, Math.PI * 2);
+    ctxT.fillStyle = s.nt ? 'rgba(255,100,50,0.8)' : 'rgba(100,150,255,0.4)';
+    ctxT.fill();
+    ctxT.strokeStyle = s.nt ? '#ff6633' : '#aaaaff';
+    ctxT.lineWidth = 1;
+    ctxT.stroke();
+  }
+  ctxT.fillStyle = '#99ccff';
+  ctxT.font = '10px sans-serif';
+  ctxT.textAlign = 'center';
+  ctxT.fillText('vesículas', cx, vesY + 18);
+
+  // ── Neurotransmitters ──
+  if (s.nt) {
+    const synY = cy + 30;
+    for (let i = 0; i < 8; i++) {
+      const nx = cellX + 10 + Math.random() * (cellW - 16);
+      const ny = synY + Math.random() * 20;
+      ctxT.beginPath();
+      ctxT.arc(nx, ny, 3, 0, Math.PI * 2);
+      ctxT.fillStyle = '#ff6633';
+      ctxT.fill();
+    }
+    ctxT.fillStyle = '#ff6633';
+    ctxT.font = '11px sans-serif';
+    ctxT.textAlign = 'center';
+    ctxT.fillText('neurotransmisores', cx, synY + 34);
+  }
+
+  // ── Afferent nerve ──
+  const nerveY = cy + cellH * 0.2 + 20;
+  ctxT.beginPath();
+  ctxT.moveTo(cx, nerveY);
+  ctxT.lineTo(cx, H - 20);
+  ctxT.strokeStyle = s.nerve ? '#00ff44' : 'rgba(0,200,0,0.3)';
+  ctxT.lineWidth = s.nerve ? 4 : 2;
+  ctxT.stroke();
+
+  if (s.nerve) {
+    // Action potential pulse
+    const pY = nerveY + (H - 20 - nerveY) * 0.5;
+    ctxT.beginPath();
+    ctxT.arc(cx, pY, 14, 0, Math.PI * 2);
+    ctxT.fillStyle = 'rgba(0,255,68,0.9)';
+    ctxT.fill();
+    ctxT.fillStyle = '#000';
+    ctxT.font = 'bold 9px sans-serif';
+    ctxT.textAlign = 'center';
+    ctxT.fillText('AP', cx, pY + 3);
+  }
+
+  ctxT.fillStyle = '#00ff44';
+  ctxT.font = '11px sans-serif';
+  ctxT.textAlign = 'center';
+  ctxT.fillText('Nervio auditivo', cx, H - 6);
+
+  // Depol label
+  if (s.depol) {
+    ctxT.fillStyle = '#ff4444';
+    ctxT.font = 'bold 13px sans-serif';
+    ctxT.textAlign = 'left';
+    ctxT.fillText('DESPOLARIZACIÓN', cellX + cellW + 10, cy - cellH * 0.6);
+  }
+
+  // Step counter
+  ctxT.fillStyle = '#99ccff';
+  ctxT.font = '12px sans-serif';
+  ctxT.textAlign = 'right';
+  ctxT.fillText('Paso ' + step + ' / ' + (STEPS.length - 1), W - 10, 18);
+}
+
+// ── Animated signal canvas ──────────────────────────────────────────
+let sigPhase = 0, sigAnimId = null;
+
+function drawSignal() {
+  cS.width = cS.offsetWidth || 800;
+  const W = cS.width, H = cS.height;
+  ctxS.clearRect(0, 0, W, H);
+
+  const padL = 72, padR = 18, padT = 16, padB = 22;
+  const bw = W - padL - padR;
+  const totalH = H - padT - padB;
+  const gap = 14;
+  const pH = (totalH - gap) / 2;   // height of each panel
+
+  // panel Y coords
+  const p1top = padT, p1bot = padT + pH;
+  const p2top = p1bot + gap, p2bot = p2top + pH;
+  const p1mid = (p1top + p1bot) / 2;
+  const p2rest = p2top + pH * 0.52;  // rest-potential line (slightly below centre)
+
+  const CYCLES = 4.5;
+  const N = 500;
+
+  // ── Panel 1 background ──
+  ctxS.fillStyle = 'rgba(0,180,255,0.05)';
+  ctxS.fillRect(padL, p1top, bw, pH);
+  ctxS.strokeStyle = 'rgba(0,180,255,0.25)';
+  ctxS.lineWidth = 1; ctxS.strokeRect(padL, p1top, bw, pH);
+  // baseline
+  ctxS.beginPath(); ctxS.moveTo(padL, p1mid); ctxS.lineTo(padL + bw, p1mid);
+  ctxS.strokeStyle = 'rgba(0,200,255,0.2)'; ctxS.lineWidth = 0.8; ctxS.stroke();
+  // Sound sine wave (scrolls right-to-left)
+  ctxS.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t  = i / N;
+    const ph = sigPhase + t * CYCLES * 2 * Math.PI;
+    const y  = p1mid - Math.sin(ph) * pH * 0.40;
+    const x  = padL + bw * t;
+    if (i === 0) ctxS.moveTo(x, y); else ctxS.lineTo(x, y);
+  }
+  ctxS.strokeStyle = '#00ccff'; ctxS.lineWidth = 2.2; ctxS.stroke();
+  // Panel 1 labels
+  ctxS.font = 'bold 10px sans-serif'; ctxS.fillStyle = '#00ccff';
+  ctxS.textAlign = 'right';
+  ctxS.fillText('Onda', padL - 4, p1mid - 6);
+  ctxS.fillText('sonora', padL - 4, p1mid + 7);
+
+  // ── Panel 2 background ──
+  ctxS.fillStyle = 'rgba(255,60,60,0.04)';
+  ctxS.fillRect(padL, p2top, bw, pH);
+  ctxS.strokeStyle = 'rgba(255,100,100,0.25)';
+  ctxS.lineWidth = 1; ctxS.strokeRect(padL, p2top, bw, pH);
+  // rest line
+  ctxS.beginPath(); ctxS.moveTo(padL, p2rest); ctxS.lineTo(padL + bw, p2rest);
+  ctxS.strokeStyle = 'rgba(255,150,150,0.25)'; ctxS.lineWidth = 0.8; ctxS.stroke();
+  // rest label
+  ctxS.fillStyle = '#99aacc'; ctxS.font = '9px sans-serif'; ctxS.textAlign = 'left';
+  ctxS.fillText('reposo (−70 mV)', padL + 4, p2rest - 3);
+
+  // Receptor potential — half-wave rectified sine (depol on positive half-cycles only)
+  ctxS.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t   = i / N;
+    const ph  = sigPhase + t * CYCLES * 2 * Math.PI;
+    const snd = Math.sin(ph);
+    const vRec = Math.max(0, snd) * 0.75;        // depolarise on positive half only
+    const y   = p2rest - vRec * pH * 0.70;
+    const x   = padL + bw * t;
+    if (i === 0) ctxS.moveTo(x, y); else ctxS.lineTo(x, y);
+  }
+  ctxS.strokeStyle = '#ff4444'; ctxS.lineWidth = 2.5; ctxS.stroke();
+
+  // Action potentials — one spike per positive peak of the sound wave
+  // Peak occurs where sin(sigPhase + t*CYCLES*2π) = 1  →  t = (π/2 - sigPhase + 2πk) / (CYCLES*2π)
+  const cycleW = bw / CYCLES;  // pixels per cycle
+  for (let k = -1; k <= Math.ceil(CYCLES) + 1; k++) {
+    const peakPhase = Math.PI / 2 + k * 2 * Math.PI;
+    const t = (peakPhase - sigPhase) / (CYCLES * 2 * Math.PI);
+    if (t < 0.01 || t > 0.99) continue;
+    const xAP = padL + bw * t;
+    const apH = pH * 0.68;
+    // Classic AP shape: fast rise → overshoot below rest → recovery
+    ctxS.beginPath();
+    ctxS.moveTo(xAP,     p2rest);
+    ctxS.lineTo(xAP + 3, p2rest - apH);          // fast depol spike
+    ctxS.lineTo(xAP + 7, p2rest + pH * 0.22);    // hyperpolarisation
+    ctxS.lineTo(xAP + 13, p2rest);               // back to rest
+    ctxS.strokeStyle = '#00ff44'; ctxS.lineWidth = 2.5; ctxS.stroke();
+  }
+
+  // Panel 2 labels
+  ctxS.font = 'bold 10px sans-serif'; ctxS.fillStyle = '#ff4444';
+  ctxS.textAlign = 'right';
+  ctxS.fillText('Pot. de', padL - 4, p2rest - pH * 0.28);
+  ctxS.fillText('receptor', padL - 4, p2rest - pH * 0.28 + 12);
+  ctxS.fillStyle = 'rgba(150,200,255,0.55)'; ctxS.font = '9px sans-serif';
+  ctxS.fillText('+mV', padL - 4, p2top + 10);
+  ctxS.fillText('−mV', padL - 4, p2bot - 4);
+
+  // AP legend inside panel 2 (bottom-centre, avoids the area below)
+  ctxS.fillStyle = '#00ff44'; ctxS.font = '11px sans-serif'; ctxS.textAlign = 'center';
+  ctxS.fillText('Potenciales de acción (nervio) — sincronía temporal', padL + bw / 2, p2bot - 6);
+
+  // Time axis — in the inter-panel gap so it never overlaps
+  ctxS.fillStyle = 'rgba(150,200,255,0.55)'; ctxS.font = '10px sans-serif'; ctxS.textAlign = 'center';
+  ctxS.fillText('Tiempo →', padL + bw / 2, p1bot + gap / 2 + 4);
+
+  // Scroll — normalise to [0, 2π] to prevent spike calculation from breaking
+  sigPhase -= 0.038;
+  sigPhase = ((sigPhase % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  sigAnimId = requestAnimationFrame(drawSignal);
+}
+
+function updateStep(s) {
+  currentStep = Math.max(0, Math.min(STEPS.length - 1, s));
+  document.getElementById('stepLabel').textContent = STEPS[currentStep].label;
+  drawCell(currentStep);
+}
+
+function nextStep() { updateStep(currentStep + 1); }
+function prevStep() { updateStep(currentStep - 1); }
+function resetSteps() {
+  clearTimeout(autoTimer); autoTimer = null;
+  updateStep(0);
+}
+
+function autoPlay() {
+  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; return; }
+  function step() {
+    if (currentStep < STEPS.length - 1) {
+      nextStep();
+      autoTimer = setTimeout(step, 1600);
+    } else {
+      autoTimer = null;
+    }
+  }
+  step();
+}
+
+function init() {
+  updateStep(0);
+  drawSignal();   // start continuous signal animation
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => {
+  updateStep(currentStep);
+  // signal animation redraws itself; just reset canvas size on next frame
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Pérdida Auditiva — Sistema Auditivo</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sistema-auditivo">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_oido_externo_medio/index.html">1. Oído Ext+Med</a>
+  <a href="../02_coclea_tonotopia/index.html">2. Cóclea</a>
+  <a href="../03_membrana_basilar/index.html">3. Membrana Basilar</a>
+  <a href="../04_celulas_ciliares/index.html">4. Células Ciliares</a>
+  <a href="../05_transduccion/index.html">5. Transducción</a>
+  <a href="../06_perdida_auditiva/index.html" class="active">6. Pérdida Auditiva</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Pérdida Auditiva</h1>
+      <p class="subtitle">Audiograma interactivo: tipos y consecuencias</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Audiograma</h2>
+    <p class="description">
+      El <span class="kw">audiograma</span> muestra el umbral de audición en función de la frecuencia.
+      El eje vertical indica cuántos dB hay que agregar al tono para que sea justo audible (0 dB = audición normal).
+      La <span class="kw">pérdida conductiva</span> afecta por igual a todas las frecuencias
+      (oído externo/medio dañado). La <span class="kw">pérdida sensorineural</span> afecta
+      principalmente las frecuencias altas (células ciliares dañadas). La
+      <span class="kw">pérdida por ruido</span> presenta típicamente una "muesca" en 4 kHz.
+      La <span class="kw">presbiacusia</span> (envejecimiento) también ataca los agudos.
+    </p>
+    <div class="controls">
+      <div class="btn-group" id="profileBtns">
+        <button class="btn active" onclick="setProfile(0)">Audición normal</button>
+        <button class="btn" onclick="setProfile(1)">Pérdida conductiva</button>
+        <button class="btn" onclick="setProfile(2)">Pérdida sensorineural</button>
+        <button class="btn" onclick="setProfile(3)">Daño por ruido</button>
+        <button class="btn" onclick="setProfile(4)">Presbiacusia</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia de prueba: <span class="val" id="freqVal">1000</span> Hz</label>
+        <input type="range" id="freqSlider" min="125" max="8000" value="1000" step="125">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="playTestTone()">▶ Escuchar tono (con pérdida)</button>
+      </div>
+    </div>
+    <div class="canvas-label">Audiograma — línea activa con punto naranja en la frecuencia seleccionada</div>
+    <canvas id="canvasAudio" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Causas y consecuencias</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Pérdida conductiva</strong><br>
+        Causa: cera, infecciones oído medio, otosclerosis, rotura del tímpano.<br>
+        Efecto: atenuación uniforme ~30–60 dB. Tratable con audífonos o cirugía.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff4444;">Pérdida sensorineural</strong><br>
+        Causa: daño a células ciliares (OHC principalmente). Irreversible en humanos.<br>
+        Efecto: pérdida de agudos, reducción de selectividad de frecuencia.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Daño por ruido</strong><br>
+        Causa: exposición a sonidos > 85 dB por tiempo prolongado o &gt;130 dB instantáneo.<br>
+        Muesca característica en 4 kHz, donde la membrana basilar es más vulnerable.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ff44;">Presbiacusia</strong><br>
+        Causa: envejecimiento natural de las células ciliares basales.<br>
+        Progresiva desde los 40 años. Afecta primero los agudos (>2 kHz).
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// Audiogram profiles: hearing level in dB at octave frequencies
+// Frequencies: 125, 250, 500, 1000, 2000, 4000, 8000 Hz
+const FREQ_MARKS = [125, 250, 500, 1000, 2000, 4000, 8000];
+
+const PROFILES = [
+  { name: 'Normal',         color: '#00ffff', hl: [5, 5, 5, 5, 5, 5, 5] },
+  { name: 'Conductiva',     color: '#ffaa00', hl: [40, 40, 40, 40, 40, 40, 40] },
+  { name: 'Sensorineural',  color: '#ff4444', hl: [5, 10, 15, 25, 40, 60, 70] },
+  { name: 'Daño ruido',     color: '#ff8800', hl: [5, 5, 10, 15, 25, 65, 35] },
+  { name: 'Presbiacusia',   color: '#00ff44', hl: [5, 5, 10, 15, 30, 50, 65] },
+];
+
+let activeProfile = 0;
+const cA = document.getElementById('canvasAudio');
+const ctxA = cA.getContext('2d');
+
+function interpolateHL(freq, profile) {
+  const hl = PROFILES[profile].hl;
+  if (freq <= FREQ_MARKS[0]) return hl[0];
+  if (freq >= FREQ_MARKS[FREQ_MARKS.length - 1]) return hl[hl.length - 1];
+  for (let i = 0; i < FREQ_MARKS.length - 1; i++) {
+    if (freq >= FREQ_MARKS[i] && freq <= FREQ_MARKS[i + 1]) {
+      const t = (Math.log(freq) - Math.log(FREQ_MARKS[i])) /
+                (Math.log(FREQ_MARKS[i + 1]) - Math.log(FREQ_MARKS[i]));
+      return hl[i] * (1 - t) + hl[i + 1] * t;
+    }
+  }
+  return 0;
+}
+
+function freqToX(f, padL, bw) {
+  return padL + bw * (Math.log10(f / 125) / Math.log10(8000 / 125));
+}
+
+function hlToY(hl, padT, bh) {
+  return padT + bh * hl / 90;
+}
+
+function drawAudiogram(activeFreq) {
+  cA.width = cA.offsetWidth || 800;
+  const W = cA.width, H = cA.height;
+  ctxA.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 20, padT = 20, padB = 38;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  // Y-axis grid (dB HL)
+  const dBmarks = [0, 20, 40, 60, 80];
+  ctxA.font = '11px sans-serif';
+  dBmarks.forEach(db => {
+    const y = hlToY(db, padT, bh);
+    ctxA.strokeStyle = 'rgba(100,180,255,0.2)';
+    ctxA.lineWidth = 1;
+    ctxA.beginPath(); ctxA.moveTo(padL, y); ctxA.lineTo(padL + bw, y); ctxA.stroke();
+    ctxA.fillStyle = 'rgba(150,200,255,0.7)';
+    ctxA.textAlign = 'right';
+    ctxA.fillText(db + ' dB', padL - 5, y + 4);
+  });
+  ctxA.fillStyle = 'rgba(150,200,255,0.5)';
+  ctxA.textAlign = 'right';
+  ctxA.fillText('Normal', padL - 5, hlToY(5, padT, bh) - 6);
+  ctxA.fillText('Leve', padL - 5, hlToY(25, padT, bh) - 6);
+  ctxA.fillText('Moderada', padL - 5, hlToY(45, padT, bh) - 6);
+  ctxA.fillText('Severa', padL - 5, hlToY(65, padT, bh) - 6);
+
+  // X-axis grid (freq)
+  FREQ_MARKS.forEach(f => {
+    const x = freqToX(f, padL, bw);
+    ctxA.strokeStyle = 'rgba(100,180,255,0.15)';
+    ctxA.lineWidth = 1;
+    ctxA.beginPath(); ctxA.moveTo(x, padT); ctxA.lineTo(x, padT + bh); ctxA.stroke();
+    const label = f >= 1000 ? (f / 1000) + 'k' : f + '';
+    ctxA.fillStyle = 'rgba(150,200,255,0.7)';
+    ctxA.textAlign = 'center';
+    ctxA.fillText(label, x, padT + bh + 16);
+  });
+  ctxA.fillStyle = 'rgba(150,200,255,0.5)';
+  ctxA.textAlign = 'center';
+  ctxA.fillText('Frecuencia (Hz)', padL + bw / 2, padT + bh + 30);
+
+  // Draw all profiles (dimmed) then active
+  PROFILES.forEach((p, pi) => {
+    const alpha = pi === activeProfile ? 1 : 0.18;
+    ctxA.beginPath();
+    FREQ_MARKS.forEach((f, fi) => {
+      const x = freqToX(f, padL, bw);
+      const y = hlToY(p.hl[fi], padT, bh);
+      if (fi === 0) ctxA.moveTo(x, y); else ctxA.lineTo(x, y);
+    });
+    ctxA.strokeStyle = p.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba').replace('#', '');
+    // Use a simpler approach
+    ctxA.globalAlpha = alpha;
+    ctxA.strokeStyle = p.color;
+    ctxA.lineWidth = pi === activeProfile ? 3 : 1.5;
+    ctxA.stroke();
+
+    // Symbols
+    FREQ_MARKS.forEach((f, fi) => {
+      const x = freqToX(f, padL, bw);
+      const y = hlToY(p.hl[fi], padT, bh);
+      ctxA.beginPath();
+      ctxA.arc(x, y, pi === activeProfile ? 6 : 3, 0, Math.PI * 2);
+      ctxA.fillStyle = p.color;
+      ctxA.fill();
+    });
+  });
+  ctxA.globalAlpha = 1;
+
+  // Normal hearing zone (shaded)
+  ctxA.fillStyle = 'rgba(0,255,68,0.04)';
+  ctxA.fillRect(padL, padT, bw, hlToY(20, padT, bh) - padT);
+
+  // Active freq marker
+  const xc = freqToX(activeFreq, padL, bw);
+  const yc = hlToY(interpolateHL(activeFreq, activeProfile), padT, bh);
+  ctxA.beginPath(); ctxA.moveTo(xc, padT); ctxA.lineTo(xc, padT + bh);
+  ctxA.strokeStyle = 'rgba(255,170,0,0.4)';
+  ctxA.lineWidth = 1.5; ctxA.stroke();
+  ctxA.beginPath(); ctxA.arc(xc, yc, 9, 0, Math.PI * 2);
+  ctxA.fillStyle = '#ffaa00'; ctxA.fill();
+
+  const hl = interpolateHL(activeFreq, activeProfile);
+  const fLabel = activeFreq >= 1000 ? (activeFreq / 1000) + ' kHz' : activeFreq + ' Hz';
+  ctxA.fillStyle = '#ffaa00';
+  ctxA.font = 'bold 12px sans-serif';
+  ctxA.textAlign = 'center';
+  ctxA.fillText(fLabel + ' → ' + hl.toFixed(0) + ' dB HL', xc, yc - 16);
+
+  // Legend
+  ctxA.font = '11px sans-serif';
+  PROFILES.forEach((p, pi) => {
+    const lx = padL + bw * 0.02 + pi * (bw * 0.2);
+    ctxA.fillStyle = pi === activeProfile ? p.color : 'rgba(150,180,200,0.4)';
+    ctxA.fillRect(lx, padT + 4, 16, 3);
+    ctxA.textAlign = 'left';
+    ctxA.fillText(p.name, lx + 20, padT + 10);
+  });
+}
+
+function setProfile(idx) {
+  activeProfile = idx;
+  document.querySelectorAll('#profileBtns .btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+  drawAudiogram(parseInt(document.getElementById('freqSlider').value));
+}
+
+// ── Audio ──────────────────────────────────────────────────────────
+let oscNode = null, gainNode = null;
+
+function lossGain(f) {
+  const hl = interpolateHL(f, activeProfile);
+  return Math.max(0.001, Math.pow(10, -hl / 20) * 0.3);
+}
+
+function playTestTone() {
+  if (oscNode) { stopTone(); return; }
+  const f = parseInt(document.getElementById('freqSlider').value);
+  const actx = getAudioContext();
+  const doPlay = () => {
+    oscNode = actx.createOscillator();
+    gainNode = actx.createGain();
+    oscNode.type = 'sine';
+    oscNode.frequency.value = f;
+    gainNode.gain.value = lossGain(f);
+    oscNode.connect(gainNode); gainNode.connect(actx.destination);
+    oscNode.start();
+    document.getElementById('btnPlay').textContent = '■ Detener';
+    document.getElementById('btnPlay').classList.add('active');
+  };
+  if (actx.state === 'suspended') actx.resume().then(doPlay); else doPlay();
+}
+
+function stopTone() {
+  if (oscNode) { try { oscNode.stop(); } catch(e){} oscNode = null; gainNode = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar tono (con pérdida)';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  const f = parseInt(this.value);
+  document.getElementById('freqVal').textContent = f;
+  drawAudiogram(f);
+  if (oscNode) {
+    oscNode.frequency.value = f;
+    gainNode.gain.value = lossGain(f);   // update gain for new freq + active profile
+  }
+});
+
+function init() { drawAudiogram(1000); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawAudiogram(parseInt(document.getElementById('freqSlider').value)));
+</script>
+</body>
+</html>

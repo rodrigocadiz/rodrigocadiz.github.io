@@ -286,6 +286,18 @@ canvas {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.sec-sistema-auditivo header h1 {
+  background: linear-gradient(90deg, #ff4444, #ffaa00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sec-percepcion header h1 {
+  background: linear-gradient(90deg, #00ff44, #aa44ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Card grid (índices de sección) ── */
 .card-grid {

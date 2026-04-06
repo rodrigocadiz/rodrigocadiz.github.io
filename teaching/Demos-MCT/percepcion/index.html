@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Percepción y ASA — Demostraciones MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-percepcion">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="index.html" class="active">Percepción y ASA</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Percepción y Análisis de la Escena Auditiva</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      El <span class="kw">Análisis de la Escena Auditiva (ASA)</span> estudia cómo el sistema auditivo
+      separa y agrupa los sonidos del entorno en fuentes individuales. Albert Bregman (1990)
+      identificó los principios que gobiernan este proceso: desde los principios Gestalt hasta
+      los flujos auditivos y la integración espectral.
+    </p>
+    <div class="card-grid">
+
+      <a class="vineta-card" href="01_gestalt/index.html">
+        <div class="num" style="color:#44dd88;">1 ◈</div>
+        <h3 style="color:#44dd88;">Principios Gestalt</h3>
+        <p>Proximidad, similitud, buena continuación y destino común. Los mismos principios que organizan la percepción visual se aplican al sonido.</p>
+      </a>
+
+      <a class="vineta-card" href="02_cocktail_party/index.html">
+        <div class="num" style="color:#00ffff;">2 🎉</div>
+        <h3 style="color:#00ffff;">El Problema del Cocktail Party</h3>
+        <p>Cherry (1953): ¿Cómo podemos seguir una conversación en medio del ruido? La separación de fuentes sonoras concurrentes.</p>
+      </a>
+
+      <a class="vineta-card" href="03_flujos_auditivos/index.html">
+        <div class="num" style="color:#ffaa00;">3 〰</div>
+        <h3 style="color:#ffaa00;">Flujos Auditivos</h3>
+        <p>Bregman (1990): segregación y fusión de flujos auditivos. Procesos primitivos (automáticos) vs procesos basados en esquemas (aprendidos).</p>
+      </a>
+
+      <a class="vineta-card" href="04_segregacion_frecuencia/index.html">
+        <div class="num" style="color:#ff4444;">4 ↕</div>
+        <h3 style="color:#ff4444;">Segregación por Frecuencia y Velocidad</h3>
+        <p>DEMO clásico: tonos agudos y graves alternantes. A mayor separación de frecuencia o mayor velocidad, más clara es la segregación en dos flujos.</p>
+      </a>
+
+      <a class="vineta-card" href="05_segregacion_timbre/index.html">
+        <div class="num" style="color:#aa44ff;">5 ◑</div>
+        <h3 style="color:#aa44ff;">Segregación por Timbre y Altura</h3>
+        <p>Efectos del timbre y del registro (octava) en la segregación. Dos "jugadores" intercalados: ¿se perciben como uno o como dos?</p>
+      </a>
+
+      <a class="vineta-card" href="06_integracion_espectral/index.html">
+        <div class="num" style="color:#00ff44;">6 ✕</div>
+        <h3 style="color:#00ff44;">Integración Espectral y Cruce de Trayectorias</h3>
+        <p>Componentes de frecuencia simultáneos: ¿se fusionan o se segregan? El fenómeno del "rebote" vs "cruce" de glissandos.</p>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+</body>
+</html>

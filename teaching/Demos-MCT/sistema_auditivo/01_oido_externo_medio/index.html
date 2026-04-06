@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Oído Externo y Medio — Sistema Auditivo</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sistema-auditivo">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_oido_externo_medio/index.html" class="active">1. Oído Ext+Med</a>
+  <a href="../02_coclea_tonotopia/index.html">2. Cóclea</a>
+  <a href="../03_membrana_basilar/index.html">3. Membrana Basilar</a>
+  <a href="../04_celulas_ciliares/index.html">4. Células Ciliares</a>
+  <a href="../05_transduccion/index.html">5. Transducción</a>
+  <a href="../06_perdida_auditiva/index.html">6. Pérdida Auditiva</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Oído Externo y Medio</h1>
+      <p class="subtitle">Anatomía, resonancia del canal auditivo e impedancia acústica</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Anatomía del oído</h2>
+    <p class="description">
+      El <span class="kw">oído externo</span> comprende el pabellón auricular (pinna), que colecta y filtra el sonido,
+      y el conducto auditivo externo (~2.5 cm), que actúa como resonador y amplifica frecuencias entre <span class="kw">2–4 kHz</span>.
+      Al fondo del conducto se encuentra la <span class="kw">membrana timpánica</span>, que vibra ante los cambios de presión sonora.
+      El <span class="kw">oído medio</span> es una cavidad aireada que contiene la cadena de tres huesecillos:
+      <span class="kw">martillo</span> (unido al tímpano), <span class="kw">yunque</span> (intermediario) y <span class="kw">estribo</span>
+      (cuya platina se apoya en la ventana oval). Esta cadena actúa como transformador mecánico que resuelve el problema de
+      <span class="kw">impedancia acústica</span> entre el aire y el líquido coclear (ganancia ~25–30 dB).
+      La <span class="kw">membrana redonda</span> y la <span class="kw">trompa de Eustaquio</span> —que equilibra la presión
+      con la faringe— completan el oído medio.
+      El <span class="kw">oído interno</span> contiene la <span class="kw">cóclea</span> (caracol), donde la energía mecánica
+      se transforma en señal nerviosa mediante las células ciliares, y los <span class="kw">conductos semicirculares</span>,
+      responsables del equilibrio. La información auditiva sale por el <span class="kw">nervio auditivo</span> hacia el cerebro.
+    </p>
+    <!-- Diagrama anatómico de referencia -->
+    <img src="oido_anatomia.png" alt="Anatomía del oído externo, medio e interno"
+         style="width:100%;height:auto;display:block;border-radius:8px;margin-bottom:4px">
+
+    <!-- Esquema animado -->
+    <div class="canvas-label" style="margin-top:12px">Esquema animado — propagación del sonido por la cadena osicular</div>
+    <canvas id="canvasAnatomia" height="300"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Respuesta en frecuencia del oído externo</h2>
+    <p class="description">
+      La respuesta total del oído externo resulta de la suma de cuatro contribuciones independientes:
+      <span class="kw">Torso y hombros</span>: la reflexión desde el hombro llega con retardo (~0.3 ms),
+      reforzando bajas frecuencias (~400–500 Hz, +3–4 dB) y produciendo una pequeña caída en ~1 kHz.
+      <span class="kw">Cabeza</span>: la difracción alrededor del cráneo (esfera rígida) amplifica
+      2–4 kHz hasta +5 dB para incidencia frontal.
+      <span class="kw">Pabellón auricular (pinna)</span>: la concha agrega una resonancia prominente
+      ~5 kHz (+8 dB) y una muesca de dirección alrededor de ~9 kHz (−5 dB).
+      <span class="kw">Canal auditivo</span>: tubo cerrado L≈2.5 cm, resonancia principal a
+      f = c/4L ≈ 3.4 kHz (+14 dB).
+      La suma de estas cuatro contribuciones constituye la
+      <span class="kw">HRTF</span> (<em>Head-Related Transfer Function</em>, función de transferencia relacionada con la cabeza):
+      la respuesta en frecuencia que experimenta el sonido desde el campo libre hasta el tímpano,
+      incluyendo los efectos del cuerpo, la cabeza y el pabellón auricular.
+      La HRTF total puede alcanzar <span class="kw">+20–22 dB</span> en torno a 3–5 kHz y varía según la dirección
+      de la fuente, lo que permite al sistema auditivo inferir la localización espacial del sonido.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqVal">1000</span> Hz</label>
+        <input type="range" id="freqSlider" min="100" max="10000" value="1000" step="50">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Reproducir tono</button>
+      </div>
+    </div>
+    <div class="btn-group" style="flex-wrap:wrap;margin-bottom:6px">
+      <button class="btn active" id="togTorso"  onclick="toggleCurve('torso')" style="border-color:#ff8844;color:#ff8844">Torso/hombros</button>
+      <button class="btn active" id="togHead"   onclick="toggleCurve('head')"  style="border-color:#44dd88;color:#44dd88">Cabeza</button>
+      <button class="btn active" id="togPinna"  onclick="toggleCurve('pinna')" style="border-color:#ffcc00;color:#ffcc00">Pabellón auricular</button>
+      <button class="btn active" id="togCanal"  onclick="toggleCurve('canal')" style="border-color:#00ffff;color:#00ffff">Canal auditivo</button>
+      <span class="btn active" style="border-color:#ff44cc;color:#ff44cc;cursor:default;opacity:1">Total HRTF ●</span>
+    </div>
+    <div class="canvas-label">Respuesta en frecuencia del oído externo (incidencia frontal) — cursor en naranja</div>
+    <canvas id="canvasFreq" height="260"></canvas>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Diagrama anatómico animado ────────────────────────────────────
+const cA = document.getElementById('canvasAnatomia');
+const ctxA = cA.getContext('2d');
+let animPhase = 0;
+let animId = null;
+
+function drawAnatomy(phase) {
+  cA.width = cA.offsetWidth || 800;
+  const W = cA.width, H = cA.height;
+  ctxA.clearRect(0, 0, W, H);
+
+  // Layout zones
+  const cy = H * 0.50;
+  const pinnaX  = W * 0.055;
+  const canalX1 = W * 0.07;
+  const canalX2 = W * 0.36;
+  const midX1   = canalX2;
+  const midX2   = W * 0.62;
+  const cocX    = W * 0.815;
+  const cocY    = cy - 4;
+
+  const canalTop = cy - 24, canalBot = cy + 24;
+  const midTop   = cy - 54, midBot   = cy + 54;
+
+  const amp = 0.85 * Math.sin(phase * 6);  // vibration amplitude in pixels
+
+  // ── Pinna ──
+  ctxA.beginPath();
+  ctxA.ellipse(pinnaX, cy, 18, 44, 0, 0, Math.PI * 2);
+  ctxA.strokeStyle = '#ffaa00';
+  ctxA.lineWidth = 2.5;
+  ctxA.stroke();
+  ctxA.fillStyle = 'rgba(255,170,0,0.08)';
+  ctxA.fill();
+  ctxA.fillStyle = '#ffaa00';
+  ctxA.font = '10px sans-serif';
+  ctxA.textAlign = 'center';
+  ctxA.fillText('Pinna', pinnaX, cy + 56);
+
+  // ── Canal auditivo ──
+  ctxA.fillStyle = 'rgba(100,180,255,0.08)';
+  ctxA.fillRect(canalX1, canalTop, canalX2 - canalX1, canalBot - canalTop);
+  ctxA.strokeStyle = 'rgba(100,180,255,0.40)';
+  ctxA.lineWidth = 1.5;
+  ctxA.strokeRect(canalX1, canalTop, canalX2 - canalX1, canalBot - canalTop);
+
+  // Wavefronts moving left→right
+  const canalLen = canalX2 - canalX1;
+  for (let i = 0; i < 4; i++) {
+    const t = ((phase * 0.5 + i / 4) % 1);
+    const wx = canalX1 + t * canalLen;
+    ctxA.globalAlpha = Math.sin(t * Math.PI) * 0.85;
+    ctxA.strokeStyle = '#ffaa00';
+    ctxA.lineWidth = 2;
+    ctxA.beginPath();
+    ctxA.moveTo(wx, canalTop + 5);
+    ctxA.lineTo(wx, canalBot - 5);
+    ctxA.stroke();
+  }
+  ctxA.globalAlpha = 1;
+
+  // Canal label
+  ctxA.fillStyle = '#99ccff';
+  ctxA.textAlign = 'center';
+  ctxA.font = '10px sans-serif';
+  ctxA.fillText('Canal auditivo', (canalX1 + canalX2) / 2, canalTop - 8);
+
+  // ── Tímpano ──
+  const timpX = canalX2 + amp * 2.5;
+  ctxA.beginPath();
+  ctxA.moveTo(timpX, canalTop - 10);
+  ctxA.lineTo(timpX, canalBot + 10);
+  ctxA.strokeStyle = '#4a9fff';
+  ctxA.lineWidth = 4;
+  ctxA.lineCap = 'round';
+  ctxA.stroke();
+
+  // ── Middle ear box ──
+  ctxA.fillStyle = 'rgba(0,180,255,0.04)';
+  ctxA.strokeStyle = 'rgba(0,180,255,0.22)';
+  ctxA.lineWidth = 1;
+  ctxA.beginPath();
+  ctxA.rect(midX1, midTop, midX2 - midX1, midBot - midTop);
+  ctxA.fill(); ctxA.stroke();
+
+  ctxA.fillStyle = '#44ccff';
+  ctxA.textAlign = 'center';
+  ctxA.font = 'bold 10px sans-serif';
+  ctxA.fillText('Oído Medio', (midX1 + midX2) / 2, midTop - 5);
+
+  // ── OSSICULAR LEVER MECHANICS ──
+  // The malleus-incus pair pivots as a rigid body around a fixed ligament
+  // attachment point (superior malleolar ligament).
+  const ossW = midX2 - midX1;
+
+  // Pivot: fixed point ~40% into the middle ear, slightly above center
+  const pivotX = midX1 + ossW * 0.40;
+  const pivotY = cy - 18;
+
+  // Lever arm: from pivot to where the malleus handle touches the tympanum
+  const dx0 = timpX - pivotX;
+  const dy0 = cy - pivotY;  // handle contacts tympanum at cy (canal center)
+  const leverLen = Math.sqrt(dx0 * dx0 + dy0 * dy0);
+  const staticAngle = Math.atan2(dy0, dx0);
+
+  // Rotation driven by tympanum vibration (clockwise when amp > 0)
+  const theta = -amp * 0.18;
+  const mAngle = staticAngle + theta;
+
+  // Malleus handle tip (touches tympanum)
+  const mTipX = pivotX + leverLen * Math.cos(mAngle);
+  const mTipY = pivotY + leverLen * Math.sin(mAngle);
+
+  // Malleus head: slightly shorter arm on the other side of pivot, toward incus
+  const headLen = leverLen * 0.45;
+  const mHeadX = pivotX - headLen * Math.cos(mAngle);
+  const mHeadY = pivotY - headLen * Math.sin(mAngle);
+
+  // Incus long arm: pivots with malleus (rigid coupling), extends ~120° clockwise
+  const incusAngle = mAngle - Math.PI * 0.62;
+  const incusLen = leverLen * 0.90;
+  const iEndX = pivotX + incusLen * Math.cos(incusAngle);
+  const iEndY = pivotY + incusLen * Math.sin(incusAngle);
+
+  // ── Draw MALLEUS (handle + head) ──
+  ctxA.lineCap = 'round';
+  // Handle (thin, from tip to pivot)
+  ctxA.beginPath();
+  ctxA.moveTo(mTipX, mTipY);
+  ctxA.lineTo(pivotX, pivotY);
+  ctxA.strokeStyle = '#e8a030';
+  ctxA.lineWidth = 4;
+  ctxA.stroke();
+  // Head arm (thicker, from pivot to head)
+  ctxA.beginPath();
+  ctxA.moveTo(pivotX, pivotY);
+  ctxA.lineTo(mHeadX, mHeadY);
+  ctxA.strokeStyle = '#e8a030';
+  ctxA.lineWidth = 5;
+  ctxA.stroke();
+  // Head knob
+  ctxA.beginPath();
+  ctxA.arc(mHeadX, mHeadY, 7, 0, Math.PI * 2);
+  ctxA.fillStyle = '#e8a030';
+  ctxA.fill();
+
+  // ── Draw INCUS ──
+  // Body at pivot (shared with malleus head junction)
+  ctxA.beginPath();
+  ctxA.arc(pivotX, pivotY, 6, 0, Math.PI * 2);
+  ctxA.fillStyle = '#e8a030';
+  ctxA.fill();
+  // Long process arm
+  ctxA.beginPath();
+  ctxA.moveTo(pivotX, pivotY);
+  ctxA.lineTo(iEndX, iEndY);
+  ctxA.strokeStyle = '#e8a030';
+  ctxA.lineWidth = 4;
+  ctxA.stroke();
+  // Lenticular process (small knob at end connecting to stapes)
+  ctxA.beginPath();
+  ctxA.arc(iEndX, iEndY, 4, 0, Math.PI * 2);
+  ctxA.fillStyle = '#e8a030';
+  ctxA.fill();
+
+  // Pivot indicator (ligament attachment)
+  ctxA.beginPath();
+  ctxA.arc(pivotX, pivotY, 3.5, 0, Math.PI * 2);
+  ctxA.fillStyle = '#ffffff';
+  ctxA.fill();
+
+  // ── Draw STAPES (U-arch from incus end to oval window) ──
+  // Oval window is at the right edge of middle ear, at cy height
+  const ovalX  = midX2 - 8;
+  const ovalY  = cy;
+  // Stapes: head at iEndX/iEndY, two crura arching to footplate on oval window
+  const stapesTopY = Math.min(iEndY, ovalY) - 14;
+  ctxA.beginPath();
+  ctxA.moveTo(iEndX, iEndY);
+  ctxA.bezierCurveTo(iEndX + 8, stapesTopY, ovalX - 8, stapesTopY, ovalX, ovalY - 10);
+  ctxA.strokeStyle = '#e8a030';
+  ctxA.lineWidth = 3;
+  ctxA.stroke();
+  ctxA.beginPath();
+  ctxA.moveTo(iEndX, iEndY);
+  ctxA.bezierCurveTo(iEndX + 8, iEndY + 14, ovalX - 8, ovalY + 14, ovalX, ovalY + 10);
+  ctxA.strokeStyle = '#e8a030';
+  ctxA.lineWidth = 3;
+  ctxA.stroke();
+  // Footplate bar on oval window
+  ctxA.beginPath();
+  ctxA.moveTo(ovalX, ovalY - 10);
+  ctxA.lineTo(ovalX, ovalY + 10);
+  ctxA.strokeStyle = '#e8a030';
+  ctxA.lineWidth = 4.5;
+  ctxA.stroke();
+
+  // ── OVAL WINDOW (vibrates with stapes) ──
+  const ovalAmp = amp * 1.5;
+  ctxA.beginPath();
+  ctxA.ellipse(ovalX + 2 + ovalAmp * 0.4, ovalY, 7, 13, 0, 0, Math.PI * 2);
+  ctxA.fillStyle = 'rgba(74,127,203,0.55)';
+  ctxA.fill();
+  ctxA.strokeStyle = '#4a7fcb';
+  ctxA.lineWidth = 2;
+  ctxA.stroke();
+
+  // ── VESTIBULE (tube connecting oval window to cochlea base) ──
+  // Cochlea spiral starts at angle π (left side) → entry at (cocX - cocRadius, cocY)
+  const cocRadius = 6;  // inner radius at start of spiral
+  const cochEntryX = cocX - cocRadius - 28;  // entry is on the left side of cochlea
+  const cochEntryY = cocY;
+  ctxA.beginPath();
+  ctxA.moveTo(ovalX + 9, ovalY);
+  ctxA.bezierCurveTo(ovalX + 28, ovalY - 8, cochEntryX - 16, cochEntryY - 4, cochEntryX, cochEntryY);
+  ctxA.strokeStyle = 'rgba(74,127,203,0.55)';
+  ctxA.lineWidth = 5;
+  ctxA.stroke();
+
+  // ── COCHLEA (Archimedean spiral starting from LEFT = angle π) ──
+  const cocPulse = 1 + 0.025 * Math.sin(phase * 6 - 1.0);
+  ctxA.save();
+  ctxA.translate(cocX, cocY);
+  ctxA.scale(cocPulse, cocPulse);
+  // Draw filled spiral using thick stroke: start at angle π (left side)
+  ctxA.beginPath();
+  for (let a = Math.PI; a > Math.PI - 6.8 * Math.PI; a -= 0.04) {
+    const r = cocRadius + (Math.PI - a) * 3.0;
+    const x = r * Math.cos(a);
+    const y = r * Math.sin(a) * 0.58;
+    if (a >= Math.PI - 0.04) ctxA.moveTo(x, y); else ctxA.lineTo(x, y);
+  }
+  ctxA.strokeStyle = '#1e6fcc';
+  ctxA.lineWidth = 10;
+  ctxA.lineCap = 'round';
+  ctxA.lineJoin = 'round';
+  ctxA.stroke();
+  // Center helicotrema
+  ctxA.beginPath();
+  ctxA.arc(0, 0, 6, 0, Math.PI * 2);
+  ctxA.fillStyle = '#1e4d8c';
+  ctxA.fill();
+  ctxA.restore();
+
+  // ── LABELS ──
+  ctxA.font = '11px sans-serif';
+  ctxA.lineWidth = 1;
+
+  function label(x, y, text, color, lx, ly, align) {
+    ctxA.strokeStyle = color + '55';
+    ctxA.beginPath(); ctxA.moveTo(lx, ly); ctxA.lineTo(x, y); ctxA.stroke();
+    ctxA.fillStyle = color;
+    ctxA.textAlign = align || 'center';
+    text.split('\n').forEach((ln, i) => ctxA.fillText(ln, x, y + i * 13));
+  }
+
+  // Tímpano
+  label(canalX2 - 12, midTop - 14, 'Tímpano', '#4a9fff', timpX, canalTop - 5, 'center');
+
+  // Martillo (handle below)
+  label(mTipX - 8, midBot + 15, 'Martillo', '#e8a030', mTipX, mTipY + 6);
+
+  // Yunque (above pivot)
+  label(pivotX + headLen * 0.5, midTop - 18, 'Yunque', '#e8a030', pivotX + 10, pivotY - 8, 'left');
+
+  // Estribo (below incus end)
+  label(iEndX + 12, midBot + 15, 'Estribo', '#e8a030', iEndX, iEndY + 5, 'center');
+
+  // Ventana Oval
+  label(ovalX + 24, cy - 30, 'Ventana\nOval', '#4a9fff', ovalX + 6, cy - 10, 'left');
+
+  // Cóclea
+  ctxA.fillStyle = '#44aaff';
+  ctxA.textAlign = 'center';
+  ctxA.font = '11px sans-serif';
+  ctxA.fillText('Cóclea', cocX, cocY + 66);
+}
+
+function startAnatomyAnim() {
+  const t0 = performance.now();
+  function tick(now) {
+    animPhase = (now - t0) / 1000;
+    drawAnatomy(animPhase);
+    animId = requestAnimationFrame(tick);
+  }
+  if (animId) cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(tick);
+}
+
+// ── Respuesta en frecuencia ───────────────────────────────────────
+const cF = document.getElementById('canvasFreq');
+const ctxF = cF.getContext('2d');
+
+// Curve toggle state
+const showCurves = { torso: true, head: true, pinna: true, canal: true, total: true };
+
+function toggleCurve(name) {
+  showCurves[name] = !showCurves[name];
+  const btn = document.getElementById('tog' + name.charAt(0).toUpperCase() + name.slice(1));
+  btn.classList.toggle('active', showCurves[name]);
+  drawFreqResponse(parseInt(document.getElementById('freqSlider').value));
+}
+
+// ── Component transfer functions (dB, frontal incidence) ──────────
+
+// 1. Torso / shoulder reflection (~20 cm extra path → delayed copy)
+//    Creates a comb: bump ~400 Hz, slight dip ~1 kHz
+function torsoGain(f) {
+  const bump  =  3.8 * Math.exp(-Math.pow((Math.log10(f) - Math.log10(420))  / 0.22, 2));
+  const dip   = -1.8 * Math.exp(-Math.pow((Math.log10(f) - Math.log10(1050)) / 0.18, 2));
+  return bump + dip;
+}
+
+// 2. Head diffraction (rigid sphere model, frontal incidence)
+//    Broad constructive peak 2–4 kHz, gentle lift at ~700 Hz
+function headGain(f) {
+  const peak1 = 5.0 * Math.exp(-Math.pow((Math.log10(f) - Math.log10(2600)) / 0.36, 2));
+  const peak2 = 1.8 * Math.exp(-Math.pow((Math.log10(f) - Math.log10(720))  / 0.26, 2));
+  return peak1 + peak2;
+}
+
+// 3. Pinna (concha bowl resonance ~5 kHz + anti-helix notch ~9 kHz)
+function pinnaGain(f) {
+  const concha =  8.0 * Math.exp(-Math.pow((f - 5100) / 1100, 2));
+  const notch  = -5.5 * Math.exp(-Math.pow((f - 9200) /  700, 2));
+  return concha + notch;
+}
+
+// 4. Ear canal (closed tube L≈2.5 cm, resonance ~3.4 kHz + 2nd ~10.5 kHz)
+function earCanalGain(f) {
+  const peak1 = 14 / (1 + Math.pow((f - 3400) / (3400 / 2.0), 2));
+  const peak2 =  5 / (1 + Math.pow((f - 10500) / (10500 / 1.5), 2));
+  const base  = -8 * Math.exp(-Math.pow((f - 500) / 800, 2));
+  return base + peak1 + peak2;
+}
+
+// 5. Total HRTF = sum of all components
+function totalGain(f) {
+  return torsoGain(f) + headGain(f) + pinnaGain(f) + earCanalGain(f);
+}
+
+// dB range: -12 to +26 (range = 38 dB)
+const DB_MIN = -12, DB_MAX = 26, DB_RANGE = DB_MAX - DB_MIN;
+const F_MIN = 100, F_MAX = 10000;
+function xFreq(f, fw, padL) { return padL + fw * Math.log10(f / F_MIN) / Math.log10(F_MAX / F_MIN); }
+function yDB(db, fh, padT)  { return padT + fh * (1 - (db - DB_MIN) / DB_RANGE); }
+
+const CURVES = [
+  { key: 'torso',  fn: torsoGain,   color: '#ff8844', label: 'Torso/hombros',        lw: 1.8, dash: [6,4] },
+  { key: 'head',   fn: headGain,    color: '#44dd88', label: 'Cabeza',               lw: 1.8, dash: [6,4] },
+  { key: 'pinna',  fn: pinnaGain,   color: '#ffcc00', label: 'Pabellón auricular',   lw: 1.8, dash: [6,4] },
+  { key: 'canal',  fn: earCanalGain,color: '#00ffff', label: 'Canal auditivo',       lw: 2.0, dash: [6,4] },
+  { key: 'total',  fn: totalGain,   color: '#ff44cc', label: 'Total HRTF',           lw: 3.0, dash: []    },
+];
+
+function drawFreqResponse(currentFreq) {
+  cF.width = cF.offsetWidth || 800;
+  const W = cF.width, H = cF.height;
+  ctxF.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 24, padT = 16, padB = 36;
+  const fw = W - padL - padR, fh = H - padT - padB;
+
+  // Horizontal grid (dB)
+  const dBlines = [-10, -5, 0, 5, 10, 15, 20, 25];
+  dBlines.forEach(db => {
+    const y = yDB(db, fh, padT);
+    ctxF.strokeStyle = db === 0 ? 'rgba(255,255,255,0.25)' : 'rgba(100,180,255,0.18)';
+    ctxF.lineWidth = db === 0 ? 1.5 : 1;
+    ctxF.setLineDash(db === 0 ? [4,4] : []);
+    ctxF.beginPath(); ctxF.moveTo(padL, y); ctxF.lineTo(padL + fw, y); ctxF.stroke();
+    ctxF.setLineDash([]);
+    ctxF.fillStyle = 'rgba(150,200,255,0.65)';
+    ctxF.font = '11px sans-serif'; ctxF.textAlign = 'right';
+    ctxF.fillText(db + ' dB', padL - 5, y + 4);
+  });
+
+  // Vertical grid (freq)
+  [100, 200, 500, 1000, 2000, 5000, 10000].forEach(f => {
+    const x = xFreq(f, fw, padL);
+    ctxF.strokeStyle = 'rgba(100,180,255,0.15)';
+    ctxF.lineWidth = 1; ctxF.setLineDash([]);
+    ctxF.beginPath(); ctxF.moveTo(x, padT); ctxF.lineTo(x, padT + fh); ctxF.stroke();
+    ctxF.fillStyle = 'rgba(150,200,255,0.65)';
+    ctxF.font = '11px sans-serif'; ctxF.textAlign = 'center';
+    ctxF.fillText(f < 1000 ? f : (f / 1000) + 'k', x, padT + fh + 16);
+  });
+
+  // Draw each curve (total is always drawn last and always visible)
+  CURVES.forEach(({ key, fn, color, lw, dash }) => {
+    if (key === 'total') return;          // drawn separately below
+    if (!showCurves[key]) return;
+    ctxF.beginPath();
+    let first = true;
+    for (let f = F_MIN; f <= F_MAX; f += 15) {
+      const x = xFreq(f, fw, padL);
+      const y = yDB(fn(f), fh, padT);
+      if (first) { ctxF.moveTo(x, y); first = false; } else ctxF.lineTo(x, y);
+    }
+    ctxF.strokeStyle = color;
+    ctxF.lineWidth = lw;
+    ctxF.setLineDash(dash);
+    ctxF.stroke();
+    ctxF.setLineDash([]);
+  });
+  // Total HRTF — always drawn on top
+  { const { fn, color, lw } = CURVES.find(c => c.key === 'total');
+    ctxF.beginPath();
+    let first = true;
+    for (let f = F_MIN; f <= F_MAX; f += 15) {
+      const x = xFreq(f, fw, padL);
+      const y = yDB(fn(f), fh, padT);
+      if (first) { ctxF.moveTo(x, y); first = false; } else ctxF.lineTo(x, y);
+    }
+    ctxF.strokeStyle = color; ctxF.lineWidth = lw; ctxF.stroke();
+  }
+
+  // Current freq marker — always follows total HRTF
+  const activeFn = totalGain;
+  const activeColor = '#ff44cc';
+  const xc = xFreq(currentFreq, fw, padL);
+  const gc = activeFn(currentFreq);
+  const yc = yDB(gc, fh, padT);
+
+  ctxF.beginPath(); ctxF.moveTo(xc, padT); ctxF.lineTo(xc, padT + fh);
+  ctxF.strokeStyle = 'rgba(255,170,0,0.35)'; ctxF.lineWidth = 1; ctxF.stroke();
+
+  ctxF.beginPath(); ctxF.arc(xc, yc, 6, 0, Math.PI * 2);
+  ctxF.fillStyle = '#ffaa00'; ctxF.fill();
+
+  ctxF.fillStyle = '#ffaa00';
+  ctxF.font = 'bold 11px sans-serif'; ctxF.textAlign = 'center';
+  const fLabel = currentFreq >= 1000 ? (currentFreq / 1000).toFixed(1) + ' kHz' : currentFreq + ' Hz';
+  ctxF.fillText(fLabel + '  ' + gc.toFixed(1) + ' dB', xc, yc - 12);
+
+  // Legend (top-right) — total always shown
+  let ly = padT + 6;
+  CURVES.forEach(({ key, color, label, dash }) => {
+    if (key !== 'total' && !showCurves[key]) return;
+    const lx = padL + fw - 140;
+    ctxF.strokeStyle = color; ctxF.lineWidth = key === 'total' ? 2.5 : 1.8;
+    ctxF.setLineDash(dash);
+    ctxF.beginPath(); ctxF.moveTo(lx, ly + 4); ctxF.lineTo(lx + 22, ly + 4); ctxF.stroke();
+    ctxF.setLineDash([]);
+    ctxF.fillStyle = color; ctxF.font = '10px sans-serif'; ctxF.textAlign = 'left';
+    ctxF.fillText(label, lx + 26, ly + 8);
+    ly += 16;
+  });
+
+  // Axes label
+  ctxF.fillStyle = 'rgba(150,200,255,0.7)';
+  ctxF.font = '11px sans-serif'; ctxF.textAlign = 'center';
+  ctxF.fillText('Frecuencia (Hz)', padL + fw / 2, H - 2);
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+let oscNode = null, gainNode = null;
+
+function togglePlay() {
+  const f = parseInt(document.getElementById('freqSlider').value);
+  if (oscNode) { stopTone(); return; }
+  const ctx = getAudioContext();
+  oscNode = ctx.createOscillator();
+  gainNode = ctx.createGain();
+  oscNode.type = 'sine';
+  oscNode.frequency.value = f;
+  gainNode.gain.value = 0.18;
+  oscNode.connect(gainNode);
+  gainNode.connect(ctx.destination);
+  oscNode.start();
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+}
+
+function stopTone() {
+  if (oscNode) { try { oscNode.stop(); } catch(e){} oscNode = null; }
+  document.getElementById('btnPlay').textContent = '▶ Reproducir tono';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  const f = parseInt(this.value);
+  document.getElementById('freqVal').textContent = f >= 1000 ? (f/1000).toFixed(1)+'k' : f;
+  if (oscNode) oscNode.frequency.value = f;
+  drawFreqResponse(f);
+});
+
+function init() {
+  cA.width = cA.offsetWidth || 800;
+  cF.width = cF.offsetWidth || 800;
+  startAnatomyAnim();
+  drawFreqResponse(1000);
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => {
+  cF.width = cF.offsetWidth || 800;
+  drawFreqResponse(parseInt(document.getElementById('freqSlider').value));
+});
+</script>
+</body>
+</html>

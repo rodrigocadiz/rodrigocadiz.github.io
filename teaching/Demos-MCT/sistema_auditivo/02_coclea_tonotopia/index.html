@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Cóclea y Tonotopía — Sistema Auditivo</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sistema-auditivo">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_oido_externo_medio/index.html">1. Oído Ext+Med</a>
+  <a href="../02_coclea_tonotopia/index.html" class="active">2. Cóclea</a>
+  <a href="../03_membrana_basilar/index.html">3. Membrana Basilar</a>
+  <a href="../04_celulas_ciliares/index.html">4. Células Ciliares</a>
+  <a href="../05_transduccion/index.html">5. Transducción</a>
+  <a href="../06_perdida_auditiva/index.html">6. Pérdida Auditiva</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Cóclea y Tonotopía</h1>
+      <p class="subtitle">Mapa tonotópico: la espiral que analiza la frecuencia</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>La cóclea</h2>
+    <p class="description">
+      La <span class="kw">cóclea</span> es un pasaje en espiral lleno de líquido, de ~35 mm de largo y 3.5 vueltas.
+      Está dividida en tres canales: <span class="kw">scala vestibuli, scala media y scala tympani</span>.
+      La <span class="kw">tonotopía</span> es la propiedad por la que cada frecuencia activa una posición
+      diferente: frecuencias <span class="kw">agudas en la base</span> (ventana oval) y
+      <span class="kw">graves en el ápex</span> (helicotrema). Selecciona una frecuencia para ver
+      dónde se activa la cóclea.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqVal">1000</span> Hz</label>
+        <input type="range" id="freqSlider" min="20" max="20000" value="1000" step="10">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Reproducir</button>
+      </div>
+    </div>
+    <div class="canvas-label">Mapa tonotópico — posición activada resaltada en naranja</div>
+    <canvas id="canvasCoclea" height="460"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Posición en la membrana basilar</h2>
+    <p class="description">
+      La posición del máximo de vibración sigue la <span class="kw">función de Greenwood</span>:
+      f = 165.4 · (10<sup>0.06·x</sup> − 0.88), donde x es la posición en mm desde el ápex.
+      Las frecuencias bajas estimulan tanto el ápex como la base, mientras que las frecuencias
+      altas están <span class="kw">confinadas cerca de la base</span>.
+    </p>
+    <div class="canvas-label">Membrana basilar desenrollada (Base izquierda → Ápex derecha)</div>
+    <canvas id="canvasLinear" height="120"></canvas>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// Greenwood function: frequency from position (x in mm from apex, 0-35mm)
+function posToFreq(x) {
+  return 165.4 * (Math.pow(10, 0.06 * x) - 0.88);
+}
+// Inverse: position from frequency
+function freqToPos(f) {
+  return Math.log10((f / 165.4) + 0.88) / 0.06;
+}
+
+const MAX_MM = 35; // mm length of BM
+
+// Color along the spiral: hue from red (apex) to violet (base)
+function tonotopicColor(posNorm, alpha) { // posNorm: 0=apex(low), 1=base(high)
+  // Red(bass) → Orange → Yellow → Green → Cyan → Blue → Violet(treble)
+  const hue = 0 + posNorm * 270; // 0°=red, 270°=violet
+  return `hsla(${hue}, 100%, 55%, ${alpha})`;
+}
+
+// ── Spiral cochlea drawing ──────────────────────────────────────
+const cC = document.getElementById('canvasCoclea');
+const ctxC = cC.getContext('2d');
+
+function drawCochlea(activeFreq) {
+  cC.width = cC.offsetWidth || 800;
+  const W = cC.width, H = cC.height;
+  ctxC.clearRect(0, 0, W, H);
+
+  const TURNS = 3.5;
+  // Center slightly left to leave room for base stub on the right
+  const cx = W * 0.46, cy = H * 0.50;
+  const R_BASE = Math.min(W, H) * 0.37;
+  const R_APEX = Math.max(6, R_BASE * 0.055);
+
+  // Gap between successive turns at radius midpoint
+  const GAP = (R_BASE - R_APEX) / TURNS;
+  // Duct width: wide at base (t=1), narrow at apex (t=0)
+  const W_BASE = GAP * 0.78;
+  const W_APEX = Math.max(3, GAP * 0.07);
+  function dw(t) { return W_APEX + (W_BASE - W_APEX) * t; }
+
+  // Spiral starts at angle 0 (right side = apex exit)
+  // After TURNS full turns: base exits at angle TURNS*2π mod 2π = 0 → but since 3.5 turns it's at π (left)
+  const START_ANGLE = 0; // apex is at the right (t=0)
+
+  // Active position
+  const activePosFromApex = freqToPos(activeFreq);
+  const activePosNorm = Math.min(1, Math.max(0, activePosFromApex / MAX_MM)); // 0=apex, 1=base
+  const activeAngle = START_ANGLE + activePosNorm * TURNS * 2 * Math.PI;
+  const activeR = R_APEX + (R_BASE - R_APEX) * activePosNorm;
+  const activeX = cx + activeR * Math.cos(activeAngle);
+  const activeY = cy + activeR * Math.sin(activeAngle);
+
+  // Layer definitions: frac=fraction of half-width, drawn from outermost to innermost
+  // so inner layers paint over outer ones → tube effect
+  const LAYERS = [
+    { frac: 1.00, color: '#0d2a45' },   // dark outer wall
+    { frac: 0.82, color: '#1a5c9e' },   // main blue fluid
+    { frac: 0.58, color: '#3a90cc' },   // lighter scala media
+    { frac: 0.18, color: '#6b3010' },   // basilar membrane (brown stripe)
+  ];
+
+  const STEPS = 900;
+
+  // Draw from base outward to apex so inner turns are on top
+  for (let layer = 0; layer < LAYERS.length; layer++) {
+    const { frac, color } = LAYERS[layer];
+    for (let i = STEPS - 1; i >= 0; i--) {
+      const t0 = i / STEPS;       // t=0=apex, t=1=base
+      const t1 = (i + 1) / STEPS;
+      const a0 = START_ANGLE + t0 * TURNS * 2 * Math.PI;
+      const a1 = START_ANGLE + t1 * TURNS * 2 * Math.PI;
+      const r0 = R_APEX + (R_BASE - R_APEX) * t0;
+      const r1 = R_APEX + (R_BASE - R_APEX) * t1;
+      const hw = dw(t0) * frac;
+
+      ctxC.beginPath();
+      ctxC.moveTo(cx + r0 * Math.cos(a0), cy + r0 * Math.sin(a0));
+      ctxC.lineTo(cx + r1 * Math.cos(a1), cy + r1 * Math.sin(a1));
+      ctxC.strokeStyle = color;
+      ctxC.lineWidth = hw * 2;
+      ctxC.lineCap = 'butt';
+      ctxC.stroke();
+    }
+  }
+
+  // Active glow overlay (tonotopic color)
+  const glowColor = tonotopicColor(activePosNorm, 0.85);
+  const glowR = dw(activePosNorm) * 1.2;
+  const grd = ctxC.createRadialGradient(activeX, activeY, 0, activeX, activeY, glowR * 2.5);
+  grd.addColorStop(0, glowColor);
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctxC.beginPath();
+  ctxC.arc(activeX, activeY, glowR * 2.5, 0, Math.PI * 2);
+  ctxC.fillStyle = grd;
+  ctxC.fill();
+
+  ctxC.beginPath();
+  ctxC.arc(activeX, activeY, Math.max(5, glowR * 0.55), 0, Math.PI * 2);
+  ctxC.fillStyle = '#ffaa00';
+  ctxC.fill();
+
+  // Base stub — base exits at angle START_ANGLE + 3.5 * 2π = START_ANGLE + 7π = START_ANGLE + π (mod 2π)
+  // With START_ANGLE=0: base is at angle π → left side
+  const baseAngle = START_ANGLE + TURNS * 2 * Math.PI; // = 7π, cos=-1, sin=0
+  const bx0 = cx + R_BASE * Math.cos(baseAngle);
+  const by0 = cy + R_BASE * Math.sin(baseAngle);
+  const stubLen = W_BASE * 1.2;
+  const bxEnd = bx0 - stubLen;
+
+  // Draw stub as filled rect (extending left)
+  ctxC.fillStyle = '#0d2a45';
+  ctxC.fillRect(bxEnd, by0 - W_BASE * 0.78, stubLen, W_BASE * 1.56);
+  ctxC.fillStyle = '#1a5c9e';
+  ctxC.fillRect(bxEnd, by0 - W_BASE * 0.63, stubLen, W_BASE * 1.26);
+
+  // Oval window dot at stub end
+  ctxC.beginPath();
+  ctxC.arc(bxEnd, by0, W_BASE * 0.38, 0, Math.PI * 2);
+  ctxC.fillStyle = '#cc88ff';
+  ctxC.fill();
+
+  // Labels — base (stub exits left, so label goes left of the dot)
+  ctxC.font = 'bold 12px sans-serif';
+  ctxC.textAlign = 'center';
+  ctxC.fillStyle = '#cc88ff';
+  ctxC.fillText('Base (ventana oval)', bxEnd, by0 - W_BASE - 8);
+
+  // Apex label in center
+  ctxC.textAlign = 'center';
+  ctxC.fillStyle = '#ff6655';
+  ctxC.fillText('Ápex', cx, cy + 4);
+  ctxC.font = '10px sans-serif';
+  ctxC.fillText('(helicotrema)', cx, cy + 16);
+
+  // Active freq label at bottom
+  const fLabel = activeFreq >= 1000
+    ? (activeFreq / 1000).toFixed(1) + ' kHz'
+    : activeFreq.toFixed(0) + ' Hz';
+  const posLabel = activePosFromApex.toFixed(1) + ' mm desde el ápex';
+  ctxC.fillStyle = '#ffaa00';
+  ctxC.font = 'bold 13px sans-serif';
+  ctxC.textAlign = 'center';
+  ctxC.fillText(fLabel + '  →  ' + posLabel, W / 2, H - 10);
+
+  // Freq marks with leader lines
+  const freqMarks = [100, 500, 1000, 2000, 4000, 8000, 16000];
+  ctxC.font = '10px sans-serif';
+  freqMarks.forEach(f => {
+    const pn = Math.min(1, Math.max(0, freqToPos(f) / MAX_MM));
+    const a = START_ANGLE + pn * TURNS * 2 * Math.PI;
+    const r = R_APEX + (R_BASE - R_APEX) * pn;
+    const fx = cx + r * Math.cos(a);
+    const fy = cy + r * Math.sin(a);
+    const leaderLen = dw(pn) + 10;
+    const lx = fx + Math.cos(a) * leaderLen;
+    const ly = fy + Math.sin(a) * leaderLen;
+    const label = f >= 1000 ? (f / 1000) + 'k' : f + '';
+    const col = tonotopicColor(pn, 0.95);
+    ctxC.strokeStyle = col;
+    ctxC.lineWidth = 0.8;
+    ctxC.beginPath();
+    ctxC.moveTo(fx + Math.cos(a) * 2, fy + Math.sin(a) * 2);
+    ctxC.lineTo(lx, ly);
+    ctxC.stroke();
+    ctxC.fillStyle = col;
+    ctxC.textAlign = 'center';
+    ctxC.fillText(label, lx + Math.cos(a) * 8, ly + Math.sin(a) * 8 + 3);
+  });
+}
+
+// ── Linear membrane ────────────────────────────────────────────────
+const cL = document.getElementById('canvasLinear');
+const ctxL = cL.getContext('2d');
+
+function drawLinear(activeFreq) {
+  cL.width = cL.offsetWidth || 800;
+  const W = cL.width, H = cL.height;
+  ctxL.clearRect(0, 0, W, H);
+
+  const padL = 70, padR = 70, padT = 22, padB = 28;
+  const bw = W - padL - padR;
+  // Variable height: tall at base (left), narrow at apex (right)
+  // Base height = 60% of available, apex height = 15% of available
+  const availH = H - padT - padB;
+  const H_BASE = availH * 0.80;
+  const H_APEX = availH * 0.14;
+  const midY = padT + availH / 2; // vertical center of the trapezoid
+
+  // Draw trapezoid membrane — column by column
+  for (let i = 0; i <= bw; i++) {
+    const tCol = i / bw;           // 0=base(left), 1=apex(right)
+    const posNorm = 1 - tCol;      // 0=apex, 1=base (for color & width)
+    const colH = H_APEX + (H_BASE - H_APEX) * posNorm;
+    const y0 = midY - colH / 2;
+    ctxL.fillStyle = tonotopicColor(posNorm, 0.75);
+    ctxL.fillRect(padL + i, y0, 1, colH);
+  }
+
+  // Trapezoid outline
+  const tl_y = midY - H_BASE / 2, bl_y = midY + H_BASE / 2;
+  const tr_y = midY - H_APEX / 2, br_y = midY + H_APEX / 2;
+  ctxL.beginPath();
+  ctxL.moveTo(padL, tl_y);
+  ctxL.lineTo(padL + bw, tr_y);
+  ctxL.lineTo(padL + bw, br_y);
+  ctxL.lineTo(padL, bl_y);
+  ctxL.closePath();
+  ctxL.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctxL.lineWidth = 1.2;
+  ctxL.stroke();
+
+  // Active position
+  const activePosFromApex = freqToPos(activeFreq);
+  const activePosNorm = Math.min(1, Math.max(0, activePosFromApex / MAX_MM));
+  // base=LEFT, apex=RIGHT
+  const xActive = padL + bw * (1 - activePosNorm);
+  const activeColH = H_APEX + (H_BASE - H_APEX) * activePosNorm;
+  const activeTop = midY - activeColH / 2;
+
+  // Vertical cursor line
+  ctxL.beginPath();
+  ctxL.moveTo(xActive, activeTop - 3);
+  ctxL.lineTo(xActive, activeTop + activeColH + 3);
+  ctxL.strokeStyle = '#ffaa00';
+  ctxL.lineWidth = 2.5;
+  ctxL.stroke();
+
+  // Triangle marker above
+  const triY = activeTop - 3;
+  ctxL.beginPath();
+  ctxL.moveTo(xActive, triY);
+  ctxL.lineTo(xActive - 6, triY - 10);
+  ctxL.lineTo(xActive + 6, triY - 10);
+  ctxL.closePath();
+  ctxL.fillStyle = '#ffaa00';
+  ctxL.fill();
+
+  // Frequency label next to cursor
+  const fLabel = activeFreq >= 1000
+    ? (activeFreq / 1000).toFixed(1) + ' kHz'
+    : activeFreq.toFixed(0) + ' Hz';
+  ctxL.font = 'bold 11px sans-serif';
+  // Place label left or right of cursor depending on position
+  const labelLeft = (xActive > padL + bw * 0.65);
+  ctxL.textAlign = labelLeft ? 'right' : 'left';
+  ctxL.fillStyle = '#ffaa00';
+  ctxL.fillText(fLabel, xActive + (labelLeft ? -10 : 10), triY - 13);
+
+  // End labels
+  ctxL.font = 'bold 11px sans-serif';
+  ctxL.textAlign = 'left';
+  ctxL.fillStyle = '#cc88ff';
+  ctxL.fillText('Base (agudos)', padL, H - 4);
+  ctxL.textAlign = 'right';
+  ctxL.fillStyle = '#ff6655';
+  ctxL.fillText('Ápex (graves)', padL + bw, H - 4);
+
+  // Center label
+  ctxL.textAlign = 'center';
+  ctxL.fillStyle = 'rgba(200,220,255,0.6)';
+  ctxL.font = '10px sans-serif';
+  ctxL.fillText('Membrana Basilar (35 mm)', padL + bw / 2, midY + 4);
+}
+
+// ── Controls ───────────────────────────────────────────────────────
+let oscNode = null;
+
+function updateFreq(f) {
+  document.getElementById('freqVal').textContent = f >= 1000 ? (f / 1000).toFixed(1) + 'k' : f;
+  drawCochlea(f);
+  drawLinear(f);
+  if (oscNode) oscNode.frequency.value = f;
+}
+
+function togglePlay() {
+  const f = parseInt(document.getElementById('freqSlider').value);
+  if (oscNode) { stopTone(); return; }
+  const actx = getAudioContext();
+  const doPlay = () => {
+    oscNode = actx.createOscillator();
+    const g = actx.createGain();
+    oscNode.type = 'sine';
+    oscNode.frequency.value = f;
+    g.gain.value = 0.18;
+    oscNode.connect(g); g.connect(actx.destination);
+    oscNode.start();
+    document.getElementById('btnPlay').textContent = '■ Detener';
+    document.getElementById('btnPlay').classList.add('active');
+  };
+  if (actx.state === 'suspended') actx.resume().then(doPlay); else doPlay();
+}
+
+function stopTone() {
+  if (oscNode) { try { oscNode.stop(); } catch(e){} oscNode = null; }
+  document.getElementById('btnPlay').textContent = '▶ Reproducir';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  updateFreq(parseInt(this.value));
+});
+
+function init() {
+  updateFreq(1000);
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => updateFreq(parseInt(document.getElementById('freqSlider').value)));
+</script>
+</body>
+</html>

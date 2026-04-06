@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Segregación por Frecuencia — Percepción y ASA</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-percepcion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_gestalt/index.html">1. Gestalt</a>
+  <a href="../02_cocktail_party/index.html">2. Cocktail Party</a>
+  <a href="../03_flujos_auditivos/index.html">3. Flujos</a>
+  <a href="../04_segregacion_frecuencia/index.html" class="active">4. Seg. Frecuencia</a>
+  <a href="../05_segregacion_timbre/index.html">5. Seg. Timbre</a>
+  <a href="../06_integracion_espectral/index.html">6. Integración</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Segregación por Frecuencia y Velocidad</h1>
+      <p class="subtitle">Pérdida de información rítmica al segregarse los flujos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Demostración de pérdida de información rítmica</h2>
+    <p class="description">
+      Cuando una secuencia de tonos se segrega en dos flujos, se pierde la información
+      <span class="kw">rítmica</span> entre ellos. El patrón H-G-G (galope) se escucha
+      claramente como un solo flujo cuando la separación de frecuencia es pequeña,
+      pero desaparece cuando H y G forman dos corrientes independientes.
+      Escucha primero con ΔF pequeño (un flujo) y luego aumenta ΔF (dos flujos).
+      ¿Desaparece el galope?
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>ΔF galope: <span class="val" id="dfGalVal">4</span> semitonos</label>
+        <input type="range" id="dfGalSlider" min="1" max="20" value="4" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnGalope" onclick="toggleGalope()">▶ Escuchar galope</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="galopeLabel">Patrón: H G G H G G H G G … (H=agudo, G=grave)</div>
+    <canvas id="canvasGalope" height="200"></canvas>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const cGal = document.getElementById('canvasGalope');
+const ctxGal = cGal.getContext('2d');
+
+let galPlaying = false;
+let galTimer = null;
+let galSeqIdx = 0;
+let galHistory = [];
+
+function getDFGal() { return parseInt(document.getElementById('dfGalSlider').value); }
+
+function drawGalopeCanvas(history) {
+  cGal.width = cGal.offsetWidth || 800;
+  const W = cGal.width, H = cGal.height;
+  ctxGal.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 20, padT = 28, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const dfG = getDFGal();
+  const fH = 1500;
+  const fL = fH * Math.pow(2, -dfG / 12);
+  const fMin = fL * 0.7, fMax = fH * 1.4;
+
+  function yF(f) {
+    return padT + bh * (1 - (Math.log(f) - Math.log(fMin)) / (Math.log(fMax) - Math.log(fMin)));
+  }
+
+  // Grid lines
+  [fH, fL].forEach(f => {
+    ctxGal.strokeStyle = 'rgba(100,180,255,0.2)'; ctxGal.lineWidth = 1;
+    ctxGal.beginPath(); ctxGal.moveTo(padL, yF(f)); ctxGal.lineTo(padL + bw, yF(f)); ctxGal.stroke();
+  });
+
+  // Y labels
+  ctxGal.font = '11px sans-serif';
+  ctxGal.fillStyle = '#00ffff'; ctxGal.textAlign = 'right';
+  ctxGal.fillText('H: ' + fH + ' Hz', padL - 4, yF(fH) + 4);
+  ctxGal.fillStyle = '#ffaa00';
+  ctxGal.fillText('G: ' + fL.toFixed(0) + ' Hz', padL - 4, yF(fL) + 4);
+
+  const NSHOW = 18;
+  const GALOPE = [true, false, false];
+  const noteW = bw / NSHOW * 0.65;
+
+  if (!history || history.length === 0) {
+    for (let i = 0; i < NSHOW; i++) {
+      const isH = GALOPE[i % 3];
+      const x = padL + bw * i / NSHOW;
+      ctxGal.fillStyle = isH ? 'rgba(0,255,255,0.4)' : 'rgba(255,170,0,0.4)';
+      ctxGal.fillRect(x, yF(isH ? fH : fL) - 12, noteW, 24);
+      ctxGal.fillStyle = 'rgba(255,255,255,0.6)';
+      ctxGal.font = '10px sans-serif'; ctxGal.textAlign = 'center';
+      ctxGal.fillText(isH ? 'H' : 'G', x + noteW / 2, yF(isH ? fH : fL) + 4);
+    }
+  } else {
+    const recent = history.slice(-NSHOW);
+    recent.forEach((note, i) => {
+      const x = padL + bw * i / NSHOW;
+      const isLast = i === recent.length - 1;
+      ctxGal.fillStyle = note.isH
+        ? (isLast ? '#00ffff' : 'rgba(0,255,255,0.55)')
+        : (isLast ? '#ffaa00' : 'rgba(255,170,0,0.55)');
+      if (isLast) { ctxGal.shadowColor = note.isH ? '#00ffff' : '#ffaa00'; ctxGal.shadowBlur = 10; }
+      ctxGal.fillRect(x, yF(note.isH ? fH : fL) - 12, noteW, 24);
+      ctxGal.shadowBlur = 0;
+    });
+  }
+
+  ctxGal.fillStyle = 'rgba(150,200,255,0.6)'; ctxGal.font = '11px sans-serif'; ctxGal.textAlign = 'center';
+  ctxGal.fillText('Tiempo →', padL + bw / 2, H - 8);
+
+  const pred = dfG >= 10 ? '→ 2 flujos: el galope desaparece' : '→ 1 flujo: se escucha el galope';
+  const col  = dfG >= 10 ? '#ff4444' : '#44dd88';
+  document.getElementById('galopeLabel').textContent = 'ΔF = ' + dfG + ' semitonos  |  Patrón: H-G-G-H-G-G…  ' + pred;
+  document.getElementById('galopeLabel').style.color = col;
+}
+
+function toggleGalope() {
+  if (galPlaying) { stopGalope(); return; }
+  galPlaying = true;
+  galSeqIdx = 0;
+  galHistory = [];
+  document.getElementById('btnGalope').textContent = '■ Detener';
+  document.getElementById('btnGalope').classList.add('active');
+  playGalopeTick();
+}
+
+function playGalopeTick() {
+  if (!galPlaying) return;
+  const GALOPE = [true, false, false];
+  const isH = GALOPE[galSeqIdx % 3];
+  const dfG = getDFGal();
+  const fH = 1500;
+  const fL = fH * Math.pow(2, -dfG / 12);
+  const f = isH ? fH : fL;
+  const shortDur = isH ? 0.25 : 0.15;
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.005;
+  const osc = actx.createOscillator();
+  const g = actx.createGain();
+  osc.type = 'sine'; osc.frequency.value = f;
+  g.gain.setValueAtTime(0.0, t0);
+  g.gain.linearRampToValueAtTime(0.18, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + shortDur * 0.85);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0); osc.stop(t0 + shortDur);
+  galHistory.push({ isH });
+  if (galHistory.length > 30) galHistory.shift();
+  drawGalopeCanvas(galHistory);
+  galSeqIdx++;
+  galTimer = setTimeout(playGalopeTick, shortDur * 1000);
+}
+
+function stopGalope() {
+  galPlaying = false;
+  clearTimeout(galTimer); galTimer = null;
+  galHistory = [];
+  document.getElementById('btnGalope').textContent = '▶ Escuchar galope';
+  document.getElementById('btnGalope').classList.remove('active');
+  drawGalopeCanvas(null);
+}
+
+document.getElementById('dfGalSlider').addEventListener('input', function() {
+  document.getElementById('dfGalVal').textContent = this.value;
+  drawGalopeCanvas(galHistory.length ? galHistory : null);
+});
+
+function init() { drawGalopeCanvas(null); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawGalopeCanvas(galHistory.length ? galHistory : null));
+</script>
+</body>
+</html>

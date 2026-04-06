@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Membrana Basilar — Sistema Auditivo</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sistema-auditivo">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_oido_externo_medio/index.html">1. Oído Ext+Med</a>
+  <a href="../02_coclea_tonotopia/index.html">2. Cóclea</a>
+  <a href="../03_membrana_basilar/index.html" class="active">3. Membrana Basilar</a>
+  <a href="../04_celulas_ciliares/index.html">4. Células Ciliares</a>
+  <a href="../05_transduccion/index.html">5. Transducción</a>
+  <a href="../06_perdida_auditiva/index.html">6. Pérdida Auditiva</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Membrana Basilar</h1>
+      <p class="subtitle">Onda viajera de Von Bekesy: la mecánica del análisis frecuencial</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Onda viajera y envolvente de desplazamiento</h2>
+    <p class="description">
+      La <span class="kw">membrana basilar</span> viaja desde la base (ventana oval) hasta el ápex (helicotrema).
+      Cuando la ventana oval vibra a cierta frecuencia, se genera una <span class="kw">onda viajera</span>
+      que se propaga hacia el ápex y alcanza su <span class="kw">máximo de desplazamiento</span> en un punto
+      específico. <span class="kw">Von Bekesy</span> (Nobel 1961) demostró que los sonidos agudos tienen
+      su máximo cerca de la base y los graves cerca del ápex. Las frecuencias bajas estimulan
+      toda la membrana; las altas quedan confinadas a la zona basal.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqVal">1000</span> Hz</label>
+        <input type="range" id="freqSlider" min="50" max="16000" value="1000" step="10">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Reproducir</button>
+        <button class="btn" id="btnAnim" onclick="toggleAnim()">▶ Animar onda</button>
+      </div>
+    </div>
+    <div class="canvas-label">Membrana basilar desenrollada — Base (ventana oval) a la izquierda, Ápex a la derecha</div>
+    <canvas id="canvasBM" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Envolventes para múltiples frecuencias</h2>
+    <p class="description">
+      Comparación de las envolventes de desplazamiento para diferentes frecuencias.
+      Nota cómo los graves se extienden a lo largo de casi toda la membrana, mientras
+      que los agudos tienen un pico <span class="kw">estrecho y cercano a la base</span>.
+    </p>
+    <div class="canvas-label">Superposición de envolventes para 125, 500, 1k, 4k, 10k Hz</div>
+    <canvas id="canvasMulti" height="200"></canvas>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const BM_LEN = 35; // mm
+
+function freqToPos(f) {
+  // Greenwood: x (mm from apex) = log10(f/165.4 + 0.88) / 0.06
+  const x = Math.log10(f / 165.4 + 0.88) / 0.06;
+  return Math.max(0, Math.min(BM_LEN, x));
+}
+
+// Traveling wave envelope model (simplified)
+// Peak at x_peak (mm from apex), amplitude decays on both sides asymmetrically
+function bmEnvelope(xMM, peakMM, f) {
+  const spread = 4 + 14 * Math.exp(-f / 600); // sharper at high freq
+  const dx = xMM - peakMM;
+  if (dx >= 0) {
+    // Apical side (toward apex): steeper cutoff
+    return Math.exp(-Math.pow(dx / (spread * 0.45), 2));
+  } else {
+    // Basal side: gentler slope
+    return Math.exp(-Math.pow(dx / (spread * 1.2), 2));
+  }
+}
+
+// ── Main BM canvas ──────────────────────────────────────────────
+const cBM = document.getElementById('canvasBM');
+const ctxBM = cBM.getContext('2d');
+let animId = null, animPhase = 0;
+
+function drawBM(freq, phase) {
+  cBM.width = cBM.offsetWidth || 800;
+  const W = cBM.width, H = cBM.height;
+  ctxBM.clearRect(0, 0, W, H);
+
+  const padL = 60, padR = 30, padT = 30, padB = 40;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+  const baseY = padT + bh * 0.5;
+
+  const peakMM = freqToPos(freq);
+  // Normalize peak to canvas: base=0mm is LEFT, apex=35mm is RIGHT
+  const xPeak = padL + bw * (1 - peakMM / BM_LEN);
+
+  // Grid
+  ctxBM.strokeStyle = 'rgba(100,180,255,0.2)';
+  ctxBM.lineWidth = 1;
+  [0, 5, 10, 15, 20, 25, 30, 35].forEach(mm => {
+    const x = padL + bw * (1 - mm / BM_LEN);
+    ctxBM.beginPath(); ctxBM.moveTo(x, padT); ctxBM.lineTo(x, padT + bh); ctxBM.stroke();
+    ctxBM.fillStyle = 'rgba(150,200,255,0.5)';
+    ctxBM.font = '10px sans-serif';
+    ctxBM.textAlign = 'center';
+    ctxBM.fillText(mm, x, padT + bh + 14);
+  });
+  ctxBM.fillStyle = 'rgba(150,200,255,0.6)';
+  ctxBM.font = '11px sans-serif';
+  ctxBM.textAlign = 'center';
+  ctxBM.fillText('Posición en mm desde el ápex', padL + bw / 2, padT + bh + 28);
+
+  // Amplitude axis
+  ctxBM.fillStyle = 'rgba(150,200,255,0.6)';
+  ctxBM.font = '11px sans-serif';
+  ctxBM.textAlign = 'right';
+  ctxBM.fillText('Desplazamiento', padL - 4, padT + 10);
+
+  // Membrane baseline
+  ctxBM.beginPath();
+  ctxBM.moveTo(padL, baseY);
+  ctxBM.lineTo(padL + bw, baseY);
+  ctxBM.strokeStyle = 'rgba(100,180,255,0.4)';
+  ctxBM.lineWidth = 1;
+  ctxBM.stroke();
+
+  // Traveling wave (animated)
+  const N = 400;
+  const waveFreqViz = 8; // spatial frequency for visualization
+  ctxBM.beginPath();
+  let first = true;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const xCanvas = padL + bw * t;
+    const mm = BM_LEN * (1 - t); // mm from apex (base=left=high mm, apex=right=low mm)
+    const env = bmEnvelope(mm, peakMM, freq);
+    const wave = Math.sin(waveFreqViz * t * Math.PI - phase);
+    const amp = env * wave * bh * 0.38;
+    const y = baseY - amp;
+    if (first) { ctxBM.moveTo(xCanvas, y); first = false; } else ctxBM.lineTo(xCanvas, y);
+  }
+  ctxBM.strokeStyle = '#00ffff';
+  ctxBM.lineWidth = 2.5;
+  ctxBM.stroke();
+
+  // Envelope outline
+  ctxBM.beginPath();
+  first = true;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const xCanvas = padL + bw * t;
+    const mm = BM_LEN * (1 - t);
+    const env = bmEnvelope(mm, peakMM, freq);
+    const y = baseY - env * bh * 0.38;
+    if (first) { ctxBM.moveTo(xCanvas, y); first = false; } else ctxBM.lineTo(xCanvas, y);
+  }
+  ctxBM.strokeStyle = 'rgba(255,170,0,0.5)';
+  ctxBM.lineWidth = 1.5;
+  ctxBM.setLineDash([5, 4]); ctxBM.stroke(); ctxBM.setLineDash([]);
+  ctxBM.beginPath(); first = true;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const xCanvas = padL + bw * t;
+    const mm = BM_LEN * (1 - t);
+    const env = bmEnvelope(mm, peakMM, freq);
+    const y = baseY + env * bh * 0.38;
+    if (first) { ctxBM.moveTo(xCanvas, y); first = false; } else ctxBM.lineTo(xCanvas, y);
+  }
+  ctxBM.strokeStyle = 'rgba(255,170,0,0.5)';
+  ctxBM.lineWidth = 1.5;
+  ctxBM.setLineDash([5, 4]); ctxBM.stroke(); ctxBM.setLineDash([]);
+
+  // Peak marker
+  ctxBM.beginPath();
+  ctxBM.moveTo(xPeak, padT);
+  ctxBM.lineTo(xPeak, padT + bh);
+  ctxBM.strokeStyle = 'rgba(255,170,0,0.6)';
+  ctxBM.lineWidth = 1.5; ctxBM.stroke();
+
+  // Labels
+  ctxBM.font = 'bold 12px sans-serif';
+  ctxBM.textAlign = 'left';
+  ctxBM.fillStyle = '#aa44ff';
+  ctxBM.fillText('Base (ventana oval)', padL + 3, padT + 14);
+  ctxBM.textAlign = 'right';
+  ctxBM.fillStyle = '#ff4444';
+  ctxBM.fillText('Ápex (helicotrema)', padL + bw - 3, padT + 14);
+
+  const fLabel = freq >= 1000 ? (freq / 1000).toFixed(1) + ' kHz' : freq + ' Hz';
+  ctxBM.fillStyle = '#ffaa00';
+  ctxBM.textAlign = 'center';
+  ctxBM.fillText('Máximo a ' + (BM_LEN - peakMM).toFixed(1) + ' mm de la base  (' + fLabel + ')', padL + bw / 2, padT + bh + 40);
+}
+
+// ── Multi-frequency canvas ─────────────────────────────────────
+const cM = document.getElementById('canvasMulti');
+const ctxM = cM.getContext('2d');
+const MULTI_FREQS = [
+  { f: 125,   color: '#ff4444', label: '125 Hz' },
+  { f: 500,   color: '#ffaa00', label: '500 Hz' },
+  { f: 1000,  color: '#ffff44', label: '1 kHz' },
+  { f: 4000,  color: '#00ff44', label: '4 kHz' },
+  { f: 10000, color: '#00ffff', label: '10 kHz' },
+];
+
+function drawMulti() {
+  cM.width = cM.offsetWidth || 800;
+  const W = cM.width, H = cM.height;
+  ctxM.clearRect(0, 0, W, H);
+
+  const padL = 20, padR = 20, padT = 20, padB = 30;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+  const baseY = padT + bh;
+
+  // Grid lines (vertical)
+  ctxM.strokeStyle = 'rgba(100,180,255,0.15)';
+  ctxM.lineWidth = 1;
+  [0, 5, 10, 15, 20, 25, 30, 35].forEach(mm => {
+    const x = padL + bw * (1 - mm / BM_LEN);
+    ctxM.beginPath(); ctxM.moveTo(x, padT); ctxM.lineTo(x, baseY); ctxM.stroke();
+  });
+
+  MULTI_FREQS.forEach(({ f, color }) => {
+    const peakMM = freqToPos(f);
+    ctxM.beginPath();
+    let first = true;
+    for (let i = 0; i <= 400; i++) {
+      const t = i / 400;
+      const xCanvas = padL + bw * t;
+      const mm = BM_LEN * (1 - t);
+      const env = bmEnvelope(mm, peakMM, f);
+      const y = baseY - env * bh * 0.9;
+      if (first) { ctxM.moveTo(xCanvas, y); first = false; } else ctxM.lineTo(xCanvas, y);
+    }
+    ctxM.strokeStyle = color;
+    ctxM.lineWidth = 2;
+    ctxM.stroke();
+  });
+
+  // Legend
+  ctxM.font = '11px sans-serif';
+  MULTI_FREQS.forEach(({ color, label }, i) => {
+    const lx = padL + bw * 0.68 + i * 60;
+    ctxM.fillStyle = color;
+    ctxM.fillRect(lx, padT + 4, 14, 3);
+    ctxM.textAlign = 'left';
+    ctxM.fillText(label, lx + 17, padT + 10);
+  });
+
+  // Base/Apex labels
+  ctxM.font = '10px sans-serif';
+  ctxM.fillStyle = '#aa44ff'; ctxM.textAlign = 'left';
+  ctxM.fillText('Base', padL, padT + bh + 16);
+  ctxM.fillStyle = '#ff4444'; ctxM.textAlign = 'right';
+  ctxM.fillText('Ápex', padL + bw, padT + bh + 16);
+}
+
+// ── Animation & controls ────────────────────────────────────────
+let animating = false;
+let oscNode = null;
+
+function toggleAnim() {
+  animating = !animating;
+  const btn = document.getElementById('btnAnim');
+  btn.textContent = animating ? '■ Detener animación' : '▶ Animar onda';
+  btn.classList.toggle('active', animating);
+  if (animating) animate();
+  else { if (animId) cancelAnimationFrame(animId); animId = null; }
+}
+
+function animate() {
+  if (!animating) return;
+  const f = parseInt(document.getElementById('freqSlider').value);
+  // Phase increment scales with frequency so higher freq → faster wave
+  animPhase += 0.025 * Math.sqrt(f / 1000);
+  drawBM(f, animPhase);
+  animId = requestAnimationFrame(animate);
+}
+
+function togglePlay() {
+  const f = parseInt(document.getElementById('freqSlider').value);
+  if (oscNode) { stopTone(); return; }
+  const actx = getAudioContext();
+  const doPlay = () => {
+    oscNode = actx.createOscillator();
+    const g = actx.createGain();
+    oscNode.type = 'sine';
+    oscNode.frequency.value = f;
+    g.gain.value = 0.16;
+    oscNode.connect(g); g.connect(actx.destination);
+    oscNode.start();
+    document.getElementById('btnPlay').textContent = '■ Detener';
+    document.getElementById('btnPlay').classList.add('active');
+  };
+  if (actx.state === 'suspended') actx.resume().then(doPlay); else doPlay();
+}
+
+function stopTone() {
+  if (oscNode) { try { oscNode.stop(); } catch(e){} oscNode = null; }
+  document.getElementById('btnPlay').textContent = '▶ Reproducir';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  const f = parseInt(this.value);
+  const label = f >= 1000 ? (f / 1000).toFixed(1) + ' kHz' : f + ' Hz';
+  document.getElementById('freqVal').textContent = label;
+  if (!animating) drawBM(f, 0);
+  if (oscNode) oscNode.frequency.value = f;
+});
+
+function init() {
+  drawBM(1000, 0);
+  drawMulti();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => {
+  drawBM(parseInt(document.getElementById('freqSlider').value), animPhase);
+  drawMulti();
+});
+</script>
+</body>
+</html>

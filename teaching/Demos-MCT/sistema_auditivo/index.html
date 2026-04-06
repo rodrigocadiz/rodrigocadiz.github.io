@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Auditivo — Demostraciones MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-sistema-auditivo">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="index.html" class="active">Sistema Auditivo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Sistema Auditivo</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      Explora la anatomía y fisiología del sistema auditivo humano: desde el oído externo hasta
+      la transducción mecano-eléctrica en las células ciliares y las pérdidas auditivas.
+    </p>
+    <div class="card-grid">
+
+      <a class="vineta-card" href="01_oido_externo_medio/index.html">
+        <div class="num" style="color:#ff6633;">1 👂</div>
+        <h3 style="color:#ff6633;">Oído Externo y Medio</h3>
+        <p>Canal auditivo, tímpano y huesecillos. Resonancia del canal (2–4 kHz) y solución al problema de impedancia acústica.</p>
+      </a>
+
+      <a class="vineta-card" href="02_coclea_tonotopia/index.html">
+        <div class="num" style="color:#ffaa00;">2 🐚</div>
+        <h3 style="color:#ffaa00;">Cóclea y Tonotopía</h3>
+        <p>La espiral coclear de 3.5 vueltas y 35 mm. Mapa tonotópico: frecuencias agudas en la base, graves en el ápex.</p>
+      </a>
+
+      <a class="vineta-card" href="03_membrana_basilar/index.html">
+        <div class="num" style="color:#ffff44;">3 〜</div>
+        <h3 style="color:#ffff44;">Membrana Basilar</h3>
+        <p>Onda viajera de Von Bekesy: cada frecuencia produce un máximo de desplazamiento en una posición distinta de la membrana.</p>
+      </a>
+
+      <a class="vineta-card" href="04_celulas_ciliares/index.html">
+        <div class="num" style="color:#00ffff;">4 ≋</div>
+        <h3 style="color:#00ffff;">Órgano de Corti y Células Ciliares</h3>
+        <p>Estructura del órgano de Corti. Células ciliares internas (IHC) y externas (OHC), estereocilios y membrana tectorial.</p>
+      </a>
+
+      <a class="vineta-card" href="05_transduccion/index.html">
+        <div class="num" style="color:#00ff44;">5 ⚡</div>
+        <h3 style="color:#00ff44;">Transducción Auditiva</h3>
+        <p>Conversión de vibración mecánica a señal eléctrica: deflexión de estereocilios, despolarización y transmisión nerviosa.</p>
+      </a>
+
+      <a class="vineta-card" href="06_perdida_auditiva/index.html">
+        <div class="num" style="color:#ff4444;">6 📉</div>
+        <h3 style="color:#ff4444;">Pérdida Auditiva</h3>
+        <p>Audiograma interactivo. Pérdida conductiva vs sensorineural. Daño por ruido y presbiacusia (pérdida por envejecimiento).</p>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>
+  document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());
+</script>
+</body>
+</html>

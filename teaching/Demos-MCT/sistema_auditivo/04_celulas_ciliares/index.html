@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Órgano de Corti y Células Ciliares — Sistema Auditivo</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sistema-auditivo">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_oido_externo_medio/index.html">1. Oído Ext+Med</a>
+  <a href="../02_coclea_tonotopia/index.html">2. Cóclea</a>
+  <a href="../03_membrana_basilar/index.html">3. Membrana Basilar</a>
+  <a href="../04_celulas_ciliares/index.html" class="active">4. Células Ciliares</a>
+  <a href="../05_transduccion/index.html">5. Transducción</a>
+  <a href="../06_perdida_auditiva/index.html">6. Pérdida Auditiva</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Órgano de Corti y Células Ciliares</h1>
+      <p class="subtitle">La maquinaria sensorial del oído interno</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Estructura del órgano de Corti</h2>
+    <p class="description">
+      El <span class="kw">órgano de Corti</span> reposa sobre la membrana basilar y contiene
+      ~3.500 <span class="kw">células ciliares internas (IHC)</span> y ~12.000
+      <span class="kw">células ciliares externas (OHC)</span>.
+      Las IHC son el verdadero transductor: envían señales al cerebro vía el nervio auditivo.
+      Las OHC amplifican activamente la vibración de la membrana basilar, aumentando
+      la sensitividad y selectividad de frecuencia. Los <span class="kw">estereocilios</span>
+      son filas de "pelos" que se doblan con el movimiento de la membrana basilar.
+      El desplazamiento mínimo para generar una respuesta es de sólo <span class="kw">0.3 nm</span>
+      — comparable al diámetro de un átomo de hidrógeno.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn play" id="btnTone" onclick="toggleTone()">▶ Aplicar sonido</button>
+      </div>
+      <div class="control-group">
+        <label>Amplitud de vibración: <span class="val" id="ampVal">50</span>%</label>
+        <input type="range" id="ampSlider" min="5" max="100" value="50" step="5">
+      </div>
+    </div>
+    <div class="canvas-label">Sección transversal del órgano de Corti — animación de los estereocilios</div>
+    <canvas id="canvasCorti" height="340"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Comparación IHC vs OHC</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Células Ciliares Internas (IHC)</strong><br>
+        • Una sola fila de ~3.500 células<br>
+        • Verdadero transductor: convierten vibración en señal nerviosa<br>
+        • 90–95% de las fibras del nervio auditivo son aferentes desde IHC<br>
+        • Desplazamiento mínimo: 0.3 nm
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Células Ciliares Externas (OHC)</strong><br>
+        • Tres filas de ~12.000 células<br>
+        • Amplifican activamente la membrana basilar (electromotilidad)<br>
+        • Reciben señales eferentes desde el cerebro<br>
+        • Son más vulnerables al daño por ruido
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const cC = document.getElementById('canvasCorti');
+const ctx = cC.getContext('2d');
+let animId = null, phase = 0, toneNode = null, gainNode = null;
+let playing = false;
+
+function getAmp() { return parseInt(document.getElementById('ampSlider').value) / 100; }
+
+function drawCorti(deflection) {
+  cC.width = cC.offsetWidth || 800;
+  const W = cC.width, H = cC.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W * 0.5;
+  const bmOffset = deflection * 0.55;  // BM vertical displacement
+  const bmY0 = H * 0.66;               // BM rest position
+  const bmY  = bmY0 + bmOffset;
+  const bmH  = 14;
+
+  // TM geometry — pivots at inner (left) anchor, free right end
+  const tmLeftX  = W * 0.10;
+  const tmRightX = W * 0.90;
+  const tmThick  = 20;
+  const tmY0top  = bmY0 - 138;         // inner anchor top edge (fixed)
+  // Right end moves 45% as much as BM → creates differential shear
+  const tmRightTopY = tmY0top + bmOffset * 0.42;
+
+  // Helper: TM Y at canvas x (linear interpolation from inner pivot to free end)
+  function tmYat(x) {
+    const frac = (x - tmLeftX) / (tmRightX - tmLeftX);
+    return tmY0top + (tmRightTopY - tmY0top) * frac;
+  }
+  // Shear at canvas x = (BM displacement) − (TM displacement at that x)
+  function shearAt(x) {
+    const frac = (x - tmLeftX) / (tmRightX - tmLeftX);
+    return bmOffset - bmOffset * 0.42 * frac;  // negative = BM moved more than TM
+  }
+
+  // ── Rest-position guide line ──
+  ctx.beginPath();
+  ctx.moveTo(W * 0.08, bmY0); ctx.lineTo(W * 0.92, bmY0);
+  ctx.strokeStyle = 'rgba(100,150,255,0.18)';
+  ctx.lineWidth = 1; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]);
+
+  // ── Basilar membrane ──
+  ctx.fillStyle = 'rgba(100,150,200,0.45)';
+  ctx.fillRect(W * 0.08, bmY, W * 0.84, bmH);
+  ctx.strokeStyle = 'rgba(100,150,255,0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(W * 0.08, bmY, W * 0.84, bmH);
+  // Label above BM (static position so it never overlaps)
+  ctx.fillStyle = 'rgba(150,200,255,0.7)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Membrana basilar', cx, bmY0 - 6);
+
+  // ── Tectorial membrane — tilted band, pivots at left ──
+  ctx.beginPath();
+  ctx.moveTo(tmLeftX,  tmY0top);
+  ctx.lineTo(tmRightX, tmRightTopY);
+  ctx.lineTo(tmRightX, tmRightTopY + tmThick);
+  ctx.lineTo(tmLeftX,  tmY0top + tmThick);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(150,80,200,0.45)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(180,100,255,0.8)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // Pivot dot
+  ctx.beginPath();
+  ctx.arc(tmLeftX, tmY0top + tmThick / 2, 5, 0, Math.PI * 2);
+  ctx.fillStyle = '#cc66ff';
+  ctx.fill();
+  // TM label — top-left, never overlaps
+  ctx.fillStyle = '#bb66ff';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Membrana tectorial (pivota en ●)', tmLeftX + 10, tmY0top - 6);
+
+  // ── Arch of Corti — moves with BM ──
+  const archX = cx - 20;
+  ctx.beginPath();
+  ctx.moveTo(archX - 30, bmY);
+  ctx.quadraticCurveTo(archX - 20, bmY - 55, archX, bmY - 75);
+  ctx.quadraticCurveTo(archX + 20, bmY - 55, archX + 50, bmY);
+  ctx.strokeStyle = 'rgba(200,200,100,0.45)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // ── IHC — moves with BM ──
+  const ihcX    = cx - 115;
+  const ihcBodyH = 52;
+  const ihcBodyW = 24;
+  const ihcBodyY = bmY - 28;
+
+  ctx.beginPath();
+  ctx.roundRect(ihcX - ihcBodyW / 2, ihcBodyY - ihcBodyH, ihcBodyW, ihcBodyH, 8);
+  ctx.fillStyle = 'rgba(0,255,255,0.22)';
+  ctx.fill();
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(ihcX, ihcBodyY - ihcBodyH * 0.5, 7, 9, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,255,255,0.5)';
+  ctx.fill();
+
+  // IHC stereocilia — tips always touch TM bottom, shear deflects them horizontally
+  const nCiliaIHC = 5, ciliaSpacing = 5;
+  const ihcCiliaBase = ihcBodyY - ihcBodyH;           // base of cilia (top of cell)
+  const ihcTipY      = tmYat(ihcX) + tmThick;         // TM bottom at IHC position
+  const ihcShear     = shearAt(ihcX) * 0.55;
+  for (let i = 0; i < nCiliaIHC; i++) {
+    const bx   = ihcX - (nCiliaIHC - 1) * ciliaSpacing / 2 + i * ciliaSpacing;
+    const tipX = bx - ihcShear * (0.8 + i * 0.08);
+    ctx.beginPath();
+    ctx.moveTo(bx, ihcCiliaBase);
+    ctx.lineTo(tipX, ihcTipY);
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+    // Small dot where cilia contacts TM
+    ctx.beginPath();
+    ctx.arc(tipX, ihcTipY, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ccccff'; ctx.fill();
+  }
+
+  // Afferent nerve fiber (static Y endpoint)
+  ctx.beginPath();
+  ctx.moveTo(ihcX, ihcBodyY);
+  ctx.lineTo(ihcX, bmY0 + bmH + 4);
+  ctx.strokeStyle = '#00ff44'; ctx.lineWidth = 2.5; ctx.stroke();
+
+  // IHC label — to the left of cell body, mid-height, never overlaps
+  ctx.fillStyle = '#00ffff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('IHC', ihcX - ihcBodyW / 2 - 8, ihcBodyY - ihcBodyH * 0.5 + 4);
+
+  // ── OHC (3 outer hair cells) — move with BM ──
+  const ohcColors = ['#ffaa00', '#ff8800', '#ff5500'];
+  for (let col = 0; col < 3; col++) {
+    const ohcX     = cx + 28 + col * 52;
+    const ohcBodyH = 58 + col * 8;
+    const ohcBodyW = 20;
+    const ohcBodyY2 = bmY - 16;
+
+    ctx.beginPath();
+    ctx.roundRect(ohcX - ohcBodyW / 2, ohcBodyY2 - ohcBodyH, ohcBodyW, ohcBodyH, 6);
+    ctx.fillStyle = `rgba(255,${140 - col * 35},0,0.2)`;
+    ctx.fill();
+    ctx.strokeStyle = ohcColors[col]; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(ohcX, ohcBodyY2 - ohcBodyH * 0.5, 5, 7, 0, 0, Math.PI * 2);
+    ctx.fillStyle = ohcColors[col]; ctx.globalAlpha = 0.5; ctx.fill(); ctx.globalAlpha = 1;
+
+    // OHC stereocilia — tips always touch TM bottom, shear deflects them horizontally
+    const nOHC = 4;
+    const ohcCiliaBase = ohcBodyY2 - ohcBodyH;        // base of cilia (top of cell)
+    const ohcTipY      = tmYat(ohcX) + tmThick;       // TM bottom at this OHC position
+    const ohcShear     = shearAt(ohcX) * 0.50;
+    for (let i = 0; i < nOHC; i++) {
+      const bx3   = ohcX - (nOHC - 1) * 4 / 2 + i * 4;
+      const tipX3 = bx3 - ohcShear * (0.7 + i * 0.08);
+      ctx.beginPath();
+      ctx.moveTo(bx3, ohcCiliaBase);
+      ctx.lineTo(tipX3, ohcTipY);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(tipX3, ohcTipY, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ccccff'; ctx.fill();
+    }
+
+    // Efferent nerve fiber (static Y endpoint)
+    ctx.beginPath();
+    ctx.moveTo(ohcX, ohcBodyY2);
+    ctx.lineTo(ohcX, bmY0 + bmH + 4);
+    ctx.strokeStyle = 'rgba(255,100,100,0.6)'; ctx.lineWidth = 2; ctx.stroke();
+  }
+
+  // OHC label — above middle OHC, clear of cells
+  const ohcLabelX = cx + 28 + 52;
+  ctx.fillStyle = '#ffaa00'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('OHC (3 filas)', ohcLabelX, bmY0 - 118);
+
+  // ── Nerve labels — below static bmY0 baseline, stacked ──
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#00ff44'; ctx.textAlign = 'center';
+  ctx.fillText('↓ Nervio aferente (al cerebro)', ihcX, bmY0 + bmH + 18);
+  ctx.fillStyle = 'rgba(255,100,100,0.85)';
+  ctx.fillText('↓ Nervio eferente (desde cerebro)', cx + 80, bmY0 + bmH + 18);
+
+  // Vibration indicator (top-right)
+  if (playing) {
+    ctx.fillStyle = '#ffaa00'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('Vibración: ' + Math.round(getAmp() * 100) + '%', W - 10, 18);
+  }
+}
+
+function animate() {
+  phase += 0.12;
+  const amp = getAmp();
+  const deflection = Math.sin(phase) * amp * 18;
+  drawCorti(deflection);
+  animId = requestAnimationFrame(animate);
+}
+
+function toggleTone() {
+  if (playing) {
+    stopAllAudio();
+    return;
+  }
+  playing = true;
+  const actx = getAudioContext();
+  toneNode = actx.createOscillator();
+  gainNode = actx.createGain();
+  toneNode.frequency.value = 800;
+  gainNode.gain.value = getAmp() * 0.2;
+  toneNode.connect(gainNode);
+  gainNode.connect(actx.destination);
+  toneNode.start();
+  document.getElementById('btnTone').textContent = '■ Detener sonido';
+  document.getElementById('btnTone').classList.add('active');
+  if (!animId) animate();
+}
+
+document.getElementById('ampSlider').addEventListener('input', function() {
+  const v = parseInt(this.value);
+  document.getElementById('ampVal').textContent = v;
+  if (gainNode) gainNode.gain.value = v / 100 * 0.2;
+});
+
+// Override stopAllAudio to also reset our state
+const _origStop = stopAllAudio;
+function stopAllAudio() {
+  playing = false;
+  if (toneNode) { try { toneNode.stop(); } catch(e){} toneNode = null; }
+  gainNode = null;
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnTone').textContent = '▶ Aplicar sonido';
+  document.getElementById('btnTone').classList.remove('active');
+  drawCorti(0);
+}
+
+function init() {
+  drawCorti(0);
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) drawCorti(0); });
+</script>
+</body>
+</html>

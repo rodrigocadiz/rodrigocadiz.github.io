@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. El Problema del Cocktail Party — Percepción y ASA</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-percepcion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_gestalt/index.html">1. Gestalt</a>
+  <a href="../02_cocktail_party/index.html" class="active">2. Cocktail Party</a>
+  <a href="../03_flujos_auditivos/index.html">3. Flujos</a>
+  <a href="../04_segregacion_frecuencia/index.html">4. Seg. Frecuencia</a>
+  <a href="../05_segregacion_timbre/index.html">5. Seg. Timbre</a>
+  <a href="../06_integracion_espectral/index.html">6. Integración</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. El Problema del Cocktail Party</h1>
+      <p class="subtitle">Cherry (1953): separación de fuentes sonoras concurrentes</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>El problema</h2>
+    <p class="description">
+      En una fiesta con mucho ruido de fondo, los humanos podemos seguir fácilmente una sola
+      conversación ignorando las demás. Esto se llama el <span class="kw">problema del cocktail party</span>
+      (Cherry, 1953). El sistema auditivo analiza la mezcla de ondas que llega a los oídos y
+      logra separar las fuentes: ¿cuántas personas están hablando? ¿Dónde están?
+      ¿Qué dice cada una? Activa y desactiva las "voces" para escuchar la diferencia
+      entre una mezcla y las fuentes separadas.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Número de voces simultáneas: <span class="val" id="nVoicesVal">2</span></label>
+        <input type="range" id="nVoicesSlider" min="1" max="4" value="2" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnMix" onclick="toggleMix()">▶ Escuchar mezcla</button>
+      </div>
+    </div>
+    <div class="canvas-label">Escena auditiva — activa/desactiva cada voz haciendo clic</div>
+    <canvas id="canvasScene" height="280"></canvas>
+    <div id="voiceToggles" class="btn-group" style="margin-top:10px;"></div>
+  </section>
+
+  <section class="section-card">
+    <h2>Claves para la separación</h2>
+    <p class="description">El cerebro usa múltiples <span class="kw">claves acústicas</span> para separar fuentes:</p>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#44dd88;">Claves espectrales</strong><br>
+        • Diferencia de timbre (forma espectral)<br>
+        • Diferencias en la frecuencia fundamental (pitch)<br>
+        • Estructura armónica diferente por voz
+      </div>
+      <div class="info-box">
+        <strong style="color:#44dd88;">Claves temporales</strong><br>
+        • Onset/offset asincrónicos: fuentes que empiezan juntas se fusionan<br>
+        • Modulación de amplitud diferente por fuente<br>
+        • Continuidad temporal de cada flujo
+      </div>
+      <div class="info-box">
+        <strong style="color:#44dd88;">Claves espaciales (binaural)</strong><br>
+        • Diferencia interaural de tiempo (ITD): llega antes a un oído<br>
+        • Diferencia interaural de nivel (ILD): más fuerte en un oído<br>
+        • Localización espacial: ubica la fuente en el espacio
+      </div>
+      <div class="info-box">
+        <strong style="color:#44dd88;">Analogía de Bregman</strong><br>
+        Como un lago con surcos: el sistema auditivo analiza el movimiento de
+        dos "hojas flotantes" y deduce cuántos "botes" (fuentes) hay en el lago
+        y dónde están — ¡sin ver el lago directamente!
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const cS = document.getElementById('canvasScene');
+const ctxS = cS.getContext('2d');
+
+const VOICE_DEFS = [
+  { name: 'Voz 1', f0: 130, color: '#00ffff',  angle: -60, waveType: 'sawtooth' },
+  { name: 'Voz 2', f0: 180, color: '#ffaa00',  angle: -20, waveType: 'sawtooth' },
+  { name: 'Voz 3', f0: 240, color: '#00ff44',  angle:  25, waveType: 'square'   },
+  { name: 'Voz 4', f0: 90,  color: '#ff4444',  angle:  55, waveType: 'sawtooth' },
+];
+
+let activeVoices = [true, true, false, false];
+let oscNodes = [null, null, null, null];
+let gainNodes = [null, null, null, null];
+let mixPlaying = false;
+let animId = null, animPhase = 0;
+
+function getNVoices() { return parseInt(document.getElementById('nVoicesSlider').value); }
+
+function buildVoiceToggles(nVoices) {
+  const div = document.getElementById('voiceToggles');
+  div.innerHTML = '';
+  for (let i = 0; i < nVoices; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'btn' + (activeVoices[i] ? ' active' : '');
+    btn.style.borderColor = VOICE_DEFS[i].color;
+    btn.style.color = activeVoices[i] ? VOICE_DEFS[i].color : '';
+    btn.textContent = (activeVoices[i] ? '🔊 ' : '🔇 ') + VOICE_DEFS[i].name;
+    btn.onclick = () => toggleVoice(i);
+    div.appendChild(btn);
+  }
+}
+
+function toggleVoice(i) {
+  activeVoices[i] = !activeVoices[i];
+  if (mixPlaying) {
+    if (activeVoices[i]) startVoice(i);
+    else stopVoice(i);
+  }
+  buildVoiceToggles(getNVoices());
+}
+
+function startVoice(i) {
+  if (oscNodes[i]) return;
+  const actx = getAudioContext();
+  const v = VOICE_DEFS[i];
+  const osc = actx.createOscillator();
+  const g = actx.createGain();
+  // Add harmonics by using a sawtooth/square wave
+  osc.type = v.waveType;
+  osc.frequency.value = v.f0;
+  // Panning for spatial simulation
+  const panner = actx.createStereoPanner();
+  panner.pan.value = Math.sin(v.angle * Math.PI / 180) * 0.7;
+  g.gain.value = 0.12;
+  osc.connect(g); g.connect(panner); panner.connect(actx.destination);
+  osc.start();
+  oscNodes[i] = osc; gainNodes[i] = g;
+}
+
+function stopVoice(i) {
+  if (oscNodes[i]) { try { oscNodes[i].stop(); } catch(e){} oscNodes[i] = null; gainNodes[i] = null; }
+}
+
+function toggleMix() {
+  if (mixPlaying) { stopAllVoices(); return; }
+  mixPlaying = true;
+  const nV = getNVoices();
+  for (let i = 0; i < nV; i++) {
+    if (activeVoices[i]) startVoice(i);
+  }
+  document.getElementById('btnMix').textContent = '■ Detener mezcla';
+  document.getElementById('btnMix').classList.add('active');
+  if (!animId) animateScene();
+}
+
+function stopAllVoices() {
+  mixPlaying = false;
+  for (let i = 0; i < 4; i++) stopVoice(i);
+  document.getElementById('btnMix').textContent = '▶ Escuchar mezcla';
+  document.getElementById('btnMix').classList.remove('active');
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  drawScene(0);
+}
+
+function animateScene() {
+  animPhase += 0.04;
+  drawScene(animPhase);
+  animId = requestAnimationFrame(animateScene);
+}
+
+function drawScene(phase) {
+  cS.width = cS.offsetWidth || 800;
+  const W = cS.width, H = cS.height;
+  ctxS.clearRect(0, 0, W, H);
+
+  const nV = getNVoices();
+  const cx = W * 0.5, cy = H * 0.52;
+  const R = Math.min(W, H) * 0.32;
+
+  // Background: room
+  ctxS.fillStyle = 'rgba(255,255,255,0.03)';
+  ctxS.fillRect(0, 0, W, H);
+
+  // Listener in center
+  ctxS.beginPath();
+  ctxS.arc(cx, cy, 22, 0, Math.PI * 2);
+  ctxS.fillStyle = 'rgba(255,255,255,0.2)';
+  ctxS.fill();
+  ctxS.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctxS.lineWidth = 2; ctxS.stroke();
+  ctxS.fillStyle = '#ffffff';
+  ctxS.font = 'bold 10px sans-serif';
+  ctxS.textAlign = 'center';
+  ctxS.fillText('👂', cx, cy + 4);
+  ctxS.fillText('Oyente', cx, cy + 34);
+
+  // Sound waves radiating from each voice
+  for (let i = 0; i < nV; i++) {
+    const v = VOICE_DEFS[i];
+    const ang = v.angle * Math.PI / 180;
+    const vx = cx + R * Math.sin(ang);
+    const vy = cy - R * Math.cos(ang);
+
+    // Radiating circles (if active)
+    if (activeVoices[i] && mixPlaying) {
+      for (let r = 0; r < 3; r++) {
+        const rad = 20 + ((phase * 60 + r * 30) % 80);
+        const alpha = Math.max(0, 1 - rad / 80) * 0.5;
+        ctxS.beginPath();
+        ctxS.arc(vx, vy, rad, 0, Math.PI * 2);
+        ctxS.strokeStyle = v.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba');
+        ctxS.strokeStyle = v.color;
+        ctxS.globalAlpha = alpha;
+        ctxS.lineWidth = 1.5; ctxS.stroke();
+        ctxS.globalAlpha = 1;
+      }
+    }
+
+    // Voice source circle
+    ctxS.beginPath();
+    ctxS.arc(vx, vy, 24, 0, Math.PI * 2);
+    ctxS.fillStyle = activeVoices[i]
+      ? v.color.replace('#', 'rgba(').replace(/(.{2})(.{2})(.{2})/, (_, r, g, b) =>
+          `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},0.25)`)
+      : 'rgba(80,80,80,0.15)';
+    ctxS.fillStyle = activeVoices[i] ? `${v.color}33` : 'rgba(80,80,80,0.15)';
+    ctxS.fill();
+    ctxS.strokeStyle = activeVoices[i] ? v.color : 'rgba(120,120,120,0.4)';
+    ctxS.lineWidth = 2.5; ctxS.stroke();
+
+    ctxS.fillStyle = activeVoices[i] ? v.color : 'rgba(150,150,150,0.6)';
+    ctxS.font = 'bold 10px sans-serif';
+    ctxS.textAlign = 'center';
+    ctxS.fillText('🗣', vx, vy + 4);
+    ctxS.fillText(v.name, vx, vy + 38);
+    ctxS.font = '10px sans-serif';
+    ctxS.fillText('f₀ = ' + v.f0 + ' Hz', vx, vy + 50);
+
+    // Line to listener
+    if (activeVoices[i]) {
+      ctxS.beginPath();
+      ctxS.moveTo(vx, vy); ctxS.lineTo(cx, cy);
+      ctxS.strokeStyle = v.color;
+      ctxS.globalAlpha = 0.2; ctxS.lineWidth = 1; ctxS.stroke(); ctxS.globalAlpha = 1;
+    }
+  }
+
+  // Question mark if multiple voices
+  if (nV > 1 && mixPlaying) {
+    ctxS.fillStyle = '#ffaa00';
+    ctxS.font = 'bold 20px sans-serif';
+    ctxS.textAlign = 'center';
+    ctxS.fillText('!?', cx, cy - 30);
+  }
+}
+
+document.getElementById('nVoicesSlider').addEventListener('input', function() {
+  const nV = parseInt(this.value);
+  document.getElementById('nVoicesVal').textContent = nV;
+  // Stop voices beyond nV
+  for (let i = nV; i < 4; i++) { stopVoice(i); activeVoices[i] = i < nV; }
+  for (let i = 0; i < nV; i++) { if (activeVoices[i] === undefined) activeVoices[i] = true; }
+  buildVoiceToggles(nV);
+  drawScene(animPhase);
+});
+
+function init() {
+  const nV = getNVoices();
+  for (let i = 0; i < 4; i++) activeVoices[i] = i < nV;
+  buildVoiceToggles(nV);
+  drawScene(0);
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawScene(animPhase));
+</script>
+</body>
+</html>

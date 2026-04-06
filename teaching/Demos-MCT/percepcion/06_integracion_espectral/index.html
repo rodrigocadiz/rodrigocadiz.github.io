@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Integración Espectral — Percepción y ASA</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-percepcion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_gestalt/index.html">1. Gestalt</a>
+  <a href="../02_cocktail_party/index.html">2. Cocktail Party</a>
+  <a href="../03_flujos_auditivos/index.html">3. Flujos</a>
+  <a href="../04_segregacion_frecuencia/index.html">4. Seg. Frecuencia</a>
+  <a href="../05_segregacion_timbre/index.html">5. Seg. Timbre</a>
+  <a href="../06_integracion_espectral/index.html" class="active">6. Integración</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Integración Espectral</h1>
+      <p class="subtitle">Fusión y segregación de componentes simultáneos; efectos de conexión temporal</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- SECCIÓN 1: Integración / Segregación espectral básica -->
+  <section class="section-card">
+    <h2>Integración espectral simultánea</h2>
+    <p class="description">
+      Componentes de frecuencia que ocurren <span class="kw">al mismo tiempo</span> pueden
+      <span class="kw">fusionarse</span> en un solo objeto perceptual o
+      <span class="kw">segregarse</span> en objetos distintos.
+      A pequeña separación de frecuencia, los parciales se integran (fusión).
+      A gran separación, el sistema auditivo los trata como fuentes distintas.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Separación ΔF: <span class="val" id="dfSimVal">4</span> semitonos</label>
+        <input type="range" id="dfSimSlider" min="1" max="24" value="4" step="1">
+      </div>
+      <div class="control-group">
+        <label>Frecuencia base: <span class="val" id="fBaseVal">440</span> Hz</label>
+        <input type="range" id="fBaseSlider" min="200" max="1000" value="440" step="10">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn play" id="btnSimPlay" onclick="toggleSimPlay()">▶ Escuchar</button>
+    </div>
+    <div class="canvas-label" id="simLabel">Ajusta ΔF y escucha</div>
+    <canvas id="canvasSim" height="200"></canvas>
+  </section>
+
+  <!-- SECCIÓN 2: Efectos de conexión -->
+  <section class="section-card">
+    <h2>Efectos de conexión en la segregación</h2>
+    <p class="description">
+      Una secuencia <span class="kw">conectada</span> (H→L→H mediante un glissando continuo)
+      se percibe como <span class="kw">un solo flujo</span>: el cerebro sigue la trayectoria.
+      La misma secuencia <span class="kw">sin conexión</span> (H, pausa, L, pausa, H como notas
+      separadas) tiende a segregarse en <span class="kw">dos flujos</span>: uno agudo y uno grave.
+      La continuidad temporal es una clave poderosa de integración.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn active" id="btnConnected" onclick="setConnected(true)">Conectado (glissando)</button>
+        <button class="btn" id="btnDisconnected" onclick="setConnected(false)">Desconectado (notas)</button>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn play" id="btnDemo12Play" onclick="toggleDemo12()">▶ Escuchar</button>
+    </div>
+    <div class="canvas-label" id="demo12Label">Conectado → 1 flujo</div>
+    <canvas id="canvasDemo12" height="240"></canvas>
+  </section>
+
+  <!-- Explicación -->
+  <section class="section-card">
+    <h2>Principios de integración espectral</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Integración (fusión)</strong><br>
+        Componentes simultáneos con inicio sincrónico, modulación de amplitud coherente
+        y razón armónica simple → se perciben como <em>un solo</em> objeto sonoro.
+        Ejemplo: armónicos de una nota musical.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Segregación</strong><br>
+        Gran ΔF, inicio asincrónico o modulación incoherente → el cerebro los separa
+        en fuentes distintas. La integración espectral complementa la segregación temporal.
+      </div>
+      <div class="info-box">
+        <strong style="color:#44dd88;">Buena continuación</strong><br>
+        Trayectorias de frecuencia suaves y continuas se agrupan en un mismo flujo.
+        Una glissando H→L→H unido es un objeto; las mismas notas sin conectar, dos.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// SECCIÓN 1: Integración espectral simultánea
+// ═══════════════════════════════════════════════════════
+const cSim = document.getElementById('canvasSim');
+const ctxSim = cSim.getContext('2d');
+let simPlaying = false;
+let simOsc1 = null, simOsc2 = null, simGain1 = null, simGain2 = null;
+
+function getSimDF() { return parseInt(document.getElementById('dfSimSlider').value); }
+function getSimFBase() { return parseInt(document.getElementById('fBaseSlider').value); }
+function getSimF2() { return getSimFBase() * Math.pow(2, getSimDF() / 12); }
+
+function updateSimLabel() {
+  const df = getSimDF();
+  const msg = df <= 4 ? '→ Fusión: se percibe como 1 objeto' :
+              df <= 8 ? '→ Ambiguo: ¿1 o 2 objetos?' :
+                        '→ Segregación: 2 objetos distintos';
+  const col = df <= 4 ? '#44dd88' : df <= 8 ? '#ffaa00' : '#ff4444';
+  const el = document.getElementById('simLabel');
+  el.textContent = msg;
+  el.style.color = col;
+}
+
+function drawSim() {
+  cSim.width = cSim.offsetWidth || 800;
+  const W = cSim.width, H = cSim.height;
+  ctxSim.clearRect(0, 0, W, H);
+
+  const padL = 60, padR = 20, padT = 20, padB = 30;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const f1 = getSimFBase(), f2 = getSimF2();
+  const df = getSimDF();
+  const fMin = 100, fMax = 4000;
+
+  function yF(f) {
+    return padT + bh * (1 - (Math.log(f) - Math.log(fMin)) / (Math.log(fMax) - Math.log(fMin)));
+  }
+
+  // Grid lines
+  ctxSim.strokeStyle = 'rgba(100,180,255,0.25)';
+  ctxSim.lineWidth = 1;
+  [200, 440, 880, 1760].forEach(f => {
+    const y = yF(f);
+    ctxSim.beginPath(); ctxSim.moveTo(padL, y); ctxSim.lineTo(padL + bw, y); ctxSim.stroke();
+    ctxSim.fillStyle = 'rgba(150,200,255,0.5)';
+    ctxSim.font = '10px sans-serif'; ctxSim.textAlign = 'right';
+    ctxSim.fillText(f + ' Hz', padL - 4, y + 4);
+  });
+
+  const y1 = yF(f1), y2 = yF(f2);
+  const barW = bw * 0.5;
+  const barX = padL + bw * 0.25;
+  const barH = 28;
+
+  // Bracket showing ΔF span
+  const bracketX = padL + bw * 0.78;
+  ctxSim.strokeStyle = 'rgba(200,200,255,0.5)';
+  ctxSim.lineWidth = 1.5;
+  ctxSim.beginPath();
+  ctxSim.moveTo(bracketX, y1 + barH / 2);
+  ctxSim.lineTo(bracketX + 10, y1 + barH / 2);
+  ctxSim.moveTo(bracketX + 10, y1 + barH / 2);
+  ctxSim.lineTo(bracketX + 10, y2 + barH / 2);
+  ctxSim.moveTo(bracketX + 10, y2 + barH / 2);
+  ctxSim.lineTo(bracketX, y2 + barH / 2);
+  ctxSim.stroke();
+  ctxSim.fillStyle = '#aaccff';
+  ctxSim.font = '11px sans-serif'; ctxSim.textAlign = 'left';
+  ctxSim.fillText('ΔF=' + df + 'st', bracketX + 14, (y1 + y2) / 2 + barH / 2 + 4);
+
+  // Tone 1 (base)
+  ctxSim.fillStyle = simPlaying ? '#00ffff' : '#00ffff88';
+  if (simPlaying) { ctxSim.shadowColor = '#00ffff'; ctxSim.shadowBlur = 10; }
+  ctxSim.fillRect(barX, y1, barW, barH);
+  ctxSim.shadowBlur = 0;
+
+  // Tone 2 (shifted)
+  ctxSim.fillStyle = simPlaying ? '#ffaa00' : '#ffaa0088';
+  if (simPlaying) { ctxSim.shadowColor = '#ffaa00'; ctxSim.shadowBlur = 10; }
+  ctxSim.fillRect(barX, y2, barW, barH);
+  ctxSim.shadowBlur = 0;
+
+  // Labels
+  ctxSim.fillStyle = '#00ffff'; ctxSim.font = 'bold 11px sans-serif'; ctxSim.textAlign = 'right';
+  ctxSim.fillText('f₁ = ' + f1 + ' Hz', barX - 6, y1 + barH / 2 + 4);
+  ctxSim.fillStyle = '#ffaa00';
+  ctxSim.fillText('f₂ = ' + Math.round(f2) + ' Hz', barX - 6, y2 + barH / 2 + 4);
+
+  // Fusion/segregation indicator
+  const fusColor = df <= 4 ? '#44dd88' : df <= 8 ? '#ffaa00' : '#ff4444';
+  const fusText = df <= 4 ? '⟵ fusionados ⟶' : df <= 8 ? '⟵ ambiguo ⟶' : '⟵ segregados ⟶';
+  ctxSim.fillStyle = fusColor;
+  ctxSim.font = 'bold 12px sans-serif'; ctxSim.textAlign = 'center';
+  ctxSim.fillText(fusText, padL + bw * 0.5, Math.max(y1, y2) + barH + 16);
+
+  // Axes
+  ctxSim.fillStyle = 'rgba(150,200,255,0.5)'; ctxSim.font = '11px sans-serif';
+  ctxSim.textAlign = 'center';
+  ctxSim.save(); ctxSim.translate(14, padT + bh / 2); ctxSim.rotate(-Math.PI / 2);
+  ctxSim.fillText('Frecuencia ↑', 0, 0); ctxSim.restore();
+}
+
+function toggleSimPlay() {
+  if (simPlaying) { stopSim(); return; }
+  simPlaying = true;
+  const actx = getAudioContext();
+  simOsc1 = actx.createOscillator(); simGain1 = actx.createGain();
+  simOsc2 = actx.createOscillator(); simGain2 = actx.createGain();
+  simOsc1.type = 'sine'; simOsc1.frequency.value = getSimFBase();
+  simOsc2.type = 'sine'; simOsc2.frequency.value = getSimF2();
+  simGain1.gain.value = 0.15; simGain2.gain.value = 0.15;
+  simOsc1.connect(simGain1); simGain1.connect(actx.destination);
+  simOsc2.connect(simGain2); simGain2.connect(actx.destination);
+  simOsc1.start(); simOsc2.start();
+  document.getElementById('btnSimPlay').textContent = '■ Detener';
+  document.getElementById('btnSimPlay').classList.add('active');
+  drawSim();
+}
+
+function stopSim() {
+  simPlaying = false;
+  if (simOsc1) { try { simOsc1.stop(); } catch(e){} simOsc1 = null; }
+  if (simOsc2) { try { simOsc2.stop(); } catch(e){} simOsc2 = null; }
+  document.getElementById('btnSimPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnSimPlay').classList.remove('active');
+  drawSim();
+}
+
+document.getElementById('dfSimSlider').addEventListener('input', function() {
+  document.getElementById('dfSimVal').textContent = this.value;
+  if (simPlaying && simOsc2) simOsc2.frequency.value = getSimF2();
+  updateSimLabel(); drawSim();
+});
+document.getElementById('fBaseSlider').addEventListener('input', function() {
+  document.getElementById('fBaseVal').textContent = this.value;
+  if (simPlaying) {
+    if (simOsc1) simOsc1.frequency.value = getSimFBase();
+    if (simOsc2) simOsc2.frequency.value = getSimF2();
+  }
+  drawSim();
+});
+
+// ═══════════════════════════════════════════════════════
+// SECCIÓN 2: DEMO 12 — Conexión de trayectorias
+// ═══════════════════════════════════════════════════════
+const cD12 = document.getElementById('canvasDemo12');
+const ctxD12 = cD12.getContext('2d');
+let demo12Playing = false;
+let demo12Timer = null;
+let isConnected = true;
+let demo12Phase = 0; // 0..1 playhead position
+let demo12AnimId = null;
+let demo12StartTime = null;
+const DEMO12_DURATION = 3.0; // seconds for one cycle H-L-H
+
+// Frequencies
+const D12_FH = 880;
+const D12_FL = 220;
+
+function setConnected(val) {
+  isConnected = val;
+  document.getElementById('btnConnected').classList.toggle('active', val);
+  document.getElementById('btnDisconnected').classList.toggle('active', !val);
+  document.getElementById('demo12Label').textContent = val
+    ? 'Conectado → 1 flujo (trayectoria continua)'
+    : 'Desconectado → 2 flujos (notas separadas)';
+  document.getElementById('demo12Label').style.color = val ? '#44dd88' : '#ff4444';
+  drawDemo12(-1);
+  if (demo12Playing) { stopDemo12(); }
+}
+
+function drawDemo12(playhead) {
+  cD12.width = cD12.offsetWidth || 800;
+  const W = cD12.width, H = cD12.height;
+  ctxD12.clearRect(0, 0, W, H);
+
+  const padL = 60, padR = 20, padT = 24, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const fMin = 100, fMax = 2000;
+  function yF(f) {
+    return padT + bh * (1 - (Math.log(f) - Math.log(fMin)) / (Math.log(fMax) - Math.log(fMin)));
+  }
+
+  // Grid
+  ctxD12.strokeStyle = 'rgba(100,180,255,0.2)';
+  ctxD12.lineWidth = 1;
+  [D12_FL, D12_FH].forEach(f => {
+    const y = yF(f);
+    ctxD12.beginPath(); ctxD12.moveTo(padL, y); ctxD12.lineTo(padL + bw, y); ctxD12.stroke();
+    ctxD12.fillStyle = 'rgba(150,200,255,0.5)';
+    ctxD12.font = '10px sans-serif'; ctxD12.textAlign = 'right';
+    ctxD12.fillText(f + ' Hz', padL - 4, y + 4);
+  });
+
+  // Build the path: H → (glide or gap) → L → (glide or gap) → H
+  // Three segments over time 0..1: [0..0.3], [0.3..0.7], [0.7..1.0]
+  // t=0: fH, t=0.3: going down, t=0.5: fL, t=0.7: going up, t=1: fH
+  function freqAtT(t) {
+    if (isConnected) {
+      // Smooth glissando: cosine interpolation
+      if (t < 0.5) return D12_FH * Math.pow(D12_FL / D12_FH, t * 2);
+      else         return D12_FL * Math.pow(D12_FH / D12_FL, (t - 0.5) * 2);
+    } else {
+      // Discrete notes with gaps
+      // H note: t in [0, 0.28], gap [0.28..0.38], L note [0.38..0.62], gap [0.62..0.72], H note [0.72..1.0]
+      if (t < 0.28) return D12_FH;
+      if (t < 0.38) return null; // gap
+      if (t < 0.62) return D12_FL;
+      if (t < 0.72) return null; // gap
+      return D12_FH;
+    }
+  }
+
+  // Draw trajectory
+  const STEPS = 200;
+  const col1 = '#00ffff', col2 = '#ffaa00';
+
+  ctxD12.lineWidth = 3;
+  ctxD12.shadowBlur = 0;
+
+  if (isConnected) {
+    // Single continuous path
+    ctxD12.beginPath();
+    let started = false;
+    for (let i = 0; i <= STEPS; i++) {
+      const t = i / STEPS;
+      const f = freqAtT(t);
+      const x = padL + bw * t;
+      const y = yF(f);
+      if (!started) { ctxD12.moveTo(x, y); started = true; }
+      else ctxD12.lineTo(x, y);
+    }
+    ctxD12.strokeStyle = '#44dd88';
+    ctxD12.stroke();
+  } else {
+    // Three separate colored segments
+    const segments = [
+      { t0: 0, t1: 0.28, col: col1, label: 'H' },
+      { t0: 0.38, t1: 0.62, col: col2, label: 'L' },
+      { t0: 0.72, t1: 1.0, col: col1, label: 'H' },
+    ];
+    segments.forEach(seg => {
+      ctxD12.beginPath();
+      const x0 = padL + bw * seg.t0, x1 = padL + bw * seg.t1;
+      const f = freqAtT((seg.t0 + seg.t1) / 2);
+      const y = yF(f);
+      ctxD12.moveTo(x0, y); ctxD12.lineTo(x1, y);
+      ctxD12.strokeStyle = seg.col;
+      ctxD12.stroke();
+      // Note label
+      ctxD12.fillStyle = seg.col;
+      ctxD12.font = 'bold 12px sans-serif'; ctxD12.textAlign = 'center';
+      ctxD12.fillText(seg.label, (x0 + x1) / 2, y - 8);
+    });
+  }
+
+  // Playhead dot
+  if (playhead >= 0 && playhead <= 1) {
+    const f = freqAtT(playhead);
+    if (f !== null) {
+      const x = padL + bw * playhead;
+      const y = yF(f);
+      ctxD12.beginPath(); ctxD12.arc(x, y, 7, 0, Math.PI * 2);
+      ctxD12.fillStyle = '#ffffff';
+      ctxD12.shadowColor = '#ffffff'; ctxD12.shadowBlur = 12;
+      ctxD12.fill(); ctxD12.shadowBlur = 0;
+    }
+  }
+
+  // Axes
+  ctxD12.fillStyle = 'rgba(150,200,255,0.5)'; ctxD12.font = '11px sans-serif';
+  ctxD12.textAlign = 'center';
+  ctxD12.fillText('Tiempo →', padL + bw / 2, H - 4);
+  ctxD12.save(); ctxD12.translate(14, padT + bh / 2); ctxD12.rotate(-Math.PI / 2);
+  ctxD12.fillText('Frecuencia ↑', 0, 0); ctxD12.restore();
+}
+
+function toggleDemo12() {
+  if (demo12Playing) { stopDemo12(); return; }
+  demo12Playing = true;
+  demo12StartTime = null;
+  document.getElementById('btnDemo12Play').textContent = '■ Detener';
+  document.getElementById('btnDemo12Play').classList.add('active');
+  playDemo12Cycle();
+}
+
+function playDemo12Cycle() {
+  if (!demo12Playing) return;
+  const actx = getAudioContext();
+  const t0 = actx.currentTime;
+  const dur = DEMO12_DURATION;
+
+  if (isConnected) {
+    // Continuous glissando H→L→H
+    const osc = actx.createOscillator();
+    const g = actx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(D12_FH, t0);
+    osc.frequency.exponentialRampToValueAtTime(D12_FL, t0 + dur * 0.5);
+    osc.frequency.exponentialRampToValueAtTime(D12_FH, t0 + dur);
+    g.gain.setValueAtTime(0.15, t0);
+    g.gain.setValueAtTime(0.15, t0 + dur - 0.05);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0); osc.stop(t0 + dur);
+  } else {
+    // Three separate notes: H, L, H with gaps
+    const noteSpecs = [
+      { f: D12_FH, start: 0,    dur: 0.28 * dur },
+      { f: D12_FL, start: 0.38 * dur, dur: 0.24 * dur },
+      { f: D12_FH, start: 0.72 * dur, dur: 0.28 * dur },
+    ];
+    noteSpecs.forEach(n => {
+      const osc = actx.createOscillator();
+      const g = actx.createGain();
+      osc.type = 'sine'; osc.frequency.value = n.f;
+      g.gain.setValueAtTime(0.15, t0 + n.start);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + n.start + n.dur);
+      osc.connect(g); g.connect(actx.destination);
+      osc.start(t0 + n.start); osc.stop(t0 + n.start + n.dur);
+    });
+  }
+
+  // Animate playhead
+  demo12StartTime = performance.now();
+  animDemo12();
+
+  // Loop
+  demo12Timer = setTimeout(() => { if (demo12Playing) playDemo12Cycle(); }, dur * 1000);
+}
+
+function animDemo12() {
+  if (!demo12Playing) return;
+  const elapsed = (performance.now() - demo12StartTime) / 1000;
+  const ph = Math.min(elapsed / DEMO12_DURATION, 1);
+  drawDemo12(ph);
+  if (ph < 1) demo12AnimId = requestAnimationFrame(animDemo12);
+}
+
+function stopDemo12() {
+  demo12Playing = false;
+  clearTimeout(demo12Timer); demo12Timer = null;
+  if (demo12AnimId) { cancelAnimationFrame(demo12AnimId); demo12AnimId = null; }
+  document.getElementById('btnDemo12Play').textContent = '▶ Escuchar';
+  document.getElementById('btnDemo12Play').classList.remove('active');
+  drawDemo12(-1);
+}
+
+// ═══════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════
+function init() {
+  updateSimLabel(); drawSim();
+  setConnected(true);
+  drawDemo12(-1);
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { drawSim(); drawDemo12(-1); });
+</script>
+</body>
+</html>

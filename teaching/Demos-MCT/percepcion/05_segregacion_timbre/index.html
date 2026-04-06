@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Segregación por Timbre y Altura — Percepción y ASA</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-percepcion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_gestalt/index.html">1. Gestalt</a>
+  <a href="../02_cocktail_party/index.html">2. Cocktail Party</a>
+  <a href="../03_flujos_auditivos/index.html">3. Flujos</a>
+  <a href="../04_segregacion_frecuencia/index.html">4. Seg. Frecuencia</a>
+  <a href="../05_segregacion_timbre/index.html" class="active">5. Seg. Timbre</a>
+  <a href="../06_integracion_espectral/index.html">6. Integración</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. Segregación por Timbre y Altura</h1>
+      <p class="subtitle">Efectos del pitch y timbre en el agrupamiento auditivo</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Dos intérpretes intercalados</h2>
+    <p class="description">
+      Dos secuencias de notas (Intérprete 1 e Intérprete 2) se <span class="kw">intercalan</span> en el tiempo.
+      Cuando comparten el mismo registro (octava) y el mismo timbre, se perciben como
+      <span class="kw">una sola melodía</span> caótica y difícil de reconocer.
+      Al separarlos por octava o timbre diferente, emergen <span class="kw">dos flujos distintos</span>
+      y cada melodía se vuelve reconocible por separado.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn active" id="btnOctava" onclick="toggleOctava()">Misma octava</button>
+        <button class="btn active" id="btnTimbre" onclick="toggleTimbre()">Mismo timbre</button>
+      </div>
+      <div class="control-group">
+        <label>BPM: <span class="val" id="bpmVal">180</span></label>
+        <input type="range" id="bpmSlider" min="60" max="360" value="180" step="20">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      <button class="btn" id="btnSolo1" onclick="toggleSolo(1)">Solo Intérprete 1</button>
+      <button class="btn" id="btnSolo2" onclick="toggleSolo(2)">Solo Intérprete 2</button>
+    </div>
+    <div class="canvas-label" id="statusLabel">Configura y escucha</div>
+    <canvas id="canvasTimbre" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Explicación</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Misma octava + mismo timbre</strong><br>
+        Las dos melodías se fusionan en 1 flujo incomprensible.
+        El cerebro no puede separar las fuentes porque no hay
+        ninguna clave que las diferencie.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Diferente octava O diferente timbre</strong><br>
+        Aparecen 2 flujos separados. Cada melodía es reconocible.
+        El timbre (forma de onda) y el registro son claves de
+        segregación muy potentes — incluso sin diferencia espacial.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const cT = document.getElementById('canvasTimbre');
+const ctxT = cT.getContext('2d');
+
+// Melodía pentatónica para cada intérprete
+const MELODY1 = [0, 2, 4, 7, 9, 7, 4, 2]; // grados en escala pentatónica
+const MELODY2 = [9, 7, 4, 2, 0, 2, 4, 7];
+const PENTA_SEMITONES = [0, 2, 4, 7, 9]; // pentatónica mayor
+
+let sameOctave = true;
+let sameTimbre = true;
+let solo = 0; // 0=both, 1=only p1, 2=only p2
+let playing = false;
+let playTimer = null;
+let seqIdx = 0;
+let history = [];
+
+function toggleOctava() {
+  sameOctave = !sameOctave;
+  const btn = document.getElementById('btnOctava');
+  btn.textContent = sameOctave ? 'Misma octava' : 'Diferente octava';
+  btn.classList.toggle('active', sameOctave);
+  updateStatus();
+}
+
+function toggleTimbre() {
+  sameTimbre = !sameTimbre;
+  const btn = document.getElementById('btnTimbre');
+  btn.textContent = sameTimbre ? 'Mismo timbre' : 'Diferente timbre';
+  btn.classList.toggle('active', sameTimbre);
+  updateStatus();
+}
+
+function toggleSolo(s) {
+  solo = solo === s ? 0 : s;
+  document.getElementById('btnSolo1').classList.toggle('active', solo === 1);
+  document.getElementById('btnSolo2').classList.toggle('active', solo === 2);
+}
+
+function updateStatus() {
+  const segregated = !sameOctave || !sameTimbre;
+  const msg = segregated ? '→ 2 flujos segregados — cada melodía reconocible' : '→ 1 flujo fusionado — melodías entrelazadas';
+  const col = segregated ? '#44dd88' : '#ff4444';
+  document.getElementById('statusLabel').textContent = msg;
+  document.getElementById('statusLabel').style.color = col;
+  drawCanvas();
+}
+
+// Base frequencies
+function getNoteFreq(player, noteIdx) {
+  const mel = player === 1 ? MELODY1 : MELODY2;
+  const degree = mel[noteIdx % mel.length];
+  const semitone = PENTA_SEMITONES[degree % PENTA_SEMITONES.length];
+  const baseFreq = player === 1 ? 440 : (sameOctave ? 440 : 220);
+  return baseFreq * Math.pow(2, semitone / 12);
+}
+
+function getWaveType(player) {
+  if (sameTimbre) return 'sine';
+  return player === 1 ? 'sine' : 'sawtooth';
+}
+
+function drawCanvas() {
+  cT.width = cT.offsetWidth || 800;
+  const W = cT.width, H = cT.height;
+  ctxT.clearRect(0, 0, W, H);
+
+  const padL = 60, padR = 20, padT = 24, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  // Freq range
+  const fMin = 200, fMax = 1200;
+  function yF(f) {
+    return padT + bh * (1 - (Math.log(f) - Math.log(fMin)) / (Math.log(fMax) - Math.log(fMin)));
+  }
+
+  // Grid
+  ctxT.strokeStyle = 'rgba(100,180,255,0.15)';
+  ctxT.lineWidth = 1;
+  [300, 440, 660, 880].forEach(f => {
+    if (f >= fMin && f <= fMax) {
+      const y = yF(f);
+      ctxT.beginPath(); ctxT.moveTo(padL, y); ctxT.lineTo(padL + bw, y); ctxT.stroke();
+      ctxT.fillStyle = 'rgba(150,200,255,0.4)';
+      ctxT.font = '10px sans-serif'; ctxT.textAlign = 'right';
+      ctxT.fillText(f + ' Hz', padL - 4, y + 4);
+    }
+  });
+
+  // History notes
+  const NSHOW = 24;
+  const recent = history.slice(-NSHOW);
+  const noteW = bw / NSHOW * 0.6;
+  const noteH = 22;
+
+  recent.forEach((note, i) => {
+    if (solo !== 0 && solo !== note.player) return;
+    const x = padL + bw * i / NSHOW;
+    const y = yF(note.f) - noteH / 2;
+    const isLast = i === recent.length - 1;
+    const col = note.player === 1 ? '#00ffff' : '#ffaa00';
+    ctxT.fillStyle = isLast ? col : col + '77';
+    if (isLast) { ctxT.shadowColor = col; ctxT.shadowBlur = 8; }
+    ctxT.fillRect(x, y, noteW, noteH);
+    ctxT.shadowBlur = 0;
+    if (!sameTimbre) {
+      // Wavy pattern for sawtooth (player 2)
+      if (note.player === 2) {
+        ctxT.strokeStyle = '#ff8800';
+        ctxT.lineWidth = 1;
+        ctxT.beginPath();
+        for (let j = 0; j < noteW; j += 3) {
+          const yw = y + noteH / 2 + (j % 6 < 3 ? 3 : -3);
+          if (j === 0) ctxT.moveTo(x + j, yw); else ctxT.lineTo(x + j, yw);
+        }
+        ctxT.stroke();
+      }
+    }
+  });
+
+  // Player labels
+  ctxT.font = 'bold 12px sans-serif'; ctxT.textAlign = 'left';
+  ctxT.fillStyle = '#00ffff';
+  ctxT.fillText('■ Intérprete 1' + (sameTimbre ? '' : ' (sine)'), padL + 6, padT + 14);
+  ctxT.fillStyle = '#ffaa00';
+  ctxT.fillText('■ Intérprete 2' + (sameOctave ? '' : ' (octava inferior)') + (sameTimbre ? '' : ' (sawtooth)'), padL + 6, padT + 28);
+
+  // Axes
+  ctxT.fillStyle = 'rgba(150,200,255,0.5)'; ctxT.font = '11px sans-serif';
+  ctxT.textAlign = 'center';
+  ctxT.fillText('Tiempo →', padL + bw / 2, H - 4);
+  ctxT.save();
+  ctxT.translate(14, padT + bh / 2);
+  ctxT.rotate(-Math.PI / 2);
+  ctxT.fillText('Frecuencia ↑', 0, 0);
+  ctxT.restore();
+}
+
+// ── Playback ─────────────────────────────────────────────────────
+let p1Idx = 0, p2Idx = 0;
+
+function togglePlay() {
+  if (playing) { stopAllAudio(); return; }
+  playing = true;
+  history = [];
+  seqIdx = 0;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  playTick();
+}
+
+function playTick() {
+  if (!playing) return;
+  const bpm = parseInt(document.getElementById('bpmSlider').value);
+  const dur = 60 / bpm;
+
+  const player = seqIdx % 2 === 0 ? 1 : 2;
+  const noteIdx = player === 1 ? Math.floor(seqIdx / 2) % MELODY1.length : Math.floor(seqIdx / 2) % MELODY2.length;
+  const f = getNoteFreq(player, noteIdx);
+  const waveType = getWaveType(player);
+
+  if (solo === 0 || solo === player) {
+    const actx = getAudioContext();
+    const osc = actx.createOscillator();
+    const g = actx.createGain();
+    osc.type = waveType; osc.frequency.value = f;
+    g.gain.setValueAtTime(0.12, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur * 0.8);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(); osc.stop(actx.currentTime + dur);
+  }
+
+  history.push({ player, f, noteIdx });
+  if (history.length > 50) history.shift();
+  drawCanvas();
+  seqIdx++;
+  playTimer = setTimeout(playTick, dur * 1000);
+}
+
+function stopAllAudio() {
+  playing = false;
+  clearTimeout(playTimer); playTimer = null;
+  history = [];
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+document.getElementById('bpmSlider').addEventListener('input', function() {
+  document.getElementById('bpmVal').textContent = this.value;
+});
+
+function init() { updateStatus(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', drawCanvas);
+</script>
+</body>
+</html>
