@@ -4,11 +4,10 @@
 // ============================================================
 
 const JURADOS_ESPERADOS = {
-  A: ["José Miguel Fernández", "Roque Rivas", "Anthony de Ritis", "Miguel Farías", "Rodrigo Cádiz", "Juan Pablo Vergara"],
-  B: ["Pink Noise", "Anthony de Ritis", "Miguel Farías", "Rodrigo Cádiz", "Juan Pablo Vergara"],
-  C: ["José Miguel Fernández", "Roque Rivas", "Anthony de Ritis", "Miguel Farías", "Rodrigo Cádiz", "Juan Pablo Vergara"],
+  AC: ["José Miguel Fernández", "Roque Rivas", "Anthony de Ritis", "Miguel Farías", "Rodrigo Cádiz", "Juan Pablo Vergara"],
+  B:  ["Pink Noise", "Anthony de Ritis", "Miguel Farías", "Rodrigo Cádiz", "Juan Pablo Vergara"],
 };
-const TOTAL_OBRAS = { A: 31, B: 8, C: 9 };
+const TOTAL_OBRAS = { AC: 40, B: 8 };
 // 3 criterios uniformes (Calidad compositiva · Originalidad · Realización técnica), máx. 30
 
 // ─── POST: recibe evaluación de un jurado ─────────────────────────────────
@@ -76,7 +75,7 @@ function doGet(e) {
 // ─── Calcular promedios por obra desde las hojas de evaluación ────────────
 function _calcularPromediosPorObra(ss) {
   const result = {};
-  ["A", "B", "C"].forEach(function(cat) {
+  ["AC", "B"].forEach(function(cat) {
     result[cat] = {};
     const sheet = ss.getSheetByName(cat);
     if (!sheet || sheet.getLastRow() < 2) return;
@@ -120,7 +119,7 @@ function _calcularPromediosPorObra(ss) {
 // ─── Calcular progreso por jurado ─────────────────────────────────────────
 function _calcularProgreso(ss) {
   const result = {};
-  ["A", "B", "C"].forEach(function(cat) {
+  ["AC", "B"].forEach(function(cat) {
     result[cat] = {};
     (JURADOS_ESPERADOS[cat] || []).forEach(function(j) {
       result[cat][j] = { obras: 0, total: TOTAL_OBRAS[cat], completo: false, lastActivity: null };
