@@ -286,7 +286,8 @@ function buildList(cats, thresh) {
   const list = [];
   cats.forEach(cat => {
     (OBRAS_DATA[cat]||[]).forEach(o => {
-      const s = scores[cat]&&scores[cat][String(o.num)];
+      const scoresCat = (cat==='A'||cat==='C') ? 'AC' : cat;
+      const s = scores[scoresCat]&&scores[scoresCat][String(o.num)];
       list.push({ ...o, cat,
         prom: s?s.promedio:null,
         numEval: s?s.numEvaluaciones:0,
@@ -335,7 +336,8 @@ function renderWorksList(list, thresh, cats) {
     const cls = o.prom===null?'' : passes?'selected':'below';
     const scoreStr = o.prom!==null ? o.prom+'/30' : '—';
     const sc = o.prom===null?'none': o.prom>=thresh*0.9?'high': o.prom>=thresh*0.75?'mid':'low';
-    const catCfg = CATS[o.cat];
+    const catKey = (o.cat==='A'||o.cat==='C') ? 'AC' : o.cat;
+    const catCfg = CATS[catKey];
     html+=`<div class="work-row ${cls}">
       <span class="w-rank">#${i+1}</span>
       ${multiCat?`<span class="w-cat" style="background:${catCfg.color}22;color:${catCfg.color};border:1px solid ${catCfg.color}44">${o.cat==='A'?'ACUS':'AV'}</span>`:''}
