@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Espacio de Datos 2D — Sonificación</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sonificacion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_que_es_sonificacion/index.html">1. ¿Qué es la Sonificación?</a>
+  <a href="../02_mapeo_parametros/index.html">2. Mapeo de Parámetros</a>
+  <a href="../03_audificacion/index.html">3. Audificación</a>
+  <a href="../04_earcons_iconos/index.html">4. Earcons e Iconos</a>
+  <a href="../05_datos_2d/index.html" class="active">5. Espacio de Datos 2D</a>
+  <a href="../06_tiempo_real/index.html">6. Tiempo Real</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#ff44ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">5. Espacio de Datos 2D</h1>
+      <p class="subtitle">Exploración interactiva de datos con sonido — mueve el cursor sobre el mapa</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Exploración sonora interactiva</h2>
+    <p class="description">
+      Mueve el cursor sobre el mapa. El <span class="kw">valor del dato</span> en cada posición
+      (representado por el color) controla el sonido: zonas claras/cálidas suenan distinto a
+      zonas oscuras/frías. La posición del cursor solo indica <em>dónde</em> estás en el espacio
+      de datos — el sonido refleja <em>qué valor</em> hay ahí.
+      Este es el principio de la <span class="kw">sonificación interactiva</span>.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Dataset</label>
+        <div class="btn-group" style="margin-bottom:0">
+          <button class="btn active" id="btnWaves" onclick="setDataset('waves')">Ondas</button>
+          <button class="btn" id="btnGradient" onclick="setDataset('gradient')">Gradiente radial</button>
+          <button class="btn" id="btnRandom" onclick="setDataset('random')">Datos ruidosos</button>
+          <button class="btn" id="btnSaddle" onclick="setDataset('saddle')">Punto de silla</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Mapeo auditivo</label>
+        <div class="btn-group" style="margin-bottom:0">
+          <button class="btn active" id="btnMapPitch" onclick="setAudioMap('pitch')">Dato → Pitch</button>
+          <button class="btn" id="btnMapVol" onclick="setAudioMap('vol')">Dato → Volumen</button>
+          <button class="btn" id="btnMapBoth" onclick="setAudioMap('both')">Dato → Pitch + Vol</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Rango de pitch: <span class="val" id="rangeVal">110 – 1760 Hz</span></label>
+        <input type="range" id="rangeSlider" min="1" max="3" value="2" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnSound" onclick="toggleSound()">▶ Activar sonido</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Activa el sonido y mueve el cursor sobre el mapa</div>
+    <canvas id="mapCanvas" height="320" style="cursor:crosshair;"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Sonificación interactiva</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Principio</strong><br>
+        El usuario navega el espacio de datos con el cursor. El sonido responde en tiempo real,
+        creando un canal paralelo de información al visual. El oído puede detectar
+        estructuras que la vista no nota inmediatamente.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Dimensiones auditivas usadas</strong><br>
+        X → <strong style="color:#00ffff;">Pitch</strong> (110–1760 Hz, 4 octavas)<br>
+        Y → <strong style="color:#00ff44;">Volumen</strong> (silencio → forte)<br>
+        Color del mapa → valor Z de la función subyacente
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let dataset = 'waves';
+let oscNode = null, gainNode = null;
+let audioActive = false;
+let mouseX = 0.5, mouseY = 0.5;
+let dataGrid = null;
+const GRID = 80;
+
+// ── Datasets ──────────────────────────────────────────────────────────
+function generateDataset(type) {
+  const grid = new Float32Array(GRID * GRID);
+  for (let yi = 0; yi < GRID; yi++) {
+    for (let xi = 0; xi < GRID; xi++) {
+      const x = xi / (GRID - 1);
+      const y = yi / (GRID - 1);
+      let v;
+      if (type === 'waves') {
+        v = 0.5 + 0.5 * Math.sin(x * Math.PI * 6) * Math.cos(y * Math.PI * 4);
+      } else if (type === 'gradient') {
+        const dx = x - 0.5, dy = y - 0.5;
+        const r = Math.sqrt(dx*dx + dy*dy) * 2;
+        v = Math.max(0, 1 - r) * (1 + 0.3 * Math.sin(r * 20));
+      } else if (type === 'random') {
+        // Perlin-like: bicubic interpolation over coarse random grid
+        const cx = Math.floor(x * 8), cy = Math.floor(y * 8);
+        const fx = (x * 8) - cx, fy = (y * 8) - cy;
+        const rand = (a,b) => { const n=a*97+b*31; return ((Math.sin(n*127.1)*43758.5453)%1+1)%1; };
+        const h = (a,b) => rand(a,b);
+        const lerp = (a,b,t) => a + (b-a)*(3*t*t-2*t*t*t);
+        v = lerp(lerp(h(cx,cy),h(cx+1,cy),fx), lerp(h(cx,cy+1),h(cx+1,cy+1),fx), fy);
+      } else if (type === 'saddle') {
+        const u = x * 2 - 1, w2 = y * 2 - 1;
+        v = 0.5 + 0.4 * (u*u - w2*w2);
+      }
+      grid[yi * GRID + xi] = v;
+    }
+  }
+  return grid;
+}
+
+function setDataset(type) {
+  dataset = type;
+  ['waves','gradient','random','saddle'].forEach(t => {
+    document.getElementById('btn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.remove('active');
+  });
+  document.getElementById('btn'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
+  dataGrid = generateDataset(type);
+  drawCanvas();
+}
+
+// ── Canvas ─────────────────────────────────────────────────────────────
+const canvas = document.getElementById('mapCanvas');
+const ctx2 = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx2.clearRect(0, 0, W, H);
+
+  if (!dataGrid) return;
+
+  // Mapa de calor (datos → color)
+  const cellW = W / GRID, cellH = H / GRID;
+  for (let yi = 0; yi < GRID; yi++) {
+    for (let xi = 0; xi < GRID; xi++) {
+      const v = dataGrid[yi * GRID + xi];
+      // Gradiente: azul oscuro → magenta → naranja
+      let r, g, b;
+      if (v < 0.5) {
+        const t = v * 2;
+        r = Math.round(t * 200);
+        g = Math.round(t * 40);
+        b = Math.round(100 + t * 100);
+      } else {
+        const t = (v - 0.5) * 2;
+        r = Math.round(200 + t * 55);
+        g = Math.round(40 + t * 100);
+        b = Math.round(200 - t * 180);
+      }
+      ctx2.fillStyle = `rgb(${r},${g},${b})`;
+      ctx2.fillRect(xi * cellW, yi * cellH, cellW + 1, cellH + 1);
+    }
+  }
+
+  // Crosshair en posición del cursor
+  const cx = mouseX * W;
+  const cy = mouseY * H;
+
+  ctx2.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx2.lineWidth = 1.5;
+  ctx2.setLineDash([4,4]);
+  ctx2.beginPath(); ctx2.moveTo(cx, 0); ctx2.lineTo(cx, H); ctx2.stroke();
+  ctx2.beginPath(); ctx2.moveTo(0, cy); ctx2.lineTo(W, cy); ctx2.stroke();
+  ctx2.setLineDash([]);
+
+  // Punto central
+  ctx2.beginPath();
+  ctx2.arc(cx, cy, 8, 0, Math.PI*2);
+  ctx2.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx2.fill();
+  ctx2.strokeStyle = '#ffffff';
+  ctx2.lineWidth = 2;
+  ctx2.stroke();
+
+  // Valor del dato en la posición actual
+  const xi = Math.min(GRID - 1, Math.floor(mouseX * GRID));
+  const yi2 = Math.min(GRID - 1, Math.floor(mouseY * GRID));
+  const dataVal = dataGrid[yi2 * GRID + xi];
+  const freq = getFreq(dataVal);
+  const vol  = getGain(dataVal);
+
+  // Tooltip con el valor del dato y el sonido resultante
+  const tipX = cx + 12 < W - 175 ? cx + 12 : cx - 172;
+  const tipY = cy - 44 > 0 ? cy - 44 : cy + 8;
+  ctx2.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx2.fillRect(tipX, tipY, 168, 42);
+  ctx2.fillStyle = '#ffaa00';
+  ctx2.font = 'bold 11px sans-serif';
+  ctx2.textAlign = 'left';
+  ctx2.fillText(`dato: ${dataVal.toFixed(3)}`, tipX + 8, tipY + 14);
+  ctx2.fillStyle = '#00ffff';
+  ctx2.font = '10px sans-serif';
+  ctx2.fillText(`pitch: ${Math.round(freq)} Hz`, tipX + 8, tipY + 28);
+  ctx2.fillStyle = '#00ff44';
+  ctx2.fillText(`vol: ${Math.round(vol * 100)}%`, tipX + 90, tipY + 28);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+const ranges = ['110 – 440 Hz', '110 – 1760 Hz', '55 – 3520 Hz'];
+const rangeFactors = [2, 4, 6];
+let audioMap = 'pitch';
+
+// Leer el valor del dato en la posición actual del cursor
+function getDataValue() {
+  if (!dataGrid) return 0.5;
+  const xi = Math.min(GRID - 1, Math.floor(mouseX * GRID));
+  const yi = Math.min(GRID - 1, Math.floor(mouseY * GRID));
+  return dataGrid[yi * GRID + xi];
+}
+
+function getFreq(dataVal) {
+  const factor = rangeFactors[parseInt(document.getElementById('rangeSlider').value) - 1];
+  return 110 * Math.pow(2, dataVal * factor);
+}
+function getGain(dataVal) { return 0.02 + dataVal * 0.25; }
+
+function startAudio() {
+  if (audioActive) return;
+  audioActive = true;
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+  const osc = actx.createOscillator();
+  const g = actx.createGain();
+  osc.type = 'sine';
+  const dv = getDataValue();
+  osc.frequency.value = getFreq(dv);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(audioMap === 'vol' ? getGain(dv) : 0.20, t0 + 0.03);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0);
+  _activeNodes.push(osc);
+  oscNode = osc; gainNode = g;
+}
+
+function updateAudio() {
+  if (!audioActive || !oscNode || !gainNode) return;
+  const actx = getAudioContext();
+  const dv = getDataValue();
+  // El dato leído del grid controla el sonido — no la posición del cursor
+  if (audioMap === 'pitch' || audioMap === 'both') {
+    oscNode.frequency.setTargetAtTime(getFreq(dv), actx.currentTime, 0.04);
+    gainNode.gain.setTargetAtTime(0.20, actx.currentTime, 0.04);
+  }
+  if (audioMap === 'vol') {
+    oscNode.frequency.setTargetAtTime(440, actx.currentTime, 0.04);
+    gainNode.gain.setTargetAtTime(getGain(dv), actx.currentTime, 0.04);
+  }
+  if (audioMap === 'both') {
+    gainNode.gain.setTargetAtTime(getGain(dv), actx.currentTime, 0.04);
+  }
+}
+
+function stopAudio() {
+  audioActive = false;
+  if (gainNode) {
+    const actx = getAudioContext();
+    gainNode.gain.setTargetAtTime(0, actx.currentTime, 0.05);
+  }
+  setTimeout(() => { stopAllAudio(); oscNode = null; gainNode = null; }, 200);
+}
+
+function setAudioMap(m) {
+  audioMap = m;
+  ['pitch','vol','both'].forEach(t => {
+    const id = 'btnMap' + t.charAt(0).toUpperCase() + t.slice(1);
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('btnMap' + m.charAt(0).toUpperCase() + m.slice(1)).classList.add('active');
+}
+
+function toggleSound() {
+  const btn = document.getElementById('btnSound');
+  if (audioActive) {
+    stopAudio();
+    btn.textContent = '▶ Activar sonido';
+    btn.classList.remove('active');
+    document.getElementById('statusLabel').textContent = 'Activa el sonido y mueve el cursor sobre el mapa';
+  } else {
+    startAudio();
+    btn.textContent = '■ Detener sonido';
+    btn.classList.add('active');
+  }
+}
+
+// ── Eventos del canvas ────────────────────────────────────────────────
+// mouseleave NO detiene el audio: el sonido permanece en el último valor
+canvas.addEventListener('mouseleave', () => {
+  if (audioActive) {
+    document.getElementById('statusLabel').textContent =
+      `Sonido activo — Pitch: ${Math.round(getFreq(mouseX))} Hz · Volumen: ${Math.round(getGain(1-mouseY)*100)}% (cursor fuera del mapa)`;
+  }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  mouseY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+  updateAudio();
+  drawCanvas();
+  const freq = getFreq(mouseX);
+  document.getElementById('statusLabel').textContent =
+    `Pitch: ${Math.round(freq)} Hz  ·  Volumen: ${Math.round(getGain(1-mouseY)*100)}%`;
+});
+
+// Touch
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  mouseX = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+  mouseY = Math.max(0, Math.min(1, (touch.clientY - rect.top) / rect.height));
+  if (!audioActive) { startAudio(); document.getElementById('btnSound').textContent = '■ Detener sonido'; document.getElementById('btnSound').classList.add('active'); }
+  updateAudio();
+  drawCanvas();
+}, { passive: false });
+canvas.addEventListener('touchend', () => {
+  stopAudio();
+  document.getElementById('btnSound').textContent = '▶ Activar sonido';
+  document.getElementById('btnSound').classList.remove('active');
+});
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('rangeSlider').addEventListener('input', function() {
+  document.getElementById('rangeVal').textContent = ranges[this.value - 1];
+  updateAudio();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  dataGrid = generateDataset(dataset);
+  drawCanvas();
+});
+window.addEventListener('resize', () => drawCanvas());
+</script>
+</body>
+</html>

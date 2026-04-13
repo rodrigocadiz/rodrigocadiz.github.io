@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Audificación — Sonificación</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sonificacion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_que_es_sonificacion/index.html">1. ¿Qué es la Sonificación?</a>
+  <a href="../02_mapeo_parametros/index.html">2. Mapeo de Parámetros</a>
+  <a href="../03_audificacion/index.html" class="active">3. Audificación</a>
+  <a href="../04_earcons_iconos/index.html">4. Earcons e Iconos</a>
+  <a href="../05_datos_2d/index.html">5. Espacio de Datos 2D</a>
+  <a href="../06_tiempo_real/index.html">6. Tiempo Real</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#ff44ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">3. Audificación</h1>
+      <p class="subtitle">Señales de datos convertidas directamente en audio audible</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Señal de datos → Audio</h2>
+    <p class="description">
+      La <span class="kw">audificación</span> reproduce los datos directamente como audio, acelerándolos
+      hasta el rango audible (20–20.000 Hz). El panel izquierdo muestra la señal en su
+      <span class="kw">tiempo original</span> (inaudible). El panel derecho muestra el
+      <span class="kw">audio resultante</span>: la misma forma de onda, comprimida en el tiempo.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Tipo de señal</label>
+        <div class="btn-group" style="margin-bottom:0">
+          <button class="btn active" id="btnSine" onclick="setSignal('sine')">Sinusoide</button>
+          <button class="btn" id="btnChirp" onclick="setSignal('chirp')">Chirp (barrido)</button>
+          <button class="btn" id="btnEcg" onclick="setSignal('ecg')">ECG sintético</button>
+          <button class="btn" id="btnSeismic" onclick="setSignal('seismic')">Sísmico</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Velocidad / Pitch: <span class="val" id="speedVal">30</span>×</label>
+        <input type="range" id="speedSlider" min="5" max="150" value="30" step="5">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Ajusta la velocidad y presiona Escuchar</div>
+    <canvas id="audCanvas" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>¿Qué es la audificación?</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Principio</strong><br>
+        Si una señal varía a una tasa que el oído puede percibir (20–20.000 Hz), puede reproducirse
+        directamente como audio. Un sismograma que oscila a 1 Hz se convierte en audio al
+        reproducirlo 100 veces más rápido: ahora suena a 100 Hz (nota Sol).
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Aplicaciones reales</strong><br>
+        Ondas gravitacionales (LIGO), datos del viento solar, registros sísmicos,
+        señales EEG/ECG, datos de telescopios de rayos X. El oído detecta patrones
+        que la vista puede perder en grandes volúmenes de datos.
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:10px;">
+      <strong style="color:#00ffff;">Limitación fundamental</strong><br>
+      La audificación solo revela estructura si la señal tiene <em>correlación temporal</em>
+      en las escalas que el oído puede percibir. Datos sin estructura temporal suenan como ruido blanco,
+      sin importar la velocidad de reproducción.
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let signalType = 'sine';
+let currentSrc = null;   // referencia al BufferSource activo para actualizar playbackRate en vivo
+
+// Propiedades de cada señal: duración en tiempo de datos (segundos)
+const signalProps = {
+  sine:    { dur: 2,   label: 'Sinusoide 3 Hz',    freqLabel: f => `${Math.round(f*3)} Hz` },
+  chirp:   { dur: 6,   label: 'Chirp 1→25 Hz',     freqLabel: f => `${Math.round(f)}→${Math.round(f*25)} Hz` },
+  ecg:     { dur: 2.4, label: 'ECG sintético',      freqLabel: f => `${(1.25*f).toFixed(1)} Hz (${Math.round(75*f)} BPM)` },
+  seismic: { dur: 3,   label: 'Sísmico 2–4 Hz',     freqLabel: f => `~${Math.round(f*2)}–${Math.round(f*4)} Hz` }
+};
+
+// ── Valor de señal en tiempo t (segundos) ─────────────────────────────
+function signalAt(type, t) {
+  if (type === 'sine') {
+    // Sinusoide pura a 3 Hz
+    return Math.sin(2 * Math.PI * 3 * t) * 0.42;
+
+  } else if (type === 'chirp') {
+    // Barrido lineal 1→25 Hz en 6 s
+    // fase = integral(1 + 4t)dt = t + 2t²  → freq instantánea = 1 + 4t
+    return Math.sin(2 * Math.PI * (t + 2 * t * t)) * 0.42;
+
+  } else if (type === 'ecg') {
+    // ECG sintético con línea de base centrada (media ≈ 0)
+    const tc = t % 0.8;
+    const qrs   = 0.9  * Math.exp(-Math.pow((tc - 0.15) * 30, 2));
+    const p     = 0.15 * Math.exp(-Math.pow((tc - 0.05) * 20, 2));
+    const tWave = 0.18 * Math.exp(-Math.pow((tc - 0.38) *  8, 2));
+    // Restamos la media para centrar alrededor de 0 (evita tono "de sierra")
+    return (qrs + p + tWave - 0.13) * 0.55;
+
+  } else if (type === 'seismic') {
+    // Señal sísmica: frecuencia modulada con envolvente de ataque suave
+    const env = t < 0.2 ? t / 0.2 : 1.0;   // ataque rápido (sin silencio inicial)
+    const fq  = 2 + Math.sin(2 * Math.PI * 0.35 * t) * 1.5;  // 0.5–3.5 Hz
+    return Math.sin(2 * Math.PI * fq * t) * env * 0.38
+           * (1 + 0.25 * Math.sin(2 * Math.PI * 6 * t));
+  }
+  return 0;
+}
+
+// ── Canvas: dos paneles estáticos ─────────────────────────────────────
+const canvas = document.getElementById('audCanvas');
+const ctx2 = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx2.clearRect(0, 0, W, H);
+
+  const speed  = parseFloat(document.getElementById('speedSlider').value);
+  const props  = signalProps[signalType];
+  const dataDur = props.dur;               // duración señal de datos (s)
+  const audDur  = dataDur / speed;         // duración del audio resultante (s)
+  const audMs   = audDur * 1000;           // en milisegundos
+
+  const NPTS  = 400;
+  const padT  = 44, padB = 28, gapCenter = 52;
+  const halfW = (W - gapCenter) / 2;
+  const bh    = H - padT - padB;
+
+  // ── Paneles de fondo ──────────────────────────────────────────────
+  ctx2.fillStyle = 'rgba(255,68,255,0.05)';
+  ctx2.fillRect(0, padT - 8, halfW, bh + 16);
+  ctx2.fillStyle = 'rgba(255,170,0,0.05)';
+  ctx2.fillRect(halfW + gapCenter, padT - 8, halfW, bh + 16);
+
+  // ── Títulos de paneles ────────────────────────────────────────────
+  ctx2.font = 'bold 11px sans-serif';
+  ctx2.textAlign = 'center';
+
+  ctx2.fillStyle = '#ff44ff';
+  ctx2.fillText('SEÑAL DE DATOS', halfW / 2, padT - 26);
+  ctx2.fillStyle = 'rgba(255,68,255,0.7)';
+  ctx2.font = '10px sans-serif';
+  ctx2.fillText(`${props.label}  ·  duración: ${dataDur.toFixed(1)} s  ·  inaudible`, halfW / 2, padT - 12);
+
+  ctx2.fillStyle = '#ffaa00';
+  ctx2.font = 'bold 11px sans-serif';
+  ctx2.fillText('AUDIO RESULTANTE', halfW + gapCenter + halfW / 2, padT - 26);
+  ctx2.fillStyle = 'rgba(255,170,0,0.7)';
+  ctx2.font = '10px sans-serif';
+  ctx2.fillText(`${props.freqLabel(speed)}  ·  duración: ${audMs < 10 ? audMs.toFixed(1) : Math.round(audMs)} ms  ·  audible`, halfW + gapCenter + halfW / 2, padT - 12);
+
+  // ── Líneas de base ────────────────────────────────────────────────
+  const midY = padT + bh / 2;
+  [[0, halfW], [halfW + gapCenter, halfW + gapCenter + halfW]].forEach(([x0, x1]) => {
+    ctx2.beginPath(); ctx2.moveTo(x0, midY); ctx2.lineTo(x1, midY);
+    ctx2.strokeStyle = 'rgba(100,180,255,0.35)'; ctx2.lineWidth = 1; ctx2.stroke();
+    // Grid superior e inferior
+    [0.25, 0.75].forEach(fr => {
+      ctx2.beginPath(); ctx2.moveTo(x0, padT + bh * fr); ctx2.lineTo(x1, padT + bh * fr);
+      ctx2.strokeStyle = 'rgba(100,180,255,0.18)'; ctx2.stroke();
+    });
+  });
+
+  // ── Waveform izquierdo (datos) ────────────────────────────────────
+  ctx2.beginPath();
+  for (let i = 0; i <= NPTS; i++) {
+    const t = i / NPTS * dataDur;
+    const v = signalAt(signalType, t);
+    const x = (i / NPTS) * halfW;
+    const y = midY - v * bh * 0.44;
+    i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+  }
+  ctx2.strokeStyle = '#ff44ff';
+  ctx2.lineWidth = 2;
+  ctx2.stroke();
+
+  // ── Waveform derecho (audio = misma forma, eje X en ms) ───────────
+  ctx2.beginPath();
+  for (let i = 0; i <= NPTS; i++) {
+    const t = i / NPTS * dataDur;          // mismo t → misma forma de onda
+    const v = signalAt(signalType, t);
+    const x = halfW + gapCenter + (i / NPTS) * halfW;
+    const y = midY - v * bh * 0.44;
+    i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+  }
+  ctx2.strokeStyle = '#ffaa00';
+  ctx2.lineWidth = 2;
+  ctx2.stroke();
+
+  // ── Etiquetas eje X ───────────────────────────────────────────────
+  ctx2.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx2.font = '10px sans-serif';
+  ctx2.textAlign = 'center';
+
+  // Izquierdo: tiempo en segundos
+  const nTicksL = Math.min(5, Math.floor(dataDur) + 1);
+  for (let i = 0; i <= nTicksL; i++) {
+    const s = i / nTicksL * dataDur;
+    const x = (i / nTicksL) * halfW;
+    ctx2.fillText(s.toFixed(s < 1 ? 1 : 0) + 's', x, padT + bh + 16);
+  }
+
+  // Derecho: tiempo en ms
+  const nTicksR = 4;
+  for (let i = 0; i <= nTicksR; i++) {
+    const ms = i / nTicksR * audMs;
+    const x  = halfW + gapCenter + (i / nTicksR) * halfW;
+    const label = ms < 1 ? ms.toFixed(2) : ms < 10 ? ms.toFixed(1) : Math.round(ms);
+    ctx2.fillText(label + 'ms', x, padT + bh + 16);
+  }
+
+  // ── Flecha central con factor ─────────────────────────────────────
+  const arrowX = halfW + gapCenter / 2;
+  const arrowY = midY;
+
+  ctx2.fillStyle = '#ffffff';
+  ctx2.font = 'bold 13px sans-serif';
+  ctx2.textAlign = 'center';
+  ctx2.fillText(`×${speed}`, arrowX, arrowY - 10);
+
+  // Flecha →
+  ctx2.beginPath();
+  ctx2.moveTo(halfW + 6, arrowY + 4);
+  ctx2.lineTo(halfW + gapCenter - 6, arrowY + 4);
+  ctx2.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx2.lineWidth = 1.5;
+  ctx2.stroke();
+  ctx2.beginPath();
+  ctx2.moveTo(halfW + gapCenter - 6, arrowY + 4);
+  ctx2.lineTo(halfW + gapCenter - 12, arrowY);
+  ctx2.lineTo(halfW + gapCenter - 12, arrowY + 8);
+  ctx2.closePath();
+  ctx2.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx2.fill();
+
+  // Indicador de reproducción
+  if (playing) {
+    ctx2.fillStyle = '#00ff44';
+    ctx2.font = 'bold 10px sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.fillText('▶ REPRODUCIENDO', halfW + gapCenter + halfW / 2, padT - 28 + 48);
+  }
+}
+
+// ── Tipo de señal ─────────────────────────────────────────────────────
+function setSignal(type) {
+  if (playing) stopPlayback();
+  signalType = type;
+  ['sine','chirp','ecg','seismic'].forEach(t => {
+    document.getElementById('btn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.remove('active');
+  });
+  document.getElementById('btn'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
+  drawCanvas();
+  updateLabel();
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+  drawCanvas();
+}
+
+function stopPlayback() {
+  playing = false;
+  currentSrc = null;
+  stopAllAudio();
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+  updateLabel();
+}
+
+function startAudio() {
+  stopAllAudio();
+  const actx = getAudioContext();
+  const speed = parseFloat(document.getElementById('speedSlider').value);
+  const sr = actx.sampleRate;
+  const dur = signalProps[signalType].dur;
+  const len = Math.round(sr * dur);
+
+  const buf = new Float32Array(len);
+  for (let i = 0; i < len; i++) buf[i] = signalAt(signalType, i / sr);
+
+  const audioBuf = actx.createBuffer(1, len, sr);
+  audioBuf.copyToChannel(buf, 0);
+
+  const src = actx.createBufferSource();
+  src.buffer = audioBuf;
+  src.playbackRate.value = speed;
+  src.loop = true;
+  currentSrc = src;
+
+  const g = actx.createGain();
+  const t0 = actx.currentTime + 0.01;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.32, t0 + 0.05);
+  src.connect(g); g.connect(actx.destination);
+  src.start(t0);
+  _activeNodes.push(src);
+  updateLabel();
+}
+
+function updateLabel() {
+  const speed = parseFloat(document.getElementById('speedSlider').value);
+  const props = signalProps[signalType];
+  if (playing) {
+    document.getElementById('statusLabel').textContent =
+      `Reproduciendo a ${speed}× — ${props.label} → ${props.freqLabel(speed)}`;
+  } else {
+    const audMs = props.dur / speed * 1000;
+    document.getElementById('statusLabel').textContent =
+      `${props.dur.toFixed(1)} s de datos → ${audMs < 10 ? audMs.toFixed(1) : Math.round(audMs)} ms de audio · Presiona Escuchar`;
+  }
+}
+
+// ── Slider velocidad ──────────────────────────────────────────────────
+document.getElementById('speedSlider').addEventListener('input', function() {
+  const speed = parseFloat(this.value);
+  document.getElementById('speedVal').textContent = this.value;
+  // Actualizar playbackRate en vivo sin detener el audio
+  if (playing && currentSrc) {
+    currentSrc.playbackRate.setValueAtTime(speed, getAudioContext().currentTime + 0.01);
+  }
+  drawCanvas();
+  updateLabel();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener('load', () => { drawCanvas(); updateLabel(); });
+window.addEventListener('resize', () => drawCanvas());
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Earcons e Iconos Auditivos — Sonificación</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sonificacion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_que_es_sonificacion/index.html">1. ¿Qué es la Sonificación?</a>
+  <a href="../02_mapeo_parametros/index.html">2. Mapeo de Parámetros</a>
+  <a href="../03_audificacion/index.html">3. Audificación</a>
+  <a href="../04_earcons_iconos/index.html" class="active">4. Earcons e Iconos</a>
+  <a href="../05_datos_2d/index.html">5. Espacio de Datos 2D</a>
+  <a href="../06_tiempo_real/index.html">6. Tiempo Real</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#ff44ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">4. Earcons e Iconos Auditivos</h1>
+      <p class="subtitle">Representaciones auditivas simbólicas vs. analógicas de eventos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Escucha y compara</h2>
+    <p class="description">
+      Los <span class="kw">earcons</span> son sonidos abstractos y sintéticos que representan eventos de forma simbólica
+      (como el lenguaje). Los <span class="kw">iconos auditivos</span> suenan análogamente al evento que representan.
+      Escucha ambas versiones para el mismo evento y compara su intuitibilidad.
+    </p>
+    <div class="canvas-label" id="statusLabel">Haz clic en un botón para escuchar</div>
+    <canvas id="iconCanvas" height="340"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Controles de audio</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+      <div class="info-box" style="border-color:#ff44ff; background:rgba(255,68,255,0.05);">
+        <strong style="color:#ff44ff; font-size:1rem;">Earcons (abstractos)</strong><br><br>
+        <div class="btn-group" style="flex-direction:column; gap:8px; margin-bottom:0">
+          <button class="btn" style="border-color:#ff44ff; color:#ff44ff; text-align:left;" onclick="playEarcon('error')">⬛ Error del sistema</button>
+          <button class="btn" style="border-color:#ff44ff; color:#ff44ff; text-align:left;" onclick="playEarcon('success')">⬛ Operación exitosa</button>
+          <button class="btn" style="border-color:#ff44ff; color:#ff44ff; text-align:left;" onclick="playEarcon('alert')">⬛ Alerta / Advertencia</button>
+          <button class="btn" style="border-color:#ff44ff; color:#ff44ff; text-align:left;" onclick="playEarcon('message')">⬛ Mensaje recibido</button>
+        </div>
+      </div>
+
+      <div class="info-box" style="border-color:#ffaa00; background:rgba(255,170,0,0.05);">
+        <strong style="color:#ffaa00; font-size:1rem;">Iconos Auditivos (analógicos)</strong><br><br>
+        <div class="btn-group" style="flex-direction:column; gap:8px; margin-bottom:0">
+          <button class="btn" style="border-color:#ffaa00; color:#ffaa00; text-align:left;" onclick="playAuditoryIcon('error')">🔶 Error — bocina descendente</button>
+          <button class="btn" style="border-color:#ffaa00; color:#ffaa00; text-align:left;" onclick="playAuditoryIcon('success')">🔶 Éxito — moneda / ping</button>
+          <button class="btn" style="border-color:#ffaa00; color:#ffaa00; text-align:left;" onclick="playAuditoryIcon('alert')">🔶 Alerta — bips urgentes</button>
+          <button class="btn" style="border-color:#ffaa00; color:#ffaa00; text-align:left;" onclick="playAuditoryIcon('message')">🔶 Mensaje — papel llegando</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>Comparación</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Earcons — ventajas y desventajas</strong><br>
+        ✓ Pueden diseñarse para cualquier evento<br>
+        ✓ Combinables jerárquicamente (motivos + familias)<br>
+        ✗ Requieren entrenamiento para aprenderse<br>
+        ✗ Arbitrarios: no hay relación natural con el evento
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Iconos Auditivos — ventajas y desventajas</strong><br>
+        ✓ Intuitivos: se aprenden rápido sin entrenamiento<br>
+        ✓ Aprovechan el conocimiento del mundo cotidiano<br>
+        ✓ El sonido evoca el evento real (bocina→fallo, campana→éxito)<br>
+        ✗ Dependientes de la cultura del usuario<br>
+        ✗ No todos los eventos tienen un sonido ecológico claro
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Earcons (motivos melódicos abstractos) ────────────────────────────
+const earconDefs = {
+  error:   { label:'Error', color:'#ff4444',
+             notes: [[880,0.08,'square'],[660,0.08,'square'],[440,0.18,'square']] },
+  success: { label:'Éxito', color:'#00ff44',
+             notes: [[440,0.08,'sine'],[550,0.08,'sine'],[660,0.08,'sine'],[880,0.16,'sine']] },
+  alert:   { label:'Alerta', color:'#ffaa00',
+             notes: [[880,0.06,'sawtooth'],[880,0.06,'sawtooth'],[880,0.06,'sawtooth']] },
+  message: { label:'Mensaje', color:'#44aaff',
+             notes: [[660,0.12,'sine'],[880,0.12,'sine']] }
+};
+
+function playEarcon(type) {
+  stopAllAudio();
+  const def = earconDefs[type];
+  const actx = getAudioContext();
+  let offset = 0.01;
+  def.notes.forEach(([freq, dur, waveType]) => {
+    const t0 = actx.currentTime + offset;
+    const osc = actx.createOscillator();
+    const g = actx.createGain();
+    osc.type = waveType;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.18, t0 + 0.01);
+    g.gain.setValueAtTime(0.18, t0 + dur - 0.01);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.01);
+    offset += dur + 0.04;
+  });
+  document.getElementById('statusLabel').textContent = `Earcon: ${def.label} — motivo melódico abstracto`;
+  highlightEvent(type, 'earcon');
+}
+
+// ── Auditory Icons (síntesis analógica — sonidos analógicos al evento) ─
+// Los iconos auditivos deben evocar el sonido real o una metáfora ecológica del evento.
+function playAuditoryIcon(type) {
+  stopAllAudio();
+  const actx = getAudioContext();
+  const sr = actx.sampleRate;
+
+  const labels = {
+    error:   'Error — bocina descendente (señal de fallo)',
+    success: 'Éxito — moneda/ping metálico (señal de premio o transacción exitosa)',
+    alert:   'Alerta — bips urgentes (señal de peligro)',
+    message: 'Mensaje — deslizamiento + golpe suave (papel llegando)'
+  };
+
+  if (type === 'error') {
+    // Bocina descendente: pitch cae de 400→120 Hz — señal universal de fallo/incorrecto
+    const t0 = actx.currentTime + 0.01;
+    const osc = actx.createOscillator();
+    const g   = actx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(400, t0);
+    osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.35);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.22, t0 + 0.02);
+    g.gain.setValueAtTime(0.22, t0 + 0.3);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.38);
+    // Filtro paso-bajo para suavizar el cuadrado (menos áspero)
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+    osc.connect(lp); lp.connect(g); g.connect(actx.destination);
+    osc.start(t0); osc.stop(t0 + 0.4);
+
+  } else if (type === 'success') {
+    // Moneda/premio: dos pings metálicos ascendentes — como caja registradora o moneda cayendo
+    // Ecológico: el sonido de una transacción exitosa o premio ganado
+    const t0 = actx.currentTime + 0.01;
+    [[1047, 0], [1568, 0.12]].forEach(([freq, delay]) => {
+      // Cada ping = fundamental + 2 parciales inarmónicos (metal)
+      [[freq, 1.0], [freq * 2.76, 0.4], [freq * 5.4, 0.15]].forEach(([f, amp]) => {
+        const osc = actx.createOscillator(); const gg = actx.createGain();
+        osc.type = 'sine'; osc.frequency.value = f;
+        gg.gain.setValueAtTime(0, t0 + delay);
+        gg.gain.linearRampToValueAtTime(amp * 0.18, t0 + delay + 0.006);
+        gg.gain.exponentialRampToValueAtTime(0.001, t0 + delay + 0.55);
+        osc.connect(gg); gg.connect(actx.destination);
+        osc.start(t0 + delay); osc.stop(t0 + delay + 0.6);
+      });
+    });
+
+  } else if (type === 'alert') {
+    // Bips repetidos a 880 Hz — sirena de alarma simplificada, señal de urgencia
+    const t0 = actx.currentTime;
+    [0, 0.18, 0.36].forEach(off => {
+      const osc = actx.createOscillator(); const gg = actx.createGain();
+      osc.type = 'sine'; osc.frequency.value = 880;
+      gg.gain.setValueAtTime(0, t0+off+0.01);
+      gg.gain.linearRampToValueAtTime(0.25, t0+off+0.02);
+      gg.gain.setValueAtTime(0.25, t0+off+0.13);
+      gg.gain.linearRampToValueAtTime(0, t0+off+0.16);
+      osc.connect(gg); gg.connect(actx.destination); osc.start(t0+off); osc.stop(t0+off+0.18);
+    });
+
+  } else if (type === 'message') {
+    // Deslizamiento de papel + golpe suave: evoca un sobre/hoja llegando
+    const t0 = actx.currentTime + 0.01;
+
+    // 1) Deslizamiento: ruido filtrado ascendente (como papel rozando)
+    const swBuf = actx.createBuffer(1, Math.round(sr * 0.18), sr);
+    const sw = swBuf.getChannelData(0);
+    for (let i = 0; i < sw.length; i++) sw[i] = (Math.random() * 2 - 1);
+    const swSrc = actx.createBufferSource(); swSrc.buffer = swBuf;
+    const hp = actx.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 3000; hp.Q.value = 0.8;
+    const swG = actx.createGain();
+    swG.gain.setValueAtTime(0, t0);
+    swG.gain.linearRampToValueAtTime(0.12, t0 + 0.06);
+    swG.gain.linearRampToValueAtTime(0.04, t0 + 0.18);
+    swSrc.connect(hp); hp.connect(swG); swG.connect(actx.destination);
+    swSrc.start(t0); swSrc.stop(t0 + 0.2);
+
+    // 2) Golpe suave al llegar: breve impacto grave (como hoja cayendo en mesa)
+    const tapBuf = actx.createBuffer(1, Math.round(sr * 0.12), sr);
+    const tap = tapBuf.getChannelData(0);
+    for (let i = 0; i < tap.length; i++) {
+      const tt = i / sr;
+      tap[i] = (Math.random() * 2 - 1) * Math.exp(-tt * 60) * 0.6
+              + Math.sin(2 * Math.PI * 120 * tt) * Math.exp(-tt * 40) * 0.4;
+    }
+    const tapSrc = actx.createBufferSource(); tapSrc.buffer = tapBuf;
+    const tapG = actx.createGain(); tapG.gain.value = 0.45;
+    tapSrc.connect(tapG); tapG.connect(actx.destination);
+    tapSrc.start(t0 + 0.17); tapSrc.stop(t0 + 0.3);
+  }
+
+  document.getElementById('statusLabel').textContent = `Icono auditivo: ${labels[type]}`;
+  highlightEvent(type, 'icon');
+}
+
+// ── Canvas: visualización de eventos ──────────────────────────────────
+const canvas = document.getElementById('iconCanvas');
+const ctx2 = canvas.getContext('2d');
+let activeEvent = null, activeType = null;
+
+const events = [
+  { id:'error',   label:'Error',    icon:'✕', earconColor:'#ff4444', iconColor:'#ff8800' },
+  { id:'success', label:'Éxito',    icon:'✓', earconColor:'#00ff44', iconColor:'#aaff00' },
+  { id:'alert',   label:'Alerta',   icon:'!', earconColor:'#ffaa00', iconColor:'#ffdd00' },
+  { id:'message', label:'Mensaje',  icon:'✉', earconColor:'#44aaff', iconColor:'#88ccff' }
+];
+
+function highlightEvent(evId, type) {
+  activeEvent = evId; activeType = type;
+  drawCanvas();
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx2.clearRect(0, 0, W, H);
+
+  const headerH = 30;
+  const rowH = (H - headerH) / events.length;
+  const halfW = W / 2;
+  const r = Math.min(30, rowH * 0.34);
+
+  // Fondos de columna
+  ctx2.fillStyle = 'rgba(255,68,255,0.04)';
+  ctx2.fillRect(0, headerH, halfW, H - headerH);
+  ctx2.fillStyle = 'rgba(255,170,0,0.04)';
+  ctx2.fillRect(halfW, headerH, halfW, H - headerH);
+
+  // Cabeceras
+  ctx2.font = 'bold 12px sans-serif';
+  ctx2.textAlign = 'center';
+  ctx2.textBaseline = 'middle';
+  ctx2.fillStyle = '#ff44ff';
+  ctx2.fillText('EARCONS  (abstractos · sintéticos)', halfW / 2, headerH / 2);
+  ctx2.fillStyle = '#ffaa00';
+  ctx2.fillText('ICONOS AUDITIVOS  (analógicos · representativos)', halfW + halfW / 2, headerH / 2);
+
+  // Línea divisoria vertical
+  ctx2.beginPath();
+  ctx2.moveTo(halfW, headerH); ctx2.lineTo(halfW, H);
+  ctx2.strokeStyle = 'rgba(150,200,255,0.3)';
+  ctx2.lineWidth = 1.5;
+  ctx2.setLineDash([6, 4]);
+  ctx2.stroke();
+  ctx2.setLineDash([]);
+
+  // Líneas divisorias horizontales entre filas
+  events.forEach((_, i) => {
+    if (i === 0) return;
+    const y = headerH + rowH * i;
+    ctx2.beginPath();
+    ctx2.moveTo(0, y); ctx2.lineTo(W, y);
+    ctx2.strokeStyle = 'rgba(100,150,200,0.15)';
+    ctx2.lineWidth = 1;
+    ctx2.stroke();
+  });
+
+  // 4 filas × 2 columnas: earcon izquierda, icono derecha
+  events.forEach((ev, i) => {
+    const cy = headerH + rowH * i + rowH / 2;
+
+    [
+      { cx: halfW / 2,        side: 'earcon', color: ev.earconColor },
+      { cx: halfW + halfW / 2, side: 'icon',   color: ev.iconColor  }
+    ].forEach(({ cx, side, color }) => {
+      const isHighlighted = activeEvent === ev.id && activeType === side;
+      const radius = isHighlighted ? r + 4 : r;
+
+      // Círculo
+      ctx2.beginPath();
+      ctx2.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx2.fillStyle = isHighlighted ? color + '28' : 'rgba(15,28,48,0.8)';
+      ctx2.fill();
+      ctx2.strokeStyle = isHighlighted ? color : 'rgba(100,150,200,0.35)';
+      ctx2.lineWidth = isHighlighted ? 2.5 : 1.5;
+      ctx2.stroke();
+
+      // Ícono dentro del círculo
+      ctx2.fillStyle = isHighlighted ? color : '#6688aa';
+      ctx2.font = `${isHighlighted ? radius * 0.72 : radius * 0.62}px sans-serif`;
+      ctx2.textAlign = 'center';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText(ev.icon, cx, cy - 4);
+
+      // Nombre del evento debajo del ícono
+      ctx2.font = `${isHighlighted ? 'bold ' : ''}10px sans-serif`;
+      ctx2.fillStyle = isHighlighted ? '#ffffff' : '#7799bb';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText(ev.label, cx, cy + radius * 0.55);
+    });
+
+    // Etiqueta del evento en el margen izquierdo
+    ctx2.fillStyle = 'rgba(150,200,255,0.5)';
+    ctx2.font = '10px sans-serif';
+    ctx2.textAlign = 'left';
+    ctx2.textBaseline = 'middle';
+    ctx2.fillText(ev.label.toUpperCase(), 6, cy);
+  });
+}
+
+window.addEventListener('load', () => drawCanvas());
+window.addEventListener('resize', () => drawCanvas());
+</script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Mapeo de Parámetros — Sonificación</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sonificacion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_que_es_sonificacion/index.html">1. ¿Qué es la Sonificación?</a>
+  <a href="../02_mapeo_parametros/index.html" class="active">2. Mapeo de Parámetros</a>
+  <a href="../03_audificacion/index.html">3. Audificación</a>
+  <a href="../04_earcons_iconos/index.html">4. Earcons e Iconos</a>
+  <a href="../05_datos_2d/index.html">5. Espacio de Datos 2D</a>
+  <a href="../06_tiempo_real/index.html">6. Tiempo Real</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#ff44ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">2. Mapeo de Parámetros</h1>
+      <p class="subtitle">Asignación de variables de datos a dimensiones auditivas</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Dato → Sonido</h2>
+    <p class="description">
+      El <span class="kw">mapeo de parámetros</span> asigna cada valor de dato a un parámetro del sonido.
+      Ajusta el valor del dato y elige qué dimensión auditiva lo representa. El canvas muestra la
+      <span class="kw">función de mapeo</span> (curva dato → parámetro) y el punto actual.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Valor del dato: <span class="val" id="dataVal">50</span></label>
+        <input type="range" id="dataSlider" min="0" max="100" value="50">
+      </div>
+      <div class="control-group">
+        <label>Dimensión auditiva</label>
+        <div class="btn-group" style="margin-bottom:0">
+          <button class="btn active" id="btnPitch" onclick="setDim('pitch')">Pitch (altura)</button>
+          <button class="btn" id="btnVol" onclick="setDim('vol')">Volumen</button>
+          <button class="btn" id="btnTempo" onclick="setDim('tempo')">Tempo</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Tipo de mapeo</label>
+        <div class="btn-group" style="margin-bottom:0">
+          <button class="btn active" id="btnLin" onclick="setMapping('lin')">Lineal</button>
+          <button class="btn" id="btnLog" onclick="setMapping('log')">Logarítmico</button>
+          <button class="btn" id="btnExp" onclick="setMapping('exp')">Exponencial</button>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Ajusta el slider y presiona Escuchar</div>
+    <canvas id="mapCanvas" height="240"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Importancia del tipo de mapeo</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Mapeo lineal</strong><br>
+        Relación proporcional directa entre dato y parámetro. Simple pero no siempre
+        corresponde a la percepción: el oído percibe el pitch de forma logarítmica (escala musical).
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Mapeo logarítmico</strong><br>
+        Dato → parámetro con escala log. Apropiado para el pitch (frecuencia musical),
+        donde duplicar la frecuencia produce una octava, independientemente del registro.
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:10px;">
+      <strong style="color:#00ffff;">Regla de diseño (Walker &amp; Nees, 2011)</strong><br>
+      El mapeo debe ser <em>intuitivo</em> (más dato → más sonido en la dirección esperada),
+      <em>perceptualmente uniforme</em> (igual diferencia en datos = igual diferencia percibida)
+      y adecuado al <em>tipo de escala</em> del dato (nominal, ordinal, de intervalo, de razón).
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let dim = 'pitch';
+let mappingType = 'lin';
+let oscNode = null, gainNode = null, tempoInterval = null;
+
+// ── Funciones de mapeo ────────────────────────────────────────────────
+function applyMapping(val) {
+  // val ∈ [0,1]
+  if (mappingType === 'lin') return val;
+  if (mappingType === 'log') return Math.log(1 + val * (Math.E - 1));
+  if (mappingType === 'exp') return (Math.exp(val) - 1) / (Math.E - 1);
+  return val;
+}
+
+function getMappedValue() {
+  const raw = parseInt(document.getElementById('dataSlider').value) / 100;
+  return applyMapping(raw);
+}
+
+function getFreq(mapped) { return 110 * Math.pow(2, mapped * 4); }   // 110–1760 Hz
+function getGain(mapped) { return 0.02 + mapped * 0.25; }
+function getTempoBpm(mapped) { return 40 + mapped * 200; }  // 40–240 BPM
+
+// ── Control de UI ─────────────────────────────────────────────────────
+function setDim(d) {
+  dim = d;
+  ['pitch','vol','tempo'].forEach(x => document.getElementById('btn'+x.charAt(0).toUpperCase()+x.slice(1)).classList.remove('active'));
+  document.getElementById('btn'+d.charAt(0).toUpperCase()+d.slice(1)).classList.add('active');
+  if (playing) updateSound();
+  drawCanvas();
+}
+
+function setMapping(m) {
+  mappingType = m;
+  ['lin','log','exp'].forEach(x => document.getElementById('btn'+x.charAt(0).toUpperCase()+x.slice(1)).classList.remove('active'));
+  document.getElementById('btn'+m.charAt(0).toUpperCase()+m.slice(1)).classList.add('active');
+  if (playing) updateSound();
+  drawCanvas();
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startSound();
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  if (tempoInterval) { clearInterval(tempoInterval); tempoInterval = null; }
+  oscNode = null; gainNode = null;
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  document.getElementById('statusLabel').textContent = 'Ajusta el slider y presiona Escuchar';
+  drawCanvas();
+}
+
+function startSound() {
+  stopAllAudio();
+  if (tempoInterval) { clearInterval(tempoInterval); tempoInterval = null; }
+  const actx = getAudioContext();
+  const mapped = getMappedValue();
+
+  if (dim === 'pitch') {
+    const t0 = actx.currentTime + 0.01;
+    const osc = actx.createOscillator();
+    const g = actx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = getFreq(mapped);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.18, t0 + 0.015);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0);
+    _activeNodes.push(osc);
+    oscNode = osc; gainNode = g;
+    updateLabel(mapped);
+  } else if (dim === 'vol') {
+    const t0 = actx.currentTime + 0.01;
+    const osc = actx.createOscillator();
+    const g = actx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(getGain(mapped), t0 + 0.015);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0);
+    _activeNodes.push(osc);
+    oscNode = osc; gainNode = g;
+    updateLabel(mapped);
+  } else if (dim === 'tempo') {
+    playBeat();
+    const bpm = getTempoBpm(mapped);
+    tempoInterval = setInterval(playBeat, 60000 / bpm);
+    updateLabel(mapped);
+  }
+}
+
+function playBeat() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+  const osc = actx.createOscillator();
+  const g = actx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 660;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.2, t0 + 0.008);
+  g.gain.setValueAtTime(0.2, t0 + 0.04);
+  g.gain.linearRampToValueAtTime(0, t0 + 0.08);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0); osc.stop(t0 + 0.1);
+}
+
+function updateSound() {
+  const mapped = getMappedValue();
+  const actx = getAudioContext();
+  if (dim === 'pitch' && oscNode) {
+    oscNode.frequency.setTargetAtTime(getFreq(mapped), actx.currentTime, 0.05);
+  } else if (dim === 'vol' && gainNode) {
+    gainNode.gain.setTargetAtTime(getGain(mapped), actx.currentTime, 0.05);
+  } else if (dim === 'tempo') {
+    if (tempoInterval) clearInterval(tempoInterval);
+    const bpm = getTempoBpm(mapped);
+    tempoInterval = setInterval(playBeat, 60000 / bpm);
+  }
+  updateLabel(mapped);
+}
+
+function updateLabel(mapped) {
+  const val = parseInt(document.getElementById('dataSlider').value);
+  if (dim === 'pitch') document.getElementById('statusLabel').textContent =
+    `Dato: ${val} → Pitch: ${Math.round(getFreq(mapped))} Hz`;
+  else if (dim === 'vol') document.getElementById('statusLabel').textContent =
+    `Dato: ${val} → Volumen: ${Math.round(getGain(mapped)*100)}%`;
+  else document.getElementById('statusLabel').textContent =
+    `Dato: ${val} → Tempo: ${Math.round(getTempoBpm(mapped))} BPM`;
+}
+
+// ── Canvas: curva de mapeo ────────────────────────────────────────────
+const canvas = document.getElementById('mapCanvas');
+const ctx2 = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx2.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 20, padT = 24, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  // Grid
+  ctx2.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx2.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + bh * (1 - i / 4);
+    ctx2.beginPath(); ctx2.moveTo(padL, y); ctx2.lineTo(padL + bw, y); ctx2.stroke();
+    const x = padL + bw * i / 4;
+    ctx2.beginPath(); ctx2.moveTo(x, padT); ctx2.lineTo(x, padT + bh); ctx2.stroke();
+  }
+
+  // Curvas para los 3 tipos (dim)
+  const curves = [
+    { type:'lin', color:'rgba(255,170,0,0.35)', label:'Lineal' },
+    { type:'log', color:'rgba(0,255,255,0.35)',  label:'Log' },
+    { type:'exp', color:'rgba(255,68,255,0.35)', label:'Exp' }
+  ];
+  curves.forEach(c => {
+    if (c.type === mappingType) return; // la activa se dibuja después
+    ctx2.beginPath();
+    for (let xi = 0; xi <= 100; xi++) {
+      const raw = xi / 100;
+      let m;
+      if (c.type==='lin') m=raw;
+      else if (c.type==='log') m=Math.log(1+raw*(Math.E-1));
+      else m=(Math.exp(raw)-1)/(Math.E-1);
+      const x = padL + raw * bw;
+      const y = padT + bh * (1 - m);
+      xi===0 ? ctx2.moveTo(x,y) : ctx2.lineTo(x,y);
+    }
+    ctx2.strokeStyle = c.color;
+    ctx2.lineWidth = 1.5;
+    ctx2.stroke();
+    // Label
+    ctx2.fillStyle = c.color.replace('0.35','0.7');
+    ctx2.font = '10px sans-serif';
+    ctx2.textAlign = 'left';
+    const endRaw = 0.95, endM = c.type==='lin'?endRaw:c.type==='log'?Math.log(1+endRaw*(Math.E-1)):(Math.exp(endRaw)-1)/(Math.E-1);
+    ctx2.fillText(c.label, padL+endRaw*bw+4, padT+bh*(1-endM));
+  });
+
+  // Curva activa
+  const activeColor = mappingType==='lin'?'#ffaa00':mappingType==='log'?'#00ffff':'#ff44ff';
+  ctx2.beginPath();
+  for (let xi = 0; xi <= 100; xi++) {
+    const raw = xi / 100;
+    const m = applyMapping(raw);
+    const x = padL + raw * bw;
+    const y = padT + bh * (1 - m);
+    xi===0 ? ctx2.moveTo(x,y) : ctx2.lineTo(x,y);
+  }
+  ctx2.strokeStyle = activeColor;
+  ctx2.lineWidth = 2.5;
+  ctx2.stroke();
+
+  // Punto actual
+  const rawCurrent = parseInt(document.getElementById('dataSlider').value) / 100;
+  const mappedCurrent = applyMapping(rawCurrent);
+  const px = padL + rawCurrent * bw;
+  const py = padT + bh * (1 - mappedCurrent);
+  ctx2.beginPath();
+  ctx2.arc(px, py, 7, 0, Math.PI * 2);
+  ctx2.fillStyle = activeColor;
+  ctx2.fill();
+  ctx2.strokeStyle = '#ffffff';
+  ctx2.lineWidth = 2;
+  ctx2.stroke();
+
+  // Líneas punteadas al punto
+  ctx2.setLineDash([4, 4]);
+  ctx2.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx2.lineWidth = 1;
+  ctx2.beginPath(); ctx2.moveTo(px, py); ctx2.lineTo(px, padT+bh); ctx2.stroke();
+  ctx2.beginPath(); ctx2.moveTo(px, py); ctx2.lineTo(padL, py); ctx2.stroke();
+  ctx2.setLineDash([]);
+
+  // Ejes
+  ctx2.strokeStyle = 'rgba(150,200,255,0.70)';
+  ctx2.lineWidth = 1.5;
+  ctx2.beginPath(); ctx2.moveTo(padL,padT); ctx2.lineTo(padL,padT+bh); ctx2.lineTo(padL+bw,padT+bh); ctx2.stroke();
+
+  // Labels
+  ctx2.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx2.font = '11px sans-serif';
+  ctx2.textAlign = 'center';
+  ctx2.fillText('Valor del dato →', padL + bw/2, H - 6);
+  ctx2.save(); ctx2.translate(14, padT+bh/2); ctx2.rotate(-Math.PI/2);
+  const dimLabel = dim==='pitch'?'Pitch (Hz)':dim==='vol'?'Volumen':'Tempo (BPM)';
+  ctx2.fillText(dimLabel+' →', 0, 0); ctx2.restore();
+
+  // Ticks
+  ctx2.fillStyle = '#99ccff';
+  ctx2.font = '10px sans-serif';
+  ctx2.textAlign = 'center';
+  [0,25,50,75,100].forEach(v => ctx2.fillText(v, padL+v/100*bw, padT+bh+14));
+  ctx2.textAlign = 'right';
+  [0,25,50,75,100].forEach(v => ctx2.fillText(v, padL-6, padT+bh*(1-v/100)+4));
+}
+
+// ── Slider ─────────────────────────────────────────────────────────────
+document.getElementById('dataSlider').addEventListener('input', function() {
+  document.getElementById('dataVal').textContent = this.value;
+  drawCanvas();
+  if (playing) updateSound();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener('load', () => drawCanvas());
+window.addEventListener('resize', () => { if(!playing) drawCanvas(); });
+</script>
+</body>
+</html>

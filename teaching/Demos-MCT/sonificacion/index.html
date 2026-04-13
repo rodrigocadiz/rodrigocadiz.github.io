@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sonificación — Demos MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-sonificacion">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="01_que_es_sonificacion/index.html">1. ¿Qué es la Sonificación?</a>
+  <a href="02_mapeo_parametros/index.html">2. Mapeo de Parámetros</a>
+  <a href="03_audificacion/index.html">3. Audificación</a>
+  <a href="04_earcons_iconos/index.html">4. Earcons e Iconos</a>
+  <a href="05_datos_2d/index.html">5. Espacio de Datos 2D</a>
+  <a href="06_tiempo_real/index.html">6. Tiempo Real</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#ff44ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Sonificación</h1>
+      <p class="subtitle">Demostraciones de Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      Explora los fundamentos de la sonificación y la representación auditiva: de la taxonomía teórica
+      al mapeo de datos en tiempo real, audificación, earcons y exploración interactiva de espacios de datos.
+    </p>
+    <div class="card-grid">
+
+      <a class="vineta-card" href="01_que_es_sonificacion/index.html">
+        <div class="num" style="color:#ff44ff;">1 📊</div>
+        <h3 style="color:#ff44ff;">¿Qué es la Sonificación?</h3>
+        <p>Definición y taxonomía de la representación auditiva. Diferencias entre audificación, mapeo de parámetros y sonificación basada en modelo.</p>
+      </a>
+
+      <a class="vineta-card" href="02_mapeo_parametros/index.html">
+        <div class="num" style="color:#ffaa00;">2 ↔</div>
+        <h3 style="color:#ffaa00;">Mapeo de Parámetros</h3>
+        <p>Asignación de variables de datos a dimensiones auditivas: pitch, volumen y tempo. Mapeo lineal vs. logarítmico.</p>
+      </a>
+
+      <a class="vineta-card" href="03_audificacion/index.html">
+        <div class="num" style="color:#ff44ff;">3 〰</div>
+        <h3 style="color:#ff44ff;">Audificación</h3>
+        <p>Conversión directa de señales de datos en audio audible. Señales sintéticas y biomédicas a distintas velocidades.</p>
+      </a>
+
+      <a class="vineta-card" href="04_earcons_iconos/index.html">
+        <div class="num" style="color:#ffaa00;">4 🔔</div>
+        <h3 style="color:#ffaa00;">Earcons e Iconos Auditivos</h3>
+        <p>Representaciones auditivas de eventos: earcons abstractos y sintéticos vs. auditory icons analógicos y representativos.</p>
+      </a>
+
+      <a class="vineta-card" href="05_datos_2d/index.html">
+        <div class="num" style="color:#ff44ff;">5 ⊹</div>
+        <h3 style="color:#ff44ff;">Espacio de Datos 2D</h3>
+        <p>Exploración interactiva de un espacio de datos bidimensional con el cursor: posición horizontal controla pitch, vertical controla volumen.</p>
+      </a>
+
+      <a class="vineta-card" href="06_tiempo_real/index.html">
+        <div class="num" style="color:#ffaa00;">6 ▶</div>
+        <h3 style="color:#ffaa00;">Sonificación en Tiempo Real</h3>
+        <p>Monitoreo auditivo continuo de una señal cambiante. El pitch del sonido sigue la señal de datos en tiempo real.</p>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+</body>
+</html>

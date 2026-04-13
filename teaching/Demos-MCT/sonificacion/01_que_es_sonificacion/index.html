@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. ¿Qué es la Sonificación? — Sonificación</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sonificacion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_que_es_sonificacion/index.html" class="active">1. ¿Qué es la Sonificación?</a>
+  <a href="../02_mapeo_parametros/index.html">2. Mapeo de Parámetros</a>
+  <a href="../03_audificacion/index.html">3. Audificación</a>
+  <a href="../04_earcons_iconos/index.html">4. Earcons e Iconos</a>
+  <a href="../05_datos_2d/index.html">5. Espacio de Datos 2D</a>
+  <a href="../06_tiempo_real/index.html">6. Tiempo Real</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#ff44ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">1. ¿Qué es la Sonificación?</h1>
+      <p class="subtitle">De datos a sonido — definición y taxonomía de la representación auditiva</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Taxonomía de la Representación Auditiva</h2>
+    <p class="description">
+      La <span class="kw">sonificación</span> es el uso de audio no verbal para representar datos o procesos. Es una rama de la
+      <span class="kw">representación auditiva</span>: el uso del sonido para transmitir información. Haz clic en cada nodo del árbol
+      para escuchar un ejemplo y ver su descripción.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn" id="btnAD" onclick="selectNode('ad')">📢 Representación Auditiva</button>
+        <button class="btn" id="btnSon" onclick="selectNode('son')">📊 Sonificación</button>
+        <button class="btn" id="btnAud" onclick="selectNode('aud')">〰 Audificación</button>
+        <button class="btn" id="btnPM" onclick="selectNode('pm')">↔ Mapeo de Parámetros</button>
+        <button class="btn" id="btnMB" onclick="selectNode('mb')">🔧 Basada en Modelo</button>
+        <button class="btn" id="btnEar" onclick="selectNode('ear')">🔔 Earcons</button>
+        <button class="btn" id="btnAI" onclick="selectNode('ai')">🎵 Iconos Auditivos</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Selecciona un nodo para explorar</div>
+    <canvas id="taxCanvas" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2 id="nodeTitle">Representación Auditiva</h2>
+    <p class="description" id="nodeDesc">
+      La <span class="kw">representación auditiva</span> es el campo que estudia el uso del sonido para transmitir
+      información al usuario. Incluye voz, música, efectos de sonido y sonificación de datos.
+      Se diferencia del simple uso ornamental del audio en que el sonido <em>es la información</em>.
+    </p>
+    <div class="two-col">
+      <div class="info-box" id="infoA">
+        <strong style="color:#ff44ff;">¿Para qué sirve?</strong><br>
+        El oído humano es extraordinariamente bueno detectando patrones temporales, cambios de frecuencia
+        y anomalías en flujos de datos — tareas difíciles para la visión.
+      </div>
+      <div class="info-box" id="infoB">
+        <strong style="color:#ffaa00;">Referencia</strong><br>
+        Hermann, Hunt &amp; Neuhoff (2011). <em>The Sonification Handbook</em>. Logos Verlag Berlin.
+        Capítulo 1: Auditory Display and Sonification. (título original en inglés)
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Datos de nodos ────────────────────────────────────────────────────
+const nodes = {
+  ad:  { label:'Repr. Auditiva', color:'#ffffff',
+         title:'Representación Auditiva',
+         desc:'La <span class="kw">representación auditiva</span> es el campo que estudia el uso del sonido para transmitir información. Incluye sonificación, voz sintetizada, música generativa y efectos auditivos. El sonido <em>es la información</em>, no un adorno.',
+         infoA:'<strong style="color:#ff44ff;">¿Por qué el oído?</strong><br>El sistema auditivo detecta cambios temporales, patrones de frecuencia y anomalías con gran precisión, complementando la visión en tareas de monitoreo.',
+         infoB:'<strong style="color:#ffaa00;">Historia</strong><br>El campo fue consolidado en ICAD 1992 (International Conference on Auditory Display). Gregory Kramer editó el primer libro de referencia en 1994.',
+         play: () => { playTone(440, 0.5); setTimeout(()=>playTone(550,0.5),300); setTimeout(()=>playTone(660,0.5),600); } },
+
+  son: { label:'Sonificación', color:'#ff44ff',
+         title:'Sonificación',
+         desc:'La <span class="kw">sonificación</span> es el uso de audio no verbal para representar datos o procesos. Se divide en: <em>audificación</em> (señal directa a audio), <em>mapeo de parámetros</em> (datos → parámetros de sonido) y <em>sonificación basada en modelo</em>.',
+         infoA:'<strong style="color:#ff44ff;">Definición formal</strong><br>"Sonification is the use of non-speech audio to convey information or perceptualize data." (Kramer et al., 1999)',
+         infoB:'<strong style="color:#ffaa00;">Aplicaciones</strong><br>Exploración científica, monitoreo médico (ECG, EEG), análisis financiero, interfaz para personas con discapacidad visual, arte sonoro.',
+         play: () => { const ctx=getAudioContext(); const t=ctx.currentTime; [220,277,330,440].forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;g.gain.setValueAtTime(0,t+i*0.18);g.gain.linearRampToValueAtTime(0.2,t+i*0.18+0.02);g.gain.setValueAtTime(0.2,t+i*0.18+0.15);g.gain.linearRampToValueAtTime(0,t+i*0.18+0.18);o.connect(g);g.connect(ctx.destination);o.start(t+i*0.18);o.stop(t+i*0.18+0.2);}) } },
+
+  aud: { label:'Audificación', color:'#00ffff',
+         title:'Audificación',
+         desc:'La <span class="kw">audificación</span> convierte una señal de datos directamente en audio, sin mapeo intermedio. Los datos se tratan como muestras de audio. Útil para señales físicas: sismos, ondas cerebrales, datos de viento solar.',
+         infoA:'<strong style="color:#ff44ff;">¿Cómo funciona?</strong><br>Si los datos representan variaciones a cierta tasa, se reproducen como audio. Un sismograma a 100× su velocidad original cae en el rango audible (20–20.000 Hz).',
+         infoB:'<strong style="color:#ffaa00;">Limitación</strong><br>Solo funciona si la señal tiene estructura temporal significativa. Datos sin correlación temporal suenan como ruido blanco.',
+         play: () => { const ctx=getAudioContext(); const sr=ctx.sampleRate; const dur=1.5; const buf=ctx.createBuffer(1,sr*dur,sr); const d=buf.getChannelData(0); for(let i=0;i<d.length;i++){const t=i/sr; d[i]=Math.sin(2*Math.PI*(200+150*Math.sin(2*Math.PI*1.5*t))*t)*0.3;} const src=ctx.createBufferSource();src.buffer=buf;src.connect(ctx.destination);src.start(); _activeNodes.push(src); } },
+
+  pm:  { label:'Mapeo de Parámetros', color:'#ffaa00',
+         title:'Mapeo de Parámetros (Parameter Mapping)',
+         desc:'El <span class="kw">mapeo de parámetros</span> asigna variables de datos a parámetros del sonido: pitch, volumen, timbre, tempo, posición espacial. Es la técnica más flexible y utilizada en sonificación.',
+         infoA:'<strong style="color:#ff44ff;">Parámetros auditivos</strong><br>Pitch (frecuencia), loudness (amplitud), timbre (forma de onda / espectro), ataque, duración, posición espacial (panorama).',
+         infoB:'<strong style="color:#ffaa00;">Desafío central</strong><br>Elegir el mapeo correcto es difícil. El mapeo debe ser intuitivo, perceptualmente uniforme y adecuado al tipo de dato (ordinal, nominal, continuo).',
+         play: () => { const ctx=getAudioContext(); const t=ctx.currentTime; for(let i=0;i<8;i++){const f=220*Math.pow(2,i/12);const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;g.gain.setValueAtTime(0,t+i*0.12);g.gain.linearRampToValueAtTime(0.15+i*0.015,t+i*0.12+0.01);g.gain.setValueAtTime(0.15+i*0.015,t+i*0.12+0.1);g.gain.linearRampToValueAtTime(0,t+i*0.12+0.12);o.connect(g);g.connect(ctx.destination);o.start(t+i*0.12);o.stop(t+i*0.12+0.13);} } },
+
+  mb:  { label:'Basada en Modelo', color:'#00ff44',
+         title:'Sonificación Basada en Modelo',
+         desc:'La <span class="kw">sonificación basada en modelo</span> usa un modelo del proceso físico o del dato para generar sonido. Por ejemplo, una partícula cuyo movimiento en un campo de datos determina la síntesis física de un instrumento.',
+         infoA:'<strong style="color:#ff44ff;">Ejemplo típico</strong><br>Model-based sonification: una partícula "navega" el espacio de datos. Sus colisiones y velocidad determinan parámetros de síntesis de cuerdas pulsadas.',
+         infoB:'<strong style="color:#ffaa00;">Ventaja</strong><br>El modelo proporciona una capa semántica entre datos y sonido, facilitando la interpretación intuitiva sin necesidad de aprender el mapeo.',
+         play: () => { const ctx=getAudioContext(); const t=ctx.currentTime; const buf=ctx.createBuffer(1,ctx.sampleRate*1.2,ctx.sampleRate); const d=buf.getChannelData(0); let y=0,v=0; for(let i=0;i<d.length;i++){v+=(Math.random()-0.5)*0.01-y*0.001;y+=v;d[i]=y*0.3;} const src=ctx.createBufferSource();src.buffer=buf;const g=ctx.createGain();g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+1.2);src.connect(g);g.connect(ctx.destination);src.start();_activeNodes.push(src); } },
+
+  ear: { label:'Earcons', color:'#44aaff',
+         title:'Earcons',
+         desc:'Los <span class="kw">earcons</span> son motivos sonoros abstractos y sintéticos que representan objetos o eventos de interfaz de manera simbólica. Son el equivalente auditivo de los iconos visuales.',
+         infoA:'<strong style="color:#ff44ff;">Características</strong><br>Son abstractos (no suenan como lo que representan), combinables (se pueden componer para crear jerarquías), y deben aprenderse, como el lenguaje.',
+         infoB:'<strong style="color:#ffaa00;">Propuesto por</strong><br>Blattner, Sumikawa &amp; Greenberg (1989). Earcons: auditory icons in computer-mediated tasks. Procedentes de la notación musical occidental.',
+         play: () => { const ctx=getAudioContext(); const t=ctx.currentTime; [[880,0.08],[1100,0.08],[880,0.08],[1320,0.16]].forEach(([f,dur],i,arr)=>{const off=arr.slice(0,i).reduce((s,x)=>s+x[1]+0.04,0);const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(0,t+off);g.gain.linearRampToValueAtTime(0.12,t+off+0.01);g.gain.setValueAtTime(0.12,t+off+dur-0.01);g.gain.linearRampToValueAtTime(0,t+off+dur);o.connect(g);g.connect(ctx.destination);o.start(t+off);o.stop(t+off+dur+0.01);}); } },
+
+  ai:  { label:'Iconos Auditivos', color:'#ff4444',
+         title:'Iconos Auditivos (Auditory Icons)',
+         desc:'Los <span class="kw">iconos auditivos</span> son sonidos que se asemejan acústicamente al objeto o evento que representan. Son análogos a los sonidos cotidianos: el sonido de la papelera de reciclaje suena como papel arrugándose.',
+         infoA:'<strong style="color:#ff44ff;">Características</strong><br>Son intuitivos (se aprenden rápido sin entrenamiento), pero dependen de la experiencia cultural del usuario y pueden ser difíciles de generar sintéticamente.',
+         infoB:'<strong style="color:#ffaa00;">Propuesto por</strong><br>Gaver (1986, 1989). Auditory icons: Using sound in computer interfaces. Originalmente implementados en SonicFinder para Macintosh.',
+         play: () => { const ctx=getAudioContext(); const t=ctx.currentTime; const buf=ctx.createBuffer(1,ctx.sampleRate*0.4,ctx.sampleRate); const d=buf.getChannelData(0); for(let i=0;i<d.length;i++){const env=Math.exp(-i/(ctx.sampleRate*0.08)); d[i]=(Math.random()*2-1)*env*0.5;} const src=ctx.createBufferSource();src.buffer=buf;const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1200;f.Q.value=2;src.connect(f);f.connect(ctx.destination);src.start();_activeNodes.push(src); } }
+};
+
+// ── Selección de nodo ────────────────────────────────────────────────
+let currentNode = 'ad';
+
+function selectNode(id) {
+  stopAllAudio();
+  currentNode = id;
+  const n = nodes[id];
+
+  // Actualizar panel informativo
+  document.getElementById('nodeTitle').textContent = n.title;
+  document.getElementById('nodeDesc').innerHTML = n.desc;
+  document.getElementById('infoA').innerHTML = n.infoA;
+  document.getElementById('infoB').innerHTML = n.infoB;
+  document.getElementById('statusLabel').textContent = '▶ Reproduciendo: ' + n.label;
+
+  // Resaltar botón activo
+  const btnMap = {ad:'AD',son:'Son',aud:'Aud',pm:'PM',mb:'MB',ear:'Ear',ai:'AI'};
+  Object.values(btnMap).forEach(suffix => {
+    const btn = document.getElementById('btn'+suffix);
+    if(btn) btn.classList.remove('active');
+  });
+  const btn = document.getElementById('btn'+btnMap[id]);
+  if(btn) btn.classList.add('active');
+
+  // Reproducir ejemplo
+  n.play();
+
+  // Redibujar árbol
+  drawTree();
+}
+
+// ── Canvas: árbol de taxonomía ────────────────────────────────────────
+const canvas = document.getElementById('taxCanvas');
+const ctx2 = canvas.getContext('2d');
+
+function drawTree() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx2.clearRect(0, 0, W, H);
+
+  // Posiciones relativas
+  const cx = W / 2;
+  const positions = {
+    ad:  { x: cx,        y: 32 },
+    son: { x: cx - W*0.22, y: 100 },
+    spe: { x: cx,         y: 100 },  // Speech (no interactivo)
+    mus: { x: cx + W*0.22, y: 100 }, // Music (no interactivo)
+    aud: { x: cx - W*0.32, y: 185 },
+    pm:  { x: cx - W*0.13, y: 185 },
+    mb:  { x: cx + W*0.01, y: 185 },
+    ear: { x: cx + W*0.15, y: 185 },
+    ai:  { x: cx + W*0.30, y: 185 }
+  };
+
+  // Líneas de conexión
+  function line(from, to, alpha=0.4) {
+    ctx2.beginPath();
+    ctx2.moveTo(positions[from].x, positions[from].y + 14);
+    ctx2.lineTo(positions[to].x, positions[to].y - 14);
+    ctx2.strokeStyle = `rgba(150,200,255,${alpha})`;
+    ctx2.lineWidth = 1.5;
+    ctx2.stroke();
+  }
+  line('ad','son'); line('ad','spe'); line('ad','mus');
+  line('son','aud'); line('son','pm'); line('son','mb');
+  line('ad','ear',0.25); line('ad','ai',0.25);
+
+  // Nodos no interactivos (speech, music)
+  [{id:'spe',label:'Voz',color:'#556677'},{id:'mus',label:'Música',color:'#556677'}].forEach(n=>{
+    const p = positions[n.id];
+    ctx2.beginPath();
+    ctx2.roundRect(p.x-38, p.y-13, 76, 26, 6);
+    ctx2.fillStyle = 'rgba(80,100,130,0.25)';
+    ctx2.fill();
+    ctx2.strokeStyle = 'rgba(100,150,200,0.3)';
+    ctx2.lineWidth = 1;
+    ctx2.stroke();
+    ctx2.fillStyle = '#557799';
+    ctx2.font = '11px sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'middle';
+    ctx2.fillText(n.label, p.x, p.y);
+  });
+
+  // Nodos interactivos
+  Object.entries(nodes).forEach(([id, n]) => {
+    const p = positions[id];
+    if(!p) return;
+    const isActive = id === currentNode;
+    const r = isActive ? 10 : 7;
+    const w = id === 'ad' ? 90 : 80;
+
+    ctx2.beginPath();
+    ctx2.roundRect(p.x - w/2, p.y - 15, w, 30, 8);
+    ctx2.fillStyle = isActive ? `${n.color}22` : 'rgba(20,35,55,0.8)';
+    ctx2.fill();
+    ctx2.strokeStyle = isActive ? n.color : 'rgba(100,150,200,0.35)';
+    ctx2.lineWidth = isActive ? 2 : 1;
+    ctx2.stroke();
+
+    ctx2.fillStyle = isActive ? n.color : '#99ccff';
+    ctx2.font = isActive ? 'bold 11px sans-serif' : '11px sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'middle';
+    ctx2.fillText(n.label, p.x, p.y);
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener('load', () => { drawTree(); });
+window.addEventListener('resize', () => drawTree());
+</script>
+</body>
+</html>

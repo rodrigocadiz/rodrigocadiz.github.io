@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Sonificación en Tiempo Real — Sonificación</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sonificacion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_que_es_sonificacion/index.html">1. ¿Qué es la Sonificación?</a>
+  <a href="../02_mapeo_parametros/index.html">2. Mapeo de Parámetros</a>
+  <a href="../03_audificacion/index.html">3. Audificación</a>
+  <a href="../04_earcons_iconos/index.html">4. Earcons e Iconos</a>
+  <a href="../05_datos_2d/index.html">5. Espacio de Datos 2D</a>
+  <a href="../06_tiempo_real/index.html" class="active">6. Tiempo Real</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#ff44ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">6. Sonificación en Tiempo Real</h1>
+      <p class="subtitle">Monitoreo auditivo continuo de una señal cambiante</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Monitoreo en tiempo real</h2>
+    <p class="description">
+      Una señal de datos cambia continuamente. El sonido la <span class="kw">sonifica en tiempo real</span>:
+      el <span class="kw">pitch</span> sigue el valor del dato instante a instante. El canvas muestra el
+      <span class="kw">scrolling waveform</span> — la historia reciente de la señal — igual que un monitor de ECG o un sismógrafo.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Tipo de señal</label>
+        <div class="btn-group" style="margin-bottom:0">
+          <button class="btn active" id="btnSmooth" onclick="setSignalType('smooth')">Suave (LFO)</button>
+          <button class="btn" id="btnErratic" onclick="setSignalType('erratic')">Errática</button>
+          <button class="btn" id="btnStep" onclick="setSignalType('step')">Escalones</button>
+          <button class="btn" id="btnChaos" onclick="setSignalType('chaos')">Caótica</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Velocidad de cambio: <span class="val" id="speedVal">1.0</span>×</label>
+        <input type="range" id="speedSlider" min="1" max="5" value="2" step="1">
+      </div>
+      <div class="control-group">
+        <label>Mapeo auditivo</label>
+        <div class="btn-group" style="margin-bottom:0">
+          <button class="btn active" id="btnPitch" onclick="setAudioMap('pitch')">Pitch</button>
+          <button class="btn" id="btnVolMap" onclick="setAudioMap('vol')">Volumen</button>
+          <button class="btn" id="btnBoth" onclick="setAudioMap('both')">Pitch + Volumen</button>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Iniciar monitoreo</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Presiona Iniciar para comenzar el monitoreo</div>
+    <canvas id="rtCanvas" height="200"></canvas>
+
+    <!-- Indicador de valor actual -->
+    <div style="display:flex; gap:20px; margin-top:12px; align-items:center;">
+      <div style="flex:1;">
+        <div style="font-size:0.75rem; color:#99ccff; margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">Valor actual del dato</div>
+        <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(100,180,255,0.3); border-radius:8px; height:16px; overflow:hidden;">
+          <div id="dataBar" style="height:100%; width:50%; background:linear-gradient(90deg,#ff44ff,#ffaa00); transition:width 0.08s;"></div>
+        </div>
+      </div>
+      <div style="text-align:right; min-width:120px;">
+        <div style="font-size:0.75rem; color:#99ccff;">Pitch</div>
+        <div id="freqDisplay" style="font-size:1.4rem; font-weight:700; color:#00ffff; font-family:monospace;">— Hz</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>Aplicaciones del monitoreo continuo</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Monitoreo médico</strong><br>
+        El ECG es audificado continuamente para alertar al personal médico de anomalías
+        sin que tengan que mirar la pantalla. El sonido libera la atención visual.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Monitoreo industrial</strong><br>
+        Sensores de temperatura, presión o vibración sonificados permiten detectar
+        fallos incipientes antes de que sean visibles en dashboards complejos.
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:10px;">
+      <strong style="color:#00ffff;">El oído como detector de anomalías</strong><br>
+      El sistema auditivo humano es altamente sensible a cambios inesperados en flujos de sonido
+      continuo. Una nota "fuera de lugar" en una secuencia sonificada se detecta en milisegundos,
+      incluso cuando la atención visual está ocupada en otra tarea.
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let animId = null;
+let startTS = null;
+let signalType = 'smooth';
+let audioMap = 'pitch';
+let oscNode = null, gainNode2 = null;
+
+// Scrolling buffer de señal
+const HISTORY = 300;
+const signalHistory = new Float32Array(HISTORY);
+let histHead = 0;
+
+// Para señal caótica (logístico)
+let chaoticX = 0.4;
+
+// ── Generador de señal (valor instantáneo) ────────────────────────────
+function getSignalValue(t) {
+  const speed = parseFloat(document.getElementById('speedSlider').value) * 0.5;
+  if (signalType === 'smooth') {
+    return 0.5 + 0.45 * Math.sin(2 * Math.PI * 0.4 * speed * t)
+                + 0.15 * Math.sin(2 * Math.PI * 1.1 * speed * t + 0.7);
+  } else if (signalType === 'erratic') {
+    return 0.5 + 0.4 * Math.sin(2 * Math.PI * 2.3 * speed * t)
+                + 0.2 * Math.sin(2 * Math.PI * 5.7 * speed * t + 1.2)
+                + 0.1 * Math.sin(2 * Math.PI * 11 * speed * t);
+  } else if (signalType === 'step') {
+    const phase = (speed * t) % 1;
+    const steps = 5;
+    return Math.floor(phase * steps) / (steps - 1);
+  } else if (signalType === 'chaos') {
+    // Se actualiza en el loop de animación
+    return chaoticX;
+  }
+  return 0.5;
+}
+
+// ── Mapeo dato → audio ────────────────────────────────────────────────
+function getFreqFromVal(v) { return 110 * Math.pow(2, v * 4); }
+function getGainFromVal(v) { return 0.02 + v * 0.22; }
+
+// ── Canvas scrolling ───────────────────────────────────────────────────
+const canvas = document.getElementById('rtCanvas');
+const ctx2 = canvas.getContext('2d');
+
+function drawCanvas(currentVal) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx2.clearRect(0, 0, W, H);
+
+  const padL = 8, padR = 8, padT = 16, padB = 16;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  // Grid horizontal
+  ctx2.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx2.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + bh * (1 - i / 4);
+    ctx2.beginPath(); ctx2.moveTo(padL, y); ctx2.lineTo(padL + bw, y); ctx2.stroke();
+  }
+
+  // Señal histórica (scrolling)
+  if (currentVal !== undefined) {
+    ctx2.beginPath();
+    for (let i = 0; i < HISTORY; i++) {
+      const idx = (histHead + i) % HISTORY;
+      const x = padL + (i / (HISTORY - 1)) * bw;
+      const y = padT + bh * (1 - signalHistory[idx]);
+      i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+    }
+    ctx2.strokeStyle = '#ff44ff';
+    ctx2.lineWidth = 2;
+    ctx2.stroke();
+
+    // Punto actual (borde derecho)
+    const curX = padL + bw;
+    const curY = padT + bh * (1 - currentVal);
+    ctx2.beginPath();
+    ctx2.arc(curX, curY, 5, 0, Math.PI * 2);
+    ctx2.fillStyle = '#ffaa00';
+    ctx2.fill();
+
+    // Línea de umbral del 50%
+    const midY = padT + bh * 0.5;
+    ctx2.setLineDash([6, 4]);
+    ctx2.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx2.lineWidth = 1;
+    ctx2.beginPath(); ctx2.moveTo(padL, midY); ctx2.lineTo(padL+bw, midY); ctx2.stroke();
+    ctx2.setLineDash([]);
+  }
+
+  // Labels
+  ctx2.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx2.font = '10px sans-serif';
+  ctx2.textAlign = 'right';
+  ['1.0','0.75','0.5','0.25','0'].forEach((v,i) => ctx2.fillText(v, padL-2, padT + bh*i/4 + 3));
+  ctx2.textAlign = 'center';
+  ctx2.fillText('tiempo →', padL + bw/2, H - 2);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener monitoreo';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudioEngine();
+  startTS = null;
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  oscNode = null; gainNode2 = null;
+  document.getElementById('btnPlay').textContent = '▶ Iniciar monitoreo';
+  document.getElementById('btnPlay').classList.remove('active');
+  document.getElementById('statusLabel').textContent = 'Presiona Iniciar para comenzar el monitoreo';
+  document.getElementById('freqDisplay').textContent = '— Hz';
+  document.getElementById('dataBar').style.width = '50%';
+  drawCanvas();
+}
+
+function startAudioEngine() {
+  stopAllAudio();
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+  const osc = actx.createOscillator();
+  const g = actx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 440;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.15, t0 + 0.05);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0);
+  _activeNodes.push(osc);
+  oscNode = osc; gainNode2 = g;
+}
+
+function updateAudioFromValue(v) {
+  if (!oscNode || !gainNode2) return;
+  const actx = getAudioContext();
+  if (audioMap === 'pitch' || audioMap === 'both') {
+    oscNode.frequency.setTargetAtTime(getFreqFromVal(v), actx.currentTime, 0.04);
+    gainNode2.gain.setTargetAtTime(0.18, actx.currentTime, 0.04);
+  }
+  if (audioMap === 'vol') {
+    oscNode.frequency.setTargetAtTime(440, actx.currentTime, 0.04);
+    gainNode2.gain.setTargetAtTime(getGainFromVal(v), actx.currentTime, 0.04);
+  }
+  if (audioMap === 'both') {
+    gainNode2.gain.setTargetAtTime(getGainFromVal(v), actx.currentTime, 0.04);
+  }
+}
+
+// ── Loop de animación ──────────────────────────────────────────────────
+let lastChaosUpdate = 0;
+
+function animate(ts) {
+  if (!startTS) startTS = ts;
+  const elapsed = (ts - startTS) / 1000;
+
+  // Actualizar señal caótica (mapa logístico)
+  if (signalType === 'chaos' && ts - lastChaosUpdate > 80) {
+    const r = 3.7 + parseFloat(document.getElementById('speedSlider').value) * 0.06;
+    chaoticX = r * chaoticX * (1 - chaoticX);
+    lastChaosUpdate = ts;
+  }
+
+  const v = Math.max(0, Math.min(1, getSignalValue(elapsed)));
+
+  // Agregar al historial
+  histHead = (histHead + 1) % HISTORY;
+  signalHistory[histHead] = v;
+
+  // Actualizar audio
+  updateAudioFromValue(v);
+
+  // Actualizar UI
+  const freq = getFreqFromVal(v);
+  document.getElementById('freqDisplay').textContent = Math.round(freq) + ' Hz';
+  document.getElementById('dataBar').style.width = (v * 100).toFixed(1) + '%';
+  document.getElementById('statusLabel').textContent =
+    `Dato: ${v.toFixed(3)}  ·  Pitch: ${Math.round(freq)} Hz  ·  Vol: ${Math.round(getGainFromVal(v)*100)}%`;
+
+  drawCanvas(v);
+
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+function setSignalType(type) {
+  signalType = type;
+  ['smooth','erratic','step','chaos'].forEach(t => {
+    document.getElementById('btn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.remove('active');
+  });
+  document.getElementById('btn'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
+  if (type === 'chaos') chaoticX = 0.4;
+}
+
+function setAudioMap(m) {
+  audioMap = m;
+  ['pitch','volMap','both'].forEach(t => {
+    document.getElementById('btn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.remove('active');
+  });
+  document.getElementById('btn'+m.charAt(0).toUpperCase()+m.slice(1)).classList.add('active');
+}
+
+document.getElementById('speedSlider').addEventListener('input', function() {
+  document.getElementById('speedVal').textContent = (parseFloat(this.value) * 0.5).toFixed(1);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener('load', () => drawCanvas());
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>
