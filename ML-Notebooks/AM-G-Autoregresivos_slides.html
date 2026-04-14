@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Modelos Autoregresivos · IEE3021</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+:root {
+  --ink:#1a1a1a; --ink-soft:#555; --ink-faint:#8b8b8b; --paper:#ffffff;
+  --rule:#e8e8e8; --accent:#2c6aa0;
+  --note-bg:#eaf2fb; --note-bd:#4a90d9; --note-tx:#2c6aa0;
+  --alert-bg:#fef9e7; --alert-bd:#e0a800; --alert-tx:#856404;
+  --danger-bg:#fdecea; --danger-bd:#e74c3c; --danger-tx:#c0392b;
+  --eq-bg:#f6f8fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:#eaeaea; --ink-soft:#b8b8b8; --ink-faint:#8a8a8a; --paper:#141414;
+    --rule:#2a2a2a; --accent:#6ba8dc;
+    --note-bg:#1f2b3a; --note-bd:#6ba8dc; --note-tx:#8fb8da;
+    --alert-bg:#3a3122; --alert-bd:#e0a800; --alert-tx:#e5c26d;
+    --danger-bg:#3d1e1c; --danger-bd:#e74c3c; --danger-tx:#ff8d7a;
+    --eq-bg:#1c222d;
+  }
+  .svg-holder svg { background-color:#faf7eb; border-radius:8px; padding:6px; }
+}
+.reveal, .reveal .slides, .reveal .slides section {
+  font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight:400; color:var(--ink); text-align:left; letter-spacing:0.005em;
+}
+.reveal .slide-background { background:var(--paper); }
+
+/* Each section is a flex column so SVG gets remaining space */
+.reveal .slides section {
+  padding:2.5% 5% 3% 5%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.section-label {
+  font-size:0.62em; color:var(--ink-faint); letter-spacing:0.14em;
+  text-transform:uppercase; font-weight:500; margin-bottom:0.7em;
+  flex-shrink:0;
+}
+.reveal h1 { font-size:2.1em; font-weight:600; line-height:1.15; margin:0 0 0.5em 0; color:var(--ink); text-transform:none; letter-spacing:-0.01em; flex-shrink:0; }
+.reveal h2 { font-size:1.35em; font-weight:600; line-height:1.2; margin:0 0 0.5em 0; color:var(--ink); text-transform:none; letter-spacing:-0.005em; border:none; flex-shrink:0; }
+.reveal h3 { font-size:0.95em; font-weight:500; color:var(--ink-soft); margin:0 0 0.5em 0; text-transform:none; }
+.reveal p, .reveal li { font-size:0.82em; line-height:1.45; color:var(--ink); }
+.reveal ul, .reveal ol { margin:0.3em 0 0 1em; }
+.reveal li { margin:0.2em 0; }
+.reveal strong { font-weight:600; color:var(--ink); }
+.reveal em { font-style:italic; }
+.reveal a { color:var(--accent); text-decoration:none; }
+
+.intro { font-size:0.88em; line-height:1.5; color:var(--ink-soft); max-width:880px; margin:0 0 0.7em 0; flex-shrink:0; }
+.intro strong { color:var(--ink); }
+
+.adm { border-left:4px solid; border-radius:4px; padding:0.7em 1.15em; margin:0.4em 0; max-width:880px; flex-shrink:0; }
+.adm .adm-title { font-weight:600; font-size:0.82em; margin:0 0 0.35em 0; letter-spacing:0.005em; }
+.adm .adm-body p { margin:0.22em 0; font-size:0.78em; line-height:1.45; }
+.adm .adm-body ul { margin:0.22em 0 0 1em; }
+.adm .adm-body li { font-size:0.78em; margin:0.16em 0; line-height:1.4; }
+.adm-note { background:var(--note-bg); border-color:var(--note-bd); }
+.adm-note .adm-title { color:var(--note-tx); }
+.adm-alert { background:var(--alert-bg); border-color:var(--alert-bd); }
+.adm-alert .adm-title { color:var(--alert-tx); }
+.adm-danger { background:var(--danger-bg); border-color:var(--danger-bd); }
+.adm-danger .adm-title { color:var(--danger-tx); }
+
+.eq { background:var(--eq-bg); border-left:3px solid var(--accent); padding:0.7em 1.2em; margin:0.45em 0; border-radius:4px; max-width:880px; flex-shrink:0; overflow-x:auto; }
+.eq-big .katex-display { font-size:1.15em; margin:0.25em 0; }
+.eq-huge { padding:1em 1.5em; }
+.eq-huge .katex-display { font-size:1.45em; margin:0.22em 0; }
+.eq .caption { font-size:0.7em; color:var(--ink-faint); margin-top:0.35em; text-align:right; }
+
+.caption-end { font-size:0.75em; color:var(--ink-faint); margin-top:0.4em; font-style:italic; max-width:880px; flex-shrink:0; }
+
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.4em; align-items:start; margin-top:0.4em; flex-shrink:0; }
+.col-label { font-size:0.64em; text-transform:uppercase; color:var(--ink-faint); letter-spacing:0.1em; margin-bottom:0.4em; font-weight:600; }
+
+/* SVG takes all remaining vertical space */
+.svg-holder { display:flex; align-items:center; justify-content:flex-start; width:100%; max-width:880px; flex:1; min-height:0; margin-top:0.3em; }
+.svg-holder svg { width:100%; height:100%; display:block; }
+
+.mini-table { border-collapse:collapse; font-size:0.72em; width:100%; max-width:880px; margin-top:0.3em; flex-shrink:0; }
+.mini-table th, .mini-table td { padding:0.4em 0.7em; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top; }
+.mini-table th { font-weight:600; color:var(--ink-soft); font-size:0.7em; text-transform:uppercase; letter-spacing:0.05em; }
+
+.title-slide { display:flex; flex-direction:column; justify-content:center; height:100%; }
+.title-slide .course-id { font-size:0.75em; color:var(--ink-faint); letter-spacing:0.14em; text-transform:uppercase; margin-bottom:2em; font-weight:500; }
+.title-slide h1 { font-size:2.8em; font-weight:600; line-height:1.1; margin:0 0 0.4em 0; }
+.title-slide .byline { font-size:1em; color:var(--ink-soft); margin-top:1.2em; }
+
+.close-slide { display:flex; flex-direction:column; justify-content:center; height:100%; }
+.close-slide .section-label { margin-bottom:1em; }
+.close-slide h1 { font-size:1.9em; max-width:24em; line-height:1.25; }
+
+.slide-num { position:absolute; bottom:2%; right:3%; font-size:0.55em; color:var(--ink-faint); letter-spacing:0.1em; }
+.reveal .controls { color:var(--ink-faint); }
+.reveal .progress { background:transparent; color:var(--accent); height:2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section>
+<div class="title-slide">
+  <div class="course-id">Aprendizaje de Máquina y Modelos Generativos</div>
+  <h1>Modelos autoregresivos</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+
+</section>
+
+<section>
+<div class="section-label">§ 1 · Fundamentos: la regla de la cadena</div><h2>La distribución conjunta factoriza exactamente en condicionales</h2>
+<p class="intro">Los modelos generativos profundos difieren en cómo abordan la distribución de los datos. Los VAE optimizan una cota inferior de la verosimilitud; las GAN aprenden de forma implícita sin acceso directo a la probabilidad. Los <strong>modelos autoregresivos</strong> (ARM) toman una ruta distinta: estiman la función de densidad exacta descomponiendo la distribución conjunta en un producto de condicionales, una variable a la vez.</p>
+<div class="eq eq-huge">$$p(\mathbf{x}) = \prod_{d=1}^{D} p(x_d \mid x_{&lt;d}) \tag{1}$$</div><p class="caption-end">Identidad algebraica exacta derivada de la regla del producto. No es una aproximación, y no asume independencia condicional alguna.</p>
+<div class="slide-num">2</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Fundamentos: la regla de la cadena</div><h2>La log-verosimilitud se calcula sin aproximaciones</h2>
+<p class="intro">La ecuación (1) implica que tomar logaritmo a ambos lados convierte el producto en una suma numéricamente estable. La log-verosimilitud de un dato es la suma de los logaritmos de sus condicionales.</p>
+<div class="eq eq-big">$$\ln p(\mathbf{x}) = \sum_{d=1}^{D} \ln p(x_d \mid x_{&lt;d})$$</div><div class="adm adm-note"><div class="adm-title">Verosimilitud exacta</div><div class="adm-body"><p>A diferencia del VAE, que maximiza el <strong>ELBO</strong> (una cota inferior), los ARM maximizan directamente la log-verosimilitud real. Esto los convierte en los mejores estimadores de densidad entre los modelos generativos profundos.</p><p>Permiten calcular $p(\mathbf{x})$ para cualquier dato de prueba y comparar modelos cuantitativamente mediante <strong>bits por dimensión</strong> (BPD).</p></div></div>
+<div class="slide-num">3</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Fundamentos: la regla de la cadena</div><h2>Un problema D-dimensional en D subproblemas tratables</h2>
+<p class="intro">La factorización (1) transforma el inmanejable problema de modelar una distribución conjunta multivariada en la construcción de $D$ distribuciones condicionales unidimensionales.</p>
+<div class="adm adm-alert"><div class="adm-title">El cambio de paradigma</div><div class="adm-body"><p>Cada condicional $p(x_d \mid x_{&lt;d})$ puede ser una <strong>softmax discreta</strong> (para píxeles o tokens) o una distribución continua parametrizada (mezcla de logísticas para audio).</p><p>Un único modelo neuronal, con la arquitectura correcta, puede predecir los parámetros de todas las $D$ distribuciones en un solo <em>forward pass</em> durante el entrenamiento.</p></div></div>
+<div class="slide-num">4</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Fundamentos: la regla de la cadena</div><h2>El orden es arbitrario pero importa</h2>
+<p class="intro">La regla de la cadena requiere un orden fijo de las variables. Para imágenes, el orden <strong>rasterizado</strong> (fila por fila, de izquierda a derecha) es la convención estándar. Para audio, el orden cronológico es obligatorio.</p>
+<div class="adm adm-danger"><div class="adm-title">Sesgo estructural del orden</div><div class="adm-body"><p>La elección del orden introduce un <strong>sesgo estructural</strong>: impone la necesidad de un orden arbitrario que puede no coincidir con la estructura causal natural de los datos.</p><p>Este sesgo es una desventaja intrínseca de los ARM frente a modelos no ordenados como los VAE.</p></div></div>
+<div class="slide-num">5</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Fundamentos: la regla de la cadena</div><h2>Cada píxel se predice desde todo el pasado rasterizado</h2>
+<p class="intro">En una imagen $4 \times 4$, el píxel $x_8$ se predice a partir de $x_1, \ldots, x_7$ (contexto azul, ya observado). Los píxeles $x_9, \ldots, x_{16}$ son el futuro y no participan. La red neuronal produce la distribución categórica completa sobre los 256 valores posibles de $x_8$.</p>
+<div class="svg-holder"><svg viewBox="0 0 870 235" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Factorización autoregresiva en imagen 4×4: predicción del píxel x₈</text>
+  <rect x="80" y="35" width="42" height="42" rx="4" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="101" y="61" text-anchor="middle" fill="white" font-weight="bold">x₁</text>
+  <rect x="126" y="35" width="42" height="42" rx="4" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="147" y="61" text-anchor="middle" fill="white" font-weight="bold">x₂</text>
+  <rect x="172" y="35" width="42" height="42" rx="4" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="193" y="61" text-anchor="middle" fill="white" font-weight="bold">x₃</text>
+  <rect x="218" y="35" width="42" height="42" rx="4" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="239" y="61" text-anchor="middle" fill="white" font-weight="bold">x₄</text>
+  <rect x="80" y="81" width="42" height="42" rx="4" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="101" y="107" text-anchor="middle" fill="white" font-weight="bold">x₅</text>
+  <rect x="126" y="81" width="42" height="42" rx="4" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="147" y="107" text-anchor="middle" fill="white" font-weight="bold">x₆</text>
+  <rect x="172" y="81" width="42" height="42" rx="4" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="193" y="107" text-anchor="middle" fill="white" font-weight="bold">x₇</text>
+  <rect x="218" y="81" width="42" height="42" rx="4" fill="#27ae60" stroke="#1a7a42" stroke-width="2.5"/>
+  <text x="239" y="107" text-anchor="middle" fill="white" font-weight="bold">x₈</text>
+  <rect x="80" y="127" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="101" y="153" text-anchor="middle" fill="#999">x₉</text>
+  <rect x="126" y="127" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="147" y="153" text-anchor="middle" fill="#999">x₁₀</text>
+  <rect x="172" y="127" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="193" y="153" text-anchor="middle" fill="#999">x₁₁</text>
+  <rect x="218" y="127" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="239" y="153" text-anchor="middle" fill="#999">x₁₂</text>
+  <rect x="80" y="173" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="101" y="199" text-anchor="middle" fill="#999">x₁₃</text>
+  <rect x="126" y="173" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="147" y="199" text-anchor="middle" fill="#999">x₁₄</text>
+  <rect x="172" y="173" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="193" y="199" text-anchor="middle" fill="#999">x₁₅</text>
+  <rect x="218" y="173" width="42" height="42" rx="4" fill="#eaf2fb" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="239" y="199" text-anchor="middle" fill="#999">x₁₆</text>
+  <line x1="265" y1="102" x2="340" y2="102" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="303" y="95" text-anchor="middle" fill="#555" font-size="11">x₁…x₇</text>
+  <rect x="340" y="77" width="140" height="50" rx="8" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+  <text x="410" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="#856404">Red neuronal</text>
+  <text x="410" y="116" text-anchor="middle" font-size="11" fill="#856404">f(x₁,…,x₇; θ)</text>
+  <line x1="480" y1="102" x2="555" y2="102" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="555" y="77" width="175" height="50" rx="8" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
+  <text x="642" y="98" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a7a42">p(x₈ | x₁,…,x₇)</text>
+  <text x="642" y="116" text-anchor="middle" font-size="11" fill="#1a7a42">softmax 256 vías</text>
+</svg></div>
+<div class="slide-num">6</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Conexión con la autoregresión clásica</div><h2>La idea no es nueva: ARMA es un AR lineal</h2>
+<p class="intro">La idea autoregresiva no nació con las redes neuronales. En procesamiento de señales y econometría, los modelos <strong>AR, ARMA y ARIMA</strong> han sido la herramienta estándar durante décadas para modelar series de tiempo estacionarias. Un modelo AR de orden $p$ predice la muestra actual como combinación lineal de las $p$ muestras previas más ruido blanco:</p>
+<div class="eq eq-big">$$x_t = c + \sum_{k=1}^{p} \varphi_k \, x_{t-k} + \varepsilon_t, \qquad \varepsilon_t \sim \mathcal{N}(0, \sigma^2)$$</div><p class="caption-end">Coeficientes $\varphi_k$ explícitos, ajustados por mínimos cuadrados o verosimilitud máxima. La misma idea central: condicionar cada valor en la historia previa.</p>
+<div class="slide-num">7</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Conexión con la autoregresión clásica</div><h2>Mismo principio, distinto nivel de expresividad</h2>
+<p class="intro">Los modelos autoregresivos clásicos y los neuronales comparten la idea central: condicionar cada valor en la historia previa. La diferencia radica en <strong>cómo</strong> se aprende ese condicionamiento.</p>
+<div class="adm adm-note"><div class="adm-title">Clásico vs neural</div><div class="adm-body"><ul><li>En <strong>ARMA</strong>, la relación es lineal y explícita, con un número fijo de rezagos $p$ y una distribución gaussiana fija para el residuo.</li><li>En un <strong>ARM neuronal</strong> (con CNN causales, RNN o Transformers causales), la relación es no lineal e implícita, aprendida por millones de parámetros, puede condicionar en contextos arbitrariamente largos y modelar distribuciones multimodales arbitrarias.</li></ul><p>En lenguaje estadístico, ambos estiman $p(x_t \mid x_{&lt;t})$. La diferencia está en la flexibilidad de la familia paramétrica.</p></div></div>
+<div class="slide-num">8</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Conexión con la autoregresión clásica</div><h2>No se asume independencia, solo si se elige simplificar</h2>
+<p class="intro">La regla de la cadena (ecuación 1) no asume independencia alguna: es una identidad exacta.</p>
+<div class="adm adm-alert"><div class="adm-title">Supuesto markoviano opcional</div><div class="adm-body"><p>El supuesto de Markov $p(x_t \mid x_{&lt;t}) = p(x_t \mid x_{t-p:t-1})$ es una simplificación <em>opcional</em> que reduce el contexto a los últimos $p$ valores.</p><p>Los modelos AR clásicos imponen este supuesto por construcción; los ARM neuronales modernos no lo hacen y aprovechan todo el contexto disponible, lo que explica gran parte de su ventaja en datos complejos.</p></div></div>
+<div class="slide-num">9</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El carácter generativo</div><h2>Un ARM predice una distribución, no un valor</h2>
+<p class="intro">Es común confundir un modelo autoregresivo con un regresor ordinario que devuelve un único valor predicho. La distinción es sutil pero fundamental, y explica por qué los ARM neuronales son <strong>modelos generativos</strong> y no simples predictores.</p>
+<div class="adm adm-note"><div class="adm-title">No se predice un valor, se predice una distribución</div><div class="adm-body"><p>Un ARM no devuelve un escalar $\hat{x}_d$ como salida. Devuelve los <strong>parámetros de una distribución de probabilidad completa</strong> sobre los posibles valores de $x_d$ dado el contexto $x_{&lt;d}$: por ejemplo, una softmax sobre 256 niveles para un píxel, o una mezcla de logísticas para una muestra de audio continua.</p><p>De esa distribución se <strong>muestrea</strong> estocásticamente para obtener el siguiente valor.</p></div></div>
+<div class="slide-num">10</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El carácter generativo</div><h2>Diversidad sin sacrificar precisión</h2>
+<p class="intro">Un regresor determinista entrega siempre la misma salida para la misma entrada. Un ARM, al muestrear, puede producir múltiples continuaciones plausibles para el mismo contexto.</p>
+<div class="adm adm-alert"><div class="adm-title">Estocasticidad controlada</div><div class="adm-body"><p>Es preciso respecto a la <strong>distribución condicional</strong> (la familia de valores compatibles con el contexto), pero flexible respecto al <strong>valor concreto</strong> que elige.</p><p>Esa estocasticidad controlada es lo que permite generar muestras nuevas, diversas y realistas, en lugar de reconstrucciones idénticas.</p></div></div>
+<div class="slide-num">11</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El carácter generativo</div><h2>Reconstrucción exacta vs generación novedosa</h2>
+<p class="intro">Si el objetivo fuera reconstruir una imagen específica, se elegiría la moda de cada condicional (<em>greedy decoding</em>) y se obtendría una salida determinista. Para generar nuevos datos, en cambio, se muestrea de las condicionales, produciendo trayectorias distintas en cada ejecución.</p>
+<div class="adm adm-danger"><div class="adm-title">Dos modos de uso</div><div class="adm-body"><p>La <strong>temperatura</strong> de la softmax controla el balance entre fidelidad y diversidad: $T \to 0$ concentra la masa en los modos, produciendo secuencias deterministas y repetitivas; $T \to \infty$ aplana la distribución hacia la uniforme.</p></div></div>
+<div class="slide-num">12</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Parametrización con redes neuronales</div><h2>La regla de la cadena no especifica cómo modelar cada condicional</h2>
+<p class="intro">La regla de la cadena garantiza la validez matemática de la factorización, pero <strong>no especifica cómo modelar cada condicional</strong> $p(x_d \mid x_{&lt;d})$. Para datos de alta dimensionalidad, se requiere una red capaz de procesar un contexto de tamaño creciente. Tres familias arquitectónicas abordan este problema.</p>
+<table class="mini-table"><thead><tr><th>Familia</th><th>Ventaja clave</th><th>Limitación</th></tr></thead><tbody><tr><td><strong>RNN / LSTM</strong></td><td>Estado oculto que resume la historia</td><td>Cómputo secuencial estricto</td></tr><tr><td><strong>Conv. causales</strong></td><td>Entrenamiento totalmente paralelo</td><td>Campo receptivo local; punto ciego</td></tr><tr><td><strong>Atención causal</strong></td><td>Dependencias globales desde capa 1</td><td>Coste $O(D^2)$ en atención</td></tr></tbody></table>
+<div class="slide-num">13</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Parametrización con redes neuronales</div><h2>Redes recurrentes: el contexto vive en un estado oculto</h2>
+<p class="intro">Las RNN mantienen un estado oculto $h_t$ que resume la historia $x_{&lt;t}$. A partir de él se obtiene directamente la softmax de la siguiente palabra, píxel o muestra.</p>
+<div class="eq eq-big">$$\begin{aligned} h_t &= \tanh(W_h h_{t-1} + W_x x_{t-1} + b) \\ p(x_t \mid x_{&lt;t}) &= \text{softmax}(W_o h_t + b_o) \end{aligned}$$</div><div class="adm adm-note"><div class="adm-title">RNN y LSTM</div><div class="adm-body"><p>La celda LSTM mejora la memoria de largo plazo con compuertas de olvido, entrada y salida.</p><p><strong>Desventaja</strong>: la naturaleza secuencial estricta del cómputo. No se puede paralelizar el cálculo de $h_t$ sin conocer $h_{t-1}$, lo que hace el entrenamiento lento en secuencias largas.</p></div></div>
+<div class="slide-num">14</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Parametrización con redes neuronales</div><h2>Convoluciones causales: máscaras sobre el kernel</h2>
+<p class="intro">Una familia alternativa de ARM reemplaza las capas recurrentes por <strong>convoluciones causales</strong>: kernels estándar en los que los pesos de posiciones futuras se fuerzan a cero mediante una máscara binaria $M$.</p>
+<div class="eq eq-big">$$(\mathbf{W} \odot M) * \mathbf{x}, \qquad M_{k,j} = \begin{cases}0 & j \geq d\\ 1 & j &lt; d\end{cases}$$</div><div class="adm adm-alert"><div class="adm-title">Ventaja decisiva</div><div class="adm-body"><p>Todas las condicionales se pueden calcular <strong>en paralelo</strong> durante el entrenamiento con un único pase por la red, independientemente de la longitud de la secuencia.</p></div></div>
+<div class="slide-num">15</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Parametrización con redes neuronales</div><h2>Atención causal: dependencias globales desde la capa 1</h2>
+<p class="intro">Los Transformers aplican <strong>autoatención causal</strong>: la máscara de atención impide que la posición $d$ atienda a posiciones $d' &gt; d$.</p>
+<div class="adm adm-note"><div class="adm-title">Transformers causales</div><div class="adm-body"><p>A diferencia de las CNN convolucionales, cuyo campo receptivo crece linealmente con la profundidad, la atención permite <strong>dependencias globales directas</strong> desde la primera capa.</p><p>Los grandes modelos de lenguaje contemporáneos son ARM Transformer de gran escala entrenados con esta arquitectura, y representan el estado del arte en modelado de lenguaje.</p></div></div>
+<div class="slide-num">16</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Parametrización con redes neuronales</div><h2>El cuello de botella de la generación</h2>
+<p class="intro">Durante el entrenamiento, los ARM basados en convoluciones o Transformers aprovechan paralelismo completo: como se conocen todos los $x_d$ verdaderos, se predicen todas las condicionales simultáneamente en un solo <em>forward pass</em>.</p>
+<div class="adm adm-danger"><div class="adm-title">Asimetría entrenamiento / generación</div><div class="adm-body"><p>Durante la generación, sin embargo, $x_d$ no está disponible hasta haberlo muestreado: el proceso es <strong>estrictamente secuencial</strong>.</p><p>Generar una imagen de $256 \times 256 = 65.536$ píxeles requiere 65.536 pases por la red, lo que puede tardar minutos.</p></div></div>
+<div class="slide-num">17</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · MADE</div><h2>MADE: autoencoder enmascarado para estimación de densidad</h2>
+<p class="intro">MADE (<em>Masked Autoencoder for Distribution Estimation</em>, Germain et al., 2015) muestra que un autoencoder estándar puede convertirse en un modelo autoregresivo exacto con una única modificación: eliminar selectivamente conexiones para garantizar la propiedad causal. Se asigna un <strong>número de orden</strong> $m(k) \in \{1, \ldots, D\}$ a cada neurona oculta $k$ y se enmascara toda conexión que violaría la causalidad.</p>
+<div class="eq eq-big">$$M^W_{k,d} = \mathbf{1}[m(k) \geq d], \qquad M^V_{d,k} = \mathbf{1}[d &gt; m(k)]$$</div><div class="adm adm-note"><div class="adm-title">Propiedad autoregresiva garantizada</div><div class="adm-body"><p>Con las máscaras correctas, la salida $\hat{x}_d$ depende únicamente de $x_{&lt;d}$. Un único <em>forward pass</em> produce simultáneamente los parámetros de todas las condicionales para $d = 1, \ldots, D$. La función de pérdida es la log-verosimilitud negativa exacta.</p></div></div>
+<div class="slide-num">18</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · MADE</div><h2>El patrón de conexiones respeta el orden asignado</h2>
+<p class="intro">Las conexiones activas (azul) respetan la causalidad; las inactivas (punteadas) se eliminan multiplicando los pesos por cero. Solo las azules transmiten señal.</p>
+<div class="svg-holder"><svg viewBox="0 0 870 250" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">MADE: máscaras causales (D = 3, órdenes m mostrados en cada nodo)</text>
+  <text x="130" y="46" text-anchor="middle" fill="#555" font-size="11">Entrada</text>
+  <circle cx="130" cy="80" r="22" fill="#4a90d9" stroke="#2c6aa0" stroke-width="2"/>
+  <text x="130" y="76" text-anchor="middle" fill="white" font-weight="bold">x₁</text>
+  <text x="130" y="89" text-anchor="middle" fill="white" font-size="10">m=1</text>
+  <circle cx="130" cy="145" r="22" fill="#4a90d9" stroke="#2c6aa0" stroke-width="2"/>
+  <text x="130" y="141" text-anchor="middle" fill="white" font-weight="bold">x₂</text>
+  <text x="130" y="154" text-anchor="middle" fill="white" font-size="10">m=3</text>
+  <circle cx="130" cy="210" r="22" fill="#4a90d9" stroke="#2c6aa0" stroke-width="2"/>
+  <text x="130" y="206" text-anchor="middle" fill="white" font-weight="bold">x₃</text>
+  <text x="130" y="219" text-anchor="middle" fill="white" font-size="10">m=2</text>
+  <text x="435" y="46" text-anchor="middle" fill="#555" font-size="11">Oculta</text>
+  <circle cx="435" cy="90" r="22" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+  <text x="435" y="86" text-anchor="middle" fill="#856404" font-weight="bold">h₁</text>
+  <text x="435" y="99" text-anchor="middle" fill="#856404" font-size="10">m=2</text>
+  <circle cx="435" cy="155" r="22" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+  <text x="435" y="151" text-anchor="middle" fill="#856404" font-weight="bold">h₂</text>
+  <text x="435" y="164" text-anchor="middle" fill="#856404" font-size="10">m=1</text>
+  <circle cx="435" cy="210" r="22" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+  <text x="435" y="206" text-anchor="middle" fill="#856404" font-weight="bold">h₃</text>
+  <text x="435" y="219" text-anchor="middle" fill="#856404" font-size="10">m=3</text>
+  <text x="740" y="46" text-anchor="middle" fill="#555" font-size="11">Salida</text>
+  <circle cx="740" cy="80" r="22" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
+  <text x="740" y="73" text-anchor="middle" fill="#1a7a42" font-weight="bold">x̂₁</text>
+  <text x="740" y="86" text-anchor="middle" fill="#1a7a42" font-size="9">p(x₁)</text>
+  <circle cx="740" cy="145" r="22" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
+  <text x="740" y="138" text-anchor="middle" fill="#1a7a42" font-weight="bold">x̂₂</text>
+  <text x="740" y="151" text-anchor="middle" fill="#1a7a42" font-size="9">p(x₂|x₁,x₃)</text>
+  <circle cx="740" cy="210" r="22" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
+  <text x="740" y="203" text-anchor="middle" fill="#1a7a42" font-weight="bold">x̂₃</text>
+  <text x="740" y="216" text-anchor="middle" fill="#1a7a42" font-size="9">p(x₃|x₁)</text>
+  <line x1="152" y1="80" x2="413" y2="90" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="152" y1="80" x2="413" y2="155" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="152" y1="80" x2="413" y2="210" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="152" y1="145" x2="413" y2="90" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="152" y1="145" x2="413" y2="155" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="152" y1="145" x2="413" y2="210" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="152" y1="210" x2="413" y2="90" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="152" y1="210" x2="413" y2="155" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="152" y1="210" x2="413" y2="210" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="457" y1="90" x2="718" y2="80" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="457" y1="155" x2="718" y2="80" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="457" y1="210" x2="718" y2="80" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="457" y1="90" x2="718" y2="145" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="457" y1="155" x2="718" y2="145" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="457" y1="210" x2="718" y2="145" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="457" y1="90" x2="718" y2="210" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="457" y1="155" x2="718" y2="210" stroke="#4a90d9" stroke-width="1.8"/>
+  <line x1="457" y1="210" x2="718" y2="210" stroke="#ddd" stroke-width="1" stroke-dasharray="5,3"/>
+</svg></div>
+<div class="slide-num">19</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · PixelRNN y PixelCNN</div><h2>PixelRNN y PixelCNN: generación de imágenes píxel a píxel</h2>
+<p class="intro">PixelRNN y PixelCNN (van den Oord et al., 2016) aplican el paradigma autoregresivo a imágenes naturales, modelando la distribución discreta de los valores de píxeles crudos con una red profunda que escanea la imagen en orden rasterizado. Para una imagen de $H \times W$ píxeles con 3 canales RGB, la factorización combina el orden espacial con el orden de canales dentro de cada píxel:</p>
+<div class="eq eq-big">$$\begin{aligned} p(\mathbf{x}) = \prod_{i=1}^{HW} \,& p(x_{i,R} \mid \mathbf{x}_{&lt;i}) \\ \cdot\, & p(x_{i,G} \mid \mathbf{x}_{&lt;i}, x_{i,R}) \\ \cdot\, & p(x_{i,B} \mid \mathbf{x}_{&lt;i}, x_{i,R}, x_{i,G}) \end{aligned}$$</div>
+<div class="slide-num">20</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · PixelRNN y PixelCNN</div><h2>Píxeles como variables discretas de 256 niveles</h2>
+<p class="intro">En lugar de modelar los valores de píxeles como variables continuas, PixelRNN los trata como variables discretas con 256 niveles posibles ($0$ a $255$). La distribución condicional de cada píxel se parametriza con una <strong>softmax de 256 vías</strong>.</p>
+<div class="adm adm-note"><div class="adm-title">Distribución categórica</div><div class="adm-body"><p>Esto permite ajustarse a distribuciones de cualquier forma sin asumir simetría ni unimodalidad, y la función de pérdida es simplemente la entropía cruzada categórica.</p></div></div>
+<div class="slide-num">21</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · PixelRNN y PixelCNN</div><h2>Máscaras de convolución: Tipo A y Tipo B</h2>
+<p class="intro">PixelCNN usa dos tipos de máscaras sobre kernels $k \times k$ para respetar la causalidad espacial.</p>
+<div class="adm adm-alert"><div class="adm-title">Dos máscaras distintas</div><div class="adm-body"><ul><li><strong>Máscara A</strong>: usada solo en la primera capa convolucional. Enmascara el píxel central y todos los píxeles a su derecha o debajo. Garantiza que la predicción no incluya el propio valor a predecir.</li><li><strong>Máscara B</strong>: usada en las capas siguientes. Permite que el píxel central se conecte consigo mismo (la capa ya procesó el contexto), relajando la restricción para aumentar la expresividad.</li></ul><p>El campo receptivo de PixelCNN tiene forma de <strong>L invertida</strong>: accede a toda la fila superior y a los píxeles de la izquierda en la fila actual.</p></div></div>
+<div class="slide-num">22</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · PixelRNN y PixelCNN</div><h2>PixelCNN vs Gated PixelCNN</h2>
+<p class="intro">Izquierda: el punto ciego (✗) de PixelCNN deja píxeles cercanos fuera del contexto. Derecha: Gated PixelCNN incluye todo el contexto causal completo.</p>
+<div class="svg-holder"><svg viewBox="0 0 870 245" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Campo receptivo: PixelCNN vs Gated PixelCNN (grilla 5×5)</text>
+  <text x="215" y="42" text-anchor="middle" font-size="12" font-weight="bold" fill="#555">PixelCNN</text>
+  <rect x="140" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="172" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="204" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="236" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="268" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="140" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="172" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="204" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="236" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="268" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="140" y="114" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="172" y="114" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="204" y="114" width="30" height="30" rx="2" fill="#27ae60" stroke="#1a7a42" stroke-width="2.5"/>
+  <text x="219" y="134" text-anchor="middle" fill="white" font-size="13">★</text>
+  <rect x="236" y="114" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <text x="251" y="133" text-anchor="middle" fill="#c00" font-size="9">✗</text>
+  <rect x="268" y="114" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <text x="283" y="133" text-anchor="middle" fill="#c00" font-size="9">✗</text>
+  <rect x="140" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="172" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="204" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="236" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="268" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="140" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="172" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="204" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="236" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="268" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <text x="215" y="222" text-anchor="middle" fill="#c00" font-size="10">punto ciego (✗)</text>
+  <text x="650" y="42" text-anchor="middle" font-size="12" font-weight="bold" fill="#555">Gated PixelCNN</text>
+  <rect x="575" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="607" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="639" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="671" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="703" y="50" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="575" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="607" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="639" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="671" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="703" y="82" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="575" y="114" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="607" y="114" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="639" y="114" width="30" height="30" rx="2" fill="#27ae60" stroke="#1a7a42" stroke-width="2.5"/>
+  <text x="654" y="134" text-anchor="middle" fill="white" font-size="13">★</text>
+  <rect x="671" y="114" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="703" y="114" width="30" height="30" rx="2" fill="#4a90d9" stroke="#2c6aa0"/>
+  <rect x="575" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="607" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="639" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="671" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="703" y="146" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="575" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="607" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="639" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="671" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <rect x="703" y="178" width="30" height="30" rx="2" fill="#f5f5f5" stroke="#ccc" stroke-dasharray="4,3"/>
+  <text x="650" y="222" text-anchor="middle" fill="#27ae60" font-size="10">sin punto ciego</text>
+</svg></div>
+<div class="slide-num">23</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · PixelRNN y PixelCNN</div><h2>Punto ciego en PixelCNN</h2>
+<p class="intro">El campo receptivo en forma de L invertida crea un <strong>punto ciego</strong> (<em>blind spot</em>): los píxeles directamente a la derecha del píxel objetivo, en la misma fila, nunca influyen en su predicción aunque estén espacialmente cercanos.</p>
+<div class="adm adm-danger"><div class="adm-title">Gated PixelCNN lo resuelve</div><div class="adm-body"><p>Gated PixelCNN combina dos pilas de convoluciones causales, una <strong>horizontal</strong> (fila actual) y una <strong>vertical</strong> (filas superiores), conectadas con una unidad de compuerta multiplicativa. El resultado: contexto causal completo sin puntos ciegos.</p></div></div>
+<div class="slide-num">24</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · WaveNet</div><h2>WaveNet: generación autoregresiva de audio</h2>
+<p class="intro">WaveNet (van den Oord et al., 2016) aplica el paradigma autoregresivo a la generación de formas de onda de audio en bruto (<em>raw audio</em>), operando directamente sobre muestras cuantizadas con <strong>softmax de 256 niveles</strong> (cuantización $\mu$-law a 8 bits).</p>
+<div class="adm adm-note"><div class="adm-title">Por qué se necesita una arquitectura nueva</div><div class="adm-body"><p>A 16 kHz, cada segundo de audio tiene 16.000 muestras. Para modelar contexto útil, se necesita un campo receptivo mucho mayor del que proveen las convoluciones ordinarias. La solución de WaveNet son las <strong>convoluciones causales dilatadas</strong> apiladas en profundidad.</p></div></div>
+<div class="slide-num">25</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · WaveNet</div><h2>Convoluciones causales dilatadas</h2>
+<p class="intro">La arquitectura central de WaveNet son capas convolucionales unidimensionales en las que el kernel salta posiciones según un factor de dilatación $d$, multiplicando el campo receptivo sin aumentar el número de parámetros.</p>
+<div class="eq eq-big">$$y_t = \sum_{k=0}^{K-1} f_k \cdot x_{t - d \cdot k}$$</div><div class="adm adm-alert"><div class="adm-title">Dilataciones apiladas</div><div class="adm-body"><p>Para un kernel de tamaño $K = 2$ y dilataciones $d = 1, 2, 4, 8, \ldots, 2^{L-1}$ en capas sucesivas, el campo receptivo tras $L$ capas crece <strong>exponencialmente</strong> con la profundidad.</p></div></div>
+<div class="slide-num">26</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · WaveNet</div><h2>El campo receptivo dobla con cada capa</h2>
+<p class="intro">Tres capas con kernel $K=2$ y dilataciones $d=1, 2, 4$: el nodo $t_8$ alcanza un campo receptivo de 8 muestras. Cada capa adicional dobla el alcance.</p>
+<div class="svg-holder"><svg viewBox="0 0 870 250" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Convoluciones causales dilatadas en WaveNet (K=2, d = 1, 2, 4)</text>
+  <text x="60" y="57" text-anchor="end" fill="#555" font-size="11">Entrada</text>
+  <circle cx="100" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="100" y="58" text-anchor="middle" fill="white" font-size="10">t₁</text>
+  <circle cx="200" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="200" y="58" text-anchor="middle" fill="white" font-size="10">t₂</text>
+  <circle cx="300" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="300" y="58" text-anchor="middle" fill="white" font-size="10">t₃</text>
+  <circle cx="400" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="400" y="58" text-anchor="middle" fill="white" font-size="10">t₄</text>
+  <circle cx="500" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="500" y="58" text-anchor="middle" fill="white" font-size="10">t₅</text>
+  <circle cx="600" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="600" y="58" text-anchor="middle" fill="white" font-size="10">t₆</text>
+  <circle cx="700" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="700" y="58" text-anchor="middle" fill="white" font-size="10">t₇</text>
+  <circle cx="800" cy="53" r="14" fill="#4a90d9" stroke="#2c6aa0" stroke-width="1.5"/>
+  <text x="800" y="58" text-anchor="middle" fill="white" font-size="10">t₈</text>
+  <text x="60" y="118" text-anchor="end" fill="#555" font-size="11">d = 1</text>
+  <circle cx="200" cy="113" r="14" fill="#fff3cd" stroke="#e0a800" stroke-width="1.5"/>
+  <circle cx="300" cy="113" r="14" fill="#fff3cd" stroke="#e0a800" stroke-width="1.5"/>
+  <circle cx="400" cy="113" r="14" fill="#fff3cd" stroke="#e0a800" stroke-width="1.5"/>
+  <circle cx="500" cy="113" r="14" fill="#fff3cd" stroke="#e0a800" stroke-width="1.5"/>
+  <circle cx="600" cy="113" r="14" fill="#fff3cd" stroke="#e0a800" stroke-width="1.5"/>
+  <circle cx="700" cy="113" r="14" fill="#fff3cd" stroke="#e0a800" stroke-width="1.5"/>
+  <circle cx="800" cy="113" r="14" fill="#fff3cd" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="114" y1="60" x2="186" y2="106" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="200" y1="67" x2="200" y2="99" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="214" y1="60" x2="286" y2="106" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="300" y1="67" x2="300" y2="99" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="314" y1="60" x2="386" y2="106" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="400" y1="67" x2="400" y2="99" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="414" y1="60" x2="486" y2="106" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="500" y1="67" x2="500" y2="99" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="514" y1="60" x2="586" y2="106" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="600" y1="67" x2="600" y2="99" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="614" y1="60" x2="686" y2="106" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="700" y1="67" x2="700" y2="99" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="714" y1="60" x2="786" y2="106" stroke="#e0a800" stroke-width="1.5"/>
+  <line x1="800" y1="67" x2="800" y2="99" stroke="#e0a800" stroke-width="1.5"/>
+  <text x="60" y="173" text-anchor="end" fill="#555" font-size="11">d = 2</text>
+  <circle cx="400" cy="168" r="14" fill="#e8f8e8" stroke="#27ae60" stroke-width="1.5"/>
+  <circle cx="500" cy="168" r="14" fill="#e8f8e8" stroke="#27ae60" stroke-width="1.5"/>
+  <circle cx="600" cy="168" r="14" fill="#e8f8e8" stroke="#27ae60" stroke-width="1.5"/>
+  <circle cx="700" cy="168" r="14" fill="#e8f8e8" stroke="#27ae60" stroke-width="1.5"/>
+  <circle cx="800" cy="168" r="14" fill="#e8f8e8" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="214" y1="120" x2="386" y2="161" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="400" y1="127" x2="400" y2="154" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="314" y1="120" x2="486" y2="161" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="500" y1="127" x2="500" y2="154" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="414" y1="120" x2="586" y2="161" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="600" y1="127" x2="600" y2="154" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="514" y1="120" x2="686" y2="161" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="700" y1="127" x2="700" y2="154" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="614" y1="120" x2="786" y2="161" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="800" y1="127" x2="800" y2="154" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="60" y="215" text-anchor="end" fill="#555" font-size="11">d = 4</text>
+  <circle cx="800" cy="210" r="16" fill="#e8d5f5" stroke="#8e44ad" stroke-width="2"/>
+  <text x="800" y="206" text-anchor="middle" fill="#6c3483" font-size="10" font-weight="bold">t₈</text>
+  <text x="800" y="218" text-anchor="middle" fill="#6c3483" font-size="9">RF=8</text>
+  <line x1="414" y1="175" x2="784" y2="204" stroke="#8e44ad" stroke-width="2"/>
+  <line x1="800" y1="182" x2="800" y2="194" stroke="#8e44ad" stroke-width="2"/>
+</svg></div>
+<div class="slide-num">27</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · WaveNet</div><h2>Crecimiento exponencial del campo receptivo</h2>
+<p class="intro">Para kernel $K$ y $L$ capas dilatadas con dilataciones $1, 2, 4, \ldots, 2^{L-1}$, el campo receptivo total es:</p>
+<div class="eq eq-huge">$$\text{RF} = 1 + (K-1)(2^L - 1)$$</div><p class="caption-end">Con <strong>14 capas</strong> y $K=2$, el campo receptivo supera las 16.000 muestras, es decir <strong>1 segundo completo</strong> de audio a 16 kHz. Esa es la profundidad típica de WaveNet para audio de alta fidelidad.</p>
+<div class="slide-num">28</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · WaveNet</div><h2>Unidades de compuerta multiplicativas</h2>
+<p class="intro">WaveNet usa unidades de compuerta (<em>gated activation units</em>) heredadas de Gated PixelCNN, donde $\tanh$ actúa como <strong>filtro</strong> y $\sigma$ como <strong>compuerta</strong>.</p>
+<div class="eq eq-big">$$\mathbf{z} = \tanh(W_f * \mathbf{x}) \odot \sigma(W_g * \mathbf{x})$$</div><div class="adm adm-note"><div class="adm-title">Más expresivo que ReLU</div><div class="adm-body"><p>La no-linealidad multiplicativa es más expresiva que una ReLU y permite representar <strong>dependencias complejas</strong> en la señal de audio.</p></div></div>
+<div class="slide-num">29</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · WaveNet</div><h2>Condicionamiento local y global</h2>
+<p class="intro">WaveNet admite condicionamiento auxiliar para guiar la síntesis.</p>
+<div class="adm adm-note"><div class="adm-title">Dos formas de condicionar</div><div class="adm-body"><ul><li>El <strong>condicionamiento global</strong> añade un embedding de hablante $h$ a todas las capas, permitiendo controlar la <em>identidad de la voz</em>.</li><li>El <strong>condicionamiento local</strong> añade una secuencia temporal auxiliar (por ejemplo, mel-espectrogramas o características lingüísticas) que se interpola a la tasa de muestreo del audio y modula las activaciones en cada paso temporal.</li></ul></div></div>
+<div class="slide-num">30</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · WaveNet</div><h2>Latencia de generación y Parallel WaveNet</h2>
+<p class="intro">La naturaleza autoregresiva impone una barrera fundamental: generar un segundo de audio a 16 kHz requiere <strong>16.000 pases secuenciales</strong> por la red, lo que en la práctica puede tardar minutos.</p>
+<div class="adm adm-danger"><div class="adm-title">Parallel WaveNet: destilación de probabilidad</div><div class="adm-body"><p>Parallel WaveNet (van den Oord et al., 2018) resuelve esto mediante destilación de probabilidad: un modelo <strong>estudiante</strong> (flujo autoregresivo inverso, IAF) aprende a generar todas las muestras en paralelo guiado por el WaveNet lento como <strong>maestro</strong>.</p><p>Síntesis en tiempo real sin sacrificar calidad.</p></div></div>
+<div class="slide-num">31</div>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Asimetría entrenamiento-generación</div><h2>Entrenamiento eficiente: teacher forcing</h2>
+<p class="intro">Durante el entrenamiento, se dispone de todos los valores verdaderos $\mathbf{x} = (x_1, \ldots, x_D)$. Esto permite evaluar todas las condicionales en paralelo en un único <em>forward pass</em> mediante <strong>teacher forcing</strong>: en lugar de usar las propias predicciones del modelo como contexto, se usa el dato verdadero.</p>
+<div class="eq eq-big">$$\mathcal{L}(\theta) = -\frac{1}{N} \sum_{n=1}^{N} \sum_{d=1}^{D} \ln p_\theta(x_{n,d} \mid x_{n,&lt;d})$$</div><div class="adm adm-note"><div class="adm-title">Objetivo estable</div><div class="adm-body"><p>La función objetivo es la log-verosimilitud negativa exacta. La optimización de la entropía cruzada es un problema bien estudiado y estable, a diferencia del juego minimax adversario de las GAN.</p></div></div>
+<div class="slide-num">32</div>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Asimetría entrenamiento-generación</div><h2>Ventajas estructurales frente a VAE y GAN</h2>
+<p class="intro">Los ARM poseen tres ventajas intrínsecas derivadas directamente de la factorización exacta.</p>
+<div class="adm adm-alert"><div class="adm-title">Las tres ventajas</div><div class="adm-body"><ul><li><strong>Verosimilitud exacta y computable</strong>: $\ln p(\mathbf{x})$ se calcula directamente, sin cotas inferiores ni discriminadores. Permite comparar modelos cuantitativamente mediante BPD.</li><li><strong>Entrenamiento estable</strong>: la entropía cruzada no tiene puntos de equilibrio inestables ni requiere balanceo entre dos redes.</li><li><strong>Expresividad máxima</strong>: la softmax discreta sobre 256 niveles representa distribuciones multimodales y asimétricas sin restricciones paramétricas.</li></ul></div></div>
+<div class="slide-num">33</div>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Asimetría entrenamiento-generación</div><h2>Muestreo ancestral: generación secuencial e irreduciblemente lenta</h2>
+<p class="intro">Para sintetizar un nuevo dato, el proceso es estrictamente secuencial: predecir $x_d$ requiere los valores ya generados $x_{&lt;d}$. El costo computacional es $O(D)$ pases por la red.</p>
+<div class="adm adm-danger"><div class="adm-title">El costo real</div><div class="adm-body"><p>Para una imagen de $256 \times 256$ con 3 canales, $D = 196.608$. Para un segundo de audio a 44,1 kHz, $D = 44.100$.</p><p>Esta latencia <strong>no se puede eliminar con más hardware</strong> (no se puede paralelizar), solo mitigar con arquitecturas alternativas como flujos autoregresivos inversos (IAF).</p></div></div>
+<div class="slide-num">34</div>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Propagación de errores</div><h2>Propagación de errores y sesgo de exposición</h2>
+<p class="intro">La asimetría entre entrenamiento e inferencia tiene una consecuencia práctica ineludible. Durante el entrenamiento, cada condicional se evalúa sobre el contexto <strong>verdadero</strong> tomado del conjunto de datos. Durante la generación, cada condicional recibe un contexto formado por los valores <strong>previamente muestreados por el propio modelo</strong>.</p>
+<div class="adm adm-danger"><div class="adm-title">Propagación en la cadena</div><div class="adm-body"><p>Si el modelo muestrea un valor $\hat{x}_d$ que es inusual o improbable bajo la distribución real, todos los muestreos posteriores $\hat{x}_{d+1}, \hat{x}_{d+2}, \ldots$ estarán condicionados a un contexto que el modelo nunca vio durante el entrenamiento.</p><p>El error inicial se propaga y amplifica: imágenes que comienzan coherentes pueden degenerar en texturas ruidosas hacia las esquinas inferiores.</p></div></div>
+<div class="slide-num">35</div>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Propagación de errores</div><h2>Condicionamiento inicial: no se parte de ruido</h2>
+<p class="intro">La elección del punto de partida es especialmente crítica. Un ARM típicamente arranca desde un <strong>valor inicial fijo</strong> (una esquina de la imagen con valor cero, un token especial <code>&lt;BOS&gt;</code> en lenguaje, una muestra silenciosa en audio) y no desde ruido aleatorio como los flujos o los VAE.</p>
+<div class="adm adm-alert"><div class="adm-title">Implicaciones prácticas</div><div class="adm-body"><p>Dos consecuencias: (i) la generación es <strong>sensible al estado inicial</strong>, y (ii) para obtener diversidad de salidas se debe introducir estocasticidad mediante la <strong>temperatura de la softmax</strong> o el muestreo top-k / nucleus, no mediante perturbaciones de la entrada.</p></div></div>
+<div class="slide-num">36</div>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Propagación de errores</div><h2>Mitigaciones prácticas del sesgo de exposición</h2>
+<p class="intro">El sesgo de exposición no se elimina del todo, pero varias técnicas prácticas reducen su impacto durante la generación.</p>
+<div class="adm adm-note"><div class="adm-title">Tres técnicas habituales</div><div class="adm-body"><ul><li><strong>Muestreo con temperatura baja</strong>: concentra la masa en los modos, reduciendo la probabilidad de elegir valores improbables que desencadenen cadenas de errores.</li><li><strong>Muestreo top-k o nucleus (top-p)</strong>: trunca la cola de la distribución y evita decisiones ruidosas.</li><li><strong>Scheduled sampling</strong>: mezcla tokens verdaderos y muestreados durante el entrenamiento, reduciendo la brecha entre ambos regímenes.</li></ul></div></div>
+<div class="slide-num">37</div>
+</section>
+
+<section>
+<div class="section-label">§ 10 · Los ARM en el panorama</div><h2>Cada familia generativa tiene un compromiso distinto</h2>
+<p class="intro">Es útil situar los ARM en el panorama de los modelos generativos profundos comparando las dimensiones que más impactan su uso práctico: verosimilitud, estabilidad de entrenamiento, velocidad de generación y calidad perceptual de las muestras. Ninguna familia domina todas las dimensiones.</p>
+<div class="svg-holder"><svg viewBox="0 0 870 320" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <text x="435" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Comparación de familias de modelos generativos profundos</text>
+  <rect x="30" y="40" width="150" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="105" y="60" text-anchor="middle" font-weight="bold" fill="#333">Familia</text>
+  <rect x="185" y="40" width="180" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="275" y="60" text-anchor="middle" font-weight="bold" fill="#333">Verosimilitud p(x)</text>
+  <rect x="370" y="40" width="170" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="455" y="60" text-anchor="middle" font-weight="bold" fill="#333">Entrenamiento</text>
+  <rect x="545" y="40" width="155" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="622" y="60" text-anchor="middle" font-weight="bold" fill="#333">Generación</text>
+  <rect x="705" y="40" width="155" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="782" y="60" text-anchor="middle" font-weight="bold" fill="#333">Calidad típica</text>
+  <rect x="30" y="76" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="98" text-anchor="middle" fill="#2c6aa0" font-weight="bold">VAE</text>
+  <rect x="185" y="76" width="180" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="275" y="98" text-anchor="middle" fill="#856404">Cota inferior (ELBO)</text>
+  <rect x="370" y="76" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="98" text-anchor="middle" fill="#1a7a42">Estable</text>
+  <rect x="545" y="76" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="622" y="98" text-anchor="middle" fill="#1a7a42">Un pase (rápida)</text>
+  <rect x="705" y="76" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="782" y="98" text-anchor="middle" fill="#c0392b">Borrosa</text>
+  <rect x="30" y="114" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="136" text-anchor="middle" fill="#2c6aa0" font-weight="bold">GAN</text>
+  <rect x="185" y="114" width="180" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="275" y="136" text-anchor="middle" fill="#c0392b">No disponible</text>
+  <rect x="370" y="114" width="170" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="455" y="136" text-anchor="middle" fill="#c0392b">Inestable, mode collapse</text>
+  <rect x="545" y="114" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="622" y="136" text-anchor="middle" fill="#1a7a42">Un pase (rápida)</text>
+  <rect x="705" y="114" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="782" y="136" text-anchor="middle" fill="#1a7a42">Muy alta, nítida</text>
+  <rect x="30" y="152" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9" stroke-width="2.5"/>
+  <text x="105" y="174" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Autoregresivo</text>
+  <rect x="185" y="152" width="180" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="275" y="174" text-anchor="middle" fill="#1a7a42">Exacta (regla cadena)</text>
+  <rect x="370" y="152" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="174" text-anchor="middle" fill="#1a7a42">Estable (cross-entropy)</text>
+  <rect x="545" y="152" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="622" y="174" text-anchor="middle" fill="#c0392b">Secuencial O(D)</text>
+  <rect x="705" y="152" width="155" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="782" y="174" text-anchor="middle" fill="#856404">Alta, BPD óptimo</text>
+  <rect x="30" y="190" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="212" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Flujo normalizado</text>
+  <rect x="185" y="190" width="180" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="275" y="212" text-anchor="middle" fill="#1a7a42">Exacta (cambio variable)</text>
+  <rect x="370" y="190" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="212" text-anchor="middle" fill="#1a7a42">Estable (NLL directa)</text>
+  <rect x="545" y="190" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="622" y="212" text-anchor="middle" fill="#1a7a42">Paralela O(1)</text>
+  <rect x="705" y="190" width="155" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="782" y="212" text-anchor="middle" fill="#856404">Media, detalles limitados</text>
+  <rect x="30" y="228" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="250" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Difusión (DDPM)</text>
+  <rect x="185" y="228" width="180" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="275" y="250" text-anchor="middle" fill="#856404">Cota ELBO simplificada</text>
+  <rect x="370" y="228" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="250" text-anchor="middle" fill="#1a7a42">Estable (denoising MSE)</text>
+  <rect x="545" y="228" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="622" y="250" text-anchor="middle" fill="#c0392b">Iterativa O(T pasos)</text>
+  <rect x="705" y="228" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="782" y="250" text-anchor="middle" fill="#1a7a42">Muy alta</text>
+  <rect x="30" y="266" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="288" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Score-based (SDE)</text>
+  <rect x="185" y="266" width="180" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="275" y="288" text-anchor="middle" fill="#856404">Score matching</text>
+  <rect x="370" y="266" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="288" text-anchor="middle" fill="#1a7a42">Estable (DSM)</text>
+  <rect x="545" y="266" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="622" y="288" text-anchor="middle" fill="#c0392b">Iterativa (SDE solver)</text>
+  <rect x="705" y="266" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="782" y="288" text-anchor="middle" fill="#1a7a42">Muy alta</text>
+</svg></div>
+<div class="slide-num">38</div>
+</section>
+
+<section>
+<div class="section-label">§ 10 · Los ARM en el panorama</div><h2>Cuándo elegir un modelo autoregresivo</h2>
+<p class="intro">Los ARM son la opción preferida cuando los criterios del problema favorecen la exactitud matemática y la estabilidad de entrenamiento por encima de la velocidad de generación.</p>
+<div class="adm adm-note"><div class="adm-title">Criterios de decisión</div><div class="adm-body"><ul><li>Cuando se requiere la <strong>log-verosimilitud exacta</strong> sobre los datos: compresión, detección de anomalías, comparación cuantitativa de modelos mediante BPD.</li><li>Cuando los datos son <strong>naturalmente discretos y secuenciales</strong>: texto, tokens, MIDI, eventos.</li><li>Cuando la <strong>estabilidad del entrenamiento</strong> es más importante que la velocidad de generación.</li></ul><p>Para síntesis en tiempo real de audio o imágenes de alta resolución, los flujos, la difusión y las GAN suelen ser más apropiados.</p></div></div>
+<div class="slide-num">39</div>
+</section>
+
+<section>
+<div class="close-slide"><div class="section-label">En una oración</div><h1>Un ARM factoriza lo imposible en una cadena de problemas tratables: es exacto, es estable, y es lento al generar.</h1><p style="font-size:0.82em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p></div>
+
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 800, margin: 0.04,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>
