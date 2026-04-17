@@ -7,286 +7,362 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink:#1a1a1a; --ink-soft:#555; --ink-faint:#8b8b8b; --paper:#ffffff;
-  --rule:#e8e8e8; --accent:#2c6aa0;
-  --note-bg:#eaf2fb; --note-bd:#4a90d9; --note-tx:#2c6aa0;
-  --alert-bg:#fef9e7; --alert-bd:#e0a800; --alert-tx:#856404;
-  --danger-bg:#fdecea; --danger-bd:#e74c3c; --danger-tx:#c0392b;
-  --eq-bg:#f6f8fb;
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink:#eaeaea; --ink-soft:#b8b8b8; --ink-faint:#8a8a8a; --paper:#141414;
-    --rule:#2a2a2a; --accent:#6ba8dc;
-    --note-bg:#1f2b3a; --note-bd:#6ba8dc; --note-tx:#8fb8da;
-    --alert-bg:#3a3122; --alert-bd:#e0a800; --alert-tx:#e5c26d;
-    --danger-bg:#3d1e1c; --danger-bd:#e74c3c; --danger-tx:#ff8d7a;
-    --eq-bg:#1c222d;
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
   }
-  .svg-holder svg { background-color:#faf7eb; border-radius:8px; padding:6px; }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
 }
-.reveal, .reveal .slides, .reveal .slides section {
-  font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
-  font-weight:400; color:var(--ink); text-align:left; letter-spacing:0.005em;
-}
-.reveal .slide-background { background:var(--paper); }
 
-/* Each section is a flex column so SVG gets remaining space */
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
 .reveal .slides section {
-  padding:2.5% 5% 3% 5%;
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
+  padding: 2% 5% 2% 5%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .section-label {
-  font-size:0.62em; color:var(--ink-faint); letter-spacing:0.14em;
-  text-transform:uppercase; font-weight:500; margin-bottom:0.7em;
-  flex-shrink:0;
+  font-size: 0.65em;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
 }
-.reveal h1 { font-size:2.1em; font-weight:600; line-height:1.15; margin:0 0 0.5em 0; color:var(--ink); text-transform:none; letter-spacing:-0.01em; flex-shrink:0; }
-.reveal h2 { font-size:1.35em; font-weight:600; line-height:1.2; margin:0 0 0.5em 0; color:var(--ink); text-transform:none; letter-spacing:-0.005em; border:none; flex-shrink:0; }
-.reveal h3 { font-size:0.95em; font-weight:500; color:var(--ink-soft); margin:0 0 0.5em 0; text-transform:none; }
-.reveal p, .reveal li { font-size:0.82em; line-height:1.45; color:var(--ink); }
-.reveal ul, .reveal ol { margin:0.3em 0 0 1em; }
-.reveal li { margin:0.2em 0; }
-.reveal strong { font-weight:600; color:var(--ink); }
-.reveal em { font-style:italic; }
-.reveal a { color:var(--accent); text-decoration:none; }
 
-.intro { font-size:0.88em; line-height:1.5; color:var(--ink-soft); max-width:880px; margin:0 0 0.7em 0; flex-shrink:0; }
-.intro strong { color:var(--ink); }
+.reveal h1 {
+  font-size: 2.2em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.3em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 1.7em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.35em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
 
-.adm { border-left:4px solid; border-radius:4px; padding:0.7em 1.15em; margin:0.4em 0; max-width:880px; flex-shrink:0; }
-.adm .adm-title { font-weight:600; font-size:0.82em; margin:0 0 0.35em 0; letter-spacing:0.005em; }
-.adm .adm-body p { margin:0.22em 0; font-size:0.78em; line-height:1.45; }
-.adm .adm-body ul { margin:0.22em 0 0 1em; }
-.adm .adm-body li { font-size:0.78em; margin:0.16em 0; line-height:1.4; }
-.adm-note { background:var(--note-bg); border-color:var(--note-bd); }
-.adm-note .adm-title { color:var(--note-tx); }
-.adm-alert { background:var(--alert-bg); border-color:var(--alert-bd); }
-.adm-alert .adm-title { color:var(--alert-tx); }
-.adm-danger { background:var(--danger-bg); border-color:var(--danger-bd); }
-.adm-danger .adm-title { color:var(--danger-tx); }
+.reveal p, .reveal li {
+  font-size: 1.45em;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.reveal ul {
+  margin: 0 0 0 1.1em;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-height: 0;
+}
+.reveal li { margin: 0; }
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
 
-.eq { background:var(--eq-bg); border-left:3px solid var(--accent); padding:0.7em 1.2em; margin:0.45em 0; border-radius:4px; max-width:880px; flex-shrink:0; overflow-x:auto; }
-.eq-big .katex-display { font-size:1.15em; margin:0.25em 0; }
-.eq-huge { padding:1em 1.5em; }
-.eq-huge .katex-display { font-size:1.45em; margin:0.22em 0; }
-.eq .caption { font-size:0.7em; color:var(--ink-faint); margin-top:0.35em; text-align:right; }
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.3em; }
 
-.caption-end { font-size:0.75em; color:var(--ink-faint); margin-top:0.4em; font-style:italic; max-width:880px; flex-shrink:0; }
+p.note {
+  font-size: 0.85em;
+  color: var(--ink-soft);
+  margin-top: 0.3em;
+  font-style: italic;
+  flex-shrink: 0;
+}
 
-.two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.4em; align-items:start; margin-top:0.4em; flex-shrink:0; }
-.col-label { font-size:0.64em; text-transform:uppercase; color:var(--ink-faint); letter-spacing:0.1em; margin-bottom:0.4em; font-weight:600; }
+.svg-holder {
+  display: flex; align-items: center; justify-content: flex-start;
+  width: 100%; flex: 1; min-height: 0; margin-top: 0.3em;
+}
+.svg-holder svg { width: 100%; height: 100%; display: block; }
 
-/* SVG takes all remaining vertical space */
-.svg-holder { display:flex; align-items:center; justify-content:flex-start; width:100%; max-width:880px; flex:1; min-height:0; margin-top:0.3em; }
-.svg-holder svg { width:100%; height:100%; display:block; }
+.title-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.12em;
+  text-transform: uppercase; margin-bottom: 1.5em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.8em; color: var(--ink); }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 0.8em; }
 
-.mini-table { border-collapse:collapse; font-size:0.72em; width:100%; max-width:880px; margin-top:0.3em; flex-shrink:0; }
-.mini-table th, .mini-table td { padding:0.4em 0.7em; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top; }
-.mini-table th { font-weight:600; color:var(--ink-soft); font-size:0.7em; text-transform:uppercase; letter-spacing:0.05em; }
+.close-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.close-slide h1 { font-size: 2.2em; max-width: 20em; line-height: 1.3; color: var(--pluto-blue); }
 
-.title-slide { display:flex; flex-direction:column; justify-content:center; height:100%; }
-.title-slide .course-id { font-size:0.75em; color:var(--ink-faint); letter-spacing:0.14em; text-transform:uppercase; margin-bottom:2em; font-weight:500; }
-.title-slide h1 { font-size:2.8em; font-weight:600; line-height:1.1; margin:0 0 0.4em 0; }
-.title-slide .byline { font-size:1em; color:var(--ink-soft); margin-top:1.2em; }
-
-.close-slide { display:flex; flex-direction:column; justify-content:center; height:100%; }
-.close-slide .section-label { margin-bottom:1em; }
-.close-slide h1 { font-size:1.9em; max-width:24em; line-height:1.25; }
-
-.slide-num { position:absolute; bottom:2%; right:3%; font-size:0.55em; color:var(--ink-faint); letter-spacing:0.1em; }
-.reveal .controls { color:var(--ink-faint); }
-.reveal .progress { background:transparent; color:var(--accent); height:2px; }
+.slide-num {
+  position: absolute; bottom: 1.5%; right: 2.5%;
+  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.08em;
+}
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
 </style>
 </head>
 <body>
 <div class="reveal">
 <div class="slides">
+
+<!-- PORTADA -->
 <section>
 <div class="title-slide">
-  <div class="course-id">Aprendizaje de Máquina y Modelos Generativos</div>
-  <h1>Flujos normalizados</h1>
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Flujos Normalizados</h1>
   <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
   <div class="byline">Pontificia Universidad Católica de Chile</div>
 </div>
-
 </section>
 
+<!-- § 1 · El teorema del cambio de variable -->
+
 <section>
-<div class="section-label">§ 1 · El teorema del cambio de variable</div><h2>Transformaciones invertibles entre ruido y datos</h2>
-<p class="intro">Dentro de la taxonomía de los modelos generativos profundos, los VAE maximizan una cota inferior (ELBO) y las GAN aprenden de forma implícita sin calcular probabilidades. Los <strong>flujos normalizados</strong> ofrecen una alternativa exacta: aprenden una secuencia de transformaciones invertibles y diferenciables que mapean una distribución simple (una gaussiana estándar) a la distribución compleja de los datos.</p>
-<p class="caption-end">La clave matemática es el teorema del cambio de variable, que garantiza que la distribución transformada esté siempre perfectamente normalizada. De ahí el nombre.</p>
+<div class="section-label">§ 1 · El teorema del cambio de variable</div>
+<h2>Los flujos normalizados aprenden transformaciones invertibles exactas</h2>
+<ul>
+  <li>Los VAEs maximizan una cota inferior (ELBO); las GANs no calculan probabilidades directamente.</li>
+  <li>Los <strong>flujos normalizados</strong> aprenden una secuencia de transformaciones invertibles y diferenciables que mapean una gaussiana estándar a la distribución compleja de los datos.</li>
+  <li>Permiten evaluar la verosimilitud de forma <strong>exacta</strong> y generar muestras eficientemente.</li>
+  <li>La clave matemática es el <strong>teorema del cambio de variable</strong>, que garantiza que la distribución transformada esté siempre perfectamente normalizada.</li>
+</ul>
 <div class="slide-num">2</div>
 </section>
 
 <section>
-<div class="section-label">§ 1 · El teorema del cambio de variable</div><h2>Densidad bajo una biyección: cambio de variable</h2>
-<p class="intro">Sea $z \sim p_Z(z)$ una variable latente con distribución base conocida, por ejemplo $\mathcal{N}(\mathbf{0}, \mathbf{I})$. Se define una transformación determinista $\mathbf{x} = f(\mathbf{z})$, donde $f$ es una <strong>biyección</strong> (función invertible uno a uno) con inversa $\mathbf{z} = f^{-1}(\mathbf{x})$. La densidad de la variable transformada es:</p>
-<div class="eq eq-huge">$$p_X(\mathbf{x}) = p_Z\bigl(f^{-1}(\mathbf{x})\bigr) \cdot \left|\det\!\left(\frac{\partial f^{-1}(\mathbf{x})}{\partial \mathbf{x}}\right)\right| \tag{1}$$</div>
+<div class="section-label">§ 1 · El teorema del cambio de variable</div>
+<h2>La densidad transformada se corrige por el determinante del Jacobiano</h2>
+<ul>
+  <li>Sea $z \sim p_Z(z)$ con distribución base conocida, p.ej. $\mathcal{N}(\mathbf{0}, \mathbf{I})$.</li>
+  <li>Se define $\mathbf{x} = f(\mathbf{z})$ donde $f$ es una <strong>biyección</strong> invertible con $\mathbf{z} = f^{-1}(\mathbf{x})$.</li>
+</ul>
+$$p_X(\mathbf{x}) = p_Z\!\left(f^{-1}(\mathbf{x})\right) \cdot \left|\det\!\left(\frac{\partial f^{-1}(\mathbf{x})}{\partial \mathbf{x}}\right)\right|$$
+<p class="note">Ecuación (1): densidad de la variable transformada. El determinante del Jacobiano corrige el cambio de volumen.</p>
 <div class="slide-num">3</div>
 </section>
 
 <section>
-<div class="section-label">§ 1 · El teorema del cambio de variable</div><h2>La versión logarítmica</h2>
-<p class="intro">En el dominio logarítmico, usando la matriz jacobiana $J_f = \partial f(\mathbf{z})/\partial \mathbf{z}$:</p>
-<div class="eq eq-big">$$\ln p_X(\mathbf{x}) = \ln p_Z(\mathbf{z}) - \ln\left|\det(J_f)\right| \tag{2}$$</div><div class="adm adm-note"><div class="adm-title">Interpretación geométrica del Jacobiano</div><div class="adm-body"><p>El determinante del Jacobiano $|\det(J_f)|$ mide cómo $f$ expande o contrae el volumen del espacio localmente alrededor de $\mathbf{z}$.</p><p>Si $f$ estira la región alrededor de $\mathbf{z}$, la densidad de probabilidad en $\mathbf{x}$ debe disminuir proporcionalmente para que la integral total siga siendo 1. El término $-\ln|\det(J_f)|$ es exactamente esta corrección.</p></div></div>
+<div class="section-label">§ 1 · El teorema del cambio de variable</div>
+<h2>En log-dominio, la corrección de volumen aparece como resta</h2>
+<ul>
+  <li>Usando la matriz Jacobiana $J_f = \tfrac{\partial f(\mathbf{z})}{\partial \mathbf{z}}$, la log-verosimilitud es:</li>
+</ul>
+$$\ln p_X(\mathbf{x}) = \ln p_Z(\mathbf{z}) - \ln\!\left|\det(J_f)\right|$$
+<p class="note">El término $-\ln|\det(J_f)|$ compensa la expansión o contracción de volumen. Cuando $f$ estira el espacio ($|\det J_f| &gt; 1$) la densidad disminuye; cuando lo comprime ($|\det J_f| &lt; 1$) la densidad aumenta.</p>
 <div class="slide-num">4</div>
 </section>
 
 <section>
-<div class="section-label">§ 1 · El teorema del cambio de variable</div><h2>Un flujo apila K transformaciones invertibles</h2>
-<p class="intro">Un flujo normalizado apila $K$ transformaciones invertibles $f_1, f_2, \ldots, f_K$, formando $\mathbf{x} = f_K \circ \cdots \circ f_1(\mathbf{z})$. Por la regla de la cadena del determinante, la log-verosimilitud total es:</p>
-<div class="eq eq-big">$$\ln p_X(\mathbf{x}) = \ln p_Z(\mathbf{z}) - \sum_{k=1}^{K} \ln\left|\det(J_{f_k})\right|$$</div><div class="adm adm-alert"><div class="adm-title">Exactitud garantizada por composición</div><div class="adm-body"><p>Cada capa contribuye con su propio término de log-Jacobiano. La distribución resultante está <strong>garantizada exacta en todo momento</strong>: no hay aproximaciones, no hay cotas inferiores.</p></div></div>
+<div class="section-label">§ 1 · El teorema del cambio de variable</div>
+<h2>El Jacobiano es una necesidad matemática, no una elección de diseño</h2>
+<ul>
+  <li>Un volumen infinitesimal $d\mathbf{z}$ se mapea a $d\mathbf{x}$ con $|d\mathbf{x}| = |\det(J_f)|\,|d\mathbf{z}|$.</li>
+  <li>Como la probabilidad total debe conservarse: $p_X(\mathbf{x})|d\mathbf{x}| = p_Z(\mathbf{z})|d\mathbf{z}|$, de donde:</li>
+</ul>
+$$p_X(\mathbf{x}) = \frac{p_Z(\mathbf{z})}{|\det(J_f)|}$$
+<p class="note">Sin esta corrección, $\int p_X(\mathbf{x})\,d\mathbf{x} \neq 1$: la función no sería una densidad de probabilidad válida.</p>
 <div class="slide-num">5</div>
 </section>
 
 <section>
-<div class="section-label">§ 1 · El teorema del cambio de variable</div><h2>De una gaussiana simple a la distribución de los datos</h2>
-<p class="intro">Una distribución base simple (gaussiana estándar) se transforma capa a capa en la distribución de los datos, con cada paso controlado por una transformación invertible parametrizada por una red neuronal.</p>
-<div class="svg-holder"><svg viewBox="0 0 870 185" style="max-width:870px" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+<div class="section-label">§ 1 · El teorema del cambio de variable</div>
+<h2>Un flujo apila K transformaciones con log-Jacobianos acumulados</h2>
+<ul>
+  <li>Un flujo normalizado compone $K$ transformaciones: $\mathbf{x} = f_K \circ \cdots \circ f_1(\mathbf{z})$.</li>
+  <li>Por la regla de la cadena del determinante, la log-verosimilitud total es:</li>
+</ul>
+$$\ln p_X(\mathbf{x}) = \ln p_Z(\mathbf{z}) - \sum_{k=1}^{K} \ln\!\left|\det(J_{f_k})\right|$$
+<p class="note">La distribución resultante es exacta en todo momento: no hay aproximaciones ni cotas inferiores.</p>
+<div class="slide-num">6</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El teorema del cambio de variable</div>
+<h2>La distribución base se transforma capa a capa hasta alcanzar los datos</h2>
+<ul>
+  <li>Cada transformación $f_k$ es parametrizada por una red neuronal invertible.</li>
+  <li>El flujo recorrido en sentido directo ($\mathbf{z} \to \mathbf{x}$) genera muestras; en sentido inverso ($\mathbf{x} \to \mathbf{z}$) evalúa verosimilitudes.</li>
+</ul>
+<div class="svg-holder"><svg viewBox="0 0 870 185" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
   <defs>
     <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
     </marker>
   </defs>
   <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Flujo normalizado: composición de K transformaciones invertibles</text>
-
-  <!-- z ~ N(0,I) -->
   <ellipse cx="70" cy="105" rx="52" ry="65" fill="#eaf2fb" stroke="#4a90d9" stroke-width="2"/>
   <text x="70" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#2c6aa0">z</text>
   <text x="70" y="110" text-anchor="middle" font-size="10" fill="#2c6aa0">p_Z(z)</text>
   <text x="70" y="124" text-anchor="middle" font-size="10" fill="#2c6aa0">= N(0, I)</text>
-
-  <!-- Arrow + f1 -->
   <line x1="124" y1="105" x2="170" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
   <rect x="170" y="83" width="80" height="44" rx="8" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
   <text x="210" y="102" text-anchor="middle" font-size="12" font-weight="bold" fill="#856404">f₁</text>
   <text x="210" y="118" text-anchor="middle" font-size="10" fill="#856404">invertible</text>
-
-  <!-- Arrow + z1 -->
   <line x1="250" y1="105" x2="296" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
   <ellipse cx="330" cy="105" rx="28" ry="50" fill="#fef9e7" stroke="#e0a800" stroke-width="1.5"/>
   <text x="330" y="100" text-anchor="middle" font-size="10" fill="#856404">z₁</text>
   <text x="330" y="113" text-anchor="middle" font-size="9" fill="#856404">p_{Z₁}</text>
-
-  <!-- Arrow + f2 -->
   <line x1="358" y1="105" x2="390" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
   <rect x="390" y="83" width="80" height="44" rx="8" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
   <text x="430" y="102" text-anchor="middle" font-size="12" font-weight="bold" fill="#856404">f₂</text>
   <text x="430" y="118" text-anchor="middle" font-size="10" fill="#856404">invertible</text>
-
-  <!-- dots -->
   <line x1="470" y1="105" x2="510" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
   <text x="530" y="110" text-anchor="middle" font-size="18" fill="#555">···</text>
   <line x1="555" y1="105" x2="585" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
-
-  <!-- fK -->
   <rect x="585" y="83" width="80" height="44" rx="8" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
   <text x="625" y="102" text-anchor="middle" font-size="12" font-weight="bold" fill="#856404">f_K</text>
   <text x="625" y="118" text-anchor="middle" font-size="10" fill="#856404">invertible</text>
-
-  <!-- Arrow + x ~ p_data -->
   <line x1="665" y1="105" x2="705" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
   <ellipse cx="770" cy="105" rx="65" ry="65" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
   <text x="770" y="90" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a7a42">x</text>
   <text x="770" y="105" text-anchor="middle" font-size="10" fill="#1a7a42">p_X(x)</text>
   <text x="770" y="120" text-anchor="middle" font-size="10" fill="#1a7a42">≈ p_data</text>
-
-  <!-- Log-likelihood annotation -->
   <text x="435" y="170" text-anchor="middle" font-size="11" fill="#555">ln p_X(x)  =  ln p_Z(z)  −  Σ ln|det J_{fk}|</text>
 </svg></div>
-<div class="slide-num">6</div>
-</section>
-
-<section>
-<div class="section-label">§ 2 · Restricciones arquitectónicas</div><h2>Tres requisitos en tensión</h2>
-<p class="intro">La elegancia de calcular $\ln p_X(\mathbf{x})$ de forma exacta tiene un precio: para que el marco sea práctico con redes neuronales profundas, se deben cumplir tres condiciones simultáneamente.</p>
-<div class="adm adm-danger"><div class="adm-title">Los tres requisitos</div><div class="adm-body"><ul><li><strong>Invertibilidad estricta</strong>: $f$ debe ser una biyección. La dimensión del espacio latente $\mathbf{z}$ debe ser idéntica a la de los datos $\mathbf{x}$: ambos $\in \mathbb{R}^D$. No existe cuello de botella reductor como en autoencoders.</li><li><strong>Cálculo eficiente del determinante</strong>: para una red densa arbitraria, $\det(J_f)$ sobre una matriz $D \times D$ cuesta $O(D^3)$. Para imágenes con $D &gt; 65.000$ píxeles, inviable.</li><li><strong>Inversión rápida en ambas direcciones</strong>: generar necesita $\mathbf{x} = f(\mathbf{z})$; entrenar (evaluar verosimilitud) necesita $\mathbf{z} = f^{-1}(\mathbf{x})$. Ambas deben ser eficientes.</li></ul></div></div>
 <div class="slide-num">7</div>
 </section>
 
+<!-- § 2 · Restricciones arquitectónicas -->
+
 <section>
-<div class="section-label">§ 2 · Restricciones arquitectónicas</div><h2>La solución universal: Jacobianos triangulares por diseño</h2>
-<p class="intro">La estrategia para evitar el costo $O(D^3)$ es diseñar arquitecturas cuyo Jacobiano sea <strong>triangular por diseño</strong>.</p>
-<div class="adm adm-note"><div class="adm-title">Determinante en O(D)</div><div class="adm-body"><p>El determinante de una matriz triangular es el producto de su diagonal, calculable en $O(D)$.</p><p>Todas las familias de flujos prácticos (capas de acoplamiento, flujos autoregresivos enmascarados) explotan esta propiedad a través de distintos mecanismos de construcción.</p></div></div>
+<div class="section-label">§ 2 · Restricciones arquitectónicas</div>
+<h2>Tres requisitos en tensión deben cumplirse simultáneamente</h2>
+<ul>
+  <li><strong>Invertibilidad estricta:</strong> $f$ debe ser una biyección; el espacio latente y los datos tienen la misma dimensión $D$. No hay cuello de botella.</li>
+  <li><strong>Determinante eficiente:</strong> para una red densa arbitraria, $\det(J_f)$ sobre $D \times D$ cuesta $O(D^3)$; inviable para imágenes con $D &gt; 65.000$.</li>
+  <li><strong>Inversión rápida en ambas direcciones:</strong> la generación requiere $\mathbf{x} = f(\mathbf{z})$; el entrenamiento requiere $\mathbf{z} = f^{-1}(\mathbf{x})$. Ambas deben ser eficientes.</li>
+</ul>
 <div class="slide-num">8</div>
 </section>
 
 <section>
-<div class="section-label">§ 2 · Restricciones arquitectónicas</div><h2>Por qué componer capas simples en vez de una red gigante</h2>
-<p class="intro">Matemáticamente nada impide diseñar una única red neuronal invertible profunda. El problema es práctico: las capas habituales no son naturalmente invertibles, y construir una red completa que lo sea requiere restricciones arquitectónicas fuertes que comprometen expresividad y estabilidad.</p>
-<div class="adm adm-alert"><div class="adm-title">Composición aditiva de log-Jacobianos</div><div class="adm-body"><p>La estrategia adoptada es componer $K$ capas individualmente invertibles y simples: cada una es fácil de invertir y su log-determinante es barato de calcular.</p><p>Por la regla de la cadena del determinante, $\ln|\det J_{f_K \circ \cdots \circ f_1}| = \sum_k \ln|\det J_{f_k}|$, por lo que los términos se <strong>acumulan aditivamente</strong>.</p><p>Una composición de muchas transformaciones simples suele ser más expresiva que una única transformación compleja, en analogía con la profundidad en redes estándar.</p></div></div>
+<div class="section-label">§ 2 · Restricciones arquitectónicas</div>
+<h2>El Jacobiano triangular reduce el costo de $O(D^3)$ a $O(D)$</h2>
+<ul>
+  <li>El determinante de una matriz triangular es el <strong>producto de su diagonal</strong>: $\det(J) = \prod_i J_{ii}$.</li>
+  <li>El log-determinante se reduce a una suma: $\sum_i \ln|J_{ii}|$, calculable en $O(D)$.</li>
+  <li>Todas las familias de flujos prácticos (capas de acoplamiento, MAF, IAF) diseñan arquitecturas con Jacobiano triangular por construcción.</li>
+</ul>
 <div class="slide-num">9</div>
 </section>
 
 <section>
-<div class="section-label">§ 2 · Restricciones arquitectónicas</div><h2>Cuántas capas se necesitan en la práctica</h2>
-<p class="intro">El número de capas $K$ depende de la complejidad de la distribución de datos.</p>
-<div class="adm adm-note"><div class="adm-title">Reglas empíricas</div><div class="adm-body"><ul><li><strong>Distribuciones 2D simples</strong> (ruido gaussiano deformado): 3 a 5 capas bastan.</li><li><strong>Imágenes baja resolución</strong> como MNIST: 10 a 20 capas.</li><li><strong>Imágenes alta resolución</strong> como GLOW a $256 \times 256$: cientos de capas en múltiples escalas jerárquicas.</li></ul><p>Cada capa adicional aumenta la capacidad expresiva a costa de memoria y tiempo. $K$ es un hiperparámetro clave a sintonizar.</p></div></div>
+<div class="section-label">§ 2 · Restricciones arquitectónicas</div>
+<h2>Componer capas simples es más expresivo que una única red invertible</h2>
+<ul>
+  <li>Diseñar una sola red profunda completamente invertible requiere restricciones fuertes en cada componente, comprometiendo expresividad y estabilidad.</li>
+  <li>La estrategia adoptada universalmente: componer $K$ capas <strong>individualmente invertibles y simples</strong>.</li>
+  <li>Por la regla de la cadena: $\ln|\det J_{f_K \circ \cdots \circ f_1}| = \sum_k \ln|\det J_{f_k}|$ — los términos se acumulan aditivamente.</li>
+  <li>Con suficientes capas, la composición puede aproximar cualquier función invertible suave.</li>
+</ul>
 <div class="slide-num">10</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div><h2>La idea de la capa de acoplamiento bipartita</h2>
-<p class="intro">La solución más influyente fue introducida por <strong>NICE</strong> (Dinh et al., 2014) y extendida por <strong>RealNVP</strong> (Dinh et al., 2016). La idea: dividir el vector de entrada $\mathbf{x} \in \mathbb{R}^D$ en dos mitades $\mathbf{x} = [\mathbf{x}_a, \mathbf{x}_b]$ y aplicar:</p>
-<div class="eq eq-big">$$\begin{aligned} \mathbf{y}_a &= \mathbf{x}_a \\ \mathbf{y}_b &= \mathbf{x}_b \odot \exp\bigl(s(\mathbf{x}_a)\bigr) + t(\mathbf{x}_a) \end{aligned} \tag{3}$$</div><p class="caption-end">Las redes $s(\cdot)$ (escala) y $t(\cdot)$ (traslación) son redes neuronales arbitrariamente complejas que <strong>no necesitan ser invertibles</strong>.</p>
+<div class="section-label">§ 2 · Restricciones arquitectónicas</div>
+<h2>El número de capas $K$ escala con la complejidad de los datos</h2>
+<ul>
+  <li>Distribuciones 2D simples: 3–5 capas suficientes.</li>
+  <li>Imágenes MNIST: 10–20 capas.</li>
+  <li>Imágenes alta resolución (GLOW a $256 \times 256$): cientos de capas en escalas jerárquicas.</li>
+  <li>Cada capa adicional aumenta la capacidad expresiva a costa de memoria y tiempo de cómputo.</li>
+</ul>
 <div class="slide-num">11</div>
 </section>
 
+<!-- § 3 · Capas de acoplamiento: NICE y RealNVP -->
+
 <section>
-<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div><h2>Tres propiedades clave de RealNVP</h2>
-<p class="intro">La construcción bipartita logra simultáneamente invertibilidad trivial, Jacobiano triangular y log-determinante en $O(D)$, sin necesidad de invertir las redes $s$ y $t$.</p>
-<div class="adm adm-note"><div class="adm-title">Las tres ventajas de la capa</div><div class="adm-body"><ul><li><strong>Inversión trivial</strong>: no se requiere invertir $s$ ni $t$. Dada la salida, se recupera la entrada con una sustracción y una multiplicación.</li><li><strong>Jacobiano triangular</strong>: la mitad $\mathbf{y}_a = \mathbf{x}_a$ produce un bloque identidad; la mitad $\mathbf{y}_b$ solo depende de $\mathbf{x}_a$ (ya fijo). El Jacobiano $\partial \mathbf{y}/\partial \mathbf{x}$ es triangular inferior.</li><li><strong>Log-determinante en $O(D)$</strong>: el determinante de la parte triangular es $\exp(\sum_j s_j(\mathbf{x}_a))$. El log-Jacobiano es $\sum_j s_j(\mathbf{x}_a)$, una suma de escalares.</li></ul></div></div>
+<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div>
+<h2>La capa de acoplamiento bipartita hace innecesario invertir las redes $s$ y $t$</h2>
+<ul>
+  <li>Entrada $\mathbf{x} = [\mathbf{x}_a, \mathbf{x}_b]$ dividida en dos mitades. La transformación (NICE, RealNVP):</li>
+</ul>
+$$\mathbf{y}_a = \mathbf{x}_a \qquad \mathbf{y}_b = \mathbf{x}_b \odot \exp\!\left(s(\mathbf{x}_a)\right) + t(\mathbf{x}_a)$$
+<p class="note">Las redes $s(\cdot)$ (escala) y $t(\cdot)$ (traslación) son MLPs o CNNs arbitrarios — no necesitan ser invertibles.</p>
 <div class="slide-num">12</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div><h2>Inversión explícita con sustracción y multiplicación</h2>
-<p class="intro">Dadas las salidas $\mathbf{y}_a, \mathbf{y}_b$ de una capa de acoplamiento, la entrada se recupera sin invertir las redes $s$ o $t$:</p>
-<div class="eq eq-big">$$\mathbf{x}_a = \mathbf{y}_a, \qquad \mathbf{x}_b = \bigl(\mathbf{y}_b - t(\mathbf{y}_a)\bigr) \odot \exp\bigl(-s(\mathbf{y}_a)\bigr)$$</div><p class="caption-end">Esto hace que tanto la evaluación como la generación cuesten un solo pase por la red.</p>
+<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div>
+<h2>RealNVP: inversión trivial, Jacobiano triangular, log-det en O(D)</h2>
+<ul>
+  <li><strong>Inversión trivial:</strong> $\mathbf{x}_a = \mathbf{y}_a$, $\;\mathbf{x}_b = (\mathbf{y}_b - t(\mathbf{y}_a)) \odot \exp(-s(\mathbf{y}_a))$ — no se requiere invertir $s$ ni $t$.</li>
+  <li><strong>Jacobiano triangular:</strong> $\mathbf{y}_a = \mathbf{x}_a$ produce bloque identidad; $\mathbf{y}_b$ solo depende de $\mathbf{x}_a$.</li>
+  <li><strong>Log-det en O(D):</strong> $\ln|\det J| = \sum_j s_j(\mathbf{x}_a)$ — una suma de escalares.</li>
+</ul>
 <div class="slide-num">13</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div><h2>Estructura de una capa RealNVP y su Jacobiano triangular</h2>
-<p class="intro">Una mitad pasa como identidad; la otra se escala y traslada en función de la primera. El Jacobiano resultante es triangular inferior con diagonal $\exp(s)$, y su log-determinante es la suma $\sum_j s_j(\mathbf{x}_a)$.</p>
-<div class="svg-holder"><svg viewBox="0 0 870 220" style="max-width:870px" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div>
+<h2>GLOW alterna qué mitad se transforma para mezclar todas las dimensiones</h2>
+<ul>
+  <li>Al apilar capas se alterna qué mitad actúa como $\mathbf{x}_a$ y cuál como $\mathbf{x}_b$, vía permutaciones o convoluciones $1 \times 1$ invertibles.</li>
+  <li>Esto garantiza que todas las dimensiones se mezclen progresivamente a lo largo del flujo.</li>
+  <li>GLOW (Kingma y Dhariwal, 2018) demostró síntesis fotorrealista de rostros a $256 \times 256$ usando esta arquitectura.</li>
+</ul>
+<div class="slide-num">14</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div>
+<h2>La alternancia y la composición producen expresividad universal</h2>
+<ul>
+  <li>Capa 1 transforma $\mathbf{x}_b$ condicionado en $\mathbf{x}_a$; capa 2 transforma $\mathbf{x}_a$ condicionado en $\mathbf{x}_b$ ya transformado.</li>
+  <li>Alternando capas, la información de cada dimensión se propaga gradualmente a todas las demás.</li>
+  <li>Con suficientes capas, la composición puede aproximar cualquier función invertible suave (aproximación universal para flujos).</li>
+</ul>
+<div class="slide-num">15</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div>
+<h2>La capa de acoplamiento produce un Jacobiano triangular por construcción</h2>
+<ul>
+  <li>La mitad identidad genera el bloque $I$; la mitad afín genera la diagonal $\text{diag}(\exp s)$.</li>
+</ul>
+<div class="svg-holder"><svg viewBox="0 0 870 220" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
   <defs>
     <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
     </marker>
   </defs>
   <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Capa de acoplamiento RealNVP: estructura y Jacobiano triangular</text>
-
-  <!-- Input -->
   <rect x="30" y="55" width="70" height="40" rx="6" fill="#eaf2fb" stroke="#4a90d9" stroke-width="2"/>
   <text x="65" y="78" text-anchor="middle" fill="#2c6aa0" font-weight="bold">x_a</text>
   <rect x="30" y="105" width="70" height="40" rx="6" fill="#eaf2fb" stroke="#4a90d9" stroke-width="2"/>
   <text x="65" y="128" text-anchor="middle" fill="#2c6aa0" font-weight="bold">x_b</text>
   <text x="65" y="160" text-anchor="middle" fill="#555" font-size="11">Entrada</text>
-
-  <!-- x_a passes through directly -->
   <line x1="100" y1="75" x2="210" y2="75" stroke="#4a90d9" stroke-width="2" marker-end="url(#arr2)"/>
   <text x="155" y="68" text-anchor="middle" fill="#4a90d9" font-size="10">identidad</text>
-
-  <!-- x_a feeds into s and t networks -->
   <line x1="100" y1="75" x2="155" y2="158" stroke="#e0a800" stroke-width="1.5" stroke-dasharray="5,3"/>
-
-  <!-- s network -->
   <rect x="155" y="140" width="55" height="32" rx="6" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
   <text x="182" y="160" text-anchor="middle" fill="#856404" font-weight="bold" font-size="11">s(x_a)</text>
-
-  <!-- t network -->
   <rect x="155" y="182" width="55" height="32" rx="6" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
   <text x="182" y="202" text-anchor="middle" fill="#856404" font-weight="bold" font-size="11">t(x_a)</text>
-
-  <!-- x_b + affine -->
   <line x1="100" y1="125" x2="210" y2="125" stroke="#4a90d9" stroke-width="1.5"/>
   <circle cx="220" cy="125" r="10" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
   <text x="220" y="130" text-anchor="middle" fill="#1a7a42" font-size="12">⊙</text>
@@ -295,78 +371,77 @@
   <circle cx="245" cy="125" r="10" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
   <text x="245" y="130" text-anchor="middle" fill="#1a7a42" font-size="12">+</text>
   <line x1="255" y1="125" x2="300" y2="125" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
-
-  <!-- Output -->
   <rect x="300" y="55" width="70" height="40" rx="6" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
   <text x="335" y="78" text-anchor="middle" fill="#1a7a42" font-weight="bold">y_a</text>
   <rect x="300" y="105" width="70" height="40" rx="6" fill="#e8f8e8" stroke="#27ae60" stroke-width="2"/>
   <text x="335" y="128" text-anchor="middle" fill="#1a7a42" font-weight="bold">y_b</text>
   <text x="335" y="160" text-anchor="middle" fill="#555" font-size="11">Salida</text>
-
-  <!-- Equations -->
   <text x="435" y="60" fill="#333" font-size="12">y_a  =  x_a</text>
   <text x="435" y="85" fill="#333" font-size="12">y_b  =  x_b ⊙ exp(s(x_a))  +  t(x_a)</text>
-
-  <!-- Jacobian matrix -->
   <text x="435" y="115" fill="#555" font-size="11" font-style="italic">Jacobiano  ∂y/∂x :</text>
   <rect x="430" y="122" width="160" height="65" rx="4" fill="#f8f9fa" stroke="#aaa" stroke-width="1"/>
-  <!-- Matrix visualization -->
   <text x="450" y="145" fill="#4a90d9" font-size="11">I</text>
   <text x="530" y="145" fill="#ccc" font-size="11">0</text>
   <text x="450" y="175" fill="#e0a800" font-size="11">∂y_b/∂x_a</text>
   <text x="530" y="175" fill="#27ae60" font-size="11">diag(exp s)</text>
-  <!-- Triangle annotation -->
   <text x="600" y="155" fill="#333" font-size="11">triangular</text>
   <text x="600" y="170" fill="#333" font-size="11">inferior ✓</text>
-
-  <!-- Log-det -->
   <text x="435" y="205" fill="#27ae60" font-size="12" font-weight="bold">ln|det J|  =  Σⱼ sⱼ(x_a)   ← O(D)</text>
 </svg></div>
-<div class="slide-num">14</div>
-</section>
-
-<section>
-<div class="section-label">§ 3 · Capas de acoplamiento: NICE y RealNVP</div><h2>GLOW y la permutación de dimensiones</h2>
-<p class="intro">Al apilar múltiples capas de acoplamiento se alterna qué mitad actúa como $\mathbf{x}_a$ y cuál como $\mathbf{x}_b$, via permutaciones o convoluciones $1 \times 1$ invertibles.</p>
-<div class="adm adm-alert"><div class="adm-title">GLOW (Kingma y Dhariwal, 2018)</div><div class="adm-body"><p>La permutación entre capas garantiza que todas las dimensiones se <strong>mezclen progresivamente</strong>, dando al flujo la expresividad necesaria para modelar distribuciones complejas de imágenes de alta resolución.</p><p>GLOW demostró síntesis fotorrealista de rostros a $256 \times 256$ usando esta arquitectura.</p></div></div>
-<div class="slide-num">15</div>
-</section>
-
-<section>
-<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div><h2>Flujo continuo y modelo autoregresivo son la misma estructura</h2>
-<p class="intro">Una observación profunda en el campo: un flujo normalizado con variables continuas y un modelo autoregresivo son la misma estructura matemática vista desde dos ángulos distintos. En un ARM continuo, $x_d = \mu_d(x_{&lt;d}) + \sigma_d(x_{&lt;d}) \cdot z_d$ con $z_d \sim \mathcal{N}(0,1)$. El Jacobiano de esta transformación es triangular inferior por construcción, con diagonal $\{\sigma_d(x_{&lt;d})\}_{d=1}^D$.</p>
-<p class="caption-end">De esta dualidad nacen dos arquitecturas con un compromiso fundamental: MAF e IAF.</p>
 <div class="slide-num">16</div>
 </section>
 
+<!-- § 4 · Dualidad con modelos autoregresivos: MAF e IAF -->
+
 <section>
-<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div><h2>MAF: evaluación rápida, generación lenta</h2>
-<p class="intro">En <strong>MAF</strong> (Papamakarios et al., 2017), para generar $\mathbf{x}$ a partir de $\mathbf{z}$ se calcula cada $x_d = \mu_d(x_{&lt;d}) + \sigma_d(x_{&lt;d}) \cdot z_d$, lo que es <strong>secuencial</strong> (igual que la generación autoregresiva).</p>
-<div class="adm adm-note"><div class="adm-title">Masked Autoregressive Flow</div><div class="adm-body"><p>Para calcular $\mathbf{z}$ a partir de $\mathbf{x}$ (evaluación de verosimilitud), el cálculo $z_d = (x_d - \mu_d(x_{&lt;d})) / \sigma_d(x_{&lt;d})$ es <strong>paralelizable</strong> porque todos los $x_{&lt;d}$ son conocidos simultáneamente.</p><p>Resultado: <strong>evaluación rápida, generación lenta</strong> ($O(D)$ pases secuenciales para muestrear).</p></div></div>
+<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div>
+<h2>Un flujo autoregresivo continuo y un ARM son la misma estructura matemática</h2>
+<ul>
+  <li>En un modelo autoregresivo continuo: $x_d = \mu_d(x_{&lt;d}) + \sigma_d(x_{&lt;d}) \cdot z_d$, con $z_d \sim \mathcal{N}(0,1)$.</li>
+  <li>El Jacobiano de esta transformación es <strong>triangular inferior por construcción</strong>, con diagonal $\{\sigma_d(x_{&lt;d})\}_{d=1}^D$.</li>
+  <li>Esta dualidad da lugar a dos arquitecturas con un compromiso fundamental entre velocidad de evaluación y velocidad de generación.</li>
+</ul>
 <div class="slide-num">17</div>
 </section>
 
 <section>
-<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div><h2>IAF: generación rápida, evaluación lenta</h2>
-<p class="intro"><strong>IAF</strong> (Kingma et al., 2016) invierte la estructura: las redes $\mu$ y $\sigma$ se calculan a partir del vector latente $\mathbf{z}_{&lt;d}$ (conocido desde el inicio).</p>
-<div class="adm adm-alert"><div class="adm-title">Inverse Autoregressive Flow</div><div class="adm-body"><p>Por lo tanto $x_d = \mu_d(z_{&lt;d}) + \sigma_d(z_{&lt;d}) \cdot z_d$ se puede calcular <strong>en paralelo</strong> para todo $d$.</p><p>Resultado: <strong>generación rápida y paralelizable, evaluación lenta</strong> (requiere calcular $\mathbf{z}$ secuencialmente dado $\mathbf{x}$).</p></div></div>
+<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div>
+<h2>MAF: evaluación de verosimilitud rápida, generación secuencial lenta</h2>
+<ul>
+  <li>Generar $\mathbf{x}$ desde $\mathbf{z}$: $x_d = \mu_d(x_{&lt;d}) + \sigma_d(x_{&lt;d}) \cdot z_d$ — requiere $D$ pasos <strong>secuenciales</strong>.</li>
+  <li>Calcular $\mathbf{z}$ desde $\mathbf{x}$: $z_d = (x_d - \mu_d(x_{&lt;d})) / \sigma_d(x_{&lt;d})$ — es <strong>paralelizable</strong> porque todos los $x_{&lt;d}$ son conocidos.</li>
+  <li>Resultado: <strong>evaluación rápida, generación lenta</strong> ($O(D)$ pases secuenciales para muestrear).</li>
+</ul>
 <div class="slide-num">18</div>
 </section>
 
 <section>
-<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div><h2>El compromiso irreducible y Parallel WaveNet</h2>
-<p class="intro">MAF e IAF son duales: lo que es rápido en uno es lento en el otro. Esta asimetría no se puede eliminar con más hardware.</p>
-<div class="adm adm-danger"><div class="adm-title">Destilación de probabilidad</div><div class="adm-body"><p><strong>Parallel WaveNet</strong> (van den Oord et al., 2018) explota esta dualidad: un modelo MAF lento actúa de <em>maestro</em>, evaluando la log-verosimilitud de forma eficiente durante el entrenamiento.</p><p>Un modelo IAF actúa de <em>alumno</em>, aprendiendo a generar muestras en paralelo mediante destilación de probabilidad.</p><p>El resultado: <strong>síntesis de audio en tiempo real sin sacrificar calidad</strong>.</p></div></div>
+<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div>
+<h2>IAF: generación paralela rápida, evaluación de verosimilitud lenta</h2>
+<ul>
+  <li>IAF invierte la estructura: $\mu$ y $\sigma$ se calculan desde $\mathbf{z}_{&lt;d}$ (conocido desde el inicio).</li>
+  <li>$x_d = \mu_d(z_{&lt;d}) + \sigma_d(z_{&lt;d}) \cdot z_d$ se calcula en <strong>paralelo</strong> para todo $d$.</li>
+  <li>Resultado: <strong>generación rápida y paralelizable, evaluación lenta</strong> (requiere calcular $\mathbf{z}$ secuencialmente dado $\mathbf{x}$).</li>
+</ul>
 <div class="slide-num">19</div>
 </section>
 
 <section>
-<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div><h2>Compromiso velocidad: evaluación vs generación</h2>
-<p class="intro">Las tres familias principales de flujos (acoplamiento, MAF, IAF) se sitúan en esquinas distintas del plano evaluación-generación. Acoplamiento es la única que logra ambas rápidas.</p>
-<div class="svg-holder"><svg viewBox="0 0 870 195" style="max-width:870px" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-  <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Compromiso velocidad: evaluación de verosimilitud vs generación</text>
+<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div>
+<h2>El compromiso MAF-IAF es irreducible; Parallel WaveNet lo explota</h2>
+<ul>
+  <li>MAF e IAF son duales: lo que es rápido en uno es lento en el otro. Esta asimetría no puede eliminarse con más hardware.</li>
+  <li><strong>Parallel WaveNet</strong> (van den Oord et al., 2018): un MAF lento actúa de maestro evaluando verosimilitud; un IAF aprende a generar en paralelo mediante destilación de probabilidad.</li>
+  <li>Resultado: síntesis de audio en tiempo real sin sacrificar calidad.</li>
+</ul>
+<div class="slide-num">20</div>
+</section>
 
-  <!-- Header row -->
+<section>
+<div class="section-label">§ 4 · Dualidad con modelos autoregresivos: MAF e IAF</div>
+<h2>El compromiso entre evaluación y generación varía según la familia</h2>
+<div class="svg-holder"><svg viewBox="0 0 870 195" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+  <text x="435" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Compromiso velocidad: evaluación de verosimilitud vs generación</text>
   <rect x="55" y="35" width="175" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
   <text x="142" y="55" text-anchor="middle" font-weight="bold" fill="#333">Familia</text>
   <rect x="235" y="35" width="185" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
@@ -375,8 +450,6 @@
   <text x="517" y="55" text-anchor="middle" font-weight="bold" fill="#333">Generación x ~ p</text>
   <rect x="615" y="35" width="230" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
   <text x="730" y="55" text-anchor="middle" font-weight="bold" fill="#333">Restricción arquitectónica</text>
-
-  <!-- Coupling (RealNVP, GLOW) -->
   <rect x="55" y="71" width="175" height="32" rx="4" fill="#fff3cd" stroke="#e0a800"/>
   <text x="142" y="91" text-anchor="middle" fill="#856404">Acoplamiento (RealNVP)</text>
   <rect x="235" y="71" width="185" height="32" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
@@ -385,8 +458,6 @@
   <text x="517" y="91" text-anchor="middle" fill="#1a7a42">Rápida O(1) paralela</text>
   <rect x="615" y="71" width="230" height="32" rx="4" fill="#fef9e7" stroke="#e0a800"/>
   <text x="730" y="91" text-anchor="middle" fill="#856404">Jacobiano triangular por diseño</text>
-
-  <!-- MAF -->
   <rect x="55" y="107" width="175" height="32" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
   <text x="142" y="127" text-anchor="middle" fill="#2c6aa0">MAF</text>
   <rect x="235" y="107" width="185" height="32" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
@@ -395,8 +466,6 @@
   <text x="517" y="127" text-anchor="middle" fill="#c0392b">Lenta O(D) secuencial</text>
   <rect x="615" y="107" width="230" height="32" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
   <text x="730" y="127" text-anchor="middle" fill="#2c6aa0">Jacobiano triangular autoregresivo</text>
-
-  <!-- IAF -->
   <rect x="55" y="143" width="175" height="32" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
   <text x="142" y="163" text-anchor="middle" fill="#2c6aa0">IAF</text>
   <rect x="235" y="143" width="185" height="32" rx="4" fill="#fdecea" stroke="#e74c3c"/>
@@ -406,71 +475,102 @@
   <rect x="615" y="143" width="230" height="32" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
   <text x="730" y="163" text-anchor="middle" fill="#2c6aa0">Jacobiano triangular inverso</text>
 </svg></div>
-<div class="slide-num">20</div>
-</section>
-
-<section>
-<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div><h2>El límite continuo: trayectorias en vez de capas</h2>
-<p class="intro">Si se lleva el límite de capas discretas hacia el continuo, se obtienen los <strong>flujos normalizados continuos</strong> (CNFs, Chen et al., 2018), donde la trayectoria desde la distribución latente hasta los datos se describe mediante una ODE gobernada por una red neuronal:</p>
-<div class="eq eq-big">$$\frac{d\mathbf{x}_t}{dt} = v_\theta(\mathbf{x}_t, t)$$</div><p class="caption-end">Con condición inicial $\mathbf{x}_0 = \mathbf{z} \sim p_Z$ y solución final $\mathbf{x}_1 = \mathbf{x}$.</p>
 <div class="slide-num">21</div>
 </section>
 
+<!-- § 5 · Flujos continuos: Neural ODEs y CNFs -->
+
 <section>
-<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div><h2>Fórmula de Liouville: cambio de variable continuo</h2>
-<p class="intro">La versión continua del teorema del cambio de variable establece que el cambio en la log-densidad a lo largo de la trayectoria es la integral de la traza del Jacobiano del campo vectorial:</p>
-<div class="eq eq-big">$$\ln p(\mathbf{x}_1) = \ln p(\mathbf{x}_0) - \int_0^1 \mathrm{Tr}\!\left(\frac{\partial v_\theta(\mathbf{x}_t, t)}{\partial \mathbf{x}_t}\right) dt$$</div><div class="adm adm-note"><div class="adm-title">Estimador de Hutchinson</div><div class="adm-body"><p>La traza del Jacobiano tiene complejidad $O(D^2)$, pero puede estimarse sin sesgo con costo $O(D)$ usando el <strong>estimador de Hutchinson</strong>: $\mathrm{Tr}(A) \approx \mathbb{E}_{\boldsymbol{\epsilon}}[\boldsymbol{\epsilon}^T A \boldsymbol{\epsilon}]$ con $\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$.</p></div></div>
+<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div>
+<h2>Los CNFs describen la transformación mediante una ODE parametrizada por una red</h2>
+<ul>
+  <li>En el límite continuo de capas discretas, la trayectoria se describe con una ecuación diferencial ordinaria (ODE):</li>
+</ul>
+$$\frac{d\mathbf{x}_t}{dt} = v_\theta(\mathbf{x}_t,\, t)$$
+<p class="note">Condición inicial $\mathbf{x}_0 = \mathbf{z} \sim p_Z$; solución final $\mathbf{x}_1 = \mathbf{x}$. El campo vectorial $v_\theta$ es una red neuronal arbitraria.</p>
 <div class="slide-num">22</div>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div><h2>Flow Matching: entrenamiento directo sin ODE solver</h2>
-<p class="intro">Entrenar CNFs directamente requiere resolver una ODE hacia adelante y propagar gradientes hacia atrás a través del solver, lo cual es costoso.</p>
-<div class="adm adm-alert"><div class="adm-title">Flow Matching (Lipman et al., 2022)</div><div class="adm-body"><p>En lugar de maximizar la verosimilitud, el modelo aprende a imitar directamente un <strong>campo vectorial de referencia</strong> que conecta ruido con datos por trayectorias rectas (o gaussianas condicionales).</p><p>El entrenamiento se reduce a una regresión sobre el campo vectorial, eliminando la necesidad de resolver ODEs durante el entrenamiento.</p><p>Flow Matching es la base de modelos de síntesis de imágenes y audio de última generación.</p></div></div>
+<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div>
+<h2>La fórmula de Liouville da el cambio de densidad a lo largo de la trayectoria</h2>
+<ul>
+  <li>La versión continua del cambio de variable (Fokker-Planck) establece:</li>
+</ul>
+$$\ln p(\mathbf{x}_1) = \ln p(\mathbf{x}_0) - \int_0^1 \mathrm{Tr}\!\left(\frac{\partial v_\theta(\mathbf{x}_t,t)}{\partial \mathbf{x}_t}\right) dt$$
+<p class="note">La traza del Jacobiano puede estimarse sin sesgo en $O(D)$ con el estimador de Hutchinson: $\mathrm{Tr}(A) \approx \mathbb{E}_{\boldsymbol{\epsilon}}[\boldsymbol{\epsilon}^T A \boldsymbol{\epsilon}]$ con $\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$.</p>
 <div class="slide-num">23</div>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div><h2>CNFs frente a flujos discretos: ventajas e inconvenientes</h2>
-<p class="intro">Los CNFs liberan del requisito de capas específicas, pero hacen más caro el muestreo.</p>
-<div class="adm adm-danger"><div class="adm-title">Trade-off fundamental</div><div class="adm-body"><p>Los CNFs <strong>no requieren arquitecturas especiales</strong> (como capas de acoplamiento): cualquier red puede actuar como campo vectorial $v_\theta$.</p><p>Sin embargo, la generación requiere integrar numéricamente la ODE (típicamente 10 a 100 evaluaciones de la red por muestra), frente a los flujos discretos que solo requieren un pase hacia adelante.</p><p>Los modelos de difusión modernos (DDPM, Stable Diffusion) pueden interpretarse como CNFs discretizados entrenados con denoising score matching, heredando la flexibilidad arquitectónica sin necesidad de invertibilidad estricta.</p></div></div>
+<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div>
+<h2>Flow Matching entrena directamente sin resolver ODEs durante el entrenamiento</h2>
+<ul>
+  <li>Entrenar CNFs directamente requiere resolver una ODE hacia adelante y propagar gradientes a través del solver — costoso.</li>
+  <li><strong>Flow Matching</strong> (Lipman et al., 2022) aprende a imitar un campo vectorial de referencia que conecta ruido con datos por trayectorias rectas.</li>
+  <li>El entrenamiento se reduce a una <strong>regresión sobre el campo vectorial</strong>, eliminando ODEs durante el entrenamiento.</li>
+  <li>Es la base de modelos de síntesis de imágenes y audio de última generación.</li>
+</ul>
 <div class="slide-num">24</div>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Entrenamiento: estimación de densidad no supervisada</div><h2>Estimación de densidad no supervisada</h2>
-<p class="intro">Los flujos normalizados pertenecen a la familia de los modelos de <strong>estimación de densidad no supervisada</strong>: no se utilizan etiquetas, solo un conjunto de observaciones $\{\mathbf{x}^{(n)}\}_{n=1}^{N}$ muestreadas de una distribución $p_{\text{data}}$ desconocida. El objetivo es aprender los parámetros $\theta$ del flujo que maximizan la log-verosimilitud empírica:</p>
-<div class="eq eq-big">$$\theta^\star = \arg\max_\theta \frac{1}{N} \sum_{n=1}^{N} \left[ \ln p_Z\bigl(f_\theta^{-1}(\mathbf{x}^{(n)})\bigr) - \sum_{k=1}^{K} \ln\left|\det J_{f_k^{-1}}\right| \right]$$</div><p class="caption-end">A diferencia de los VAE (que maximizan una cota ELBO) o de las GAN (que no optimizan una verosimilitud explícita), aquí se optimiza la <strong>log-verosimilitud exacta</strong>.</p>
+<div class="section-label">§ 5 · Flujos continuos: Neural ODEs y CNFs</div>
+<h2>Los CNFs son flexibles arquitectónicamente, pero la generación es iterativa</h2>
+<ul>
+  <li>Los CNFs no requieren arquitecturas especiales: cualquier red puede actuar como campo vectorial $v_\theta$.</li>
+  <li>La generación requiere integrar numéricamente la ODE (10–100 evaluaciones de la red por muestra), frente a un pase único en flujos discretos.</li>
+  <li>Los modelos de difusión modernos (DDPM, Stable Diffusion) pueden interpretarse como CNFs discretizados, heredando flexibilidad sin invertibilidad estricta.</li>
+</ul>
 <div class="slide-num">25</div>
 </section>
 
+<!-- § 6 · Entrenamiento: estimación de densidad no supervisada -->
+
 <section>
-<div class="section-label">§ 6 · Entrenamiento: estimación de densidad no supervisada</div><h2>Dirección de evaluación vs dirección de generación</h2>
-<p class="intro">El flujo se recorre en sentidos opuestos según la fase del uso. Que ambas sean eficientes depende de la arquitectura.</p>
-<div class="adm adm-note"><div class="adm-title">Dos direcciones del mismo mapa</div><div class="adm-body"><p><strong>Entrenamiento</strong>: el flujo se recorre en sentido <em>inverso</em>. Se parte de un dato real $\mathbf{x}$, se calcula $\mathbf{z} = f^{-1}(\mathbf{x})$ y se evalúa $\ln p_Z(\mathbf{z})$ junto con los log-determinantes.</p><p><strong>Generación</strong>: el flujo se recorre en sentido <em>directo</em>. Se muestrea $\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ y se calcula $\mathbf{x} = f(\mathbf{z})$.</p><p>RealNVP es simétrico; MAF e IAF no, como se vio en la sección de dualidad.</p></div></div>
+<div class="section-label">§ 6 · Entrenamiento: estimación de densidad no supervisada</div>
+<h2>Los flujos optimizan la log-verosimilitud exacta sin cotas ni adversarios</h2>
+<ul>
+  <li>Solo se usan observaciones $\{\mathbf{x}^{(n)}\}_{n=1}^N$ sin etiquetas. El objetivo es maximizar:</li>
+</ul>
+$$\theta^\star = \arg\max_\theta \frac{1}{N} \sum_{n=1}^{N} \left[ \ln p_Z\!\left(f_\theta^{-1}(\mathbf{x}^{(n)})\right) - \sum_{k=1}^{K} \ln\!\left|\det J_{f_k^{-1}}\right| \right]$$
+<p class="note">A diferencia de los VAEs (ELBO) o las GANs (adversarial), aquí se optimiza la log-verosimilitud exacta directamente.</p>
 <div class="slide-num">26</div>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Entrenamiento: estimación de densidad no supervisada</div><h2>Conexión con VAEs y GANs en el punto de partida</h2>
-<p class="intro">Tanto los flujos como los VAE y las GAN parten de un vector latente muestreado de una distribución simple (típicamente gaussiana estándar) para generar datos. Lo que los distingue es el tipo de mapeo.</p>
-<div class="adm adm-alert"><div class="adm-title">Tres maneras de mapear ruido a datos</div><div class="adm-body"><ul><li><strong>VAE</strong>: decodificador probabilístico <em>no invertible</em> que maximiza una cota inferior.</li><li><strong>GAN</strong>: generador arbitrario entrenado por adversarialidad, sin verosimilitud explícita.</li><li><strong>Flujo</strong>: composición invertible que permite cálculo exacto de la log-verosimilitud.</li></ul><p>En contraste, los modelos autoregresivos <strong>no</strong> parten de ruido: comienzan desde un valor o token inicial fijo y construyen la salida secuencialmente.</p></div></div>
+<div class="section-label">§ 6 · Entrenamiento: estimación de densidad no supervisada</div>
+<h2>Entrenamiento recorre el flujo en sentido inverso; generación en sentido directo</h2>
+<ul>
+  <li><strong>Entrenamiento:</strong> se parte de un dato real $\mathbf{x}$, se calcula $\mathbf{z} = f^{-1}(\mathbf{x})$ y se evalúa $\ln p_Z(\mathbf{z})$ con los log-determinantes.</li>
+  <li><strong>Generación:</strong> se muestrea $\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ y se calcula $\mathbf{x} = f(\mathbf{z})$.</li>
+  <li>Que ambas direcciones sean eficientes depende de la arquitectura: RealNVP es simétrico; MAF e IAF no lo son.</li>
+</ul>
 <div class="slide-num">27</div>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Entrenamiento: estimación de densidad no supervisada</div><h2>Manipulación del espacio latente: temperatura e interpolación</h2>
-<p class="intro">Como todo flujo mantiene la correspondencia biyectiva entre $\mathbf{x}$ y $\mathbf{z}$, es posible manipular la generación variando la distribución base.</p>
-<div class="adm adm-danger"><div class="adm-title">Lo que la invertibilidad habilita</div><div class="adm-body"><p><strong>Temperatura</strong>: reducir la varianza de $p_Z$ (muestrear $\mathbf{z} \sim \mathcal{N}(\mathbf{0}, T^2 \mathbf{I})$ con $T &lt; 1$) produce muestras más típicas (menos diversas, más cercanas a los modos). Aumentar $T$ produce muestras más atípicas.</p><p><strong>Interpolación</strong>: dados dos datos $\mathbf{x}_a, \mathbf{x}_b$, interpolar en el espacio latente ($\mathbf{z}_\alpha = (1-\alpha)\mathbf{z}_a + \alpha \mathbf{z}_b$) produce morphings coherentes.</p><p>Esta manipulación es mucho más limpia que en VAE por la invertibilidad exacta del mapeo.</p></div></div>
+<div class="section-label">§ 6 · Entrenamiento: estimación de densidad no supervisada</div>
+<h2>Solo flujos y ARMs calculan densidades exactas; GANs no calculan densidad alguna</h2>
+<ul>
+  <li><strong>Flujos y ARMs:</strong> calculan $\ln p(\mathbf{x})$ de forma exacta; permiten compresión, anomaly scoring y comparación cuantitativa vía bits-por-dimensión.</li>
+  <li><strong>VAEs:</strong> calculan una cota inferior (ELBO); la densidad real es intratable.</li>
+  <li><strong>GANs:</strong> no existe función que devuelva $p(\mathbf{x})$ para un dato arbitrario; solo permiten generar muestras.</li>
+  <li>La invertibilidad exacta también permite muestreo de temperatura y morfings coherentes en el espacio latente.</li>
+</ul>
 <div class="slide-num">28</div>
 </section>
 
+<!-- § 7 · Comparación con otros modelos generativos profundos -->
+
 <section>
-<div class="section-label">§ 7 · Los flujos en el panorama</div><h2>Cada familia generativa tiene un compromiso distinto</h2>
-<p class="intro">Es útil situar las familias de modelos generativos profundos en una sola vista comparativa. Ninguna domina todas las dimensiones (verosimilitud exacta, estabilidad de entrenamiento, velocidad de generación, calidad perceptual). La elección correcta depende de las prioridades del problema.</p>
-<div class="svg-holder"><svg viewBox="0 0 870 320" style="max-width:870px" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+<div class="section-label">§ 7 · Comparación con otros modelos generativos profundos</div>
+<h2>Ninguna familia domina todas las dimensiones relevantes para la práctica</h2>
+<ul>
+  <li>Las dimensiones clave son: verosimilitud exacta, estabilidad de entrenamiento, velocidad de generación y calidad perceptual.</li>
+</ul>
+<div class="svg-holder"><svg viewBox="0 0 870 320" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
   <text x="435" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Comparación de familias de modelos generativos profundos</text>
-  <!-- Header -->
   <rect x="30" y="40" width="150" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
   <text x="105" y="60" text-anchor="middle" font-weight="bold" fill="#333">Familia</text>
   <rect x="185" y="40" width="180" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
@@ -546,16 +646,25 @@
 </section>
 
 <section>
-<div class="section-label">§ 7 · Los flujos en el panorama</div><h2>Cuándo elegir un flujo normalizado</h2>
-<p class="intro">Los flujos ocupan un nicho específico entre los modelos generativos: los únicos que combinan verosimilitud exacta con muestreo paralelo eficiente, a costa de cierta limitación en calidad perceptual.</p>
-<div class="adm adm-note"><div class="adm-title">Criterios de decisión</div><div class="adm-body"><p>Los flujos normalizados son la opción preferida cuando se necesita <strong>simultáneamente</strong>:</p><ul><li><strong>Verosimilitud exacta</strong> (sin cotas) y <strong>muestreo paralelo</strong> eficiente.</li><li>Correspondencia biyectiva entre datos y espacio latente, que permite interpolaciones limpias, codificación determinista y <em>anomaly scoring</em>.</li></ul><p>Ideales para estimación de densidad de precisión, modelado de distribuciones físicas y flujos condicionales. La restricción de invertibilidad limita la expresividad frente a GAN o difusión en imágenes de alta resolución.</p></div></div>
+<div class="section-label">§ 7 · Comparación con otros modelos generativos profundos</div>
+<h2>Los flujos son preferibles cuando se necesitan densidad exacta y muestreo paralelo</h2>
+<ul>
+  <li>Únicos modelos con <strong>verosimilitud exacta</strong> (sin cotas) y <strong>muestreo paralelo eficiente</strong> simultáneamente.</li>
+  <li>La biyección exacta permite interpolaciones limpias, codificación determinista y anomaly scoring calibrado.</li>
+  <li>Ideales para estimación de densidad de precisión, modelado de distribuciones físicas y flujos condicionales.</li>
+  <li>La restricción de invertibilidad limita la expresividad frente a GAN o difusión en imágenes de alta resolución.</li>
+</ul>
 <div class="slide-num">30</div>
 </section>
 
+<!-- CIERRE -->
 <section>
-<div class="close-slide"><div class="section-label">En una oración</div><h1>Un flujo normalizado es una composición de transformaciones invertibles que convierte ruido gaussiano en datos preservando la densidad exacta paso a paso.</h1><p style="font-size:0.82em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p></div>
-
+<div class="close-slide">
+  <h1>El flujo normalizado convierte lo intratable en exacto: una gaussiana pasa por capas invertibles y emerge como cualquier distribución, con verosimilitud calculable en todo momento.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
 </section>
+
 </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
