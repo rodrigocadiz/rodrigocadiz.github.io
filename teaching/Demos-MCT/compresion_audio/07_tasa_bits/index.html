@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Codecs y Compresión — Compresión Perceptual</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-compresion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_introduccion_compresion/index.html">1. Introducción</a>
+  <a href="../02_umbral_audicion/index.html">2. Umbral de Audición</a>
+  <a href="../03_enmascaramiento_freq/index.html">3. Enmascaramiento Frec.</a>
+  <a href="../04_enmascaramiento_temp/index.html">4. Enmascaramiento Temp.</a>
+  <a href="../05_bandas_criticas/index.html">5. Bandas Críticas</a>
+  <a href="../06_modelo_psicoacustico/index.html">6. Modelo Psicoacústico</a>
+  <a href="../07_tasa_bits/index.html" class="active">7. Codecs y Compresión</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Codecs y Compresión</h1>
+      <p class="subtitle">Esquema del codificador/decodificador y comparación entre codecs</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="section-card">
+    <h2>Esquema del codificador y decodificador perceptual</h2>
+    <p class="description">
+      Un <span class="kw">codec perceptual</span> como MP3 divide la señal en tramas cortas,
+      analiza el espectro con una <span class="kw">MDCT</span> y calcula el
+      <span class="kw">modelo psicoacústico</span> para determinar cuántos bits asignar a cada banda.
+      El cuantizador adapta la resolución por banda, y Huffman comprime el resultado.
+      El <span class="kw">decodificador</span> invierte cada paso: descomprime, decuantiza y
+      reconstruye la señal con la <span class="kw">IMDCT</span>.
+    </p>
+    <canvas id="diagCanvas"></canvas>
+    <div class="two-col" style="margin-top:16px;">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">📊 MDCT — Transformada Discreta del Coseno Modificada</strong><br>
+        Convierte un bloque de <em>N</em> muestras de audio en <em>N/2</em> coeficientes espectrales,
+        con solapamiento 50% entre tramas (<span class="kw">TDAC</span>) para evitar artefactos en los bordes.
+        Permite representar el espectro con alta resolución frecuencial, que es exactamente lo que
+        necesita el modelo psicoacústico para calcular el enmascaramiento por banda.
+        MP3 usa bloques de 576 o 192 coeficientes según el tipo de ventana (larga/corta).
+      </div>
+      <div class="info-box">
+        <strong style="color:#44aaff;">📊 IMDCT — Transformada Inversa</strong><br>
+        Reconstruye las <em>N</em> muestras a partir de los <em>N/2</em> coeficientes decuantizados.
+        Gracias al solapamiento y la propiedad TDAC, los errores de los bordes se cancelan entre
+        tramas consecutivas, produciendo audio continuo sin clics. Es la operación que define
+        la calidad de la reconstrucción en el decodificador — si la cuantización fue fiel al
+        umbral psicoacústico, el resultado es perceptualmente transparente.
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>Calidad perceptual según codec y tasa de bits</h2>
+    <p class="description">
+      Diferentes codecs alcanzan calidad transparente a distintas tasas de bits.
+      <span class="kw">Opus</span> y <span class="kw">AAC</span> son más eficientes que MP3 a bajas tasas;
+      MP3 sigue siendo el más compatible. La calidad se mide en escala 0–100 según pruebas de
+      escucha tipo <span class="kw">MUSHRA</span>. El audio CD sin comprimir equivale a 1411 kbps.
+    </p>
+    <div class="controls">
+      <div class="btn-group" id="codecBtns">
+        <button class="btn active" data-codec="0" onclick="toggleCodec(0)">MP3</button>
+        <button class="btn active" data-codec="1" onclick="toggleCodec(1)">AAC-LC</button>
+        <button class="btn active" data-codec="2" onclick="toggleCodec(2)">Opus</button>
+        <button class="btn active" data-codec="3" onclick="toggleCodec(3)">OGG Vorbis</button>
+        <button class="btn active" data-codec="4" onclick="toggleCodec(4)">WMA</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="codecLabel">Ratio de compresión respecto a CD (1411 kbps) bajo cada tasa de bits</div>
+    <canvas id="codecCanvas" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Características de cada codec</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">MP3 (MPEG-1 Layer III, 1993)</strong><br>
+        Primer codec de audio perceptual de uso masivo. Banco de 32 filtros + MDCT.
+        Buena compatibilidad universal. Calidad aceptable desde ~128 kbps.<br><br>
+        <strong style="color:#00ffff;">AAC-LC (MPEG-4, 1997)</strong><br>
+        Sucesor oficial de MP3. MDCT pura, ventanas más largas, mejor manejo de transientes.
+        Usado en iTunes, YouTube, smartphones. Transparente desde ~96 kbps.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ff44;">Opus (IETF, 2012)</strong><br>
+        Estado del arte. Combina CELT (alta calidad) y SILK (voz). Transparente desde
+        ~64 kbps en música. Estándar para streaming y VoIP (WebRTC).<br><br>
+        <strong style="color:#44aaff;">OGG Vorbis (Xiph, 2000)</strong><br>
+        Código abierto, sin royalties. Calidad comparable a AAC. Común en juegos y Linux.<br><br>
+        <strong style="color:#ff4444;">WMA (Microsoft, 1999)</strong><br>
+        Propietario de Microsoft. Rendimiento similar a MP3, menor adopción actual.
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>Transmisión de audio por internet — el caso del streaming</h2>
+    <p class="description">
+      Cuando escuchas Spotify, YouTube Music o Apple Music, el audio viaja
+      <span class="kw">ya codificado</span> desde los servidores hasta tu dispositivo.
+      El servidor almacena el audio comprimido; tu reproductor lo decodifica en tiempo real.
+      Nunca se transmite el PCM crudo — sería inviable: un audio de 5 minutos en calidad CD
+      ocupa ~<strong style="color:#ff4444;">52 MB</strong> sin comprimir,
+      pero solo ~<strong style="color:#00ff44;">4.8 MB</strong> a 128 kbps.
+      Ajusta la duración y la tasa de bits para ver cómo cambia el tamaño.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Duración del audio: <span class="val" id="durVal">5</span> min</label>
+        <input type="range" id="durSlider" min="1" max="60" step="1" value="5">
+      </div>
+      <div class="control-group">
+        <label>Tasa de bits:</label>
+        <div class="btn-group" id="brBtns" style="margin-top:6px;">
+          <button class="btn"        data-br="64"  onclick="setBR(64)">64 kbps</button>
+          <button class="btn active" data-br="128" onclick="setBR(128)">128 kbps</button>
+          <button class="btn"        data-br="256" onclick="setBR(256)">256 kbps</button>
+          <button class="btn"        data-br="320" onclick="setBR(320)">320 kbps</button>
+          <button class="btn"        data-br="1411" onclick="setBR(1411)">1411 kbps (sin comp.)</button>
+        </div>
+      </div>
+    </div>
+    <div class="canvas-label" id="streamLabel">Calculando…</div>
+    <canvas id="streamCanvas" height="300"></canvas>
+
+    <div class="two-col" style="margin-top:16px;">
+      <div class="info-box">
+        <strong style="color:#00ff44;">🎧 Servicios de streaming — tasas típicas</strong><br>
+        <span style="color:#00ff44;">Spotify Free:</span> 128 kbps OGG Vorbis<br>
+        <span style="color:#00ff44;">Spotify Premium:</span> 320 kbps OGG Vorbis<br>
+        <span style="color:#00ffff;">Apple Music:</span> 256 kbps AAC (+ lossless ALAC opcional)<br>
+        <span style="color:#ffaa00;">YouTube Music:</span> 256 kbps AAC<br>
+        <span style="color:#44aaff;">Amazon Music HD:</span> hasta 3730 kbps (Ultra HD lossless)<br>
+        <span style="color:#ffffff;">Tidal HiFi:</span> 1411 kbps FLAC (calidad CD)
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">📡 Por qué importa el bitrate en streaming</strong><br>
+        A 128 kbps se necesitan solo <strong>0.016 MB/s</strong> de ancho de banda — cualquier
+        conexión 3G lo soporta. A 1411 kbps (lossless) se necesitan <strong>0.18 MB/s</strong>,
+        requiriendo WiFi o 4G/5G estable. El codec también determina la
+        <span class="kw">latencia de decodificación</span>: Opus puede decodificar en tiempo real
+        con apenas 2.5 ms de retardo, clave para videollamadas y juegos en red.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script>
+// ── Datos de codecs ────────────────────────────────────────────────────
+// [kbps, calidad 0–100] basado en estudios MUSHRA públicos (medias aproximadas)
+const CODECS = [
+  { name: 'MP3',        col: '#ffaa00',
+    pts: [[32,28],[64,52],[96,67],[128,77],[192,88],[320,95]] },
+  { name: 'AAC-LC',     col: '#00ffff',
+    pts: [[32,42],[64,68],[96,81],[128,89],[192,95],[320,98]] },
+  { name: 'Opus',       col: '#00ff44',
+    pts: [[32,62],[64,81],[96,89],[128,94],[192,97],[320,99]] },
+  { name: 'OGG Vorbis', col: '#44aaff',
+    pts: [[32,38],[64,63],[96,78],[128,87],[192,93],[320,97]] },
+  { name: 'WMA',        col: '#ff4444',
+    pts: [[32,30],[64,55],[96,68],[128,78],[192,87],[320,93]] },
+];
+const CD_KBPS = 1411;
+const enabled = [true, true, true, true, true];
+
+function toggleCodec(i) {
+  enabled[i] = !enabled[i];
+  document.querySelector(`[data-codec="${i}"]`).classList.toggle('active', enabled[i]);
+  drawCodec();
+}
+
+// ── Diagrama del codec (arquitectura detallada) ─────────────────────────
+function drawDiagram() {
+  const canvas = document.getElementById('diagCanvas');
+  canvas.width  = canvas.offsetWidth || 820;
+  canvas.height = Math.round(canvas.width * 0.44);  // altura proporcional al ancho
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const S = W / 820;  // factor de escala global (H escala automáticamente con canvas.height ∝ W)
+
+  // ── Helpers ─────────────────────────────────────────────────────────
+  function rr(x, y, w, h, col, fill, lw) {
+    ctx.fillStyle = fill || 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = col; ctx.lineWidth = lw || 1.6;
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, 6*S); ctx.fill(); ctx.stroke();
+  }
+
+  function label(x, y, icon, line1, line2, col, bold) {
+    ctx.textAlign = 'center';
+    if (icon) {
+      ctx.font = `${14*S}px sans-serif`; ctx.fillStyle = col;
+      ctx.fillText(icon, x, y - 6*S);
+    }
+    ctx.font = `${bold?'bold ':''}${10*S}px sans-serif`; ctx.fillStyle = col;
+    ctx.fillText(line1, x, y + (icon ? 6*S : 3*S));
+    if (line2) {
+      ctx.font = `${8.5*S}px sans-serif`; ctx.fillStyle = 'rgba(255,255,255,0.60)';
+      ctx.fillText(line2, x, y + (icon ? 17*S : 14*S));
+    }
+  }
+
+  function arrow(x1, y1, x2, y2, col, dashed) {
+    const ang = Math.atan2(y2-y1, x2-x1);
+    ctx.strokeStyle = col; ctx.lineWidth = 1.8*S;
+    if (dashed) ctx.setLineDash([5*S, 3*S]); else ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = col; ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 9*S*Math.cos(ang-0.40), y2 - 9*S*Math.sin(ang-0.40));
+    ctx.lineTo(x2 - 9*S*Math.cos(ang+0.40), y2 - 9*S*Math.sin(ang+0.40));
+    ctx.closePath(); ctx.fill();
+  }
+
+  // ── Layout ──────────────────────────────────────────────────────────
+  // Todas las coordenadas en espacio 820×350, escaladas por S
+  const m = 12*S;               // margen lateral
+  const yEnc = 68*S;            // centro fila encoder (señal path)
+  const yAna = 178*S;           // centro fila análisis (FFT + Psicoacústico)
+  const yDec = 288*S;           // centro fila decoder
+  const bh  = 52*S;             // altura de caja normal
+  const bh2 = 70*S;             // altura caja compuesta
+
+  // Posiciones x (left edge) y anchos de cada bloque encoder
+  // [PCM_in] [Banco filtros] [MDCT] [== Lazo Control Distorsión ==] [Formateo] [MP3_out]
+  const EX = [m, 102*S, 218*S, 315*S, 596*S, 700*S];
+  const EW = [82*S, 106*S, 86*S, 270*S, 96*S, 106*S];
+  function ecx(i) { return EX[i] + EW[i]/2; }
+  function ey1(i) { return yEnc - (i===3 ? bh2/2 : bh/2); }
+  function ey2(i) { return yEnc + (i===3 ? bh2/2 : bh/2); }
+
+  // Bloques análisis (FFT y Modelo)
+  const AX = [102*S, 218*S];
+  const AW = [86*S,  170*S];
+  function acx(i) { return AX[i] + AW[i]/2; }
+
+  // Decoder blocks (right to left flow, left to right visual order)
+  // PCM_out | IMDCT | Decuant | Huffman_dec | MP3_in
+  const DX = [m, 102*S, 218*S, 414*S, 700*S];
+  const DW = [82*S, 106*S, 185*S, 174*S, 106*S];
+  function dcx(i) { return DX[i] + DW[i]/2; }
+
+  // ── Fondo de sección encoder ─────────────────────────────────────────
+  ctx.fillStyle = 'rgba(255,170,0,0.04)';
+  ctx.beginPath(); ctx.roundRect(m, 14*S, W-2*m, 140*S, 8*S); ctx.fill();
+  ctx.fillStyle = 'rgba(68,170,255,0.04)';
+  ctx.beginPath(); ctx.roundRect(m, 230*S, W-2*m, 110*S, 8*S); ctx.fill();
+
+  // ── Etiquetas de sección ─────────────────────────────────────────────
+  ctx.fillStyle = 'rgba(255,170,0,0.85)'; ctx.font = `bold ${11*S}px sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText('CODIFICADOR', m+6*S, 26*S);
+  ctx.fillStyle = 'rgba(68,170,255,0.85)';
+  ctx.fillText('DECODIFICADOR', m+6*S, 242*S);
+
+  // ── ENCODER: cajas ───────────────────────────────────────────────────
+  // 0: PCM input
+  rr(EX[0], ey1(0), EW[0], bh, '#44aaff', 'rgba(68,170,255,0.10)', 2);
+  label(ecx(0), yEnc, '🎵', 'Señal', 'Audio PCM', '#44aaff', false);
+
+  // 1: Banco de filtros
+  rr(EX[1], ey1(1), EW[1], bh, '#ffaa00');
+  label(ecx(1), yEnc, '🔧', 'Banco de filtros', '32 subbandas', '#ffaa00', false);
+
+  // 2: MDCT + conmutación ventanas
+  rr(EX[2], ey1(2), EW[2], bh, '#ffaa00');
+  label(ecx(2), yEnc, '📊', 'MDCT', 'ventanas', '#ffaa00', false);
+
+  // 3: Lazo de Control de Distorsión (compuesto)
+  rr(EX[3], yEnc-bh2/2, EW[3], bh2, '#00ffff', 'rgba(0,255,255,0.07)', 2.2);
+  ctx.fillStyle = 'rgba(0,255,255,0.70)'; ctx.font = `bold ${8.5*S}px sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText('Lazo de Control de Distorsión', EX[3]+7*S, yEnc-bh2/2+12*S);
+  // Sub-bloques dentro del lazo
+  const sub = [
+    { label:'Cuantización\nno-uniforme', icon:'⚙️', x:EX[3]+8*S,  w:77*S },
+    { label:'Control de\ntasa de bits',  icon:'📈', x:EX[3]+94*S, w:77*S },
+    { label:'Huffman\ncoding',           icon:'🗜️', x:EX[3]+180*S,w:77*S },
+  ];
+  sub.forEach(s => {
+    rr(s.x, yEnc-18*S, s.w, 36*S, '#ffaa00', 'rgba(255,170,0,0.10)');
+    const cx = s.x + s.w/2;
+    ctx.fillStyle = '#ffaa00'; ctx.font = `${9*S}px sans-serif`; ctx.textAlign = 'center';
+    const ls = s.label.split('\n');
+    ctx.fillText(s.icon + ' ' + ls[0], cx, yEnc - 5*S);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = `${8*S}px sans-serif`;
+    ctx.fillText(ls[1], cx, yEnc + 7*S);
+  });
+  // Flechitas entre sub-bloques
+  arrow(sub[0].x+sub[0].w, yEnc-0, sub[1].x, yEnc-0, 'rgba(255,200,100,0.60)');
+  arrow(sub[1].x+sub[1].w, yEnc-0, sub[2].x, yEnc-0, 'rgba(255,200,100,0.60)');
+
+  // 4: Formateo Bitstream
+  rr(EX[4], ey1(4), EW[4], bh, '#ffaa00');
+  label(ecx(4), yEnc, '📦', 'Formateo', 'Bitstream', '#ffaa00', false);
+
+  // 5: MP3 output
+  rr(EX[5], ey1(5), EW[5], bh, '#ffffff', 'rgba(255,255,255,0.08)', 2);
+  label(ecx(5), yEnc, '💾', 'Bitstream', '.mp3', '#ffffff', true);
+
+  // ── ENCODER: flechas principales ────────────────────────────────────
+  arrow(EX[0]+EW[0], yEnc, EX[1], yEnc, 'rgba(255,200,100,0.70)');
+  arrow(EX[1]+EW[1], yEnc, EX[2], yEnc, 'rgba(255,200,100,0.70)');
+  arrow(EX[2]+EW[2], yEnc, EX[3], yEnc, 'rgba(255,200,100,0.70)');
+  arrow(EX[3]+EW[3], yEnc, EX[4], yEnc, 'rgba(255,200,100,0.70)');
+  arrow(EX[4]+EW[4], yEnc, EX[5], yEnc, 'rgba(255,200,100,0.70)');
+
+  // ── ANÁLISIS: FFT + Modelo Psicoacústico ─────────────────────────────
+  rr(AX[0], yAna-bh/2, AW[0], bh, '#ffaa00', 'rgba(255,170,0,0.07)');
+  label(acx(0), yAna, '🔢', 'FFT', '1024 puntos', '#ffaa00', false);
+
+  rr(AX[1], yAna-bh/2, AW[1], bh, '#00ffff', 'rgba(0,255,255,0.12)', 2.2);
+  label(acx(1), yAna, '🧠', 'Modelo Psicoacústico', 'umbral de enmascaramiento', '#00ffff', true);
+
+  // Banco filtros → FFT (abajo desde banco filtros)
+  const bfcx = ecx(1);
+  arrow(bfcx, yEnc+bh/2, bfcx, yAna-bh/2, 'rgba(255,170,0,0.55)');
+  // FFT → Modelo
+  arrow(AX[0]+AW[0], yAna, AX[1], yAna, 'rgba(255,200,100,0.65)');
+  // Modelo → Lazo Control (flecha hacia arriba al lazo)
+  const modRightX = AX[1]+AW[1];
+  const lazoCX = EX[3] + EW[3]/2;
+  const lazoBotY = yEnc + bh2/2;
+  ctx.strokeStyle = 'rgba(0,255,255,0.55)'; ctx.lineWidth = 1.8*S; ctx.setLineDash([5*S,3*S]);
+  ctx.beginPath();
+  ctx.moveTo(acx(1), yAna-bh/2);
+  ctx.lineTo(acx(1), lazoBotY+8*S);
+  ctx.lineTo(lazoCX, lazoBotY+8*S);
+  ctx.lineTo(lazoCX, lazoBotY);
+  ctx.stroke(); ctx.setLineDash([]);
+  arrow(lazoCX, lazoBotY+2*S, lazoCX, lazoBotY, 'rgba(0,255,255,0.65)');
+
+  // ── Línea vertical MP3 encoder→decoder ──────────────────────────────
+  const mp3cx = ecx(5);
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = S; ctx.setLineDash([3*S,5*S]);
+  ctx.beginPath(); ctx.moveTo(mp3cx, ey2(5)); ctx.lineTo(mp3cx, DX[4] !== undefined ? yDec-bh/2 : yDec-bh/2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,255,255,0.32)'; ctx.font = `${8.5*S}px sans-serif`; ctx.textAlign = 'center';
+  ctx.fillText('transmisión /', mp3cx, (ey2(5) + yDec-bh/2)/2 - 5*S);
+  ctx.fillText('almacenamiento', mp3cx, (ey2(5) + yDec-bh/2)/2 + 7*S);
+
+  // ── DECODER: cajas ───────────────────────────────────────────────────
+  // Visual: PCM_out | IMDCT | Decuantizador | Huffman_dec | MP3_in
+  // Flujo real de datos: MP3_in → Huffman_dec → Decuant → IMDCT → PCM_out
+
+  rr(DX[4], yDec-bh/2, DW[4], bh, '#ffffff', 'rgba(255,255,255,0.08)', 2);
+  label(dcx(4), yDec, '💾', 'Bitstream', '.mp3', '#ffffff', true);
+
+  rr(DX[3], yDec-bh/2, DW[3], bh, '#ffaa00');
+  label(dcx(3), yDec, '🗜️', 'Huffman decoding', '+ síntesis de canal', '#ffaa00', false);
+
+  rr(DX[2], yDec-bh/2, DW[2], bh, '#ffaa00');
+  label(dcx(2), yDec, '⚖️', 'Decuantizador', 'restauración de escala', '#ffaa00', false);
+
+  rr(DX[1], yDec-bh/2, DW[1], bh, '#ffaa00');
+  label(dcx(1), yDec, '📊', 'IMDCT', 'síntesis subbandas', '#ffaa00', false);
+
+  rr(DX[0], yDec-bh/2, DW[0], bh, '#44aaff', 'rgba(68,170,255,0.10)', 2);
+  label(dcx(0), yDec, '🎵', 'Señal', 'Audio PCM', '#44aaff', false);
+
+  // Flechas decoder (flujo de derecha a izquierda)
+  arrow(DX[4],         yDec, DX[3]+DW[3], yDec, 'rgba(100,170,255,0.70)');
+  arrow(DX[3],         yDec, DX[2]+DW[2], yDec, 'rgba(100,170,255,0.70)');
+  arrow(DX[2],         yDec, DX[1]+DW[1], yDec, 'rgba(100,170,255,0.70)');
+  arrow(DX[1],         yDec, DX[0]+DW[0], yDec, 'rgba(100,170,255,0.70)');
+}
+
+// ── Gráfico comparativo de codecs ──────────────────────────────────────
+function drawCodec() {
+  const canvas = document.getElementById('codecCanvas');
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 80, padT = 28, padB = 52;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const KBPS = [32, 64, 96, 128, 192, 320];
+
+  function xFor(kbps) { return padL + (KBPS.indexOf(kbps) / (KBPS.length - 1)) * bw; }
+  function yFor(q)    { return padT + (1 - q / 100) * bh; }
+
+  // Grid horizontal
+  [0, 20, 40, 60, 80, 100].forEach(q => {
+    const isRef = q === 80;
+    ctx.strokeStyle = isRef ? 'rgba(100,255,100,0.30)' : 'rgba(100,180,255,0.22)';
+    ctx.lineWidth   = isRef ? 1.5 : 0.8;
+    ctx.setLineDash(isRef ? [6,4] : []);
+    ctx.beginPath(); ctx.moveTo(padL, yFor(q)); ctx.lineTo(padL+bw, yFor(q)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(q, padL - 5, yFor(q) + 4);
+  });
+  ctx.fillStyle = 'rgba(100,255,100,0.55)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('≈ transparente', padL + 4, yFor(80) - 4);
+
+  // Grid vertical + etiquetas eje X
+  KBPS.forEach(k => {
+    const x = xFor(k);
+    ctx.strokeStyle = 'rgba(100,180,255,0.22)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(k + ' kbps', x, padT+bh+14);
+    const ratio = Math.round(CD_KBPS / k);
+    ctx.fillStyle = 'rgba(150,200,255,0.45)'; ctx.font = '9px sans-serif';
+    ctx.fillText(ratio + ':1', x, padT+bh+27);
+  });
+
+  // Etiquetas de ejes
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Tasa de bits →', padL + bw/2, H - 3);
+  ctx.save(); ctx.translate(13, padT + bh/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Calidad perceptual (MUSHRA)', 0, 0); ctx.restore();
+  ctx.fillStyle = 'rgba(150,200,255,0.38)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('ratio vs CD', padL + bw/2, padT+bh+40);
+
+  // Referencia CD
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; ctx.setLineDash([3,6]);
+  ctx.beginPath(); ctx.moveTo(padL, yFor(100)); ctx.lineTo(padL+bw, yFor(100)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,255,255,0.30)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('CD sin comprimir (1411 kbps)', padL+bw, yFor(100) - 4);
+
+  // Líneas de codecs
+  CODECS.forEach((codec, ci) => {
+    if (!enabled[ci]) return;
+    // área bajo la curva (muy tenue)
+    ctx.fillStyle = codec.col.replace('#', 'rgba(').replace(/(..)(..)(..)/, (_, r, g, b) =>
+      `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},0.04)`);
+    ctx.beginPath();
+    codec.pts.forEach(([k, q], idx) => idx === 0 ? ctx.moveTo(xFor(k), yFor(q)) : ctx.lineTo(xFor(k), yFor(q)));
+    ctx.lineTo(xFor(codec.pts[codec.pts.length-1][0]), padT+bh);
+    ctx.lineTo(xFor(codec.pts[0][0]), padT+bh);
+    ctx.closePath(); ctx.fill();
+
+    // línea principal
+    ctx.strokeStyle = codec.col; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    codec.pts.forEach(([k, q], idx) => idx === 0 ? ctx.moveTo(xFor(k), yFor(q)) : ctx.lineTo(xFor(k), yFor(q)));
+    ctx.stroke();
+
+    // puntos
+    codec.pts.forEach(([k, q]) => {
+      ctx.fillStyle = codec.col;
+      ctx.beginPath(); ctx.arc(xFor(k), yFor(q), 4, 0, 2*Math.PI); ctx.fill();
+    });
+
+    // etiqueta al final
+    const [lk, lq] = codec.pts[codec.pts.length - 1];
+    ctx.fillStyle = codec.col; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(codec.name, xFor(lk) + 7, yFor(lq) + 4);
+  });
+}
+
+// ── Streaming diagram ──────────────────────────────────────────────────
+let streamDur = 5;    // minutos
+let streamBR  = 128;  // kbps
+
+const SPEEDS = [
+  { name: '3G',   mbps: 1.5  },
+  { name: '4G',   mbps: 20   },
+  { name: 'WiFi', mbps: 50   },
+  { name: '5G',   mbps: 100  },
+];
+
+// Tiempos de descarga animados (en segundos, interpolados)
+let barCurrent = SPEEDS.map(() => 0);
+let barTarget  = SPEEDS.map(() => 0);
+let streamAnimId = null;
+
+function computeTargets() {
+  const secs = streamDur * 60;
+  const cmpBytes = streamBR * 1000 / 8 * secs;
+  return SPEEDS.map(sp => cmpBytes / (sp.mbps * 1e6 / 8));
+}
+
+function startStreamAnim() {
+  barTarget = computeTargets();
+  if (streamAnimId) cancelAnimationFrame(streamAnimId);
+  function step() {
+    let done = true;
+    barCurrent = barCurrent.map((v, i) => {
+      const diff = barTarget[i] - v;
+      if (Math.abs(diff) < 0.002) return barTarget[i];
+      done = false;
+      return v + diff * 0.14;
+    });
+    renderStream();
+    if (!done) streamAnimId = requestAnimationFrame(step);
+    else streamAnimId = null;
+  }
+  streamAnimId = requestAnimationFrame(step);
+}
+
+function setBR(kbps) {
+  streamBR = kbps;
+  document.querySelectorAll('#brBtns .btn').forEach(b =>
+    b.classList.toggle('active', +b.dataset.br === kbps));
+  startStreamAnim();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('durSlider').addEventListener('input', function() {
+    streamDur = +this.value;
+    document.getElementById('durVal').textContent = this.value;
+    startStreamAnim();
+  });
+});
+
+function fmtBytes(b) {
+  if (b >= 1e9) return (b/1e9).toFixed(2) + ' GB';
+  if (b >= 1e6) return (b/1e6).toFixed(1) + ' MB';
+  return (b/1e3).toFixed(0) + ' KB';
+}
+function fmtTime(s) {
+  return s < 1 ? (s*1000).toFixed(0)+' ms' : s < 60 ? s.toFixed(1)+' s' : (s/60).toFixed(1)+' min';
+}
+
+// drawStream: dibuja con barCurrent (estado animado actual)
+function renderStream() {
+  const canvas = document.getElementById('streamCanvas');
+  if (!canvas) return;
+  canvas.width  = canvas.offsetWidth || 820;
+  canvas.height = 310;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const secs     = streamDur * 60;
+  const pcmBps   = 44100 * 16 * 2;
+  const pcmBytes = pcmBps / 8 * secs;
+  const cmpBytes = streamBR * 1000 / 8 * secs;
+  const ratio    = pcmBytes / cmpBytes;
+  const isLossless = streamBR >= 1411;
+  const S = W / 820;
+
+  function rr(x,y,w,h,col,fill,lw) {
+    ctx.fillStyle=fill||'rgba(255,255,255,0.06)'; ctx.strokeStyle=col; ctx.lineWidth=lw||1.8;
+    ctx.beginPath(); ctx.roundRect(x,y,w,h,7*S); ctx.fill(); ctx.stroke();
+  }
+  function arr(x1,y1,x2,y2,col) {
+    const ang=Math.atan2(y2-y1,x2-x1);
+    ctx.strokeStyle=col; ctx.lineWidth=2*S; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.fillStyle=col; ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-10*S*Math.cos(ang-0.38),y2-10*S*Math.sin(ang-0.38));
+    ctx.lineTo(x2-10*S*Math.cos(ang+0.38),y2-10*S*Math.sin(ang+0.38));
+    ctx.closePath(); ctx.fill();
+  }
+
+  // ── Pipeline ──────────────────────────────────────────────────────────
+  const yPipe = 68*S, bh = 78*S;
+  const blocks = [
+    { x:10*S,  w:118*S, icon:'💿', top:'PCM sin comprimir', bot:fmtBytes(pcmBytes),  col:'#44aaff', fill:'rgba(68,170,255,0.09)' },
+    { x:158*S, w:98*S,  icon:'🔧', top:'Codificador',       bot:streamBR+' kbps',    col:'#ffaa00', fill:'rgba(255,170,0,0.08)'  },
+    { x:288*S, w:222*S, icon:'🌐', top:'Internet / Streaming',
+      bot:fmtBytes(cmpBytes)+(isLossless?' (sin compresión)':' (comprimido)'),        col:'#00ff44', fill:'rgba(0,255,68,0.07)'   },
+    { x:542*S, w:98*S,  icon:'🔓', top:'Decodificador',     bot:'tiempo real',        col:'#ffaa00', fill:'rgba(255,170,0,0.08)'  },
+    { x:672*S, w:138*S, icon:'🔊', top:'Audio reproducido', bot:'PCM reconstruido',   col:'#44aaff', fill:'rgba(68,170,255,0.09)' },
+  ];
+
+  blocks.forEach(b => {
+    rr(b.x, yPipe-bh/2, b.w, bh, b.col, b.fill, 2);
+    const cx = b.x + b.w/2;
+    ctx.textAlign='center';
+    ctx.font=`${15*S}px sans-serif`; ctx.fillStyle=b.col; ctx.fillText(b.icon, cx, yPipe-14*S);
+    ctx.font=`bold ${10*S}px sans-serif`; ctx.fillStyle=b.col; ctx.fillText(b.top, cx, yPipe+5*S);
+    ctx.font=`${9*S}px sans-serif`;
+    ctx.fillStyle=b===blocks[2]?(isLossless?'#44aaff':'#00ff44'):'rgba(255,255,255,0.70)';
+    ctx.fillText(b.bot, cx, yPipe+17*S);
+  });
+
+  const ac = 'rgba(255,200,100,0.75)';
+  arr(blocks[0].x+blocks[0].w, yPipe, blocks[1].x, yPipe, ac);
+  arr(blocks[1].x+blocks[1].w, yPipe, blocks[2].x, yPipe, ac);
+  arr(blocks[2].x+blocks[2].w, yPipe, blocks[3].x, yPipe, ac);
+  arr(blocks[3].x+blocks[3].w, yPipe, blocks[4].x, yPipe, ac);
+
+  if (!isLossless) {
+    ctx.fillStyle='#ff4444'; ctx.font=`bold ${10*S}px sans-serif`; ctx.textAlign='center';
+    ctx.fillText('÷ '+ratio.toFixed(1), (blocks[0].x+blocks[0].w+blocks[1].x)/2, yPipe-17*S);
+  }
+
+  // ── Barras de tiempo de descarga ──────────────────────────────────────
+  const tableY = yPipe + bh/2 + 18*S;
+  ctx.fillStyle='rgba(150,200,255,0.60)'; ctx.font=`bold ${10*S}px sans-serif`; ctx.textAlign='left';
+  ctx.fillText('Tiempo de descarga según conexión (eje x = tiempo en segundos):', 10*S, tableY);
+
+  const labelW = 108*S;
+  const textW  = 185*S;
+  const barX0  = labelW + 4*S;
+  const barAreaW = W - labelW - textW - 14*S;
+  const textX0 = barX0 + barAreaW + 6*S;
+  const rowH   = 30*S;
+
+  // Escala: el eje x va de 0 a maxScale segundos
+  // maxScale = max(secs * 1.5, max(barTarget) * 1.1) — fijo durante animación (usa target, no current)
+  const maxScale = Math.max(secs * 1.5, Math.max(...barTarget) * 1.1, 1);
+
+  function xForSec(t) { return barX0 + Math.min(1, t / maxScale) * barAreaW; }
+
+  // Línea vertical "duración del audio"
+  const xDur = xForSec(secs);
+  ctx.strokeStyle='rgba(255,255,255,0.40)'; ctx.lineWidth=1.5*S; ctx.setLineDash([4*S,3*S]);
+  ctx.beginPath(); ctx.moveTo(xDur, tableY+8*S); ctx.lineTo(xDur, tableY+8*S+SPEEDS.length*rowH+4*S); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,0.50)'; ctx.font=`${8.5*S}px sans-serif`; ctx.textAlign='center';
+  ctx.fillText('duración', xDur, tableY+6*S);
+
+  SPEEDS.forEach((sp, i) => {
+    const y = tableY + 20*S + i * rowH;
+    const animSec  = barCurrent[i];
+    const targetSec = barTarget[i];
+    const isRT = targetSec <= secs;
+
+    const barW2 = Math.max(3*S, xForSec(animSec) - barX0);
+    ctx.fillStyle = isRT ? 'rgba(0,255,68,0.35)' : 'rgba(255,68,68,0.28)';
+    ctx.fillRect(barX0, y-15*S, barW2, 20*S);
+    ctx.strokeStyle = isRT ? 'rgba(0,255,68,0.65)' : 'rgba(255,68,68,0.55)';
+    ctx.lineWidth=0.8; ctx.strokeRect(barX0, y-15*S, barW2, 20*S);
+
+    // nombre
+    ctx.fillStyle='rgba(150,200,255,0.85)'; ctx.font=`bold ${10*S}px sans-serif`; ctx.textAlign='left';
+    ctx.fillText(sp.name+' ('+sp.mbps+' Mbps)', 10*S, y);
+
+    // texto fijo a la derecha
+    ctx.fillStyle = isRT ? '#00ff44' : '#ff4444';
+    ctx.font=`${9.5*S}px sans-serif`; ctx.textAlign='left';
+    ctx.fillText(fmtTime(targetSec)+(isRT ? '  ✓ tiempo real' : '  ✗ buffer necesario'), textX0, y);
+  });
+
+  document.getElementById('streamLabel').textContent =
+    `${streamDur} min de audio  ·  PCM sin comprimir: ${fmtBytes(pcmBytes)}`+
+    `  →  ${streamBR} kbps: ${fmtBytes(cmpBytes)}`+
+    (isLossless ? '  (sin pérdida)' : `  (ratio ${ratio.toFixed(1)}:1)`);
+}
+
+function drawStream() { startStreamAnim(); }
+
+// ── Init ───────────────────────────────────────────────────────────────
+function init() { drawDiagram(); drawCodec(); drawStream(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { drawDiagram(); drawCodec(); drawStream(); });
+</script>
+</body>
+</html>

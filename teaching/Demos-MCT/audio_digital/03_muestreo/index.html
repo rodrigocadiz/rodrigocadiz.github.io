@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Muestreo y Nyquist — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html">1. Análogo vs. Digital</a>
+  <a href="../02_intuicion_muestreo/index.html">2. Intuición del Muestreo</a>
+  <a href="../03_muestreo/index.html" class="active">3. Muestreo y Nyquist</a>
+  <a href="../04_aliasing/index.html">4. Aliasión</a>
+  <a href="../05_cuantizacion/index.html">5. Cuantización y Error</a>
+  <a href="../06_snr_bits/index.html">6. Razón Señal a Ruido</a>
+  <a href="../07_dither/index.html">7. Dither</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Muestreo y Nyquist</h1>
+      <p class="subtitle">Cuantización en el tiempo y el teorema de muestreo</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Muestreo de una señal</h2>
+    <p class="description">
+      El <span class="kw">muestreo</span> consiste en tomar muestras de la señal analógica a intervalos regulares.
+      El <span class="kw">Teorema de Nyquist</span> establece que la tasa de muestreo
+      (<span class="kw">fs</span>) debe ser al menos el doble de la frecuencia más alta de la señal
+      para poder reconstruirla exactamente: <strong style="color:#00ffff;">fs ≥ 2·f<sub>max</sub></strong>.
+      La reconstrucción teórica usa la <span class="kw">interpolación sinc</span>
+      (fórmula de Whittaker-Shannon): cuando se cumple Nyquist, la señal reconstruida
+      coincide exactamente con la original.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia de la señal: <span class="val" id="freqVal">440</span> Hz</label>
+        <input type="range" id="freqSlider" min="100" max="2000" step="10" value="440">
+      </div>
+      <div class="control-group">
+        <label>Tasa de muestreo: <span class="val" id="fsVal">8000</span> Hz</label>
+        <input type="range" id="fsSlider" min="100" max="16000" step="50" value="8000">
+      </div>
+    </div>
+    <div class="canvas-label" id="nyquistLabel">fs = 8000 Hz &nbsp;|&nbsp; f = 440 Hz &nbsp;|&nbsp; fs/f = 18.2 &nbsp;→&nbsp; ✓ Sobre Nyquist</div>
+    <canvas id="sampleCanvas" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Tasas de muestreo típicas</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Rango auditivo humano</strong><br>
+        20 Hz – 20,000 Hz<br>
+        Por Nyquist: fs mínima = 40,000 Hz<br>
+        CD usa <strong style="color:#00ffff;">44,100 Hz</strong>, audio pro usa <strong style="color:#00ffff;">48,000 Hz</strong>
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Tasas comunes</strong><br>
+        8 kHz — oscuro / ruidoso (voz telefónica)<br>
+        11 kHz — audio de baja calidad<br>
+        22 kHz — multimedia<br>
+        44.1 kHz — CD audio<br>
+        48 kHz — video / audio profesional
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('sampleCanvas');
+const ctx = canvas.getContext('2d');
+
+let freq = 440;
+let fs = 8000;
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 50, padR = 20, padT = 30, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const cy = padT + bh / 2;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (i / 4) * bh;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+
+  // Eje Y
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('+1', padL - 4, padT + 4);
+  ctx.fillText('0',  padL - 4, cy + 4);
+  ctx.fillText('−1', padL - 4, padT + bh + 4);
+
+  // Ventana temporal FIJA — independiente de ambos sliders
+  // → freq cambia cuántos ciclos caben (onda se comprime/expande)
+  // → fs cambia la separación entre puntos de muestreo
+  const dur = 3 / 440; // ≈ 6.8 ms (3 ciclos de 440 Hz)
+  const nyquist = fs / 2;
+  const overNyquist = freq < nyquist;
+
+  // ── Eje X: tiempo real en ms ──────────────────────────────────────
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  const durMs = dur * 1000;
+  [0, 0.25, 0.5, 0.75, 1].forEach(frac => {
+    const ms = durMs * frac;
+    const lbl = ms < 1 ? (ms * 1000).toFixed(0) + ' µs'
+              : ms < 10 ? ms.toFixed(2) + ' ms'
+              : ms.toFixed(1) + ' ms';
+    ctx.fillText(frac === 0 ? '0' : lbl, padL + frac * bw, padT + bh + 16);
+  });
+  ctx.fillText('Tiempo →', padL + bw / 2, H - 4);
+
+  // Analog signal (continuous)
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let px = 0; px <= bw; px++) {
+    const t = (px / bw) * dur;
+    const y = cy - Math.sin(2 * Math.PI * freq * t) * (bh / 2 - 6);
+    if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+  }
+  ctx.stroke();
+
+  // ── Muestras: extender ±M más allá del rango visible para mejor sinc ──
+  const M = 24; // semiventa sinc (en muestras)
+  const kStart = -M;
+  const kEnd   = Math.ceil(dur * fs) + M;
+  const allSamples = [];
+  for (let k = kStart; k <= kEnd; k++) {
+    const tAbs = k / fs;
+    const v = Math.sin(2 * Math.PI * freq * tAbs);
+    allSamples.push({ tAbs, v });
+  }
+
+  // Solo los visibles (0 ≤ t ≤ dur) para dibujar stems/dots
+  const samplePts = allSamples.filter(s => s.tAbs >= 0 && s.tAbs <= dur).map(s => ({
+    px: (s.tAbs / dur) * bw,
+    y:  cy - s.v * (bh / 2 - 6),
+    tAbs: s.tAbs, v: s.v
+  }));
+
+  // Interpolación sinc de Whittaker-Shannon con ventana Hann
+  function sincInterp(tQuery) {
+    let sum = 0;
+    for (let i = 0; i < allSamples.length; i++) {
+      const u = (tQuery - allSamples[i].tAbs) * fs; // en muestras
+      if (Math.abs(u) >= M) continue;
+      const sinc = Math.abs(u) < 1e-9 ? 1.0 : Math.sin(Math.PI * u) / (Math.PI * u);
+      const hann = 0.5 * (1 + Math.cos(Math.PI * u / M)); // ventana Hann
+      sum += allSamples[i].v * sinc * hann;
+    }
+    return sum;
+  }
+
+  // ── Reconstrucción sinc ────────────────────────────────────────────
+  const recColor = overNyquist ? '#00ff44' : '#ff4444';
+  ctx.strokeStyle = recColor;
+  ctx.lineWidth = overNyquist ? 2 : 1.5;
+  ctx.setLineDash(overNyquist ? [] : [5, 4]);
+  ctx.beginPath();
+  for (let px = 0; px <= bw; px++) {
+    const tQ = (px / bw) * dur;
+    const v = sincInterp(tQ);
+    const y = cy - Math.max(-1.5, Math.min(1.5, v)) * (bh / 2 - 6);
+    if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── Stems (solo si no hay demasiadas muestras) ───────────────────
+  const drawStems = samplePts.length <= 60;
+  if (drawStems) {
+    ctx.strokeStyle = 'rgba(0,255,255,0.5)';
+    ctx.lineWidth = 1;
+    samplePts.forEach(p => {
+      ctx.beginPath(); ctx.moveTo(padL + p.px, cy); ctx.lineTo(padL + p.px, p.y); ctx.stroke();
+    });
+  }
+
+  // ── Puntos de muestra ────────────────────────────────────────────
+  const dotR = samplePts.length > 60 ? 1.5 : 3.5;
+  ctx.fillStyle = '#00ffff';
+  samplePts.forEach(p => {
+    ctx.beginPath(); ctx.arc(padL + p.px, p.y, dotR, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // Labels
+  ctx.fillStyle = '#ffaa00'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('─── Señal analógica', padL + 4, padT + 14);
+  ctx.fillStyle = '#00ffff';
+  ctx.fillText('• • • Muestras', padL + 158, padT + 14);
+  ctx.fillStyle = recColor;
+  ctx.fillText(overNyquist ? '─── Reconstruida (sinc)' : '- - - Reconstruida (sinc)', padL + 290, padT + 14);
+
+  // Nyquist info
+  const ratio = (fs / freq).toFixed(1);
+  ctx.fillStyle = overNyquist ? '#00ff44' : '#ff4444';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'right';
+  const msg = overNyquist
+    ? `fs/f = ${ratio}  ✓ Sobre Nyquist (fs > 2f)`
+    : `fs/f = ${ratio}  ✗ Bajo Nyquist — ALIASING`;
+  ctx.fillText(msg, padL + bw, padT + bh + 32);
+
+  updateLabel();
+}
+
+function updateLabel() {
+  const nyquist = fs / 2;
+  const over = freq < nyquist;
+  const ratio = (fs / freq).toFixed(1);
+  document.getElementById('nyquistLabel').textContent =
+    `fs = ${fs} Hz  |  f = ${freq} Hz  |  fs/f = ${ratio}  →  ${over ? '✓ Sobre Nyquist' : '✗ Bajo Nyquist (aliasing)'}`;
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = +this.value;
+  document.getElementById('freqVal').textContent = freq;
+  draw();
+});
+document.getElementById('fsSlider').addEventListener('input', function() {
+  fs = +this.value;
+  document.getElementById('fsVal').textContent = fs;
+  draw();
+});
+
+function init() { draw(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => draw());
+</script>
+</body>
+</html>

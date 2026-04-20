@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Razón Señal a Ruido — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html">1. Análogo vs. Digital</a>
+  <a href="../02_intuicion_muestreo/index.html">2. Intuición del Muestreo</a>
+  <a href="../03_muestreo/index.html">3. Muestreo y Nyquist</a>
+  <a href="../04_aliasing/index.html">4. Aliasión</a>
+  <a href="../05_cuantizacion/index.html">5. Cuantización y Error</a>
+  <a href="../06_snr_bits/index.html" class="active">6. Razón Señal a Ruido</a>
+  <a href="../07_dither/index.html">7. Dither</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Razón Señal a Ruido</h1>
+      <p class="subtitle">~6 dB por bit: la relación entre bits y rango dinámico</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>SNR en función del número de bits</h2>
+    <p class="description">
+      La <span class="kw">razón señal a ruido</span> (SNR) mide cuánto mayor es la señal útil
+      respecto al ruido de cuantización. Para audio digital:
+      <strong style="color:#00ffff;">SNR ≈ 20·log₁₀(2<sup>N</sup>) ≈ 6.02·N dB</strong>.
+      Cada bit adicional duplica el número de niveles y agrega ~6 dB de rango dinámico.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Número de bits: <span class="val" id="bitsVal">16</span> &nbsp;→&nbsp; SNR ≈ <span id="snrVal" style="color:#00ffff; font-weight:700;">96 dB</span></label>
+        <input type="range" id="bitsSlider" min="1" max="24" step="1" value="16">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar a este bit depth</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="snrLabel">Gráfico SNR vs bits</div>
+    <canvas id="snrCanvas" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Valores de referencia</h2>
+    <table class="type-table">
+      <thead>
+        <tr><th>Bits</th><th>Niveles</th><th>SNR (dB)</th><th>Uso típico</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>4</td><td>16</td><td>24 dB</td><td>Efectos de baja calidad</td></tr>
+        <tr><td>8</td><td>256</td><td>48 dB</td><td>Voz telefónica</td></tr>
+        <tr><td>12</td><td>4,096</td><td>72 dB</td><td>Grabación básica</td></tr>
+        <tr><td>16</td><td>65,536</td><td>96 dB</td><td>CD audio</td></tr>
+        <tr><td>24</td><td>16,777,216</td><td>144 dB</td><td>Audio profesional</td></tr>
+        <tr><td>32</td><td>4,294,967,296</td><td>192 dB</td><td>DSP / procesamiento interno</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('snrCanvas');
+const ctx = canvas.getContext('2d');
+let bits = 16;
+let playing = false;
+
+const REFS = [
+  { bits: 4,  label: '4b', color: '#ff4444' },
+  { bits: 8,  label: '8b (voz)', color: '#ffaa00' },
+  { bits: 16, label: '16b (CD)', color: '#00ffff' },
+  { bits: 24, label: '24b (pro)', color: '#00ff44' }
+];
+
+function snr(n) { return 20 * Math.log10(Math.pow(2, n)); }
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 60, padR = 24, padT = 24, padB = 42;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const maxBits = 24;
+  const maxSNR = snr(maxBits) + 10;
+
+  // Grid
+  for (let db = 0; db <= 200; db += 24) {
+    const y = padT + bh - (db / maxSNR) * bh;
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(`${db}`, padL - 4, y + 4);
+  }
+
+  // Bit grid lines
+  for (let b = 0; b <= maxBits; b += 4) {
+    const x = padL + (b / maxBits) * bw;
+    ctx.strokeStyle = 'rgba(100,180,255,0.20)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(`${b}`, x, padT + bh + 14);
+  }
+
+  // Axes labels
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Número de bits →', padL + bw / 2, H - 4);
+  ctx.save(); ctx.translate(14, padT + bh / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('SNR (dB)', 0, 0); ctx.restore();
+
+  // SNR curve
+  ctx.strokeStyle = '#ff44ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let b = 1; b <= maxBits; b += 0.1) {
+    const x = padL + (b / maxBits) * bw;
+    const y = padT + bh - (snr(b) / maxSNR) * bh;
+    if (b <= 1.05) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Reference markers
+  REFS.forEach(ref => {
+    const x = padL + (ref.bits / maxBits) * bw;
+    const y = padT + bh - (snr(ref.bits) / maxSNR) * bh;
+    ctx.strokeStyle = ref.color;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(x, padT + bh); ctx.lineTo(x, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(x, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = ref.color;
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(ref.label, x + 6, y - 4);
+  });
+
+  // Current bit marker
+  const cx = padL + (bits / maxBits) * bw;
+  const cy2 = padT + bh - (snr(bits) / maxSNR) * bh;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(cx, cy2, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#ff44ff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy2, 7, 0, Math.PI * 2); ctx.stroke();
+
+  // SNR label at cursor
+  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`${bits} bits → ${snr(bits).toFixed(1)} dB`, cx + 10, cy2 - 6);
+
+  document.getElementById('snrVal').textContent = `${snr(bits).toFixed(1)} dB`;
+  document.getElementById('snrLabel').textContent =
+    `${bits} bits | ${Math.pow(2, bits).toLocaleString()} niveles | SNR ≈ ${snr(bits).toFixed(1)} dB`;
+}
+
+function quantize(v, nBits) {
+  const levels = Math.pow(2, nBits);
+  const step = 2 / levels;
+  return Math.round(v / step) * step;
+}
+
+function togglePlay() {
+  if (playing) {
+    stopAllAudio();
+    playing = false;
+    document.getElementById('btnPlay').textContent = '▶ Escuchar a este bit depth';
+    document.getElementById('btnPlay').classList.remove('active');
+    return;
+  }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+
+  const actx = getAudioContext();
+  const sr = actx.sampleRate;
+  const dur = 4;
+  const bufLen = Math.floor(sr * dur);
+  const buffer = actx.createBuffer(1, bufLen, sr);
+  const data = buffer.getChannelData(0);
+  const freq = 440;
+  const step = 2 / Math.pow(2, bits);
+  for (let i = 0; i < bufLen; i++) {
+    const t = i / sr;
+    const v = Math.sin(2 * Math.PI * freq * t);
+    data[i] = Math.max(-1, Math.min(1, quantize(v, bits))) * 0.5;
+  }
+  const src = actx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0, actx.currentTime + 0.01);
+  g.gain.linearRampToValueAtTime(0.7, actx.currentTime + 0.025);
+  src.connect(g); g.connect(actx.destination);
+  src.start(actx.currentTime + 0.01);
+  src.onended = () => {};
+  _activeNodes.push(src);
+}
+
+document.getElementById('bitsSlider').addEventListener('input', function() {
+  bits = +this.value;
+  document.getElementById('bitsVal').textContent = bits;
+  if (playing) { stopAllAudio(); playing = false;
+    document.getElementById('btnPlay').textContent = '▶ Escuchar a este bit depth';
+    document.getElementById('btnPlay').classList.remove('active');
+  }
+  draw();
+});
+
+function init() { draw(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => draw());
+</script>
+</body>
+</html>

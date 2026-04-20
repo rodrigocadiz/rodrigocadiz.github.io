@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Intuición del Muestreo — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html">1. Análogo vs. Digital</a>
+  <a href="../02_muestreo/index.html">2. Muestreo y Nyquist</a>
+  <a href="../03_aliasing/index.html">3. Aliasión</a>
+  <a href="../04_cuantizacion/index.html">4. Cuantización y Error</a>
+  <a href="../05_snr_bits/index.html">5. Razón Señal a Ruido</a>
+  <a href="../06_dither/index.html">6. Dither</a>
+  <a href="../07_intuicion_muestreo/index.html" class="active">7. Intuición del Muestreo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Intuición del Muestreo</h1>
+      <p class="subtitle">¿Cuántas muestras por ciclo identifican unívocamente una sinusoide?</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Sinusoides que pasan por los mismos puntos muestreados</h2>
+    <p class="description">
+      Dado un conjunto de <span class="kw">N muestras por ciclo</span> de la sinusoide original
+      (puntos blancos), existen otras sinusoides de distintas frecuencias que pasan exactamente
+      por los mismos puntos: las <span class="kw">alias</span>.
+      El <span class="kw">Teorema de Nyquist</span> garantiza que si
+      <strong style="color:#00ffff;">N ≥ 2</strong> y se aplica un filtro pasa-bajos a fs/2,
+      todas las alias quedan fuera del rango audible y la señal se reconstruye unívocamente.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Muestras por ciclo:</label>
+        <div class="btn-group" id="nBtns" style="margin-top:6px;">
+          <button class="btn" onclick="setN(1)" id="btn1">1</button>
+          <button class="btn" onclick="setN(2)" id="btn2">2</button>
+          <button class="btn" onclick="setN(3)" id="btn3">3</button>
+          <button class="btn active" onclick="setN(4)" id="btn4">4</button>
+          <button class="btn" onclick="setN(5)" id="btn5">5</button>
+          <button class="btn" onclick="setN(6)" id="btn6">6</button>
+          <button class="btn" onclick="setN(8)" id="btn8">8</button>
+        </div>
+      </div>
+    </div>
+    <div class="canvas-label" id="mainLabel">4 muestras/ciclo — aliases en 3f₀, 5f₀, 9f₀...</div>
+    <canvas id="timeCanvas" height="300"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Vista espectral — frecuencias alias</h2>
+    <p class="description">
+      Cada línea vertical representa una sinusoide que pasa por los mismos puntos muestreados.
+      Las líneas rojas son <span class="kw">alias</span>; la naranja es la señal original.
+      El área azul muestra el rango que pasa por el <span class="kw">filtro anti-alias</span> (fs/2).
+    </p>
+    <canvas id="specCanvas" height="140"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Conclusiones por régimen de muestreo</h2>
+    <div class="two-col">
+      <div class="info-box warn">
+        <strong style="color:#ff4444;">N = 1 o 2 — Submuestreo / límite crítico</strong><br>
+        Con 1 muestra: el punto cae en el cruce por cero; infinitas sinusoides lo satisfacen.
+        Con 2 muestras exactamente en Nyquist: ambas muestras también son cero.
+        Cualquier frecuencia entera pasa por esos puntos → ambigüedad total.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">N ≥ 3 — Sobre Nyquist</strong><br>
+        Las muestras tienen valores distintos de cero y las aliases caen en frecuencias altas
+        (≥ (N−1)·f₀ y ≥ (N+1)·f₀).
+        Un filtro pasa-bajos en fs/2 = N·f₀/2 elimina todas las aliases,
+        reconstruyendo únicamente la señal original.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let N = 4;
+
+const ALIAS_COLORS = ['#ffaa00', '#00ffff', '#ff4444', '#00ff44', '#44aaff', '#ff44ff'];
+const MAX_FREQ_DISPLAY = 10; // máximo frecuencia relativa a mostrar
+
+// ── Cálculo de aliases ────────────────────────────────────────────────
+// Para sin(2πt) muestreada a N muestras/ciclo (t_k = k/N):
+// Aliases positivas: sin(2π*(1 + k*N)*t) para k=1,2,...
+// Aliases espejo:    -sin(2π*(k*N - 1)*t) para k=1,2,...  (i.e., misma amplitud negativa)
+// Casos N=1 y N=2: muestras en cero → cualquier sin(2π*m*t) pasa
+
+function getAliases(n) {
+  if (n <= 2) {
+    // Muestras en cero: sin(2π*m*k/n)=0 para todos los enteros m
+    return [
+      { freq: 1, amp:  1, label: 'f₀',    color: '#ffaa00' },
+      { freq: 2, amp:  1, label: '2f₀',   color: '#00ffff' },
+      { freq: 3, amp:  1, label: '3f₀',   color: '#ff4444' },
+      { freq: 5, amp:  1, label: '5f₀',   color: '#00ff44' },
+      { freq: 7, amp:  1, label: '7f₀',   color: '#44aaff' },
+    ];
+  }
+
+  const list = [];
+  let colorIdx = 0;
+
+  // Original
+  list.push({ freq: 1, amp: 1, label: 'f₀ (original)', color: ALIAS_COLORS[colorIdx++] });
+
+  // Aliases positivas: 1 + k*N
+  for (let k = 1; 1 + k * n <= MAX_FREQ_DISPLAY; k++) {
+    list.push({ freq: 1 + k * n, amp: 1,  label: `${1+k*n}f₀`, color: ALIAS_COLORS[colorIdx++ % ALIAS_COLORS.length] });
+  }
+
+  // Aliases espejo: -(k*N - 1)  (amplitud negativa, frecuencia k*N-1)
+  for (let k = 1; k * n - 1 > 0 && k * n - 1 <= MAX_FREQ_DISPLAY; k++) {
+    list.push({ freq: k * n - 1, amp: -1, label: `−${k*n-1}f₀`, color: ALIAS_COLORS[colorIdx++ % ALIAS_COLORS.length] });
+  }
+
+  return list;
+}
+
+// ── Verificación numérica ─────────────────────────────────────────────
+// Confirma que los aliases son correctos comparando valores en los puntos muestreados
+function verifyAlias(freq, amp, n) {
+  for (let k = 0; k < n; k++) {
+    const t = k / n;
+    const orig = Math.sin(2 * Math.PI * t);
+    const test = amp * Math.sin(2 * Math.PI * freq * t);
+    if (Math.abs(orig - test) > 1e-6) return false;
+  }
+  return true;
+}
+
+// ── Canvas tiempo ─────────────────────────────────────────────────────
+function drawTime() {
+  const canvas = document.getElementById('timeCanvas');
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 50, padR = 20, padT = 36, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const cy = padT + bh / 2;
+  const xScale = bw / 2;   // 2 ciclos en el ancho
+  const yScale = bh / 2.4;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  [-1, -0.5, 0, 0.5, 1].forEach(v => {
+    const y = cy - v * yScale;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  });
+  [0, 0.5, 1, 1.5, 2].forEach(t => {
+    const x = padL + t * xScale;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+  });
+
+  // Eje labels
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  [1, 0.5, 0, -0.5, -1].forEach(v => {
+    ctx.fillText(v === 0 ? '0' : v.toFixed(1), padL - 4, cy - v * yScale + 4);
+  });
+  ctx.textAlign = 'center';
+  ['0', 'T/2', 'T', '3T/2', '2T'].forEach((lbl, i) => {
+    ctx.fillText(lbl, padL + i * xScale / 2, padT + bh + 14);
+  });
+  ctx.fillText('Tiempo →', padL + bw / 2, padT + bh + 28);
+
+  // Ciclo completo = sombreado leve
+  ctx.fillStyle = 'rgba(255,170,0,0.04)';
+  ctx.fillRect(padL, padT, xScale, bh);
+
+  const aliases = getAliases(N);
+
+  // Dibuja cada sinusoide alias
+  aliases.forEach((al, i) => {
+    // Solo dibujar si pasa verificación (para N>2) o siempre para N<=2
+    const valid = N <= 2 || verifyAlias(al.freq, al.amp, N);
+    if (!valid) return;
+
+    ctx.strokeStyle = al.color;
+    ctx.lineWidth = i === 0 ? 2.5 : 1.5;
+    ctx.globalAlpha = i === 0 ? 1.0 : 0.75;
+    ctx.setLineDash(i === 0 ? [] : [5, 3]);
+    ctx.beginPath();
+    for (let px = 0; px <= bw; px++) {
+      const t = (px / bw) * 2;
+      const y = cy - al.amp * Math.sin(2 * Math.PI * al.freq * t) * yScale;
+      if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+    }
+    ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
+
+  // Puntos muestreados (2 ciclos completos)
+  const totalSamples = N * 2;
+  for (let k = 0; k < totalSamples; k++) {
+    const t = k / N;
+    const v = Math.sin(2 * Math.PI * t);
+    const x = padL + (t / 2) * bw;
+    const y = cy - v * yScale;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(x, y, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffaa00';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, 5.5, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // Leyenda (esquina superior derecha dentro del canvas)
+  const lx = padL + bw - 160, ly = padT + 6;
+  aliases.forEach((al, i) => {
+    if (N <= 2 || verifyAlias(al.freq, al.amp, N)) {
+      ctx.strokeStyle = al.color;
+      ctx.lineWidth = i === 0 ? 2.5 : 1.5;
+      ctx.setLineDash(i === 0 ? [] : [5, 3]);
+      ctx.beginPath();
+      ctx.moveTo(lx, ly + i * 18 + 6);
+      ctx.lineTo(lx + 24, ly + i * 18 + 6);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = al.color;
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(al.label, lx + 28, ly + i * 18 + 10);
+    }
+  });
+
+  // Label principal
+  updateMainLabel(aliases);
+}
+
+// ── Canvas espectro ───────────────────────────────────────────────────
+function drawSpectrum() {
+  const canvas = document.getElementById('specCanvas');
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 50, padR = 20, padT = 16, padB = 32;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const maxF = MAX_FREQ_DISPLAY;
+  const nyquist = N / 2; // frecuencia de Nyquist relativa a f₀
+
+  // Zona filtro pasa-bajos (área azul: 0..Nyquist)
+  const nyqX = padL + (nyquist / maxF) * bw;
+  ctx.fillStyle = 'rgba(0,150,255,0.10)';
+  ctx.fillRect(padL, padT, nyqX - padL, bh);
+  ctx.strokeStyle = 'rgba(0,150,255,0.60)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([5, 3]);
+  ctx.beginPath(); ctx.moveTo(nyqX, padT); ctx.lineTo(nyqX, padT + bh); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(0,150,255,0.80)';
+  ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('fs/2', nyqX, padT + bh + 14);
+
+  // Eje
+  ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT + bh); ctx.lineTo(padL + bw, padT + bh); ctx.stroke();
+
+  // Frecuencias eje x
+  for (let f = 0; f <= maxF; f += 2) {
+    const x = padL + (f / maxF) * bw;
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(f === 0 ? '0' : `${f}f₀`, x, padT + bh + 14);
+    ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia →', padL + bw / 2, padT + bh + 28);
+
+  // Líneas espectrales de cada alias
+  const aliases = getAliases(N);
+  aliases.forEach((al, i) => {
+    if (N > 2 && !verifyAlias(al.freq, al.amp, N)) return;
+    const x = padL + (al.freq / maxF) * bw;
+    const barH = bh * 0.75;
+    ctx.strokeStyle = al.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, padT + bh);
+    ctx.lineTo(x, padT + bh - barH);
+    ctx.stroke();
+    ctx.fillStyle = al.color;
+    ctx.beginPath(); ctx.arc(x, padT + bh - barH, 4, 0, Math.PI * 2); ctx.fill();
+    // Freq label above line
+    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(al.label, x, padT + bh - barH - 6);
+  });
+
+  // Etiqueta zona segura
+  if (nyquist > 1.5) {
+    ctx.fillStyle = 'rgba(0,180,255,0.7)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Filtro pasa-bajos →', padL + 4, padT + 10);
+  }
+}
+
+// ── Label texto ───────────────────────────────────────────────────────
+function updateMainLabel(aliases) {
+  const el = document.getElementById('mainLabel');
+  if (N <= 1) {
+    el.textContent = `1 muestra/ciclo — muestra en t=0, valor=0 → infinitas sinusoides de cualquier frecuencia pasan por ese punto`;
+  } else if (N === 2) {
+    el.textContent = `2 muestras/ciclo (límite Nyquist) — ambas muestras en 0 → infinitas sinusoides pasan por los cruces por cero`;
+  } else {
+    const freqList = aliases.filter((a, i) => i > 0 && (N <= 2 || verifyAlias(a.freq, a.amp, N)))
+                           .map(a => a.label).join(', ');
+    el.textContent = `${N} muestras/ciclo — aliases en: ${freqList || 'ninguna visible'}`;
+  }
+}
+
+// ── Selección de N ────────────────────────────────────────────────────
+function setN(n) {
+  N = n;
+  [1,2,3,4,5,6,8].forEach(v => {
+    const btn = document.getElementById(`btn${v}`);
+    if (btn) btn.classList.toggle('active', v === n);
+  });
+  draw();
+}
+
+function draw() {
+  drawTime();
+  drawSpectrum();
+}
+
+function init() { draw(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', draw);
+</script>
+</body>
+</html>

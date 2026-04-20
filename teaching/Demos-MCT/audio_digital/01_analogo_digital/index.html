@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Análogo vs. Digital — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html" class="active">1. Análogo vs. Digital</a>
+  <a href="../02_intuicion_muestreo/index.html">2. Intuición del Muestreo</a>
+  <a href="../03_muestreo/index.html">3. Muestreo y Nyquist</a>
+  <a href="../04_aliasing/index.html">4. Aliasión</a>
+  <a href="../05_cuantizacion/index.html">5. Cuantización y Error</a>
+  <a href="../06_snr_bits/index.html">6. Razón Señal a Ruido</a>
+  <a href="../07_dither/index.html">7. Dither</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Análogo vs. Digital</h1>
+      <p class="subtitle">Las dos cadenas de transmisión y procesamiento del sonido</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Cadenas de transmisión del sonido</h2>
+    <p class="description">
+      En la cadena <span class="kw">analógica</span>, la onda de presión se convierte en voltaje eléctrico
+      (micrófono), se amplifica y se reproduce directamente (parlante).
+      En la cadena <span class="kw">digital</span>, la señal analógica se convierte a números
+      (<span class="kw">ADC</span>), se almacena en memoria, y se vuelve a convertir a analógico
+      (<span class="kw">DAC</span>) antes de la reproducción.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn" id="btnAnalog" onclick="showChain('analog')">Cadena Analógica</button>
+        <button class="btn active" id="btnDigital" onclick="showChain('digital')">Cadena Digital</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="chainLabel">Cadena Digital</div>
+    <canvas id="chainCanvas" height="300"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Comparación</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Cadena Analógica</strong><br>
+        Sonido → Micrófono → Amplificador → Parlante.<br>
+        La señal es continua en tiempo y amplitud. Cualquier ruido o distorsión en el camino degrada la señal irreversiblemente.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Cadena Digital</strong><br>
+        Sonido → ADC → Memoria/Computador → DAC → Amplificador → Parlante.<br>
+        La señal se representa como números. Se puede copiar, procesar y transmitir sin pérdida adicional.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('chainCanvas');
+const ctx = canvas.getContext('2d');
+let currentChain = 'digital';
+
+// amp: amplitude 0–1 relativa al panel; type determina el dibujo
+const CHAINS = {
+  analog: {
+    label: 'Cadena Analógica',
+    blockColor: '#ffaa00',
+    blocks: ['Fuente\nSonora', 'Micrófono', 'Amplificador', 'Parlante'],
+    signals: [
+      { type: 'wave',    amp: 0.55, color: '#ffaa00', label: 'presión\nacústica' },
+      { type: 'wave',    amp: 0.22, color: '#ffaa00', label: 'voltaje\n(débil)' },
+      { type: 'wave',    amp: 0.88, color: '#ffaa00', label: 'voltaje\namplificado' },
+      { type: 'wave',    amp: 0.88, color: '#44aaff', label: 'presión\nacústica' },
+    ]
+  },
+  digital: {
+    label: 'Cadena Digital',
+    blockColor: '#ff44ff',
+    blocks: ['Fuente\nSonora', 'Micrófono', 'ADC', 'Memoria /\nComputador', 'DAC', 'Amplificador', 'Parlante'],
+    signals: [
+      { type: 'wave',      amp: 0.55, color: '#ffaa00', label: 'presión\nacústica' },
+      { type: 'wave',      amp: 0.22, color: '#ffaa00', label: 'voltaje\n(débil)' },
+      { type: 'samples',   amp: 0.22, color: '#00ffff', label: 'muestras\ndiscretas' },
+      { type: 'bits',      amp: 1.0,  color: '#ff44ff', label: 'números\nbinarios' },
+      { type: 'staircase', amp: 0.85, color: '#00ffff', label: 'voltaje\n(escalera)' },
+      { type: 'wave',      amp: 0.85, color: '#ff44ff', label: 'voltaje\namplificado' },
+      { type: 'wave',      amp: 0.85, color: '#44aaff', label: 'presión\nacústica' },
+    ]
+  }
+};
+
+// Dibuja la mini-señal centrada en (cx, cy), dentro de un panel w×h
+function drawSignalPanel(cx, cy, w, h, sig, t) {
+  const x0 = cx - w / 2;
+  const halfH = h / 2 - 5;
+  const x1 = x0 + 3;
+  const N = w - 6;
+
+  // Panel de fondo
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.strokeStyle = 'rgba(100,180,255,0.22)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.roundRect(x0, cy - h / 2, w, h, 4); ctx.fill(); ctx.stroke();
+
+  // Línea central
+  ctx.strokeStyle = 'rgba(100,180,255,0.28)';
+  ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.moveTo(x1, cy); ctx.lineTo(x1 + N, cy); ctx.stroke();
+
+  ctx.strokeStyle = sig.color;
+  ctx.lineWidth = 1.8;
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
+
+  if (sig.type === 'wave') {
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const phase = (i / N) * Math.PI * 3 + t;
+      const y = cy - Math.sin(phase) * sig.amp * halfH;
+      if (i === 0) ctx.moveTo(x1 + i, y); else ctx.lineTo(x1 + i, y);
+    }
+    ctx.stroke();
+
+  } else if (sig.type === 'samples') {
+    // Sinusoide tenue de fondo
+    ctx.globalAlpha = 0.22;
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const phase = (i / N) * Math.PI * 3 + t;
+      const y = cy - Math.sin(phase) * sig.amp * halfH;
+      if (i === 0) ctx.moveTo(x1 + i, y); else ctx.lineTo(x1 + i, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    // Stems + dots (≈12 muestras)
+    const nS = 12;
+    for (let k = 0; k <= nS; k++) {
+      const frac = k / nS;
+      const phase = frac * Math.PI * 3 + t;
+      const sv = Math.sin(phase) * sig.amp * halfH;
+      const px = x1 + frac * N;
+      ctx.strokeStyle = sig.color; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, cy - sv); ctx.stroke();
+      ctx.fillStyle = sig.color;
+      ctx.beginPath(); ctx.arc(px, cy - sv, 2, 0, Math.PI * 2); ctx.fill();
+    }
+
+  } else if (sig.type === 'bits') {
+    const bits = [1,0,1,1,0,0,1,0,1,1,0,1,0,1,1,0];
+    const scroll = Math.floor(t * 1.8) % bits.length;
+    const bw = N / bits.length;
+    ctx.beginPath();
+    for (let i = 0; i < bits.length; i++) {
+      const b = bits[(i + scroll) % bits.length];
+      const nb = bits[(i + scroll + 1) % bits.length];
+      const bx = x1 + i * bw;
+      const by = cy + (b === 1 ? -halfH * 0.62 : halfH * 0.62);
+      const nby = cy + (nb === 1 ? -halfH * 0.62 : halfH * 0.62);
+      if (i === 0) ctx.moveTo(bx, by);
+      ctx.lineTo(bx + bw, by);
+      if (i < bits.length - 1) ctx.lineTo(bx + bw, nby);
+    }
+    ctx.stroke();
+
+  } else if (sig.type === 'staircase') {
+    const steps = 5;
+    ctx.beginPath();
+    let prevY = null;
+    for (let i = 0; i <= N; i++) {
+      const phase = (i / N) * Math.PI * 3 + t;
+      const v = Math.sin(phase) * sig.amp;
+      const qv = Math.round(v * steps) / steps;
+      const y = cy - qv * halfH;
+      if (prevY === null) { ctx.moveTo(x1 + i, y); prevY = y; }
+      else { ctx.lineTo(x1 + i, prevY); ctx.lineTo(x1 + i, y); prevY = y; }
+    }
+    ctx.stroke();
+  }
+}
+
+function showChain(which) {
+  currentChain = which;
+  document.getElementById('btnAnalog').classList.toggle('active', which === 'analog');
+  document.getElementById('btnDigital').classList.toggle('active', which === 'digital');
+  document.getElementById('chainLabel').textContent = CHAINS[which].label;
+}
+
+let animId = null;
+let t = 0;
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 900;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const chain = CHAINS[currentChain];
+  const n = chain.blocks.length;
+  const gap = 16;
+  const blockW = Math.min(90, Math.floor((W - 40 - gap * (n - 1)) / n));
+  const blockH = 46;
+  const totalW = n * blockW + (n - 1) * gap;
+  const startX = Math.floor((W - totalW) / 2);
+  const blockY = H - 58;
+  const arrowY = blockY + blockH / 2;
+  const sigH = 86;
+  const sigCY = blockY - 18 - sigH / 2;
+
+  chain.blocks.forEach((label, i) => {
+    const bx = startX + i * (blockW + gap);
+    const bcx = bx + blockW / 2;
+    const isDigitalDomain = (currentChain === 'digital') && (i >= 2 && i <= 3);
+    const borderColor = isDigitalDomain ? '#ff44ff' : chain.blockColor;
+    const sig = chain.signals[i];
+
+    // ── Mini señal ─────────────────────────────────────────────────
+    drawSignalPanel(bcx, sigCY, blockW - 2, sigH, sig, t);
+
+    // ── Conector punteado señal → bloque ───────────────────────────
+    ctx.strokeStyle = 'rgba(150,200,255,0.22)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(bcx, sigCY + sigH / 2); ctx.lineTo(bcx, blockY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ── Bloque ─────────────────────────────────────────────────────
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    ctx.fillStyle = isDigitalDomain ? 'rgba(255,68,255,0.12)' : 'rgba(255,170,0,0.08)';
+    ctx.beginPath(); ctx.roundRect(bx, blockY, blockW, blockH, 6); ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${blockW > 70 ? 11 : 9}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lines = label.split('\n');
+    lines.forEach((line, li) => {
+      ctx.fillText(line, bcx, blockY + blockH / 2 + (li - (lines.length - 1) / 2) * 13);
+    });
+
+    // ── Flecha al siguiente ────────────────────────────────────────
+    if (i < n - 1) {
+      const ax = bx + blockW + 2, ae = ax + gap - 4;
+      ctx.strokeStyle = chain.blockColor; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ax, arrowY); ctx.lineTo(ae, arrowY);
+      ctx.moveTo(ae - 5, arrowY - 4); ctx.lineTo(ae, arrowY); ctx.lineTo(ae - 5, arrowY + 4);
+      ctx.stroke();
+    }
+
+    // ── Etiqueta debajo del bloque ────────────────────────────────
+    ctx.fillStyle = 'rgba(150,200,255,0.60)';
+    ctx.font = '8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    (sig.label || '').split('\n').forEach((sl, si) => {
+      ctx.fillText(sl, bcx, blockY + blockH + 4 + si * 10);
+    });
+  });
+
+  t += 0.04;
+  animId = requestAnimationFrame(draw);
+}
+
+function init() {
+  if (animId) cancelAnimationFrame(animId);
+  draw();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { canvas.width = canvas.offsetWidth || 900; });
+</script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Aliasión — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html">1. Análogo vs. Digital</a>
+  <a href="../02_intuicion_muestreo/index.html">2. Intuición del Muestreo</a>
+  <a href="../03_muestreo/index.html">3. Muestreo y Nyquist</a>
+  <a href="../04_aliasing/index.html" class="active">4. Aliasión</a>
+  <a href="../05_cuantizacion/index.html">5. Cuantización y Error</a>
+  <a href="../06_snr_bits/index.html">6. Razón Señal a Ruido</a>
+  <a href="../07_dither/index.html">7. Dither</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Aliasión</h1>
+      <p class="subtitle">Frecuencias falsas producidas por submuestreo</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Demostración de aliasión</h2>
+    <p class="description">
+      Cuando se muestrea una señal por debajo del límite de Nyquist (fs &lt; 2·f), la frecuencia
+      reconstruida no coincide con la original: aparece una <span class="kw">frecuencia alias</span>.
+      La frecuencia alias es: <strong style="color:#ff4444;">f<sub>alias</sub> = |f − k·fs|</strong>
+      para el entero k que minimice el resultado.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia original: <span class="val" id="freqVal">1800</span> Hz</label>
+        <input type="range" id="freqSlider" min="100" max="4000" step="50" value="1800">
+      </div>
+      <div class="control-group">
+        <label>Tasa de muestreo fs: <span class="val" id="fsVal">2000</span> Hz</label>
+        <input type="range" id="fsSlider" min="1000" max="8000" step="100" value="2000">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar original</button>
+        <button class="btn" id="btnAlias" onclick="toggleAlias()">▶ Escuchar alias</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="aliasLabel">Calculando...</div>
+    <canvas id="aliasCanvas" height="300"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Chirp y aliasión: el "rebote" de Nyquist</h2>
+    <p class="description">
+      Un <span class="kw">chirp</span> barre linealmente desde 20 Hz hasta la frecuencia máxima configurada.
+      Al muestrearlo a <span class="kw">fs</span>, toda frecuencia que supera
+      <strong style="color:#00ffff;">fs/2</strong> (Nyquist) genera un alias que
+      <strong style="color:#ff4444;">rebota hacia abajo</strong> — y si sigue subiendo,
+      vuelve a rebotar, creando un zigzag. Se escucha como un glissando que sube, llega a Nyquist y desciende.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frec. máxima del chirp: <span class="val" id="chirpFMaxVal">4000</span> Hz</label>
+        <input type="range" id="chirpFMaxSlider" min="100" max="8000" step="100" value="4000">
+      </div>
+      <div class="control-group">
+        <label>Tasa de muestreo fs: <span class="val" id="chirpFsVal">2000</span> Hz</label>
+        <input type="range" id="chirpFsSlider" min="100" max="8000" step="100" value="2000">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnChirp" onclick="toggleChirp()">▶ Escuchar chirp</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="chirpLabel">…</div>
+    <canvas id="chirpCanvas" height="240"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>¿Qué es la aliasión?</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Causa</strong><br>
+        Muestrear por debajo de la frecuencia de Nyquist (fs/2). Los puntos muestreados son ambiguos:
+        corresponden igualmente a la frecuencia original y a su alias.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Solución: filtro anti-aliasing</strong><br>
+        Antes del ADC se aplica un filtro pasa-bajos que elimina todo componente por encima de fs/2.
+        Así no pueden entrar frecuencias que produzcan alias.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Alias (continuo) ──────────────────────────────────────────────────
+function computeAliasRaw(f, fsr) {
+  let r = ((f % fsr) + fsr) % fsr;
+  if (r > fsr / 2) r = fsr - r;
+  return r;
+}
+function computeAlias(f, fsr) { return Math.round(computeAliasRaw(f, fsr)); }
+
+// ── Estado ────────────────────────────────────────────────────────────
+let freq = 1800, fs = 2000;
+let playing = false, playingAlias = false, playingChirp = false;
+
+function stopEverything() {
+  stopAllAudio();
+  playing = false; playingAlias = false; playingChirp = false;
+  [['btnPlay','▶ Escuchar original'],['btnAlias','▶ Escuchar alias'],['btnChirp','▶ Escuchar chirp']]
+    .forEach(([id, txt]) => { const b = document.getElementById(id); b.textContent = txt; b.classList.remove('active'); });
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SECCIÓN 1 — Tono fijo y su alias
+// ══════════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('aliasCanvas');
+const ctx = canvas.getContext('2d');
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 50, padR = 20, padT = 30, padB = 40;
+  const bw = W - padL - padR;
+  const rowH = (H - padT - padB) / 3;
+  const fAlias = computeAlias(freq, fs);
+  const overNyquist = freq > fs / 2;
+  const rows = [
+    { label: 'Señal original', color: '#ffaa00', f: freq },
+    { label: 'Tren de muestras', color: '#00ffff', samples: true },
+    { label: overNyquist ? `Señal reconstruida (alias: ${fAlias} Hz)` : 'Señal reconstruida (sin alias)',
+      color: overNyquist ? '#ff4444' : '#00ff44', f: fAlias }
+  ];
+  const dur = 3 / Math.max(fAlias, 1);
+  rows.forEach((row, ri) => {
+    const rowY = padT + ri * rowH, cy = rowY + rowH / 2;
+    ctx.fillStyle = row.color; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(row.label, padL, rowY + 12);
+    ctx.strokeStyle = 'rgba(100,180,255,0.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(padL + bw, cy); ctx.stroke();
+    if (row.samples) {
+      const nS = Math.floor(dur * fs);
+      ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 1.5;
+      for (let k = 0; k <= nS; k++) {
+        const t = k / fs; if (t > dur) break;
+        const px = padL + (t / dur) * bw;
+        const amp = Math.sin(2 * Math.PI * freq * t) * (rowH / 2 - 8);
+        ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, cy - amp); ctx.stroke();
+        ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(px, cy - amp, 3, 0, Math.PI * 2); ctx.fill();
+      }
+    } else {
+      ctx.strokeStyle = row.color; ctx.lineWidth = 2; ctx.beginPath();
+      for (let px = 0; px <= bw; px++) {
+        const t = (px / bw) * dur;
+        const y = cy - Math.sin(2 * Math.PI * row.f * t) * (rowH / 2 - 8);
+        if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+      }
+      ctx.stroke();
+    }
+  });
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillStyle = '#ffaa00'; ctx.fillText(`f = ${freq} Hz`, W - padR, padT + rowH / 2);
+  ctx.fillStyle = '#00ffff';  ctx.fillText(`fs = ${fs} Hz`, W - padR, padT + rowH * 1.5);
+  ctx.fillStyle = overNyquist ? '#ff4444' : '#00ff44';
+  ctx.fillText(overNyquist ? `alias = ${fAlias} Hz` : `= ${freq} Hz`, W - padR, padT + rowH * 2.5);
+  updateLabel();
+}
+
+function updateLabel() {
+  const fAlias = computeAlias(freq, fs), over = freq > fs / 2;
+  document.getElementById('aliasLabel').textContent = over
+    ? `f = ${freq} Hz  |  fs = ${fs} Hz  |  Nyquist = ${fs/2} Hz  →  ALIAS: ${fAlias} Hz`
+    : `f = ${freq} Hz  |  fs = ${fs} Hz  |  Nyquist = ${fs/2} Hz  →  Sin aliasión`;
+}
+
+function togglePlay() {
+  if (playing) { stopEverything(); return; }
+  stopEverything(); playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  const actx = getAudioContext(), t0 = actx.currentTime + 0.01;
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.type = 'sine'; osc.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.18, t0 + 0.015);
+  osc.connect(g); g.connect(actx.destination); osc.start(t0);
+  _activeNodes.push(osc);
+}
+
+function toggleAlias() {
+  if (playingAlias) { stopEverything(); return; }
+  stopEverything(); playingAlias = true;
+  document.getElementById('btnAlias').textContent = '■ Detener alias';
+  document.getElementById('btnAlias').classList.add('active');
+  const fAlias = computeAlias(freq, fs);
+  const actx = getAudioContext(), t0 = actx.currentTime + 0.01;
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.type = 'sine'; osc.frequency.value = fAlias || 1;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.18, t0 + 0.015);
+  osc.connect(g); g.connect(actx.destination); osc.start(t0);
+  _activeNodes.push(osc);
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = +this.value; document.getElementById('freqVal').textContent = freq;
+  if (playing || playingAlias) stopEverything();
+  draw();
+});
+document.getElementById('fsSlider').addEventListener('input', function() {
+  fs = +this.value; document.getElementById('fsVal').textContent = fs;
+  if (playing || playingAlias) stopEverything();
+  draw();
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// SECCIÓN 2 — Chirp con rebote de Nyquist
+// ══════════════════════════════════════════════════════════════════════
+const chirpCanvas = document.getElementById('chirpCanvas');
+const cCtx = chirpCanvas.getContext('2d');
+const CHIRP_DUR = 4, CHIRP_F0 = 20;
+let chirpFMax = 4000, chirpFs = 2000;
+
+function drawChirp() {
+  chirpCanvas.width = chirpCanvas.offsetWidth || 800;
+  const W = chirpCanvas.width, H = chirpCanvas.height;
+  cCtx.clearRect(0, 0, W, H);
+  const padL = 60, padR = 24, padT = 28, padB = 38;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const nyq = chirpFs / 2;
+
+  // Grid horizontal (frecuencia)
+  const fMax = chirpFMax;
+  [0, 0.25, 0.5, 0.75, 1].forEach(frac => {
+    const f = frac * fMax, y = padT + bh - frac * bh;
+    cCtx.strokeStyle = 'rgba(100,180,255,0.28)'; cCtx.lineWidth = 0.8;
+    cCtx.beginPath(); cCtx.moveTo(padL, y); cCtx.lineTo(padL + bw, y); cCtx.stroke();
+    cCtx.fillStyle = 'rgba(150,200,255,0.65)'; cCtx.font = '10px sans-serif'; cCtx.textAlign = 'right';
+    const lbl = f >= 1000 ? (f/1000).toFixed(f%1000===0?0:1)+'k' : f+' Hz';
+    cCtx.fillText(lbl, padL - 5, y + 4);
+  });
+
+  // Grid vertical (tiempo)
+  for (let s = 0; s <= CHIRP_DUR; s++) {
+    const x = padL + (s / CHIRP_DUR) * bw;
+    cCtx.strokeStyle = 'rgba(100,180,255,0.20)'; cCtx.lineWidth = 0.8;
+    cCtx.beginPath(); cCtx.moveTo(x, padT); cCtx.lineTo(x, padT + bh); cCtx.stroke();
+    cCtx.fillStyle = 'rgba(150,200,255,0.65)'; cCtx.font = '10px sans-serif'; cCtx.textAlign = 'center';
+    cCtx.fillText(s + 's', x, padT + bh + 14);
+  }
+
+  // Línea Nyquist
+  if (nyq <= fMax) {
+    const ny = padT + bh - (nyq / fMax) * bh;
+    cCtx.strokeStyle = '#00ffff'; cCtx.lineWidth = 1.5; cCtx.setLineDash([8, 5]);
+    cCtx.beginPath(); cCtx.moveTo(padL, ny); cCtx.lineTo(padL + bw, ny); cCtx.stroke();
+    cCtx.setLineDash([]);
+    cCtx.fillStyle = '#00ffff'; cCtx.font = 'bold 10px sans-serif'; cCtx.textAlign = 'left';
+    cCtx.fillText(`Nyquist = ${nyq} Hz`, padL + 4, ny - 5);
+  }
+
+  // Chirp original (punteado naranja, tenue)
+  cCtx.strokeStyle = '#ffaa00'; cCtx.lineWidth = 1.2; cCtx.globalAlpha = 0.45;
+  cCtx.setLineDash([5, 4]); cCtx.beginPath();
+  for (let px = 0; px <= bw; px++) {
+    const t = (px / bw) * CHIRP_DUR;
+    const f = CHIRP_F0 + (fMax - CHIRP_F0) * (t / CHIRP_DUR);
+    const y = padT + bh - (f / fMax) * bh;
+    if (px === 0) cCtx.moveTo(padL + px, y); else cCtx.lineTo(padL + px, y);
+  }
+  cCtx.stroke(); cCtx.setLineDash([]); cCtx.globalAlpha = 1;
+
+  // Alias path (verde = bajo Nyquist, rojo = alias activo)
+  cCtx.lineWidth = 2.2;
+  let prevOver = null, inPath = false;
+  for (let px = 0; px <= bw; px++) {
+    const t = (px / bw) * CHIRP_DUR;
+    const f = CHIRP_F0 + (fMax - CHIRP_F0) * (t / CHIRP_DUR);
+    const fA = computeAliasRaw(f, chirpFs);
+    const over = f > nyq;
+    const y = padT + bh - (fA / fMax) * bh;
+    if (px === 0 || over !== prevOver) {
+      if (inPath) cCtx.stroke();
+      cCtx.strokeStyle = over ? '#ff4444' : '#00ff44';
+      cCtx.beginPath(); cCtx.moveTo(padL + px, y);
+      inPath = true;
+    } else {
+      cCtx.lineTo(padL + px, y);
+    }
+    prevOver = over;
+  }
+  if (inPath) cCtx.stroke();
+
+  // Leyenda
+  cCtx.fillStyle = 'rgba(150,200,255,0.70)'; cCtx.font = '11px sans-serif'; cCtx.textAlign = 'center';
+  cCtx.fillText('Tiempo (s) →', padL + bw / 2, H - 4);
+  cCtx.save(); cCtx.translate(14, padT + bh / 2); cCtx.rotate(-Math.PI / 2);
+  cCtx.fillText('Frecuencia (Hz)', 0, 0); cCtx.restore();
+
+  const lx = padL + 8, ly = padT + 6;
+  [['── Chirp original', '#ffaa00'], ['── Sin aliasión', '#00ff44'], ['── Alias (rebote)', '#ff4444']]
+    .forEach(([lbl, col], i) => {
+      cCtx.fillStyle = col; cCtx.font = 'bold 10px sans-serif'; cCtx.textAlign = 'left';
+      cCtx.fillText(lbl, lx, ly + i * 16 + 10);
+    });
+
+  document.getElementById('chirpLabel').textContent =
+    `Chirp 20–${fMax} Hz | fs = ${chirpFs} Hz | Nyquist = ${nyq} Hz | duración ${CHIRP_DUR} s`;
+}
+
+function toggleChirp() {
+  if (playingChirp) { stopEverything(); return; }
+  stopEverything(); playingChirp = true;
+  document.getElementById('btnChirp').textContent = '■ Detener';
+  document.getElementById('btnChirp').classList.add('active');
+
+  const actx = getAudioContext();
+  const sr = actx.sampleRate;
+  const bufLen = Math.floor(sr * CHIRP_DUR);
+  const buffer = actx.createBuffer(1, bufLen, sr);
+  const data = buffer.getChannelData(0);
+  const fade = Math.floor(sr * 0.025);
+  let phase = 0;
+  for (let i = 0; i < bufLen; i++) {
+    const t = i / sr;
+    const fInst = CHIRP_F0 + (chirpFMax - CHIRP_F0) * (t / CHIRP_DUR);
+    phase += 2 * Math.PI * computeAliasRaw(fInst, chirpFs) / sr;
+    let amp = 0.5;
+    if (i < fade) amp *= i / fade;
+    if (i > bufLen - fade) amp *= (bufLen - i) / fade;
+    data[i] = Math.sin(phase) * amp;
+  }
+  const src = actx.createBufferSource();
+  src.buffer = buffer; src.loop = true;
+  const g = actx.createGain(); g.gain.value = 0.85;
+  src.connect(g); g.connect(actx.destination);
+  src.start(actx.currentTime + 0.01);
+  _activeNodes.push(src);
+}
+
+document.getElementById('chirpFMaxSlider').addEventListener('input', function() {
+  chirpFMax = +this.value; document.getElementById('chirpFMaxVal').textContent = chirpFMax;
+  if (playingChirp) stopEverything();
+  drawChirp();
+});
+document.getElementById('chirpFsSlider').addEventListener('input', function() {
+  chirpFs = +this.value; document.getElementById('chirpFsVal').textContent = chirpFs;
+  if (playingChirp) stopEverything();
+  drawChirp();
+});
+
+function init() { draw(); drawChirp(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { draw(); drawChirp(); });
+</script>
+</body>
+</html>

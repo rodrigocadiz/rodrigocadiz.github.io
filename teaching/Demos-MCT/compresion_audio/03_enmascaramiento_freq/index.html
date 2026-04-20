@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Enmascaramiento Frecuencial — Compresión Perceptual</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-compresion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_introduccion_compresion/index.html">1. Introducción</a>
+  <a href="../02_umbral_audicion/index.html">2. Umbral de Audición</a>
+  <a href="../03_enmascaramiento_freq/index.html" class="active">3. Enmascaramiento Frec.</a>
+  <a href="../04_enmascaramiento_temp/index.html">4. Enmascaramiento Temp.</a>
+  <a href="../05_bandas_criticas/index.html">5. Bandas Críticas</a>
+  <a href="../06_modelo_psicoacustico/index.html">6. Modelo Psicoacústico</a>
+  <a href="../07_tasa_bits/index.html">7. Codecs y Compresión</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Enmascaramiento Frecuencial</h1>
+      <p class="subtitle">Un tono fuerte hace inaudibles a tonos cercanos en frecuencia</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Función de dispersión del enmascaramiento</h2>
+    <p class="description">
+      El <span class="kw">enmascaramiento frecuencial</span> ocurre cuando un tono fuerte
+      (el <span class="kw">enmascarador</span>) eleva el umbral de audición en frecuencias
+      cercanas. Escucha los <strong style="color:#ffaa00;">dos tonos simultáneamente</strong>
+      y mueve la frecuencia o nivel de la sonda: cuando la sonda cae bajo el umbral global
+      (punto <strong style="color:#ff4444;">rojo</strong>), dejarás de oírla aunque siga presente en la señal.
+      La función de dispersión es <strong style="color:#ff4444;">asimétrica</strong>:
+      el enmascaramiento hacia frecuencias <em>altas</em> se extiende varios Barks;
+      hacia frecuencias <em>bajas</em> decae rápido (~27 dB/Bark).
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Freq. enmascarador: <span class="val" id="fmVal">1k</span> Hz</label>
+        <input type="range" id="fmSlider" min="0" max="100" step="0.5" value="57">
+      </div>
+      <div class="control-group">
+        <label>Nivel enmascarador: <span class="val" id="lmVal">70</span> dB SPL</label>
+        <input type="range" id="lmSlider" min="20" max="90" step="1" value="70">
+      </div>
+      <div class="control-group">
+        <label>Freq. sonda: <span class="val" id="fpVal">2k</span> Hz</label>
+        <input type="range" id="fpSlider" min="0" max="100" step="0.5" value="67">
+      </div>
+      <div class="control-group">
+        <label>Nivel sonda: <span class="val" id="lpVal">60</span> dB SPL</label>
+        <input type="range" id="lpSlider" min="10" max="90" step="1" value="60">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar ambos</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="maskLabel">Calculando…</div>
+    <canvas id="maskCanvas" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Asimetría del enmascaramiento</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Upward masking (hacia frecuencias altas)</strong><br>
+        Se extiende varios Barks hacia arriba. La pendiente aumenta con el nivel del enmascarador:
+        a mayor nivel, mayor spread. Este es el efecto dominante en audio musical.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Downward masking (hacia frecuencias bajas)</strong><br>
+        Decae mucho más rápido (~27 dB/Bark). Un tono a 2 kHz enmascara muy poco
+        a 500 Hz, aunque sí puede enmascarar frecuencias ligeramente por debajo.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('maskCanvas');
+const ctx    = canvas.getContext('2d');
+
+let fMasker = 1000, lMasker = 70, fProbe = 2000, lProbe = 60;
+let playing = false;
+
+function hearingThreshold(f) {
+  if (f < 20) return 120;
+  const fk = f / 1000;
+  return Math.max(-10, Math.min(120,
+    3.64 * Math.pow(fk, -0.8)
+    - 6.5 * Math.exp(-0.6 * Math.pow(fk - 3.3, 2))
+    + 1e-3 * Math.pow(fk, 4)));
+}
+
+function barkScale(f) {
+  return 13 * Math.atan(0.00076 * f) + 3.5 * Math.atan(Math.pow(f / 7500, 2));
+}
+
+function maskingThreshAt(f, fm, Lm) {
+  if (f <= 0 || fm <= 0) return -200;
+  const dz = barkScale(f) - barkScale(fm);
+  if (dz >= 0) return Lm - (10 + 0.05 * Lm) * dz;  // upward: gentler
+  return Lm + 27 * dz;                                // downward: steep
+}
+
+function sliderToFreq(v) { return Math.round(20 * Math.pow(1000, v / 100)); }
+function fmtF(f) {
+  if (f >= 10000) return (f/1000).toFixed(0)+'k';
+  if (f >= 1000)  return (f/1000).toFixed(1)+'k';
+  return f+'';
+}
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 20, padT = 28, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const fMin = 20, fMax = 20000, dBMin = -10, dBMax = 100;
+
+  function xFor(f)  { return padL + Math.log(f / fMin) / Math.log(fMax / fMin) * bw; }
+  function yFor(db) { return padT + (1 - (db - dBMin) / (dBMax - dBMin)) * bh; }
+
+  // Grids
+  [20,50,100,200,500,1000,2000,5000,10000,20000].forEach(f => {
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(xFor(f), padT); ctx.lineTo(xFor(f), padT+bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(fmtF(f), xFor(f), padT+bh+16);
+  });
+  [0,20,40,60,80].forEach(db => {
+    ctx.strokeStyle = 'rgba(100,180,255,0.28)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(padL, yFor(db)); ctx.lineTo(padL+bw, yFor(db)); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(db+' dB', padL-5, yFor(db)+4);
+  });
+
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz) →', padL+bw/2, H-4);
+  ctx.save(); ctx.translate(13, padT+bh/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Nivel (dB SPL)', 0, 0); ctx.restore();
+
+  const NS = 400;
+
+  // Absolute threshold (dim)
+  ctx.strokeStyle = 'rgba(255,170,0,0.40)'; ctx.lineWidth = 1.5; ctx.setLineDash([4,5]);
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax/fMin, i/NS);
+    const y = yFor(Math.max(dBMin, Math.min(dBMax, hearingThreshold(f))));
+    i === 0 ? ctx.moveTo(xFor(f), y) : ctx.lineTo(xFor(f), y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Masking threshold (spreading function)
+  ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax/fMin, i/NS);
+    const y = yFor(Math.max(dBMin, Math.min(dBMax, maskingThreshAt(f, fMasker, lMasker))));
+    i === 0 ? ctx.moveTo(xFor(f), y) : ctx.lineTo(xFor(f), y);
+  }
+  ctx.stroke();
+
+  // Global threshold = max(abs, masking)
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax/fMin, i/NS);
+    const tg = Math.max(hearingThreshold(f), maskingThreshAt(f, fMasker, lMasker));
+    const y = yFor(Math.max(dBMin, Math.min(dBMax, tg)));
+    i === 0 ? ctx.moveTo(xFor(f), y) : ctx.lineTo(xFor(f), y);
+  }
+  ctx.stroke();
+
+  // Masker bar
+  const xM = xFor(fMasker);
+  const barW = Math.max(4, bw * 0.012);
+  ctx.fillStyle = '#ffaa00';
+  ctx.fillRect(xM - barW/2, yFor(lMasker), barW, yFor(dBMin) - yFor(lMasker));
+  ctx.fillStyle = '#ffaa00'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('E', xM, yFor(lMasker) - 5);
+
+  // Probe vertical line + dot at its actual level
+  const xP = xFor(fProbe);
+  const globalAtProbe = Math.max(hearingThreshold(fProbe), maskingThreshAt(fProbe, fMasker, lMasker));
+  const masked = lProbe <= globalAtProbe;
+  ctx.strokeStyle = masked ? '#ff4444' : '#00ff44';
+  ctx.lineWidth = 2; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(xP, padT); ctx.lineTo(xP, padT+bh); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = masked ? '#ff4444' : '#00ff44';
+  ctx.beginPath(); ctx.arc(xP, yFor(Math.max(dBMin, Math.min(dBMax, lProbe))), 7, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(xP, yFor(Math.max(dBMin, Math.min(dBMax, lProbe))), 7, 0, Math.PI*2); ctx.stroke();
+  ctx.fillStyle = masked ? '#ff4444' : '#00ff44';
+  ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('S', xP, padT + 10);
+
+  // Legend
+  ctx.fillStyle = 'rgba(255,170,0,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('- - Umbral absoluto', padL+4, padT+14);
+  ctx.fillStyle = '#00ffff';
+  ctx.fillText('─── Umbral de enmascaramiento', padL+130, padT+14);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('─── Umbral global (máx)', padL+340, padT+14);
+
+  const maskedMsg = masked
+    ? `SONDA ENMASCARADA (umbral global = ${globalAtProbe.toFixed(1)} dB > ${lProbe} dB)`
+    : `SONDA AUDIBLE (umbral global = ${globalAtProbe.toFixed(1)} dB < ${lProbe} dB)`;
+  document.getElementById('maskLabel').textContent =
+    `Enmascarador: ${fmtF(fMasker)} Hz @ ${lMasker} dB  |  Sonda: ${fmtF(fProbe)} Hz @ ${lProbe} dB  →  ${maskedMsg}`;
+}
+
+let _oscMasker = null, _gainMasker = null;
+let _oscProbe  = null, _gainProbe  = null;
+
+// Reference level: 0.25 gain = 70 dB SPL, ±20 dB = ×10 in amplitude
+function dBtoGain(dBspl) {
+  return Math.min(0.45, Math.max(0.001, 0.25 * Math.pow(10, (dBspl - 70) / 20)));
+}
+
+function stopPlayback() {
+  playing = false;
+  document.getElementById('btnPlay').textContent = '▶ Escuchar ambos';
+  document.getElementById('btnPlay').classList.remove('active');
+  const actx = getAudioContext(), now = actx.currentTime;
+  if (_gainMasker) _gainMasker.gain.setTargetAtTime(0, now, 0.008);
+  if (_gainProbe)  _gainProbe.gain.setTargetAtTime(0, now, 0.008);
+  const om = _oscMasker, op = _oscProbe;
+  _oscMasker = null; _gainMasker = null; _oscProbe = null; _gainProbe = null;
+  setTimeout(() => { try { om.stop(); } catch(e){} try { op.stop(); } catch(e){} }, 80);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+
+  const actx = getAudioContext(), t0 = actx.currentTime + 0.02;
+
+  _oscMasker = actx.createOscillator(); _gainMasker = actx.createGain();
+  _oscMasker.frequency.value = fMasker;
+  _gainMasker.gain.setValueAtTime(0, t0);
+  _gainMasker.gain.linearRampToValueAtTime(dBtoGain(lMasker), t0 + 0.015);
+  _oscMasker.connect(_gainMasker); _gainMasker.connect(actx.destination);
+  _oscMasker.start(t0);
+  _activeNodes.push(_oscMasker);
+
+  _oscProbe = actx.createOscillator(); _gainProbe = actx.createGain();
+  _oscProbe.frequency.value = fProbe;
+  _gainProbe.gain.setValueAtTime(0, t0);
+  _gainProbe.gain.linearRampToValueAtTime(dBtoGain(lProbe), t0 + 0.015);
+  _oscProbe.connect(_gainProbe); _gainProbe.connect(actx.destination);
+  _oscProbe.start(t0);
+  _activeNodes.push(_oscProbe);
+}
+
+function updateAudio() {
+  if (!playing) return;
+  const now = getAudioContext().currentTime;
+  if (_oscMasker) _oscMasker.frequency.setTargetAtTime(fMasker, now, 0.015);
+  if (_gainMasker) _gainMasker.gain.setTargetAtTime(dBtoGain(lMasker), now, 0.015);
+  if (_oscProbe)  _oscProbe.frequency.setTargetAtTime(fProbe, now, 0.015);
+  if (_gainProbe) _gainProbe.gain.setTargetAtTime(dBtoGain(lProbe), now, 0.015);
+}
+
+document.getElementById('fmSlider').addEventListener('input', function() {
+  fMasker = sliderToFreq(+this.value);
+  document.getElementById('fmVal').textContent = fmtF(fMasker);
+  updateAudio(); draw();
+});
+document.getElementById('lmSlider').addEventListener('input', function() {
+  lMasker = +this.value;
+  document.getElementById('lmVal').textContent = lMasker;
+  updateAudio(); draw();
+});
+document.getElementById('fpSlider').addEventListener('input', function() {
+  fProbe = sliderToFreq(+this.value);
+  document.getElementById('fpVal').textContent = fmtF(fProbe);
+  updateAudio(); draw();
+});
+document.getElementById('lpSlider').addEventListener('input', function() {
+  lProbe = +this.value;
+  document.getElementById('lpVal').textContent = lProbe;
+  updateAudio(); draw();
+});
+
+function init() {
+  fMasker = sliderToFreq(+document.getElementById('fmSlider').value);
+  fProbe  = sliderToFreq(+document.getElementById('fpSlider').value);
+  lProbe  = +document.getElementById('lpSlider').value;
+  document.getElementById('fmVal').textContent = fmtF(fMasker);
+  document.getElementById('fpVal').textContent = fmtF(fProbe);
+  document.getElementById('lpVal').textContent = lProbe;
+  draw();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => draw());
+</script>
+</body>
+</html>

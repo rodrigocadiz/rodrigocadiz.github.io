@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compresión Perceptual de Audio — Demos MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-compresion">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="01_introduccion_compresion/index.html">1. Introducción</a>
+  <a href="02_umbral_audicion/index.html">2. Umbral de Audición</a>
+  <a href="03_enmascaramiento_freq/index.html">3. Enmascaramiento Frec.</a>
+  <a href="04_enmascaramiento_temp/index.html">4. Enmascaramiento Temp.</a>
+  <a href="05_bandas_criticas/index.html">5. Bandas Críticas</a>
+  <a href="06_modelo_psicoacustico/index.html">6. Modelo Psicoacústico</a>
+  <a href="07_tasa_bits/index.html">7. Codecs y Compresión</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Compresión Perceptual de Audio</h1>
+      <p class="subtitle">Modelo psicoacústico y codificación eficiente del sonido</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="card-grid">
+
+    <a href="01_introduccion_compresion/index.html" class="vineta-card">
+      <div class="num">1 🗜</div>
+      <h3>Introducción a la Compresión</h3>
+      <p>Compresión con y sin pérdida: cómo el código Huffman elimina redundancia estadística, y por qué la compresión perceptual de imágenes y audio explota los límites de nuestra percepción.</p>
+    </a>
+
+    <a href="02_umbral_audicion/index.html" class="vineta-card">
+      <div class="num">2 👂</div>
+      <h3>Umbral de Audición</h3>
+      <p>La curva ISO 226 muestra que el oído no es igualmente sensible a todas las frecuencias. Los codecs explotan estas zonas inaudibles para ahorrar bits.</p>
+    </a>
+
+    <a href="03_enmascaramiento_freq/index.html" class="vineta-card">
+      <div class="num">3 〜</div>
+      <h3>Enmascaramiento Frecuencial</h3>
+      <p>Un tono fuerte enmascara tonos cercanos en frecuencia. La función de dispersión del enmascaramiento es asimétrica y dependiente del nivel del enmascarador.</p>
+    </a>
+
+    <a href="04_enmascaramiento_temp/index.html" class="vineta-card">
+      <div class="num">4 ⏱</div>
+      <h3>Enmascaramiento Temporal</h3>
+      <p>El enmascaramiento ocurre no solo durante el sonido fuerte, sino también antes (pre-masking ~20 ms) y después (post-masking ~200 ms) de que ocurra.</p>
+    </a>
+
+    <a href="05_bandas_criticas/index.html" class="vineta-card">
+      <div class="num">5 ▦</div>
+      <h3>Bandas Críticas</h3>
+      <p>La cóclea divide el espectro audible en 24 bandas críticas (escala Bark) de ancho variable: angostas a bajas frecuencias y amplias a frecuencias altas.</p>
+    </a>
+
+    <a href="06_modelo_psicoacustico/index.html" class="vineta-card">
+      <div class="num">6 📊</div>
+      <h3>Modelo Psicoacústico</h3>
+      <p>Combinando umbral de audición y enmascaramiento se calcula el umbral global de enmascaramiento, que determina cuántos bits asignar a cada banda.</p>
+    </a>
+
+    <a href="07_tasa_bits/index.html" class="vineta-card">
+      <div class="num">7 🗜</div>
+      <h3>Codecs y Compresión</h3>
+      <p>Esquema completo del codificador y decodificador MP3, con comparación de calidad perceptual entre MP3, AAC, Opus, OGG Vorbis y WMA a distintas tasas de bits.</p>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+</body>
+</html>

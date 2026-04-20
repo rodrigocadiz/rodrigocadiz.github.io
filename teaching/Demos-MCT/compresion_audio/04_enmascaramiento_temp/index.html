@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Enmascaramiento Temporal — Compresión Perceptual</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-compresion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_introduccion_compresion/index.html">1. Introducción</a>
+  <a href="../02_umbral_audicion/index.html">2. Umbral de Audición</a>
+  <a href="../03_enmascaramiento_freq/index.html">3. Enmascaramiento Frec.</a>
+  <a href="../04_enmascaramiento_temp/index.html" class="active">4. Enmascaramiento Temp.</a>
+  <a href="../05_bandas_criticas/index.html">5. Bandas Críticas</a>
+  <a href="../06_modelo_psicoacustico/index.html">6. Modelo Psicoacústico</a>
+  <a href="../07_tasa_bits/index.html">7. Codecs y Compresión</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Enmascaramiento Temporal</h1>
+      <p class="subtitle">El umbral de audición cambia antes y después de un sonido fuerte</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Pre-masking y post-masking</h2>
+    <p class="description">
+      El <span class="kw">enmascaramiento temporal</span> eleva el umbral de audición no solo
+      <em>durante</em> un sonido fuerte, sino también <em>antes</em> y <em>después</em>.
+      Escucha el bucle: un <strong style="color:#ffaa00;">burst de ruido</strong> (el enmascarador)
+      seguido de un <strong style="color:#00ff44;">tono puro de 1 kHz</strong> (la sonda).
+      Mueve el slider de tiempo: cuando la sonda cae dentro del área naranja, desaparecerá
+      aunque siga presente en la señal. El <span class="kw">pre-masking</span> enmascara
+      retroactivamente hasta ~20 ms antes del onset; el <span class="kw">post-masking</span>
+      decae exponencialmente hasta ~200 ms después del offset.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Tiempo de la sonda: <span class="val" id="probeTimeVal">+250</span> ms (relativo al onset del enmascarador)</label>
+        <input type="range" id="probeTimeSlider" min="-80" max="400" step="5" value="250">
+      </div>
+      <div class="control-group">
+        <label>Nivel del enmascarador (ruido): <span class="val" id="maskerGainVal">50</span> %</label>
+        <input type="range" id="maskerGainSlider" min="5" max="100" step="5" value="70">
+      </div>
+      <div class="control-group">
+        <label>Nivel de la sonda: <span class="val" id="probeLevelVal">35</span> dB SPL</label>
+        <input type="range" id="probeLevelSlider" min="0" max="80" step="1" value="35">
+      </div>
+      <div class="control-group">
+        <label>Duración de la sonda: <span class="val" id="probeDurVal">50</span> ms</label>
+        <input type="range" id="probeDurSlider" min="5" max="200" step="5" value="50">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnDemo"  onclick="togglePlay()">▶ Escuchar secuencia (bucle)</button>
+        <button class="btn"      id="btnMute"  onclick="toggleMute()">🔇 Silenciar enmascarador</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="tempLabel">Mueve los sliders para explorar el enmascaramiento temporal</div>
+    <canvas id="tempCanvas" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Las tres zonas de enmascaramiento</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Pre-masking (~20 ms antes)</strong><br>
+        El sonido fuerte enmascara retroactivamente sonidos débiles que ocurrieron justo antes.
+        Esto se debe a que el sistema auditivo "mira hacia atrás" unos 20 ms al integrar energía.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Post-masking (~100–200 ms después)</strong><br>
+        Tras el sonido fuerte, el umbral decrece exponencialmente. Esta inercia auditiva
+        permite que los codecs usen tramas de análisis largas sin que se noten cortes abruptos.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('tempCanvas');
+const ctx    = canvas.getContext('2d');
+
+let probeTime   = 250;  // ms relative to masker onset
+let probeLevel  = 35;   // dB SPL
+let maskerGainPct = 70; // 5–100 %, controls noise burst amplitude
+let maskerMuted = false;
+
+// Literature values (Zwicker & Fastl; Moore):
+// Pre-masking: ~20 ms before onset; Post-masking: ~200 ms after offset
+const PRE_MASK_DUR  = 20;
+const POST_MASK_DUR = 200;
+
+const MASKER_ONSET  =   0;
+const MASKER_OFFSET = 200;
+const MASKER_LEVEL  =  80;   // dB SPL
+const ABS_THRESH    =  10;   // dB SPL floor
+let probeDur        =  50;   // ms (user-adjustable)
+const LOOP_PERIOD   = 900;   // ms between masker onsets
+const PRE_BUFFER    = 150;   // ms scheduling lead (must exceed preMaskDur max)
+
+let playing = false;
+let loopTimer = null;
+let animId = null;
+let maskerOnsetPerf = null;
+
+function temporalThresh(t) {
+  if (t >= MASKER_ONSET && t <= MASKER_OFFSET) return MASKER_LEVEL;
+  if (t < MASKER_ONSET) {
+    const dt = MASKER_ONSET - t;
+    if (dt >= PRE_MASK_DUR) return ABS_THRESH;
+    return ABS_THRESH + (MASKER_LEVEL - ABS_THRESH) * (1 - dt / PRE_MASK_DUR);
+  }
+  const dt = t - MASKER_OFFSET;
+  if (dt >= POST_MASK_DUR) return ABS_THRESH;
+  return ABS_THRESH + (MASKER_LEVEL - ABS_THRESH) * (1 - dt / POST_MASK_DUR);
+}
+
+function makeNoiseBuffer(actx, durSec) {
+  const n = Math.ceil(actx.sampleRate * durSec);
+  const buf = actx.createBuffer(1, n, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+function playOneCycle() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + PRE_BUFFER / 1000;  // masker onset in audio time
+
+  // sync playhead to real time
+  const msUntilOnset = (t0 - actx.currentTime) * 1000;
+  setTimeout(() => { maskerOnsetPerf = performance.now(); }, msUntilOnset);
+
+  // Noise masker burst (skip if muted)
+  const mDur = MASKER_OFFSET / 1000;
+  if (!maskerMuted) {
+    const nBuf = makeNoiseBuffer(actx, mDur + 0.02);
+    const nSrc = actx.createBufferSource();
+    nSrc.buffer = nBuf;
+    const nGain = actx.createGain();
+    const nGainVal = maskerGainPct / 100 * 1.5;  // 100% → 1.5 (clipping possible at max, warn user)
+    nGain.gain.setValueAtTime(0, t0);
+    nGain.gain.linearRampToValueAtTime(nGainVal, t0 + 0.005);
+    nGain.gain.setValueAtTime(nGainVal, t0 + mDur - 0.005);
+    nGain.gain.linearRampToValueAtTime(0, t0 + mDur);
+    nSrc.connect(nGain); nGain.connect(actx.destination);
+    nSrc.start(t0); nSrc.stop(t0 + mDur + 0.03);
+    _activeNodes.push(nSrc);
+  }
+
+  // Probe tone (1 kHz, 50 ms)
+  const pStart = t0 + probeTime / 1000;
+  if (pStart >= actx.currentTime) {
+    const pDur = probeDur / 1000;
+    const gVal = Math.min(0.35, Math.max(0.002, 0.2 * Math.pow(10, (probeLevel - 60) / 20)));
+    const osc = actx.createOscillator(), pGain = actx.createGain();
+    osc.frequency.value = 1000;
+    pGain.gain.setValueAtTime(0, pStart);
+    pGain.gain.linearRampToValueAtTime(gVal, pStart + 0.005);
+    pGain.gain.setValueAtTime(gVal, pStart + pDur - 0.005);
+    pGain.gain.linearRampToValueAtTime(0, pStart + pDur);
+    osc.connect(pGain); pGain.connect(actx.destination);
+    osc.start(pStart); osc.stop(pStart + pDur + 0.02);
+    _activeNodes.push(osc);
+  }
+}
+
+function scheduleLoop() {
+  if (!playing) return;
+  playOneCycle();
+  loopTimer = setTimeout(scheduleLoop, LOOP_PERIOD);
+}
+
+function togglePlay() {
+  if (playing) {
+    playing = false;
+    clearTimeout(loopTimer); loopTimer = null;
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    stopAllAudio();
+    maskerOnsetPerf = null;
+    document.getElementById('btnDemo').textContent = '▶ Escuchar secuencia (bucle)';
+    document.getElementById('btnDemo').classList.remove('active');
+    draw();
+    return;
+  }
+  playing = true;
+  document.getElementById('btnDemo').textContent = '■ Detener';
+  document.getElementById('btnDemo').classList.add('active');
+  scheduleLoop();
+  animId = requestAnimationFrame(animLoop);
+}
+
+function animLoop() {
+  draw();
+  if (playing) animId = requestAnimationFrame(animLoop);
+}
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 20, padT = 24, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const tMin = -100, tMax = 450;
+  const dBMin = 0, dBMax = 90;
+
+  function xFor(t)  { return padL + (t - tMin) / (tMax - tMin) * bw; }
+  function yFor(db) { return padT + (1 - (db - dBMin) / (dBMax - dBMin)) * bh; }
+
+  // Time grid
+  [-80,-60,-40,-20,0,50,100,150,200,250,300,350,400].forEach(t => {
+    const x = xFor(t);
+    const isMark = t === MASKER_ONSET || t === MASKER_OFFSET;
+    ctx.strokeStyle = isMark ? 'rgba(100,180,255,0.55)' : 'rgba(100,180,255,0.28)';
+    ctx.lineWidth = isMark ? 1.2 : 0.7;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(t+'ms', x, padT+bh+16);
+  });
+
+  // dB grid
+  [0,20,40,60,80].forEach(db => {
+    ctx.strokeStyle = 'rgba(100,180,255,0.28)'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(padL, yFor(db)); ctx.lineTo(padL+bw, yFor(db)); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(db+' dB', padL-5, yFor(db)+4);
+  });
+
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Tiempo relativo al onset del enmascarador (ms) →', padL+bw/2, H-4);
+  ctx.save(); ctx.translate(13, padT+bh/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Umbral (dB SPL)', 0, 0); ctx.restore();
+
+  // Masking threshold fill
+  const NS = 500;
+  ctx.fillStyle = 'rgba(255,170,0,0.10)';
+  ctx.beginPath(); ctx.moveTo(xFor(tMin), yFor(dBMin));
+  for (let i = 0; i <= NS; i++) {
+    const t = tMin + (tMax - tMin) * i / NS;
+    ctx.lineTo(xFor(t), yFor(Math.max(dBMin, Math.min(dBMax, temporalThresh(t)))));
+  }
+  ctx.lineTo(xFor(tMax), yFor(dBMin)); ctx.closePath(); ctx.fill();
+
+  // Threshold curve
+  ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const t = tMin + (tMax - tMin) * i / NS;
+    const th = Math.max(dBMin, Math.min(dBMax, temporalThresh(t)));
+    i === 0 ? ctx.moveTo(xFor(t), yFor(th)) : ctx.lineTo(xFor(t), yFor(th));
+  }
+  ctx.stroke();
+
+  // Masker block
+  ctx.fillStyle = 'rgba(255,170,0,0.30)';
+  ctx.fillRect(xFor(MASKER_ONSET), yFor(MASKER_LEVEL), xFor(MASKER_OFFSET)-xFor(MASKER_ONSET), yFor(dBMin)-yFor(MASKER_LEVEL));
+  ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 2;
+  ctx.strokeRect(xFor(MASKER_ONSET), yFor(MASKER_LEVEL), xFor(MASKER_OFFSET)-xFor(MASKER_ONSET), yFor(dBMin)-yFor(MASKER_LEVEL));
+  ctx.fillStyle = maskerMuted ? 'rgba(255,170,0,0.40)' : '#ffaa00';
+  ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(maskerMuted ? 'RUIDO (muted)' : 'RUIDO', (xFor(MASKER_ONSET)+xFor(MASKER_OFFSET))/2, yFor(MASKER_LEVEL)-6);
+
+  // Probe block (50 ms duration)
+  const ptClamped = Math.max(tMin, Math.min(tMax - probeDur, probeTime));
+  const thresh = temporalThresh(ptClamped + probeDur / 2);  // threshold at probe center
+  const masked = probeLevel <= thresh;
+  const pCol = masked ? '#ff4444' : '#00ff44';
+  const xPl = xFor(ptClamped), xPr2 = xFor(ptClamped + probeDur);
+  const yPr = yFor(Math.max(dBMin, Math.min(dBMax, probeLevel)));
+  const yBot = yFor(dBMin);
+
+  ctx.fillStyle = masked ? 'rgba(255,68,68,0.40)' : 'rgba(0,255,68,0.40)';
+  ctx.fillRect(xPl, yPr, xPr2 - xPl, yBot - yPr);
+  ctx.strokeStyle = pCol; ctx.lineWidth = 1.5;
+  ctx.strokeRect(xPl, yPr, xPr2 - xPl, yBot - yPr);
+  ctx.fillStyle = pCol; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('SONDA', (xPl+xPr2)/2, yPr - 5);
+
+  // Zone labels
+  ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,100,100,0.80)';
+  ctx.fillText('← pre-masking', (xFor(tMin)+xFor(MASKER_ONSET))/2, padT+18);
+  ctx.fillStyle = 'rgba(0,255,255,0.80)';
+  ctx.fillText('post-masking →', (xFor(MASKER_OFFSET)+xFor(tMax))/2, padT+18);
+
+  // Legend
+  ctx.fillStyle = '#ffaa00'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('─── Umbral de enmascaramiento temporal', padL+4, padT+14);
+
+  // Animated playhead
+  if (playing && maskerOnsetPerf !== null) {
+    const elapsed = performance.now() - maskerOnsetPerf;  // ms since masker onset
+    if (elapsed >= tMin && elapsed <= tMax) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(xFor(elapsed), padT); ctx.lineTo(xFor(elapsed), padT+bh); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  const region = ptClamped < MASKER_ONSET ? 'pre-masking'
+               : ptClamped <= MASKER_OFFSET ? 'simultáneo'
+               : 'post-masking';
+  document.getElementById('tempLabel').textContent =
+    `Sonda: t=${probeTime > 0 ? '+' : ''}${probeTime} ms (${region}), ${probeLevel} dB  |  Umbral: ${thresh.toFixed(0)} dB  →  ${masked ? '✗ ENMASCARADA — no se oye aunque está presente' : '✓ AUDIBLE — se oye el tono'}`;
+}
+
+function toggleMute() {
+  maskerMuted = !maskerMuted;
+  const btn = document.getElementById('btnMute');
+  btn.textContent = maskerMuted ? '🔊 Con enmascarador' : '🔇 Silenciar enmascarador';
+  btn.classList.toggle('active', maskerMuted);
+}
+
+document.getElementById('maskerGainSlider').addEventListener('input', function() {
+  maskerGainPct = +this.value;
+  document.getElementById('maskerGainVal').textContent = maskerGainPct;
+});
+document.getElementById('probeDurSlider').addEventListener('input', function() {
+  probeDur = +this.value;
+  document.getElementById('probeDurVal').textContent = probeDur;
+  draw();
+});
+document.getElementById('probeTimeSlider').addEventListener('input', function() {
+  probeTime = +this.value;
+  document.getElementById('probeTimeVal').textContent = (probeTime > 0 ? '+' : '') + probeTime;
+  draw();
+});
+document.getElementById('probeLevelSlider').addEventListener('input', function() {
+  probeLevel = +this.value;
+  document.getElementById('probeLevelVal').textContent = probeLevel;
+  draw();
+});
+
+function init() {
+  document.getElementById('probeTimeVal').textContent = '+' + probeTime;
+  document.getElementById('probeLevelVal').textContent = probeLevel;
+  draw();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => draw());
+</script>
+</body>
+</html>

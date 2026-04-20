@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Intuición del Muestreo — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html">1. Análogo vs. Digital</a>
+  <a href="../02_intuicion_muestreo/index.html" class="active">2. Intuición del Muestreo</a>
+  <a href="../03_muestreo/index.html">3. Muestreo y Nyquist</a>
+  <a href="../04_aliasing/index.html">4. Aliasión</a>
+  <a href="../05_cuantizacion/index.html">5. Cuantización y Error</a>
+  <a href="../06_snr_bits/index.html">6. Razón Señal a Ruido</a>
+  <a href="../07_dither/index.html">7. Dither</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Intuición del Muestreo</h1>
+      <p class="subtitle">¿Cuántas muestras por ciclo determinan unívocamente la amplitud de una sinusoide?</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Sinusoides A·sin(2πt) que pasan por los mismos N puntos muestreados</h2>
+    <p class="description">
+      Se muestrea <strong style="color:#ffaa00;">sin(2πt)</strong> tomando
+      <span class="kw">N puntos equidistantes</span> por ciclo (puntos blancos), comenzando en
+      el desfase φ. La pregunta: ¿existen otras sinusoides
+      <strong style="color:#00ffff;">A·sin(2πt)</strong> — misma frecuencia y fase,
+      distinta <span class="kw">amplitud A</span> — que también pasen por esos mismos N puntos?
+      Si las muestras caen en <span class="kw">cruces por cero</span> (y=0), cualquier A funciona.
+      Si al menos una muestra es no nula, A queda completamente determinada.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Muestras por ciclo:</label>
+        <div class="btn-group" id="nBtns" style="margin-top:6px;">
+          <button class="btn" onclick="setN(1)" id="btn1">1</button>
+          <button class="btn active" onclick="setN(2)" id="btn2">2</button>
+          <button class="btn" onclick="setN(3)" id="btn3">3</button>
+          <button class="btn" onclick="setN(4)" id="btn4">4</button>
+          <button class="btn" onclick="setN(5)" id="btn5">5</button>
+          <button class="btn" onclick="setN(6)" id="btn6">6</button>
+          <button class="btn" onclick="setN(8)" id="btn8">8</button>
+        </div>
+      </div>
+      <div class="control-group" style="min-width:240px;">
+        <label>Desfase de muestreo φ: <span class="val" id="offsetVal">0.00</span>T</label>
+        <input type="range" id="offsetSlider" min="0" max="0.99" step="0.01" value="0">
+      </div>
+    </div>
+    <div class="canvas-label" id="mainLabel">…</div>
+    <canvas id="mainCanvas" height="340"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>N muestras por ciclo y la tasa de muestreo fs</h2>
+    <p class="description">
+      Muestrear a <span class="kw">N muestras por ciclo</span> de una señal de frecuencia
+      <strong style="color:#ffaa00;">f₀</strong> equivale a usar una
+      <span class="kw">tasa de muestreo</span>
+      <strong style="color:#00ffff;">fs = N × f₀</strong>.
+      El <span class="kw">Teorema de Nyquist</span> establece que el mínimo teórico es
+      <strong style="color:#00ff44;">fs &gt; 2·f₀</strong> (N &gt; 2 muestras/ciclo),
+      pero como muestra esta demo, la posición de las muestras también importa:
+      N=2 exactamente en Nyquist puede resultar en un caso degenerado si las muestras caen en cruces por cero.
+    </p>
+    <div class="controls">
+      <div class="control-group" style="min-width:280px;">
+        <label>Frecuencia de la señal f₀: <span class="val" id="f0Val">440</span> Hz</label>
+        <input type="range" id="f0Slider" min="50" max="90000" step="50" value="440">
+      </div>
+    </div>
+    <div id="fsDisplay" style="margin-top:8px;"></div>
+  </section>
+
+  <section class="section-card">
+    <h2>Resumen: ¿cuándo queda determinada la amplitud?</h2>
+    <div class="two-col">
+      <div class="info-box warn" id="boxAmbig">
+        <strong style="color:#ff4444;">Ambigüedad</strong><br>
+        <strong style="color:#ffaa00;">N=1:</strong> una sola muestra es siempre insuficiente —
+        hay infinitas sinusoides de distinta fase y amplitud que pasan por un único punto.<br><br>
+        <strong style="color:#ff4444;">N=2, φ=0:</strong> ambas muestras caen en cruces por cero →
+        cualquier amplitud A·sin(2πt) es compatible.
+      </div>
+      <div class="info-box ok" id="boxUnique">
+        <strong style="color:#00ff44;">Unicidad — N ≥ 2 con muestras no nulas</strong><br>
+        Con N ≥ 2 y al menos una muestra y ≠ 0, la condición
+        A·sin(2π·t_k) = sin(2π·t_k) impone A = 1 (única solución).
+        Mover ligeramente φ con N=2 ya garantiza reconstrucción única.
+        Por eso Nyquist establece N &gt; 2 en la práctica.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let N = 2;
+let phaseOffset = 0.0;  // fracción de T, [0, 1)
+
+const ALT_AMPS   = [0.4, 0.7, 1.3, 1.7, 2.0];
+const ALT_COLORS = ['#44aaff', '#00ff44', '#00ffff', '#ff4444', '#ff44ff'];
+
+// ── Muestras: t_k = (k/N + φ) mod 1 ─────────────────────────────────
+function getSamples(n, offset) {
+  const pts = [];
+  for (let k = 0; k < n; k++) {
+    const t = ((k / n) + offset) % 1.0;
+    pts.push({ t, y: Math.sin(2 * Math.PI * t) });
+  }
+  return pts;
+}
+
+// Ambigüedad ↔ TODAS las muestras caen en cruces por cero de sin(2πt)
+function isAmbiguous(samples) {
+  return samples.every(p => Math.abs(p.y) < 1e-6);
+}
+
+// ── Dibujo principal ──────────────────────────────────────────────────
+function draw() {
+  const canvas = document.getElementById('mainCanvas');
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 56, padR = 24, padT = 32, padB = 44;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const cy = padT + bh / 2;
+  const yScale = bh / 4.6;  // rango ±2.3
+
+  // ── Grid ──────────────────────────────────────────────────────────
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  [-2, -1, 0, 1, 2].forEach(v => {
+    const y = cy - v * yScale;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  });
+  [0, 0.25, 0.5, 0.75, 1].forEach(frac => {
+    const x = padL + frac * bw;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+  });
+
+  // Labels eje y
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  [-2, -1, 0, 1, 2].forEach(v => {
+    ctx.fillText(v === 0 ? '0' : String(v), padL - 6, cy - v * yScale + 4);
+  });
+
+  // Labels eje x
+  ctx.textAlign = 'center';
+  ['0', 'T/4', 'T/2', '3T/4', 'T'].forEach((lbl, i) => {
+    ctx.fillText(lbl, padL + i * bw / 4, padT + bh + 16);
+  });
+  ctx.fillText('Tiempo →', padL + bw / 2, padT + bh + 32);
+
+  // Label eje y
+  ctx.save();
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.translate(16, padT + bh / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Amplitud →', 0, 0);
+  ctx.restore();
+
+  const samples  = getSamples(N, phaseOffset);
+  const ambig    = isAmbiguous(samples);
+  // N=1 con muestra no nula: infinitas sinusoides de DISTINTA FASE también pasan por el punto
+  const n1NonZero = (N === 1 && !ambig);
+
+  // ── Sinusoides alternativas ───────────────────────────────────────
+  if (ambig) {
+    // Amplitude variants: todas pasan por y=0, cualquier A sirve
+    ALT_AMPS.forEach((A, i) => {
+      ctx.strokeStyle = ALT_COLORS[i];
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.65;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      for (let px = 0; px <= bw; px++) {
+        const t = px / bw;
+        const y = cy - A * Math.sin(2 * Math.PI * t) * yScale;
+        if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+      }
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+  } else if (n1NonZero) {
+    // Phase variants: B·sin(2πt + ψ) que pasan por (t₀, y₀)
+    const t0 = samples[0].t;
+    const y0 = samples[0].y;
+    const phaseDeltas = [Math.PI / 5, Math.PI * 2 / 5, Math.PI * 3 / 5, -Math.PI / 5, -Math.PI * 2 / 5];
+    let drawn = 0;
+    phaseDeltas.forEach(psi => {
+      const denom = Math.sin(2 * Math.PI * t0 + psi);
+      if (Math.abs(denom) < 0.12) return;
+      const B = y0 / denom;
+      if (Math.abs(B) > 2.2 || drawn >= 5) return;
+      ctx.strokeStyle = ALT_COLORS[drawn];
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.65;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      for (let px = 0; px <= bw; px++) {
+        const t = px / bw;
+        const y = cy - B * Math.sin(2 * Math.PI * t + psi) * yScale;
+        if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+      }
+      ctx.stroke();
+      drawn++;
+    });
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+  }
+
+  // ── Sinusoide original (siempre encima) ───────────────────────────
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 2.5;
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  for (let px = 0; px <= bw; px++) {
+    const t = px / bw;
+    const y = cy - Math.sin(2 * Math.PI * t) * yScale;
+    if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+  }
+  ctx.stroke();
+
+  // ── Líneas verticales de posición de muestreo ────────────────────
+  samples.forEach(p => {
+    const x = padL + p.t * bw;
+    ctx.strokeStyle = 'rgba(255,255,255,0.20)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // ── Puntos muestreados ────────────────────────────────────────────
+  samples.forEach(p => {
+    const x = padL + p.t * bw;
+    const y = cy - p.y * yScale;
+    // Barra vertical desde eje al punto
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x, y); ctx.stroke();
+    // Punto
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+    const borderColor = ambig ? '#ff4444' : '#00ff44';
+    ctx.strokeStyle = borderColor; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.stroke();
+    // Valor numérico
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    const valStr = Math.abs(p.y) < 1e-6 ? '0' : p.y.toFixed(3);
+    const labelY = p.y >= 0 ? y - 12 : y + 20;
+    ctx.fillText(valStr, x, labelY);
+  });
+
+  // ── Leyenda ───────────────────────────────────────────────────────
+  const lx = padL + 8, ly = padT + 6;
+  ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(lx, ly + 7); ctx.lineTo(lx + 22, ly + 7); ctx.stroke();
+  ctx.fillStyle = '#ffaa00'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('sin(2πt)  A = 1  (original)', lx + 26, ly + 11);
+
+  if (ambig) {
+    ALT_AMPS.forEach((A, i) => {
+      const row = i + 1;
+      ctx.strokeStyle = ALT_COLORS[i]; ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.80; ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(lx, ly + row * 17 + 7); ctx.lineTo(lx + 22, ly + row * 17 + 7);
+      ctx.stroke();
+      ctx.globalAlpha = 1; ctx.setLineDash([]);
+      ctx.fillStyle = ALT_COLORS[i]; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(`A = ${A}  → también pasa por los mismos puntos`, lx + 26, ly + row * 17 + 11);
+    });
+  } else if (n1NonZero) {
+    ctx.strokeStyle = 'rgba(150,200,255,0.70)'; ctx.lineWidth = 1; ctx.setLineDash([6,4]);
+    ctx.globalAlpha = 0.80;
+    ctx.beginPath(); ctx.moveTo(lx, ly + 24); ctx.lineTo(lx + 22, ly + 24); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(150,200,255,0.85)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Distintas fases — también pasan por la muestra', lx + 26, ly + 28);
+  }
+
+  // ── Label de estado ───────────────────────────────────────────────
+  updateMainLabel(samples, ambig);
+}
+
+function updateMainLabel(samples, ambig) {
+  const el = document.getElementById('mainLabel');
+  const n1NonZero = (N === 1 && !ambig);
+  if (ambig) {
+    el.style.color = '#ff4444';
+    el.textContent = `⚠ N=${N}, φ=${phaseOffset.toFixed(2)}T — TODAS las muestras en cero → amplitud indeterminada (infinitas A·sin(2πt) son compatibles)`;
+  } else if (n1NonZero) {
+    el.style.color = '#ffaa00';
+    el.textContent = `⚠ N=1, φ=${phaseOffset.toFixed(2)}T — 1 muestra: infinitas sinusoides de distinta fase y amplitud pasan por este punto → señal indeterminada`;
+  } else {
+    const nonZero = samples.find(p => Math.abs(p.y) > 1e-6);
+    el.style.color = '#00ff44';
+    el.textContent = `✓ N=${N}, φ=${phaseOffset.toFixed(2)}T — muestra en t=${nonZero.t.toFixed(3)}T, y=${nonZero.y.toFixed(3)} ≠ 0 → A·${nonZero.y.toFixed(3)} = ${nonZero.y.toFixed(3)} → A = 1 (única solución)`;
+  }
+}
+
+// ── Sección fs ────────────────────────────────────────────────────────
+const FS_REFS = [
+  { label: 'Voz telefónica',    fs:  8000 },
+  { label: 'Multimedia',        fs: 22050 },
+  { label: 'CD audio',          fs: 44100 },
+  { label: 'Audio profesional', fs: 48000 },
+  { label: 'Audio hi-res',      fs: 96000 },
+];
+
+function updateFsDisplay() {
+  const f0 = parseInt(document.getElementById('f0Slider').value);
+  const fs = N * f0;
+  const nyq = 2 * f0;
+
+  let html = `<div style="font-size:1.05rem; color:#00ffff; margin-bottom:10px;">
+    fs = <strong>${N}</strong> × <strong style="color:#ffaa00;">${f0} Hz</strong>
+    = <strong style="color:#00ffff;">${fs.toLocaleString()} Hz</strong>
+    &nbsp;|&nbsp; Nyquist mínimo: 2 × ${f0} = <strong style="color:#00ff44;">${nyq.toLocaleString()} Hz</strong>
+    ${fs < nyq ? '<span style="color:#ff4444;"> ← BAJO el límite de Nyquist</span>' : fs === nyq ? '<span style="color:#ffaa00;"> ← Exactamente en Nyquist (caso crítico)</span>' : '<span style="color:#00ff44;"> ← Sobre Nyquist ✓</span>'}
+  </div>
+  <table class="type-table" style="margin-top:4px;">
+    <thead><tr><th>Tasa de muestreo conocida</th><th>fs</th><th>N equiv. para f₀=${f0} Hz</th><th>Margen sobre Nyquist</th></tr></thead>
+    <tbody>`;
+
+  FS_REFS.forEach(r => {
+    const nEq = (r.fs / f0).toFixed(1);
+    const margin = ((r.fs / nyq - 1) * 100).toFixed(0);
+    const color = r.fs >= nyq ? '#00ff44' : '#ff4444';
+    html += `<tr><td>${r.label}</td><td>${r.fs.toLocaleString()} Hz</td>
+      <td style="color:${color};">${nEq} muestras/ciclo</td>
+      <td style="color:${color};">${r.fs >= nyq ? '+' : ''}${margin}%</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  document.getElementById('fsDisplay').innerHTML = html;
+}
+
+// ── Interactividad ────────────────────────────────────────────────────
+function setN(n) {
+  N = n;
+  [1, 2, 3, 4, 5, 6, 8].forEach(v => {
+    const btn = document.getElementById(`btn${v}`);
+    if (btn) btn.classList.toggle('active', v === n);
+  });
+  draw();
+  updateFsDisplay();
+}
+
+document.getElementById('offsetSlider').addEventListener('input', function() {
+  phaseOffset = parseFloat(this.value);
+  document.getElementById('offsetVal').textContent = phaseOffset.toFixed(2);
+  draw();
+});
+
+document.getElementById('f0Slider').addEventListener('input', function() {
+  document.getElementById('f0Val').textContent = this.value;
+  updateFsDisplay();
+});
+
+function init() {
+  draw();
+  updateFsDisplay();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', draw);
+</script>
+</body>
+</html>

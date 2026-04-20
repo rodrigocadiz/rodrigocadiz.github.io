@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Dither — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html">1. Análogo vs. Digital</a>
+  <a href="../02_intuicion_muestreo/index.html">2. Intuición del Muestreo</a>
+  <a href="../03_muestreo/index.html">3. Muestreo y Nyquist</a>
+  <a href="../04_aliasing/index.html">4. Aliasión</a>
+  <a href="../05_cuantizacion/index.html">5. Cuantización y Error</a>
+  <a href="../06_snr_bits/index.html">6. Razón Señal a Ruido</a>
+  <a href="../07_dither/index.html" class="active">7. Dither</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Dither</h1>
+      <p class="subtitle">Ruido blanco para mejorar la cuantización de señales débiles</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>El problema: señal de baja amplitud con pocos bits</h2>
+    <p class="description">
+      Cuando una señal de <span class="kw">baja amplitud</span> se cuantiza con pocos bits,
+      el error de cuantización deja de ser aleatorio y adquiere <span class="kw">estructura periódica</span>:
+      se vuelve correlacionado con la señal y genera armónicos distorsionados audibles.
+      El <span class="kw">dither</span> consiste en añadir <strong style="color:#ffaa00;">ruido blanco aleatorio</strong>
+      de amplitud ±½ LSB antes de cuantizar. Esto rompe la estructura del error,
+      convirtiéndolo en ruido de fondo uniforme, menos molesto que la distorsión armónica.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Amplitud de la señal: <span class="val" id="ampVal">0.20</span></label>
+        <input type="range" id="ampSlider" min="0.01" max="0.5" step="0.01" value="0.20">
+      </div>
+      <div class="control-group">
+        <label>Bits: <span class="val" id="bitsVal">4</span></label>
+        <input type="range" id="bitsSlider" min="2" max="6" step="1" value="4">
+      </div>
+      <div class="control-group" id="ditherAmpGroup" style="display:none;">
+        <label>Amplitud del dither: <span class="val" id="ditherAmpVal">0.25</span> × LSB</label>
+        <input type="range" id="ditherAmpSlider" min="0.1" max="1.5" step="0.05" value="0.25">
+      </div>
+      <div class="btn-group">
+        <button class="btn" id="btnDither" onclick="toggleDither()">Dither: OFF</button>
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="ditherLabel">Sin dither — error estructurado</div>
+    <canvas id="ditherCanvas" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>¿Por qué funciona el dither?</h2>
+    <div class="two-col">
+      <div class="info-box warn">
+        <strong style="color:#ff4444;">Sin dither</strong><br>
+        La señal de baja amplitud ocupa solo unos pocos niveles de cuantización.
+        El error es periódico y correlacionado con la señal → distorsión armónica
+        (sonido metálico, "granular"), muy molesta para el oído.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Con dither</strong><br>
+        El ruido blanco añadido hace que la señal "salte" entre niveles de forma aleatoria.
+        El error se vuelve ruido blanco no correlacionado → se escucha como suave
+        "sss" de fondo en lugar de distorsión estructurada.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('ditherCanvas');
+const ctx = canvas.getContext('2d');
+
+let amp = 0.20;
+let bits = 4;
+let ditherOn = false;
+let ditherAmp = 0.25; // fracción de LSB
+let playing = false;
+let animId = null;
+let startTS = null;
+
+function quantize(v, nBits) {
+  const levels = Math.pow(2, nBits);
+  const step = 2 / levels;
+  return Math.round(v / step) * step;
+}
+
+function draw(elapsed) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 54, padR = 20, padT = 24, padB = 36;
+  const bw = W - padL - padR;
+  const rowH = (H - padT - padB) / 3;
+  const freq = 3;
+  const phase = elapsed ? elapsed * freq * 2 * Math.PI : 0;
+  const N = bw;
+  const step = 2 / Math.pow(2, bits);
+
+  const rows = [
+    { label: 'Señal original (baja amplitud)', color: '#ffaa00' },
+    { label: ditherOn ? 'Señal + dither' : 'Señal sin dither', color: ditherOn ? '#ff44ff' : '#ffaa00' },
+    { label: 'Error de cuantización', color: ditherOn ? '#00ff44' : '#ff4444' }
+  ];
+
+  // Precompute dither noise (deterministic seed so it's stable)
+  const noiseArr = new Float32Array(N + 1);
+  if (ditherOn) {
+    for (let i = 0; i <= N; i++) {
+      noiseArr[i] = (Math.sin(i * 127.3 + phase * 31) * 0.5 + Math.cos(i * 93.7 - phase * 17) * 0.5);
+      noiseArr[i] *= step * ditherAmp;
+    }
+  }
+
+  rows.forEach((row, ri) => {
+    const rowY = padT + ri * rowH;
+    const cy = rowY + rowH / 2;
+
+    ctx.fillStyle = row.color;
+    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(row.label, padL + 4, rowY + 12);
+
+    ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(padL + bw, cy); ctx.stroke();
+
+    ctx.strokeStyle = row.color;
+    ctx.lineWidth = ri === 2 ? 1.5 : 2;
+
+    if (ri === 0) {
+      // Original analog signal (thin, scaled)
+      ctx.beginPath();
+      for (let px = 0; px <= N; px++) {
+        const t = px / N;
+        const v = amp * Math.sin(2 * Math.PI * freq * t + phase);
+        const y = cy - v * (rowH / 2 - 6) / amp;
+        if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+      }
+      ctx.stroke();
+
+      // Level lines
+      const levMax = Math.ceil(amp / (step / 2));
+      for (let l = -levMax; l <= levMax; l++) {
+        const lv = l * step;
+        if (Math.abs(lv) > amp * 2) continue;
+        const y = cy - lv * (rowH / 2 - 6) / amp;
+        ctx.strokeStyle = 'rgba(255,170,0,0.25)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+      }
+
+    } else if (ri === 1) {
+      // Quantized staircase (with or without dither)
+      ctx.strokeStyle = row.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let prevQy = null;
+      for (let px = 0; px <= N; px++) {
+        const t = px / N;
+        const v = amp * Math.sin(2 * Math.PI * freq * t + phase) + noiseArr[px];
+        const qv = quantize(v, bits);
+        const y = cy - qv * (rowH / 2 - 6) / amp;
+        if (px === 0) { ctx.moveTo(padL + px, y); prevQy = y; }
+        else { ctx.lineTo(padL + px, prevQy); ctx.lineTo(padL + px, y); prevQy = y; }
+      }
+      ctx.stroke();
+
+    } else {
+      // Error signal
+      const errScale = 0.8;
+      ctx.strokeStyle = row.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      let prevEy = null;
+      for (let px = 0; px <= N; px++) {
+        const t = px / N;
+        const orig = amp * Math.sin(2 * Math.PI * freq * t + phase);
+        const v = orig + noiseArr[px];
+        const qv = quantize(v, bits);
+        const err = orig - qv;
+        const y = cy - err * (rowH / 2 - 6) / (step * errScale);
+        if (px === 0) { ctx.moveTo(padL + px, y); prevEy = y; }
+        else { ctx.lineTo(padL + px, prevEy); ctx.lineTo(padL + px, y); prevEy = y; }
+      }
+      ctx.stroke();
+    }
+  });
+
+  const halfStep = (2 / Math.pow(2, bits)) / 2;
+  const belowFloor = amp < halfStep && !ditherOn;
+  document.getElementById('ditherLabel').textContent = belowFloor
+    ? `⚠ Señal (${amp.toFixed(2)}) < piso de cuantización (±${halfStep.toFixed(4)}) — sin dither: silencio total`
+    : ditherOn
+      ? `Con dither — error aleatorio (ruido de fondo)`
+      : `Sin dither — error estructurado (distorsión armónica)`;
+}
+
+function toggleDither() {
+  ditherOn = !ditherOn;
+  const btn = document.getElementById('btnDither');
+  btn.textContent = `Dither: ${ditherOn ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', ditherOn);
+  document.getElementById('ditherAmpGroup').style.display = ditherOn ? '' : 'none';
+  if (playing) { stopAllAudio(); startDitherAudio(); }
+  else draw(0);
+}
+
+function togglePlay() {
+  if (playing) {
+    stopAllAudio();
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    playing = false; startTS = null;
+    document.getElementById('btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('btnPlay').classList.remove('active');
+    draw(0);
+    return;
+  }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startDitherAudio();
+  startAnimation();
+}
+
+function startDitherAudio() {
+  const actx = getAudioContext();
+  const sr = actx.sampleRate;
+  const dur = 3;
+  const bufLen = Math.floor(sr * dur);
+  const buffer = actx.createBuffer(1, bufLen, sr);
+  const data = buffer.getChannelData(0);
+  const freq = 440;
+  const step = 2 / Math.pow(2, bits);
+
+  // Para audio usar al menos 1 paso de cuantización de amplitud,
+  // así la distorsión siempre es audible sin importar cuántos bits o qué amp se elija.
+  // El canvas sigue usando el valor real de amp para la visualización.
+  const audioAmp = Math.max(amp, step);
+  for (let i = 0; i < bufLen; i++) {
+    const t = i / sr;
+    const v = audioAmp * Math.sin(2 * Math.PI * freq * t);
+    const dith = ditherOn ? (Math.random() - 0.5) * step * ditherAmp * 2 : 0;
+    data[i] = quantize(v + dith, bits);
+  }
+
+  // Normalizar al pico para volumen consistente
+  let peak = 0;
+  for (let i = 0; i < bufLen; i++) peak = Math.max(peak, Math.abs(data[i]));
+  const scale = peak > 0 ? 0.65 / peak : 0;
+  for (let i = 0; i < bufLen; i++) data[i] *= scale;
+
+  const src = actx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  const g = actx.createGain();
+  const t0 = actx.currentTime + 0.01;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.9, t0 + 0.025);
+  src.connect(g); g.connect(actx.destination);
+  src.start(t0);
+  _activeNodes.push(src);
+}
+
+function startAnimation() {
+  startTS = null;
+  function frame(ts) {
+    if (!startTS) startTS = ts;
+    draw((ts - startTS) / 1000);
+    if (playing) animId = requestAnimationFrame(frame);
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+document.getElementById('ditherAmpSlider').addEventListener('input', function() {
+  ditherAmp = +this.value;
+  document.getElementById('ditherAmpVal').textContent = ditherAmp.toFixed(2);
+  if (playing) { stopAllAudio(); startDitherAudio(); } else draw(0);
+});
+document.getElementById('ampSlider').addEventListener('input', function() {
+  amp = +this.value;
+  document.getElementById('ampVal').textContent = amp.toFixed(2);
+  if (playing) { stopAllAudio(); startDitherAudio(); } else draw(0);
+});
+document.getElementById('bitsSlider').addEventListener('input', function() {
+  bits = +this.value;
+  document.getElementById('bitsVal').textContent = bits;
+  if (playing) { stopAllAudio(); startDitherAudio(); } else draw(0);
+});
+
+function init() { draw(0); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) draw(0); });
+</script>
+</body>
+</html>

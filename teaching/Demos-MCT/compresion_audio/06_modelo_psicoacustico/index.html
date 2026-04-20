@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Modelo Psicoacústico — Compresión Perceptual</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-compresion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_introduccion_compresion/index.html">1. Introducción</a>
+  <a href="../02_umbral_audicion/index.html">2. Umbral de Audición</a>
+  <a href="../03_enmascaramiento_freq/index.html">3. Enmascaramiento Frec.</a>
+  <a href="../04_enmascaramiento_temp/index.html">4. Enmascaramiento Temp.</a>
+  <a href="../05_bandas_criticas/index.html">5. Bandas Críticas</a>
+  <a href="../06_modelo_psicoacustico/index.html" class="active">6. Modelo Psicoacústico</a>
+  <a href="../07_tasa_bits/index.html">7. Codecs y Compresión</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Modelo Psicoacústico</h1>
+      <p class="subtitle">Umbral global de enmascaramiento y asignación de bits por banda</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Dos máscaras y umbral global de enmascaramiento</h2>
+    <p class="description">
+      Cada <span class="kw">máscara tonal</span> genera un <span class="kw">patrón de enmascaramiento</span>
+      que se extiende asimétricamente: cae rápido hacia frecuencias bajas y más lento hacia altas
+      (<span class="kw">enmascaramiento hacia arriba</span>). Donde el patrón cae por debajo del
+      <span class="kw">umbral absoluto de audición</span>, la máscara desaparece — no aporta enmascaramiento
+      adicional. El <span class="kw">umbral global</span> (blanco) es la envolvente máxima de todos
+      los patrones más el umbral absoluto. Un codec como MP3 analiza el espectro de cada trama de audio,
+      calcula este umbral global y descarta toda información que quede por debajo de él.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label style="color:#00ffff;">Máscara 1 — frecuencia: <span class="val" id="f1Val">1000</span> Hz</label>
+        <input type="range" id="f1Slider" min="100" max="8000" step="50" value="1000">
+      </div>
+      <div class="control-group">
+        <label style="color:#00ffff;">Máscara 1 — nivel: <span class="val" id="l1Val">75</span> dB SPL</label>
+        <input type="range" id="l1Slider" min="0" max="90" step="1" value="75">
+      </div>
+      <div class="control-group">
+        <label style="color:#ffaa00;">Máscara 2 — frecuencia: <span class="val" id="f2Val">3500</span> Hz</label>
+        <input type="range" id="f2Slider" min="100" max="8000" step="50" value="3500">
+      </div>
+      <div class="control-group">
+        <label style="color:#ffaa00;">Máscara 2 — nivel: <span class="val" id="l2Val">65</span> dB SPL</label>
+        <input type="range" id="l2Slider" min="0" max="90" step="1" value="65">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar máscaras</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="psychoLabel">Calculando…</div>
+    <canvas id="psychoCanvas" height="400"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Cómo usa este umbral un codec MP3</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Análisis por trama</strong><br>
+        MP3 divide la señal en tramas de ~26 ms y calcula la FFT de cada una.
+        Las componentes espectrales de esa trama son las propias máscaras —
+        el umbral global se recalcula en tiempo real para cada trama.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Asignación de bits</strong><br>
+        Los bits de cada banda son <em>(96 dB − umbral global) / 6</em>,
+        donde 96 dB es el techo dinámico de un sistema de 16 bits.
+        Cuanto más alto el umbral de enmascaramiento, menos bits necesita esa banda.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ─────────────────────────────────────────────────────────────
+let f1 = 1000, l1 = 75;
+let f2 = 3500, l2 = 65;
+let playing = false;
+let _osc1 = null, _g1 = null, _osc2 = null, _g2 = null;
+
+// 24 bandas de Bark: bordes y centros (Hz)
+const BARK_EDGES   = [20,100,200,300,400,510,630,770,920,1080,1270,
+                      1480,1720,2000,2320,2700,3150,3700,4400,5300,
+                      6400,7700,9500,12000,15500];
+const BARK_CENTERS = [50,150,250,350,450,570,700,840,1000,1170,1370,
+                      1600,1850,2150,2500,2900,3400,4000,4800,5800,
+                      7000,8500,10500,13500];
+
+// ── Psicoacústica ───────────────────────────────────────────────────────
+function hearingThreshold(f) {
+  if (f < 20) return 120;
+  const fk = f / 1000;
+  return Math.max(-10, Math.min(120,
+    3.64*Math.pow(fk,-0.8) - 6.5*Math.exp(-0.6*Math.pow(fk-3.3,2)) + 1e-3*Math.pow(fk,4)));
+}
+
+function barkScale(f) {
+  return 13*Math.atan(0.00076*f) + 3.5*Math.atan(Math.pow(f/7500,2));
+}
+
+// Patrón de enmascaramiento individual (sin clamping al umbral absoluto)
+function maskingSpread(f, fm, Lm) {
+  if (f <= 0 || fm <= 0) return -200;
+  const dz = barkScale(f) - barkScale(fm);
+  return dz >= 0
+    ? Lm - (10 + 0.05*Lm)*dz
+    : Lm + 27*dz;
+}
+
+// Patrón clamped: la máscara "llega a cero" al tocar el umbral absoluto
+function maskingClamped(f, fm, Lm) {
+  return Math.max(hearingThreshold(f), maskingSpread(f, fm, Lm));
+}
+
+function globalThresh(f) {
+  return Math.max(
+    hearingThreshold(f),
+    maskingSpread(f, f1, l1),
+    maskingSpread(f, f2, l2)
+  );
+}
+
+// ── Canvas ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('psychoCanvas');
+const ctx    = canvas.getContext('2d');
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 60, padR = 20, padT = 28, padB = 50;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+
+  const fMin = 20, fMax = 20000, dBMin = -10, dBMax = 100;
+
+  function xFor(f)  { return padL + Math.log(f/fMin)/Math.log(fMax/fMin)*bw; }
+  function yFor(db) { return padT + (1-(db-dBMin)/(dBMax-dBMin))*bh; }
+  function xClamp(x) { return Math.max(padL, Math.min(padL+bw, x)); }
+
+  // ── Bandas de Bark — fondo alternado ───────────────────────────────────
+  for (let i = 0; i < BARK_EDGES.length - 1; i++) {
+    const xL = xClamp(xFor(BARK_EDGES[i]));
+    const xR = xClamp(xFor(BARK_EDGES[i+1]));
+    ctx.fillStyle = i % 2 === 0 ? 'rgba(100,160,255,0.04)' : 'rgba(100,160,255,0.09)';
+    ctx.fillRect(xL, padT, xR - xL, bh);
+    // divisor vertical
+    ctx.strokeStyle = 'rgba(100,180,255,0.22)'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(xL, padT); ctx.lineTo(xL, padT+bh); ctx.stroke();
+  }
+  // último borde
+  const xLast = xClamp(xFor(BARK_EDGES[BARK_EDGES.length-1]));
+  ctx.strokeStyle = 'rgba(100,180,255,0.22)'; ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.moveTo(xLast, padT); ctx.lineTo(xLast, padT+bh); ctx.stroke();
+
+  // ── Grid Hz y dB ──────────────────────────────────────────────────────
+  [50,100,200,500,1000,2000,5000,10000,20000].forEach(f => {
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(xFor(f), padT); ctx.lineTo(xFor(f), padT+bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(f >= 1000 ? (f/1000)+'k' : ''+f, xFor(f), padT+bh+14);
+  });
+  [0,20,40,60,80].forEach(db => {
+    ctx.strokeStyle = 'rgba(100,180,255,0.28)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(padL, yFor(db)); ctx.lineTo(padL+bw, yFor(db)); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(db+' dB', padL-5, yFor(db)+4);
+  });
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz) →', padL+bw/2, H-4);
+  ctx.save(); ctx.translate(14, padT+bh/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Nivel (dB SPL)', 0, 0); ctx.restore();
+
+  const NS = 600;
+
+  // ── Umbral absoluto (naranja punteado) ─────────────────────────────────
+  ctx.strokeStyle = 'rgba(255,170,0,0.65)'; ctx.lineWidth = 1.8; ctx.setLineDash([4,5]);
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax/fMin, i/NS);
+    const y = yFor(Math.max(dBMin, Math.min(dBMax, hearingThreshold(f))));
+    i === 0 ? ctx.moveTo(xFor(f), y) : ctx.lineTo(xFor(f), y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // ── Relleno + curva para cada máscara individual ──────────────────────
+  // Se dibuja SOLO donde el spread supera el umbral absoluto,
+  // así las máscaras "llegan a cero" (al umbral) y no lo siguen lejos del pico.
+  function drawMask(fm, Lm, fillCol, strokeCol) {
+    // relleno entre el spread y el umbral absoluto (solo donde spread > ht)
+    ctx.fillStyle = fillCol;
+    ctx.beginPath();
+    let inZone = false;
+    for (let i = 0; i <= NS; i++) {
+      const f = fMin * Math.pow(fMax/fMin, i/NS);
+      const sp = maskingSpread(f, fm, Lm);
+      const ht = hearingThreshold(f);
+      if (sp > ht) {
+        const v = Math.max(dBMin, Math.min(dBMax, sp));
+        if (!inZone) {
+          // empezar en el punto de cruce (en el umbral)
+          ctx.moveTo(xFor(f), yFor(Math.max(dBMin, Math.min(dBMax, ht))));
+          inZone = true;
+        }
+        ctx.lineTo(xFor(f), yFor(v));
+      } else if (inZone) {
+        // cerrar al umbral y volver
+        ctx.lineTo(xFor(f), yFor(Math.max(dBMin, Math.min(dBMax, ht))));
+        inZone = false;
+      }
+    }
+    ctx.closePath(); ctx.fill();
+
+    // curva del spread solo donde supera el umbral (segmentos separados)
+    ctx.strokeStyle = strokeCol; ctx.lineWidth = 2;
+    let seg = false;
+    ctx.beginPath();
+    for (let i = 0; i <= NS; i++) {
+      const f = fMin * Math.pow(fMax/fMin, i/NS);
+      const sp = maskingSpread(f, fm, Lm);
+      const ht = hearingThreshold(f);
+      if (sp > ht) {
+        const v = Math.max(dBMin, Math.min(dBMax, sp));
+        if (!seg) { ctx.moveTo(xFor(f), yFor(v)); seg = true; }
+        else ctx.lineTo(xFor(f), yFor(v));
+      } else {
+        seg = false;
+      }
+    }
+    ctx.stroke();
+  }
+
+  drawMask(f1, l1, 'rgba(0,255,255,0.12)', 'rgba(0,255,255,0.80)');
+  drawMask(f2, l2, 'rgba(255,170,0,0.12)', 'rgba(255,170,0,0.80)');
+
+  // ── Umbral global — relleno rojo + curva blanca ────────────────────────
+  ctx.fillStyle = 'rgba(255,68,68,0.07)';
+  ctx.beginPath(); ctx.moveTo(padL, padT+bh);
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax/fMin, i/NS);
+    ctx.lineTo(xFor(f), yFor(Math.max(dBMin, Math.min(dBMax, globalThresh(f)))));
+  }
+  ctx.lineTo(padL+bw, padT+bh); ctx.closePath(); ctx.fill();
+
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax/fMin, i/NS);
+    const v = Math.max(dBMin, Math.min(dBMax, globalThresh(f)));
+    i === 0 ? ctx.moveTo(xFor(f), yFor(v)) : ctx.lineTo(xFor(f), yFor(v));
+  }
+  ctx.stroke();
+
+  // ── Barras de bits por banda de Bark (margen hasta techo de 96 dB) ──────
+  // bits = floor((96 dB - umbral_global) / 6)  — sin señal externa
+  const CEILING_DB = 96;
+  const maxBits = 16;
+  let totalBits = 0, activeBands = 0, discardedBands = 0;
+  const yCeil = yFor(Math.min(dBMax, CEILING_DB));
+
+  BARK_CENTERS.forEach((fc, idx) => {
+    const xL = xClamp(xFor(BARK_EDGES[idx]));
+    const xR = xClamp(xFor(BARK_EDGES[idx + 1]));
+    const barW = xR - xL - 2;
+    const xBar = xL + 1;
+
+    const tg = globalThresh(fc);
+    const margin = CEILING_DB - tg;
+    const bits = margin > 0 ? Math.max(1, Math.min(maxBits, Math.floor(margin / 6))) : 0;
+    totalBits += bits;
+
+    const yTh = yFor(Math.max(dBMin, Math.min(dBMax, tg)));
+
+    if (bits > 0) {
+      activeBands++;
+      const alpha = Math.min(0.70, 0.25 + 0.04 * bits);
+      // barra desde el techo (96 dB) hasta el umbral global
+      ctx.fillStyle = `rgba(0,255,68,${alpha})`;
+      ctx.fillRect(xBar, yCeil, barW, yTh - yCeil);
+      ctx.strokeStyle = 'rgba(0,255,68,0.60)'; ctx.lineWidth = 0.7;
+      ctx.strokeRect(xBar, yCeil, barW, yTh - yCeil);
+      if (barW >= 8) {
+        ctx.fillStyle = '#00ff44';
+        ctx.font = `bold ${Math.min(11, Math.max(7, barW * 0.38))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(bits, xBar + barW / 2, yTh + 11);
+      }
+    } else {
+      discardedBands++;
+    }
+  });
+
+  // ── Puntos de las máscaras ─────────────────────────────────────────────
+  [[f1,l1,'#00ffff'],[f2,l2,'#ffaa00']].forEach(([f,l,col]) => {
+    const x = xFor(f), y = yFor(Math.min(dBMax, l));
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, 2*Math.PI); ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+    const lbl = (f >= 1000 ? (f/1000).toFixed(1)+'k' : f+' Hz') + ' / ' + l + ' dB';
+    ctx.fillStyle = col; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(lbl, x, y - 11);
+  });
+
+  // ── Leyenda ────────────────────────────────────────────────────────────
+  const items = [
+    ['rgba(255,170,0,0.80)',  '- - Umbral absoluto'],
+    ['rgba(0,255,255,0.90)',  '── Máscara 1'],
+    ['rgba(255,170,0,0.90)',  '── Máscara 2'],
+    ['#ffffff',               '─── Umbral global'],
+    ['rgba(0,255,68,0.80)',   '■ Bits / banda'],
+  ];
+  let lx = padL + 2;
+  items.forEach(([col, txt]) => {
+    ctx.fillStyle = col; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(txt, lx, padT + 13);
+    lx += ctx.measureText(txt).width + 14;
+  });
+
+  document.getElementById('psychoLabel').textContent =
+    `Máscara 1: ${f1} Hz / ${l1} dB  ·  Máscara 2: ${f2} Hz / ${l2} dB  ·  `+
+    `${activeBands} bandas activas · ${discardedBands} enmascaradas · ${totalBits} bits/trama`;
+}
+
+// ── Audio ───────────────────────────────────────────────────────────────
+function gainFromSPL(dBspl) {
+  return Math.min(0.45, Math.max(0.001, 0.25 * Math.pow(10, (dBspl - 70) / 20)));
+}
+
+function startMaskers() {
+  const actx = getAudioContext(), t0 = actx.currentTime + 0.01;
+  _osc1 = actx.createOscillator(); _g1 = actx.createGain();
+  _osc1.type = 'sine'; _osc1.frequency.value = f1;
+  _g1.gain.setValueAtTime(0, t0);
+  _g1.gain.linearRampToValueAtTime(gainFromSPL(l1), t0 + 0.02);
+  _osc1.connect(_g1); _g1.connect(actx.destination); _osc1.start(t0);
+  _activeNodes.push(_osc1);
+
+  _osc2 = actx.createOscillator(); _g2 = actx.createGain();
+  _osc2.type = 'sine'; _osc2.frequency.value = f2;
+  _g2.gain.setValueAtTime(0, t0);
+  _g2.gain.linearRampToValueAtTime(gainFromSPL(l2), t0 + 0.02);
+  _osc2.connect(_g2); _g2.connect(actx.destination); _osc2.start(t0);
+  _activeNodes.push(_osc2);
+}
+
+function updateMaskers() {
+  if (!playing) return;
+  const actx = getAudioContext(), now = actx.currentTime;
+  if (_osc1) _osc1.frequency.setTargetAtTime(f1, now, 0.015);
+  if (_g1)   _g1.gain.setTargetAtTime(gainFromSPL(l1), now, 0.015);
+  if (_osc2) _osc2.frequency.setTargetAtTime(f2, now, 0.015);
+  if (_g2)   _g2.gain.setTargetAtTime(gainFromSPL(l2), now, 0.015);
+}
+
+function stopMaskers() {
+  const actx = getAudioContext(), now = actx.currentTime;
+  [_g1, _g2].forEach(g => { if (g) g.gain.setTargetAtTime(0, now, 0.008); });
+  setTimeout(() => {
+    [_osc1, _osc2].forEach(o => { try { if (o) o.stop(); } catch(e){} });
+    _osc1 = _g1 = _osc2 = _g2 = null;
+  }, 80);
+}
+
+function togglePlay() {
+  if (playing) {
+    playing = false;
+    stopMaskers();
+    document.getElementById('btnPlay').textContent = '▶ Escuchar máscaras';
+    document.getElementById('btnPlay').classList.remove('active');
+  } else {
+    playing = true;
+    document.getElementById('btnPlay').textContent = '■ Detener';
+    document.getElementById('btnPlay').classList.add('active');
+    startMaskers();
+  }
+}
+
+// ── Sliders ─────────────────────────────────────────────────────────────
+function bindSlider(id, valId, setter) {
+  document.getElementById(id).addEventListener('input', function() {
+    setter(+this.value);
+    document.getElementById(valId).textContent = this.value;
+    updateMaskers();
+    draw();
+  });
+}
+bindSlider('f1Slider', 'f1Val', v => f1 = v);
+bindSlider('l1Slider', 'l1Val', v => l1 = v);
+bindSlider('f2Slider', 'f2Val', v => f2 = v);
+bindSlider('l2Slider', 'l2Val', v => l2 = v);
+
+
+// ── Init ─────────────────────────────────────────────────────────────────
+function init() { draw(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => draw());
+</script>
+</body>
+</html>

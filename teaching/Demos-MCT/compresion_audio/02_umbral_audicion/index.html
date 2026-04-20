@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Umbral de Audición — Compresión Perceptual</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-compresion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_introduccion_compresion/index.html">1. Introducción</a>
+  <a href="../02_umbral_audicion/index.html" class="active">2. Umbral de Audición</a>
+  <a href="../03_enmascaramiento_freq/index.html">3. Enmascaramiento Frec.</a>
+  <a href="../04_enmascaramiento_temp/index.html">4. Enmascaramiento Temp.</a>
+  <a href="../05_bandas_criticas/index.html">5. Bandas Críticas</a>
+  <a href="../06_modelo_psicoacustico/index.html">6. Modelo Psicoacústico</a>
+  <a href="../07_tasa_bits/index.html">7. Codecs y Compresión</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Umbral de Audición</h1>
+      <p class="subtitle">Sensibilidad frecuencial del sistema auditivo humano</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Curvas de igual sonoridad (ISO 226)</h2>
+    <p class="description">
+      El <span class="kw">umbral absoluto de audición</span> (0 fon) es la curva inferior:
+      el nivel mínimo necesario para percibir un tono puro en silencio.
+      Las <span class="kw">curvas de igual sonoridad</span> (20, 40, 60, 80 fones) muestran
+      todos los pares (frecuencia, nivel) que suenan igual de fuerte.
+      Su forma característica —con el mínimo entre 2–4 kHz— revela que
+      el oído es más sensible en esa región: necesita menos energía para escuchar lo mismo.
+      Los codecs perceptuales explotan esta asimetría para asignar más bits donde el oído
+      es más exigente.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia del tono: <span class="val" id="freqVal">1k</span> Hz</label>
+        <input type="range" id="freqSlider" min="0" max="100" step="0.5" value="57">
+      </div>
+      <div class="control-group">
+        <label>Nivel de prueba: <span class="val" id="levelVal">40</span> dB SPL</label>
+        <input type="range" id="levelSlider" min="0" max="90" step="1" value="40">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar tono</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="threshLabel">Calculando…</div>
+    <canvas id="threshCanvas" height="340"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Implicancias para la compresión perceptual</h2>
+    <div class="two-col">
+      <div class="info-box warn">
+        <strong style="color:#ff4444;">Zona inaudible (bajo el umbral)</strong><br>
+        Los codecs como MP3 o AAC calculan cuántas componentes espectrales caen por debajo
+        del umbral en cada trama y las descartan. El oyente no nota la diferencia.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Zona de mayor sensibilidad (2–4 kHz)</strong><br>
+        Esta región corresponde a las consonantes del habla y las resonancias del canal
+        auditivo externo. Aquí se asigna la mayor resolución de cuantización.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('threshCanvas');
+const ctx    = canvas.getContext('2d');
+let freq = 1000, level = 40, playing = false;
+
+// ── ISO 226:2003 equal-loudness data ──────────────────────────────────
+const _F  = [20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500];
+const _AF = [0.532,0.506,0.480,0.455,0.432,0.409,0.387,0.367,0.349,0.330,0.315,0.301,0.288,0.276,0.267,0.259,0.253,0.250,0.246,0.244,0.243,0.243,0.243,0.242,0.242,0.245,0.254,0.271,0.301];
+const _LU = [-31.6,-27.2,-23.0,-19.1,-15.9,-13.0,-10.3,-8.1,-6.2,-4.5,-3.1,-2.0,-1.1,-0.4,0.0,0.3,0.5,0.0,-2.7,-4.1,-1.0,1.7,2.5,1.2,-2.1,-7.1,-11.2,-10.7,-3.1];
+const _TF = [78.5,68.7,59.5,51.1,44.0,37.5,31.5,26.5,22.1,17.9,14.4,11.4,8.6,6.2,4.4,3.0,2.2,2.4,3.5,1.7,-1.3,-4.2,-6.0,-5.4,-1.5,6.0,12.6,13.9,12.3];
+
+function _iso226params(f) {
+  // Log-linear interpolation of ISO 226 parameters
+  let i = 0;
+  while (i < _F.length - 2 && _F[i + 1] < f) i++;
+  const t = Math.log(f / _F[i]) / Math.log(_F[i + 1] / _F[i]);
+  return {
+    af: _AF[i] + t * (_AF[i+1] - _AF[i]),
+    lu: _LU[i] + t * (_LU[i+1] - _LU[i]),
+    tf: _TF[i] + t * (_TF[i+1] - _TF[i]),
+  };
+}
+
+// SPL (dB) for a tone at frequency f perceived at LN phons
+function iso226spl(f, LN) {
+  const fClamped = Math.max(20, Math.min(12500, f));
+  const { af, lu, tf } = _iso226params(fClamped);
+  const Bf = 0.4 * Math.pow(10, (tf + lu) / 10 - 9);
+  const A  = 4.47e-3 * (Math.pow(10, 0.025 * LN) - 1.15) + Math.pow(Bf, af);
+  const spl12500 = (10 / af) * Math.log10(A) - lu + 94;
+  if (f <= 12500) return spl12500;
+  // Beyond ISO 226 range: keep offset from threshold constant, follow threshold shape
+  const offset = spl12500 - hearingThreshold(12500);
+  return hearingThreshold(f) + offset;
+}
+
+// Phon level of a tone at frequency f with SPL Lp
+function spl2phon(f, Lp) {
+  f = Math.max(20, Math.min(12500, f));
+  const { af, lu, tf } = _iso226params(f);
+  const Bf = 0.4 * Math.pow(10, (tf + lu) / 10 - 9);
+  const A  = Math.pow(10, af * (Lp + lu - 94) / 10);
+  const v  = (A - Math.pow(Bf, af)) / 4.47e-3 + 1.15;
+  if (v <= 0) return 0;
+  return 40 * Math.log10(v);
+}
+
+function hearingThreshold(f) {
+  if (f < 20) return 120;
+  const fk = f / 1000;
+  return Math.max(-10, Math.min(120,
+    3.64*Math.pow(fk,-0.8) - 6.5*Math.exp(-0.6*Math.pow(fk-3.3,2)) + 1e-3*Math.pow(fk,4)));
+}
+
+function sliderToFreq(v) { return Math.round(20 * Math.pow(1000, v / 100)); }
+
+function fmtF(f) {
+  if (f >= 10000) return (f / 1000).toFixed(0) + 'k';
+  if (f >= 1000)  return (f / 1000).toFixed(1) + 'k';
+  return f + '';
+}
+
+const EL_CURVES = [
+  { phon: 20, color: '#44ffaa' },
+  { phon: 40, color: '#00ffff' },
+  { phon: 60, color: '#44aaff' },
+  { phon: 80, color: '#ff88ff' },
+];
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 20, padT = 28, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const fMin = 20, fMax = 20000, dBMin = -10, dBMax = 100;
+
+  function xFor(f)  { return padL + Math.log(f / fMin) / Math.log(fMax / fMin) * bw; }
+  function yFor(db) { return padT + (1 - (db - dBMin) / (dBMax - dBMin)) * bh; }
+
+  // Frequency grid
+  [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].forEach(f => {
+    const x = xFor(f);
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(fmtF(f), x, padT + bh + 16);
+  });
+
+  // dB grid
+  [0, 20, 40, 60, 80].forEach(db => {
+    const y = yFor(db);
+    ctx.strokeStyle = 'rgba(100,180,255,0.28)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(db + ' dB', padL - 5, y + 4);
+  });
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz) →', padL + bw / 2, H - 4);
+  ctx.save(); ctx.translate(13, padT + bh / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Nivel (dB SPL)', 0, 0); ctx.restore();
+
+  const NS = 300;
+
+  // Inaudible zone (below 0-phon threshold)
+  ctx.fillStyle = 'rgba(255,68,68,0.07)';
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax / fMin, i / NS);
+    ctx.lineTo(xFor(f), yFor(Math.max(dBMin, Math.min(dBMax, hearingThreshold(f)))));
+  }
+  ctx.lineTo(padL + bw, padT + bh);
+  ctx.closePath(); ctx.fill();
+
+  // Equal loudness contours (ISO 226:2003)
+  EL_CURVES.forEach(({ phon, color }) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= NS; i++) {
+      const f = fMin * Math.pow(fMax / fMin, i / NS);
+      const spl = iso226spl(f, phon);
+      if (spl < dBMin || spl > dBMax) { started = false; continue; }
+      const y = yFor(spl);
+      if (!started) { ctx.moveTo(xFor(f), y); started = true; }
+      else ctx.lineTo(xFor(f), y);
+    }
+    ctx.stroke();
+
+    // Label near 800 Hz (uncluttered region)
+    const fLabel = 800;
+    const splLabel = iso226spl(fLabel, phon);
+    if (splLabel >= dBMin && splLabel <= dBMax) {
+      ctx.fillStyle = color; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(phon + ' fon', xFor(fLabel) + 4, yFor(splLabel) - 4);
+    }
+  });
+
+  // Threshold curve (0 phon)
+  ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const f = fMin * Math.pow(fMax / fMin, i / NS);
+    const y = yFor(Math.max(dBMin, Math.min(dBMax, hearingThreshold(f))));
+    i === 0 ? ctx.moveTo(xFor(f), y) : ctx.lineTo(xFor(f), y);
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#ffaa00'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('0 fon', xFor(800) + 4, yFor(Math.max(dBMin, hearingThreshold(800))) - 4);
+
+  // Legend
+  const lx = padL + 4, ly = padT + 14;
+  ctx.font = '10px sans-serif';
+  [[' 0', '#ffaa00'], ['20', '#44ffaa'], ['40', '#00ffff'], ['60', '#44aaff'], ['80', '#ff88ff']].forEach(([label, col], k) => {
+    ctx.strokeStyle = col; ctx.lineWidth = k === 0 ? 2.5 : 1.5;
+    ctx.beginPath(); ctx.moveTo(lx + k*82, ly-4); ctx.lineTo(lx + k*82 + 18, ly-4); ctx.stroke();
+    ctx.fillStyle = col; ctx.textAlign = 'left';
+    ctx.fillText(label + ' fon', lx + k*82 + 21, ly);
+  });
+
+  // Test tone marker
+  const thresh  = hearingThreshold(freq);
+  const audible = level >= thresh;
+  const phonLevel = audible ? spl2phon(freq, level) : NaN;
+  const xDot = xFor(Math.max(fMin, Math.min(fMax, freq)));
+  const yDot = yFor(Math.max(dBMin, Math.min(dBMax, level)));
+  const dotCol = audible ? '#00ff44' : '#ff4444';
+
+  ctx.strokeStyle = audible ? 'rgba(0,255,68,0.55)' : 'rgba(255,68,68,0.55)';
+  ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(xDot, padT); ctx.lineTo(xDot, padT + bh); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = dotCol;
+  ctx.beginPath(); ctx.arc(xDot, yDot, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(xDot, yDot, 8, 0, Math.PI * 2); ctx.stroke();
+
+  const phonStr = audible ? `  |  Sonoridad ≈ ${phonLevel.toFixed(0)} fon` : '';
+  document.getElementById('threshLabel').textContent =
+    `f = ${fmtF(freq)} Hz  |  Umbral = ${thresh.toFixed(1)} dB SPL  |  Nivel = ${level} dB SPL${phonStr}  →  ${audible ? '✓ Audible' : '✗ Inaudible (bajo el umbral)'}`;
+}
+
+let _osc = null, _gainNode = null;
+
+function targetGain() {
+  return Math.max(0.001, Math.min(0.45, 0.3 * Math.pow(10, (level - 60) / 20)));
+}
+
+function startTone() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+  _osc = actx.createOscillator();
+  _gainNode = actx.createGain();
+  _osc.type = 'sine';
+  _osc.frequency.value = freq;
+  _gainNode.gain.setValueAtTime(0, t0);
+  _gainNode.gain.linearRampToValueAtTime(targetGain(), t0 + 0.015);
+  _osc.connect(_gainNode); _gainNode.connect(actx.destination);
+  _osc.start(t0);
+  _activeNodes.push(_osc);
+}
+
+function updateTone() {
+  if (!_osc || !_gainNode) return;
+  const actx = getAudioContext();
+  const now = actx.currentTime;
+  _osc.frequency.setTargetAtTime(freq, now, 0.01);
+  _gainNode.gain.setTargetAtTime(targetGain(), now, 0.01);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startTone();
+}
+
+function stopPlayback() {
+  playing = false;
+  if (_gainNode) {
+    const actx = getAudioContext();
+    const now = actx.currentTime;
+    _gainNode.gain.setTargetAtTime(0, now, 0.008);
+  }
+  setTimeout(() => { stopAllAudio(); _osc = null; _gainNode = null; }, 60);
+  document.getElementById('btnPlay').textContent = '▶ Escuchar tono';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = sliderToFreq(+this.value);
+  document.getElementById('freqVal').textContent = fmtF(freq);
+  if (playing) updateTone();
+  draw();
+});
+
+document.getElementById('levelSlider').addEventListener('input', function() {
+  level = +this.value;
+  document.getElementById('levelVal').textContent = level;
+  if (playing) updateTone();
+  draw();
+});
+
+function init() {
+  freq = sliderToFreq(+document.getElementById('freqSlider').value);
+  document.getElementById('freqVal').textContent = fmtF(freq);
+  draw();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => draw());
+</script>
+</body>
+</html>

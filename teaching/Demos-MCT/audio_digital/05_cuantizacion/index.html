@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Cuantización y Error — Audio Digital</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-audio-digital">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_analogo_digital/index.html">1. Análogo vs. Digital</a>
+  <a href="../02_intuicion_muestreo/index.html">2. Intuición del Muestreo</a>
+  <a href="../03_muestreo/index.html">3. Muestreo y Nyquist</a>
+  <a href="../04_aliasing/index.html">4. Aliasión</a>
+  <a href="../05_cuantizacion/index.html" class="active">5. Cuantización y Error</a>
+  <a href="../06_snr_bits/index.html">6. Razón Señal a Ruido</a>
+  <a href="../07_dither/index.html">7. Dither</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. Cuantización y Error</h1>
+      <p class="subtitle">Aproximación de la amplitud a niveles discretos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Señal cuantizada y error de cuantización</h2>
+    <p class="description">
+      La <span class="kw">cuantización</span> asigna cada muestra al nivel discreto más cercano.
+      Con <span class="kw">N bits</span> hay <strong style="color:#00ffff;">2<sup>N</sup> niveles</strong>.
+      La diferencia entre la señal original y la cuantizada es el
+      <span class="kw">error de cuantización</span>, acotado a ±½ nivel (±½ LSB).
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Número de bits: <span class="val" id="bitsVal">4</span> bits &nbsp;(<span id="levelsVal">16</span> niveles)</label>
+        <input type="range" id="bitsSlider" min="1" max="8" step="1" value="4">
+      </div>
+      <div class="control-group">
+        <label>Vista: </label>
+        <select id="viewSel" style="background:#0d1a2e; color:#99ccff; border:1px solid rgba(100,180,255,0.3); padding:4px 8px; border-radius:5px; font-size:0.82rem;">
+          <option value="both">Original + Cuantizada</option>
+          <option value="error">Error de cuantización</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="quantLabel">4 bits → 16 niveles | Error máx: ±0.063</div>
+    <canvas id="quantCanvas" height="300"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Distribución del error</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Error uniforme</strong><br>
+        El error de cuantización tiene distribución uniforme entre −½ y +½ del paso de cuantización (LSB).
+        A más bits, menor es el paso y menor el error máximo.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff4444;">Ruido de cuantización</strong><br>
+        El error tiene <em>estructura</em>: depende de la señal original.
+        En señales de baja amplitud con pocos bits, el error puede dominar
+        y crear distorsión armónica audible.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const canvas = document.getElementById('quantCanvas');
+const ctx = canvas.getContext('2d');
+let bits = 4;
+let playing = false;
+let animId = null;
+let startTS = null;
+
+function quantize(v, nBits) {
+  const levels = Math.pow(2, nBits);
+  const step = 2 / levels;
+  return Math.round(v / step) * step;
+}
+
+function draw(elapsed) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 54, padR = 20, padT = 24, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const cy = padT + bh / 2;
+  const view = document.getElementById('viewSel').value;
+  const levels = Math.pow(2, bits);
+  const step = 2 / levels;
+
+  // Grid — level lines
+  ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+  ctx.lineWidth = 0.5;
+  for (let lv = -levels / 2; lv <= levels / 2; lv++) {
+    const v = lv * step;
+    const y = cy - (v / 1) * (bh / 2 - 4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+
+  // Axis
+  ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + bh); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(padL + bw, cy); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('+1', padL - 4, padT + 4);
+  ctx.fillText('0',  padL - 4, cy + 4);
+  ctx.fillText('−1', padL - 4, padT + bh + 4);
+  ctx.textAlign = 'center';
+  ctx.fillText('Tiempo →', padL + bw / 2, H - 4);
+
+  const freq = 2; // cycles per window
+  const dur = 1.0;
+  const phase = elapsed ? (elapsed * freq * 2 * Math.PI) : 0;
+  const N = bw;
+
+  if (view === 'both') {
+    // Original (analog)
+    ctx.strokeStyle = '#ffaa00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = 0; px <= N; px++) {
+      const t = px / N;
+      const v = Math.sin(2 * Math.PI * freq * t + phase);
+      const y = cy - v * (bh / 2 - 4);
+      if (px === 0) ctx.moveTo(padL + px, y); else ctx.lineTo(padL + px, y);
+    }
+    ctx.stroke();
+
+    // Quantized (staircase)
+    ctx.strokeStyle = '#ff44ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let prevQy = null;
+    for (let px = 0; px <= N; px++) {
+      const t = px / N;
+      const v = Math.sin(2 * Math.PI * freq * t + phase);
+      const qv = Math.max(-1 + step / 2, Math.min(1 - step / 2, quantize(v, bits)));
+      const y = cy - qv * (bh / 2 - 4);
+      if (px === 0) { ctx.moveTo(padL + px, y); prevQy = y; }
+      else {
+        ctx.lineTo(padL + px, prevQy);
+        ctx.lineTo(padL + px, y);
+        prevQy = y;
+      }
+    }
+    ctx.stroke();
+
+    // Legend
+    ctx.fillStyle = '#ffaa00'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('─── Analógica', padL + 4, padT + 14);
+    ctx.fillStyle = '#ff44ff';
+    ctx.fillText('─── Cuantizada', padL + 120, padT + 14);
+
+  } else {
+    // Error signal
+    const errScale = 4;
+    ctx.strokeStyle = '#ff4444';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let prevEy = null;
+    for (let px = 0; px <= N; px++) {
+      const t = px / N;
+      const v = Math.sin(2 * Math.PI * freq * t + phase);
+      const qv = Math.max(-1 + step / 2, Math.min(1 - step / 2, quantize(v, bits)));
+      const err = v - qv;
+      const y = cy - err * errScale * (bh / 2 - 4);
+      if (px === 0) { ctx.moveTo(padL + px, y); prevEy = y; }
+      else {
+        ctx.lineTo(padL + px, prevEy);
+        ctx.lineTo(padL + px, y);
+        prevEy = y;
+      }
+    }
+    ctx.stroke();
+
+    // Max error lines
+    const maxErrY = cy - (step / 2) * errScale * (bh / 2 - 4);
+    const minErrY = cy + (step / 2) * errScale * (bh / 2 - 4);
+    ctx.strokeStyle = 'rgba(255,68,68,0.4)';
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, maxErrY); ctx.lineTo(padL + bw, maxErrY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, minErrY); ctx.lineTo(padL + bw, minErrY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ff4444'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(`+${(step/2).toFixed(4)}`, padL + 4, maxErrY - 3);
+    ctx.fillText(`−${(step/2).toFixed(4)}`, padL + 4, minErrY + 12);
+    ctx.fillStyle = '#ff4444'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('─── Error de cuantización', padL + 4, padT + 14);
+  }
+
+  updateLabel();
+}
+
+function updateLabel() {
+  const levels = Math.pow(2, bits);
+  const step = 2 / levels;
+  document.getElementById('quantLabel').textContent =
+    `${bits} bits → ${levels} niveles | Error máx: ±${(step/2).toFixed(4)}`;
+}
+
+function togglePlay() {
+  if (playing) {
+    stopAllAudio();
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    playing = false;
+    startTS = null;
+    document.getElementById('btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('btnPlay').classList.remove('active');
+    draw(0);
+    return;
+  }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAnimation();
+  startQuantizedAudio();
+}
+
+function startQuantizedAudio() {
+  const actx = getAudioContext();
+  const sr = actx.sampleRate;
+  const dur = 3;
+  const bufLen = Math.floor(sr * dur);
+  const buffer = actx.createBuffer(1, bufLen, sr);
+  const data = buffer.getChannelData(0);
+  const freq = 440;
+  const levels = Math.pow(2, bits);
+  const step = 2 / levels;
+  for (let i = 0; i < bufLen; i++) {
+    const t = i / sr;
+    const v = Math.sin(2 * Math.PI * freq * t);
+    data[i] = Math.max(-1 + step / 2, Math.min(1 - step / 2, quantize(v, bits))) * 0.4;
+  }
+  const src = actx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0, actx.currentTime + 0.01);
+  g.gain.linearRampToValueAtTime(0.6, actx.currentTime + 0.025);
+  src.connect(g); g.connect(actx.destination);
+  src.start(actx.currentTime + 0.01);
+  _activeNodes.push(src);
+}
+
+function startAnimation() {
+  startTS = null;
+  function frame(ts) {
+    if (!startTS) startTS = ts;
+    draw((ts - startTS) / 1000);
+    if (playing) animId = requestAnimationFrame(frame);
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+document.getElementById('bitsSlider').addEventListener('input', function() {
+  bits = +this.value;
+  document.getElementById('bitsVal').textContent = bits;
+  document.getElementById('levelsVal').textContent = Math.pow(2, bits);
+  if (playing) { stopAllAudio(); startQuantizedAudio(); }
+  else draw(0);
+});
+document.getElementById('viewSel').addEventListener('change', () => { if (!playing) draw(0); });
+
+function init() { draw(0); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) draw(0); });
+</script>
+</body>
+</html>

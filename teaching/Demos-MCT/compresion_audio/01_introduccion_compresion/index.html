@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Introducción a la Compresión — Compresión Perceptual</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-compresion">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_introduccion_compresion/index.html" class="active">1. Introducción</a>
+  <a href="../02_umbral_audicion/index.html">2. Umbral de Audición</a>
+  <a href="../03_enmascaramiento_freq/index.html">3. Enmascaramiento Frec.</a>
+  <a href="../04_enmascaramiento_temp/index.html">4. Enmascaramiento Temp.</a>
+  <a href="../05_bandas_criticas/index.html">5. Bandas Críticas</a>
+  <a href="../06_modelo_psicoacustico/index.html">6. Modelo Psicoacústico</a>
+  <a href="../07_tasa_bits/index.html">7. Codecs y Compresión</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Introducción a la Compresión</h1>
+      <p class="subtitle">Compresión sin pérdida (Huffman) y con pérdida (perceptual) — dos estrategias fundamentales</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── SECCIÓN 1: Compresión sin pérdida — Código de Huffman ── -->
+  <section class="section-card">
+    <h2>Compresión sin pérdida — Código de Huffman</h2>
+    <p class="description">
+      La <span class="kw">compresión sin pérdida</span> reconstruye los datos exactamente.
+      El <span class="kw">código de Huffman</span> asigna secuencias de bits más cortas a los
+      símbolos más frecuentes, reduciendo el número total de bits sin perder información.
+      Es un código <span class="kw">de prefijo óptimo</span>: ningún código es prefijo de otro,
+      lo que permite decodificación unívoca. Se usa en FLAC (audio), PNG (imagen) y como
+      etapa final en MP3 y JPEG.
+    </p>
+    <div class="controls">
+      <div class="btn-group" id="presetBtns">
+        <button class="btn active" onclick="setPreset(0)">ABRACADABRA</button>
+        <button class="btn" onclick="setPreset(1)">MISSISSIPPI</button>
+        <button class="btn" onclick="setPreset(2)">AAAAABBBCCD</button>
+        <button class="btn" onclick="setPreset(3)">TOMATE</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="huffLabel">Árbol de Huffman</div>
+    <canvas id="huffCanvas"></canvas>
+
+    <div id="huffStats" style="margin-top:14px; font-size:0.85rem; color:#99ccff; line-height:1.8;"></div>
+  </section>
+
+  <section class="section-card">
+    <h2>Huffman en la práctica</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ff44;">Código de prefijo óptimo</strong><br>
+        El árbol de Huffman garantiza el código de longitud variable <em>óptimo</em> para una distribución
+        de probabilidad dada. El símbolo más frecuente recibe el código más corto (menos bits); el menos
+        frecuente, el más largo. La longitud promedio es igual a la entropía de la fuente (en bits/símbolo)
+        cuando las probabilidades son potencias de ½.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Huffman en audio y video</strong><br>
+        En MP3, tras la cuantización psicoacústica, los coeficientes DCT cuantizados se codifican con
+        tablas de Huffman seleccionadas dinámicamente para reducir aún más el tamaño. En FLAC (lossless),
+        Huffman codifica los residuos de predicción lineal. En ambos casos, Huffman elimina
+        la redundancia estadística que queda después del modelo perceptual.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECCIÓN 2: Compresión con pérdida — simulación JPEG ── -->
+  <section class="section-card">
+    <h2>Compresión con pérdida — simulación JPEG en imágenes</h2>
+    <p class="description">
+      La <span class="kw">compresión con pérdida</span> descarta información que el perceptor (ojo, oído)
+      no puede detectar fácilmente. JPEG divide la imagen en bloques 8×8, aplica la
+      <span class="kw">DCT</span> (Transformada Discreta del Coseno) y <span class="kw">cuantiza</span>
+      los coeficientes de alta frecuencia con pasos gruesos. A calidad alta la diferencia es invisible;
+      a calidad baja aparecen <span class="kw">artefactos de bloque</span> claramente visibles.
+      La misma idea se aplica al audio en MP3/AAC.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Calidad JPEG: <span class="val" id="qualVal">75</span> %</label>
+        <input type="range" id="qualSlider" min="1" max="100" value="75">
+      </div>
+    </div>
+    <div class="canvas-label" id="imgLabel">Original  |  Comprimida  |  Diferencia × 5</div>
+    <canvas id="imgCanvas"></canvas>
+    <div class="info-box" style="margin-top:12px;">
+      <strong style="color:#ffaa00;">⚠ JPEG calidad 100% ≠ sin pérdida</strong> &nbsp;·&nbsp;
+      Incluso a calidad máxima, JPEG aplica cuantización con paso=1: los coeficientes DCT se redondean
+      al entero más cercano. En zonas lisas, los coeficientes de alta frecuencia valen ~0 y se almacenan
+      con pocos bits → ratio ≈ 5:1. El error es imperceptible (PSNR &gt; 60 dB), pero existe.
+      Para compresión <em>sin pérdida real</em> se usa <strong style="color:#00ff44;">PNG</strong>
+      (imágenes) o <strong style="color:#00ff44;">FLAC</strong> (audio), que reconstruyen el original
+      bit a bit.
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>¿Por qué aceptamos la compresión con pérdida?</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Límites perceptuales</strong><br>
+        Los sistemas sensoriales tienen resolución finita. El ojo no distingue variaciones de alta
+        frecuencia espacial en zonas de alto contraste. El oído no escucha sonidos suaves cerca de
+        sonidos fuertes. La compresión perceptual explota exactamente estos límites para descartar
+        información sin que lo notemos.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">La DCT y la cuantización</strong><br>
+        La DCT convierte un bloque de píxeles en coeficientes de frecuencia: el coeficiente DC (promedio)
+        y los coeficientes AC (detalles). JPEG asigna más bits a las bajas frecuencias (importantes) y
+        pocos a las altas (menos visibles). Esta asignación desigual es el núcleo de la compresión perceptual,
+        exactamente igual que el modelo psicoacústico en MP3.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  PARTE 1 — Simulación JPEG en canvas
+// ═══════════════════════════════════════════════════════════════════
+
+const IMG_W = 160, IMG_H = 128; // múltiplo de 8 en ambas dimensiones
+let origPixels = null;           // Uint8ClampedArray RGBA (R=G=B=Y, escala de grises)
+
+// Imagen sintética en escala de grises — escena natural para testear JPEG
+function generateTestImage() {
+  const data = new Uint8ClampedArray(IMG_W * IMG_H * 4);
+
+  // Ruido suave tipo value noise (determinista)
+  function vnoise(x, y) {
+    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return n - Math.floor(n);
+  }
+  function smoothNoise(x, y, s) {
+    const ix = Math.floor(x / s), iy = Math.floor(y / s);
+    const fx = x / s - ix, fy = y / s - iy;
+    const a = vnoise(ix, iy), b = vnoise(ix+1, iy);
+    const c = vnoise(ix, iy+1), d = vnoise(ix+1, iy+1);
+    const ux = fx*fx*(3-2*fx), uy = fy*fy*(3-2*fy);
+    return a + (b-a)*ux + (c-a)*uy + (a-b-c+d)*ux*uy;
+  }
+
+  for (let y = 0; y < IMG_H; y++) {
+    for (let x = 0; x < IMG_W; x++) {
+      const fy = y / IMG_H, fx = x / IMG_W;
+      let lum;
+
+      if (fy < 0.56) {
+        // Cielo: gradiente suave de gris claro — muestra banding a baja calidad
+        lum = 200 - fy * 80 + smoothNoise(x, y, 22) * 12;
+      } else if (fy < 0.62) {
+        // Transición horizonte
+        const t = (fy - 0.56) / 0.06;
+        lum = (200 - 0.56*80) * (1-t) + 90 * t;
+      } else {
+        // Suelo: gris oscuro con textura (estadística más natural)
+        lum = 90 - fy * 35 + smoothNoise(x * 0.7, y * 0.7, 12) * 18;
+      }
+
+      // Sol: gradiente radial suave
+      const sX = IMG_W * 0.72, sY = IMG_H * 0.18, sR = IMG_H * 0.14;
+      const sd = Math.hypot(x - sX, y - sY);
+      if (sd < sR * 1.5) {
+        const blend = Math.max(0, 1 - sd / (sR * 1.5));
+        lum = lum * (1 - blend) + 245 * blend;
+      }
+
+      // Edificio: rectángulo oscuro de tono sólido + ventana y puerta
+      // Bordes nítidos son suficientes para mostrar artefactos de bloque; sin textura repetitiva
+      const bX1 = Math.floor(IMG_W * 0.08), bX2 = Math.floor(IMG_W * 0.34);
+      const bY1 = Math.floor(IMG_H * 0.42), bY2 = Math.floor(IMG_H * 0.90);
+      if (x >= bX1 && x < bX2 && y >= bY1 && y < bY2) {
+        lum = 72 + smoothNoise(x, y, 30) * 8; // gris oscuro uniforme, variación suave
+        // Ventana
+        const wX1 = bX1 + Math.floor((bX2-bX1)*0.55), wX2 = bX1 + Math.floor((bX2-bX1)*0.85);
+        const wY1 = bY1 + Math.floor((bY2-bY1)*0.12), wY2 = bY1 + Math.floor((bY2-bY1)*0.40);
+        if (x >= wX1 && x < wX2 && y >= wY1 && y < wY2) lum = 160;
+        // Puerta
+        const dX1 = bX1 + Math.floor((bX2-bX1)*0.30), dX2 = bX1 + Math.floor((bX2-bX1)*0.58);
+        const dY1 = bY1 + Math.floor((bY2-bY1)*0.58);
+        if (x >= dX1 && x < dX2 && y >= dY1) lum = 45;
+      }
+
+      // Colinas suaves en horizonte — curva senoidal
+      const hillY = Math.floor(IMG_H * 0.58 + Math.sin(fx * Math.PI * 4) * IMG_H * 0.05
+                    + Math.sin(fx * Math.PI * 9) * IMG_H * 0.02);
+      if (y >= hillY && y < hillY + 10 && fy < 0.70) {
+        lum = 50 + (y - hillY) * 3;
+      }
+
+      lum = Math.max(0, Math.min(255, Math.round(lum)));
+      const i = (y * IMG_W + x) * 4;
+      data[i] = data[i+1] = data[i+2] = lum;
+      data[i+3] = 255;
+    }
+  }
+  return data;
+}
+
+// ── DCT 8-point ────────────────────────────────────────────────────
+function dct8(x) {
+  const y = new Array(8);
+  for (let k = 0; k < 8; k++) {
+    let s = 0;
+    for (let n = 0; n < 8; n++) s += x[n] * Math.cos(Math.PI * k * (2 * n + 1) / 16);
+    y[k] = s * (k === 0 ? Math.SQRT1_2 / 2 : 0.5);
+  }
+  return y;
+}
+
+function idct8(y) {
+  const x = new Array(8).fill(0);
+  for (let n = 0; n < 8; n++) {
+    for (let k = 0; k < 8; k++) {
+      x[n] += y[k] * (k === 0 ? Math.SQRT1_2 / 2 : 0.5) * Math.cos(Math.PI * k * (2 * n + 1) / 16);
+    }
+  }
+  return x;
+}
+
+function dct2d(block) {
+  const tmp = block.map(row => dct8(row));
+  const res = Array.from({length: 8}, () => new Array(8));
+  for (let j = 0; j < 8; j++) {
+    const col = dct8(tmp.map(r => r[j]));
+    for (let i = 0; i < 8; i++) res[i][j] = col[i];
+  }
+  return res;
+}
+
+function idct2d(c) {
+  const tmp = Array.from({length: 8}, () => new Array(8));
+  for (let j = 0; j < 8; j++) {
+    const col = idct8(c.map(r => r[j]));
+    for (let i = 0; i < 8; i++) tmp[i][j] = col[i];
+  }
+  return tmp.map(row => idct8(row));
+}
+
+// Matriz de cuantización base JPEG (luminancia)
+const Q_BASE = [
+  [16,11,10,16,24,40,51,61],
+  [12,12,14,19,26,58,60,55],
+  [14,13,16,24,40,57,69,56],
+  [14,17,22,29,51,87,80,62],
+  [18,22,37,56,68,109,103,77],
+  [24,35,55,64,81,104,113,92],
+  [49,64,78,87,103,121,120,101],
+  [72,92,95,98,112,100,103,99]
+];
+
+function getQMatrix(quality) {
+  const q = Math.max(1, Math.min(100, quality));
+  const scale = q < 50 ? Math.floor(5000 / q) : 200 - 2 * q;
+  return Q_BASE.map(row => row.map(v => Math.max(1, Math.floor((v * scale + 50) / 100))));
+}
+
+function compressChannel(src, W, H, qmat) {
+  const dst = new Float32Array(src);
+  for (let by = 0; by < H; by += 8) {
+    for (let bx = 0; bx < W; bx += 8) {
+      const block = Array.from({length: 8}, (_, iy) =>
+        Array.from({length: 8}, (_, ix) => {
+          const px = Math.min(bx + ix, W - 1), py = Math.min(by + iy, H - 1);
+          return src[py * W + px] - 128;
+        })
+      );
+      const coeffs = dct2d(block);
+      for (let i = 0; i < 8; i++)
+        for (let j = 0; j < 8; j++)
+          coeffs[i][j] = Math.round(coeffs[i][j] / qmat[i][j]) * qmat[i][j];
+      const recon = idct2d(coeffs);
+      for (let iy = 0; iy < 8 && by + iy < H; iy++)
+        for (let ix = 0; ix < 8 && bx + ix < W; ix++)
+          dst[(by + iy) * W + (bx + ix)] = Math.max(0, Math.min(255, Math.round(recon[iy][ix] + 128)));
+    }
+  }
+  return dst;
+}
+
+function applyJpegSim(quality) {
+  const qmat = getQMatrix(quality);
+  const W = IMG_W, H = IMG_H, N = W * H;
+
+  // Escala de grises: procesar solo luminancia Y (un solo canal)
+  const lum = new Float32Array(N);
+  for (let i = 0; i < N; i++) lum[i] = origPixels[i * 4]; // R=G=B=Y
+
+  const yc = compressChannel(lum, W, H, qmat);
+
+  const comp = new Uint8ClampedArray(N * 4);
+  const diff = new Uint8ClampedArray(N * 4);
+  let mse = 0;
+  for (let i = 0; i < N; i++) {
+    const y = yc[i];
+    comp[i*4] = comp[i*4+1] = comp[i*4+2] = y; comp[i*4+3] = 255;
+    const dy = y - lum[i];
+    mse += dy * dy;
+    const d = Math.max(0, Math.min(255, Math.round(128 + dy * 5)));
+    diff[i*4] = diff[i*4+1] = diff[i*4+2] = d; diff[i*4+3] = 255;
+  }
+  mse /= N;
+  const psnr = mse > 0 ? 10 * Math.log10(255 * 255 / mse) : 999;
+  const q = Math.max(1, Math.min(100, quality));
+  // Estimación de bpp para JPEG grayscale: alta calidad → más bits
+  // Calibrado empíricamente: q=100→~1.5 bpp (ratio ~5:1), q=75→~1.1 (ratio ~7:1),
+  // q=50→~0.8 (ratio ~10:1), q=25→~0.4 (ratio ~20:1), q=1→~0.05 (ratio ~160:1)
+  const bppEst = Math.max(0.05, 0.05 + (q / 100) * 1.45);
+  const ratioGray = 8 / bppEst;
+  const origKB  = (IMG_W * IMG_H) / 1024;            // raw 8-bit grayscale
+  const compKB  = (IMG_W * IMG_H * bppEst / 8) / 1024;
+  return { comp, diff, psnr, ratio: ratioGray, origKB, compKB };
+}
+
+function pixToCanvas(pixels, w, h) {
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  tmp.getContext('2d').putImageData(new ImageData(pixels, w, h), 0, 0);
+  return tmp;
+}
+
+function fmtKB(kb) {
+  return kb < 1 ? `${Math.round(kb * 1024)} B` : `${kb.toFixed(1)} KB`;
+}
+
+function drawImgCanvas() {
+  const canvas = document.getElementById('imgCanvas');
+  canvas.width  = canvas.offsetWidth || 820;
+  canvas.height = Math.round(canvas.width * 0.38);
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const quality = +document.getElementById('qualSlider').value;
+  const { comp, diff, psnr, ratio, origKB, compKB } = applyJpegSim(quality);
+
+  const gap    = 12;
+  const labelH = 22;
+  const sizeH  = 18;  // altura para la línea de tamaño debajo de cada imagen
+  const panelW = Math.floor((W - gap * 4) / 3);
+  const panelH = H - labelH - sizeH - 14;
+  const y0     = labelH + 4;
+
+  const origC = pixToCanvas(origPixels, IMG_W, IMG_H);
+  const compC = pixToCanvas(comp, IMG_W, IMG_H);
+  const diffC = pixToCanvas(diff, IMG_W, IMG_H);
+
+  ctx.imageSmoothingEnabled = false;
+
+  const fs = Math.round(10.5 * W / 820);
+
+  const panels = [
+    { c: origC, x: gap,                   label: 'Original (sin comprimir)',  col: '#44aaff',
+      size: fmtKB(origKB) + ' (raw)' },
+    { c: compC, x: gap + panelW + gap,
+      label: quality === 100 ? 'JPEG Q=100 (cuasi-sin pérdida)' : `Comprimida — Calidad ${quality}%`,
+      col: '#ffaa00',
+      size: quality === 100
+        ? `~${fmtKB(compKB)}  (ratio ${ratio.toFixed(1)}:1 — no es lossless)`
+        : `~${fmtKB(compKB)}  (ratio ${ratio.toFixed(1)}:1)` },
+    { c: diffC, x: gap + 2*(panelW + gap), label: 'Diferencia × 5',           col: '#ff4444',
+      size: 'amplificada 5×' },
+  ];
+
+  panels.forEach(p => {
+    ctx.drawImage(p.c, p.x, y0, panelW, panelH);
+    ctx.strokeStyle = p.col; ctx.lineWidth = 1.5;
+    ctx.strokeRect(p.x, y0, panelW, panelH);
+    // Título arriba
+    ctx.fillStyle = p.col; ctx.font = `bold ${fs}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(p.label, p.x + panelW / 2, labelH - 3);
+    // Tamaño abajo
+    ctx.fillStyle = 'rgba(150,210,255,0.75)'; ctx.font = `${fs - 1}px sans-serif`;
+    ctx.fillText(p.size, p.x + panelW / 2, y0 + panelH + sizeH - 2);
+  });
+
+  const psnrStr = psnr > 100 ? '∞' : psnr.toFixed(1) + ' dB';
+  document.getElementById('imgLabel').textContent =
+    `PSNR: ${psnrStr}  ·  Original: ${fmtKB(origKB)} raw → Comprimida: ~${fmtKB(compKB)}  (ratio ${ratio.toFixed(1)}:1)`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PARTE 2 — Código de Huffman
+// ═══════════════════════════════════════════════════════════════════
+
+const PRESETS = ['ABRACADABRA', 'MISSISSIPPI', 'AAAAABBBCCD', 'TOMATE'];
+let currentPreset = 0;
+
+const CHAR_COLORS = ['#ffaa00','#00ffff','#00ff44','#44aaff','#ff4444','#ffffff','#ff88ff','#ffff44'];
+
+function buildHuffman(text) {
+  const freq = {};
+  for (const c of text) freq[c] = (freq[c] || 0) + 1;
+
+  let nodes = Object.entries(freq).map(([char, f]) => ({ char, f, left: null, right: null, isLeaf: true }));
+  nodes.sort((a, b) => a.f - b.f || a.char.localeCompare(b.char));
+
+  while (nodes.length > 1) {
+    nodes.sort((a, b) => a.f - b.f);
+    const left = nodes.shift(), right = nodes.shift();
+    nodes.push({ char: null, f: left.f + right.f, left, right, isLeaf: false });
+  }
+
+  const root = nodes[0];
+  const codes = {};
+  function traverse(node, prefix) {
+    if (!node) return;
+    if (node.isLeaf) { codes[node.char] = prefix || '0'; return; }
+    traverse(node.left, prefix + '0');
+    traverse(node.right, prefix + '1');
+  }
+  traverse(root, '');
+
+  const sortedChars = Object.keys(freq).sort((a, b) => freq[b] - freq[a]);
+  const colorMap = {};
+  sortedChars.forEach((c, i) => colorMap[c] = CHAR_COLORS[i % CHAR_COLORS.length]);
+
+  const origBits = text.length * 8;
+  const huffBits = text.split('').reduce((s, c) => s + codes[c].length, 0);
+  const minFixed = Math.ceil(Math.log2(Object.keys(freq).length || 1));
+  const fixedBits = text.length * Math.max(1, minFixed);
+
+  return { root, codes, freq, colorMap, origBits, huffBits, fixedBits, sortedChars };
+}
+
+function treeHeight(node) {
+  if (!node) return 0;
+  return 1 + Math.max(treeHeight(node.left), treeHeight(node.right));
+}
+
+function countLeaves(node) {
+  if (!node) return 0;
+  if (node.isLeaf) return 1;
+  return countLeaves(node.left) + countLeaves(node.right);
+}
+
+function drawHuffCanvas() {
+  const text = PRESETS[currentPreset];
+  const { root, codes, freq, colorMap, origBits, huffBits, fixedBits, sortedChars } = buildHuffman(text);
+
+  const canvas = document.getElementById('huffCanvas');
+  canvas.width  = canvas.offsetWidth || 820;
+
+  const nLeaves  = countLeaves(root);
+  const height   = treeHeight(root);
+  const levelH   = Math.min(70, Math.max(44, 280 / height));
+  const treeH    = height * levelH + 30;
+  const tableH   = 72;
+  const bitsH    = 130; // sección de comparación visual de bits
+  canvas.height  = Math.round(treeH + tableH + bitsH + 20);
+
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const padX = 28;
+  const treeW = W - 2 * padX;
+
+  // Assign positions (leaves evenly spaced, internals at midpoint)
+  let leafIdx = 0;
+  function assign(node, level) {
+    if (!node) return;
+    if (node.isLeaf) {
+      node.x = padX + (leafIdx + 0.5) * treeW / nLeaves;
+      node.y = 18 + level * levelH;
+      leafIdx++;
+    } else {
+      assign(node.left,  level + 1);
+      assign(node.right, level + 1);
+      node.x = (node.left.x + node.right.x) / 2;
+      node.y = 18 + level * levelH;
+    }
+  }
+  leafIdx = 0;
+  assign(root, 0);
+
+  // Draw edges
+  function drawEdges(node) {
+    if (!node || node.isLeaf) return;
+    [['left','0','#00ff44'], ['right','1','#ff4444']].forEach(([side, bit, col]) => {
+      const child = node[side];
+      if (!child) return;
+      ctx.strokeStyle = 'rgba(100,180,255,0.45)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.lineTo(child.x, child.y); ctx.stroke();
+      const mx = (node.x + child.x) / 2 + (side === 'left' ? -6 : 6);
+      const my = (node.y + child.y) / 2;
+      ctx.fillStyle = col; ctx.font = `bold ${Math.round(W/75)}px sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText(bit, mx, my + 4);
+      drawEdges(child);
+    });
+  }
+  drawEdges(root);
+
+  // Draw nodes
+  function drawNodes(node) {
+    if (!node) return;
+    const r  = node.isLeaf ? Math.min(20, levelH * 0.34) : Math.min(16, levelH * 0.27);
+    const col = node.isLeaf ? (colorMap[node.char] || '#ffaa00') : '#00ffff';
+    ctx.fillStyle = node.isLeaf ? col.replace('#', 'rgba(').replace(/(..)(..)(..)/, (_, a,b,c) =>
+      `${parseInt(a,16)},${parseInt(b,16)},${parseInt(c,16)},0.20)`) : 'rgba(0,255,255,0.08)';
+    ctx.strokeStyle = col; ctx.lineWidth = node.isLeaf ? 2.2 : 1.5;
+    ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+    const fs = Math.round(W / 85);
+    if (node.isLeaf) {
+      ctx.fillStyle = col; ctx.font = `bold ${fs + 2}px sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText(node.char, node.x, node.y - 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.font = `${fs}px sans-serif`;
+      ctx.fillText(node.f, node.x, node.y + 12);
+    } else {
+      ctx.fillStyle = '#00ffff'; ctx.font = `${fs}px sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText(node.f, node.x, node.y + 4);
+    }
+    drawNodes(node.left);
+    drawNodes(node.right);
+  }
+  drawNodes(root);
+
+  // Code table
+  const tableY = treeH + 8;
+  ctx.fillStyle = 'rgba(150,200,255,0.65)'; ctx.font = `bold ${Math.round(W/80)}px sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText('Tabla de códigos:', 10, tableY + 14);
+
+  const colW = Math.min(110, (W - 20) / sortedChars.length);
+  sortedChars.forEach((c, i) => {
+    const cx = 10 + i * colW + colW / 2;
+    const col = colorMap[c];
+    ctx.fillStyle = col; ctx.font = `bold ${Math.round(W/65)}px sans-serif`; ctx.textAlign = 'center';
+    ctx.fillText(`"${c}"`, cx, tableY + 30);
+    ctx.fillStyle = '#ffffff'; ctx.font = `${Math.round(W/78)}px monospace`;
+    ctx.fillText(codes[c], cx, tableY + 45);
+    ctx.fillStyle = 'rgba(150,200,255,0.55)'; ctx.font = `${Math.round(W/90)}px sans-serif`;
+    ctx.fillText(`freq ${freq[c]}`, cx, tableY + 57);
+  });
+
+  // ── Comparación visual de bits: ASCII vs Huffman ─────────────────
+  const stripY0  = tableY + tableH + 8;
+  const stripX0  = 10;
+  const maxW     = W - stripX0 - 10;
+  const asciiTotal = huffBits > 0 ? text.length * 8 : 8;
+  const pixW     = maxW / asciiTotal;   // cada bit = pixW px; escala fija al máximo (ASCII)
+  const stripH   = 20;
+  const fs10     = Math.round(W / 82);
+
+  // Fondo sutil
+  ctx.fillStyle = 'rgba(0,0,0,0.20)';
+  ctx.fillRect(0, stripY0 - 4, W, bitsH + 8);
+
+  // ── Fila ASCII ─────────────────────────────────────────────────
+  ctx.fillStyle = '#ff4444'; ctx.font = `bold ${fs10}px sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText(`ASCII 8 bits/símbolo → ${asciiTotal} bits`, stripX0, stripY0 + 12);
+  let bx = stripX0;
+  text.split('').forEach(char => {
+    ctx.fillStyle = colorMap[char] || '#ffffff';
+    ctx.fillRect(bx, stripY0 + 16, pixW * 8 - 0.8, stripH);
+    bx += pixW * 8;
+  });
+  // Borde total
+  ctx.strokeStyle = 'rgba(255,68,68,0.50)'; ctx.lineWidth = 1;
+  ctx.strokeRect(stripX0, stripY0 + 16, pixW * asciiTotal, stripH);
+
+  // ── Fila Huffman ───────────────────────────────────────────────
+  const huffRowY = stripY0 + stripH + 36;
+  ctx.fillStyle = '#00ff44'; ctx.font = `bold ${fs10}px sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText(`Huffman variable → ${huffBits} bits`, stripX0, huffRowY + 12);
+  bx = stripX0;
+  text.split('').forEach(char => {
+    const nbits = codes[char].length;
+    ctx.fillStyle = colorMap[char] || '#ffffff';
+    ctx.fillRect(bx, huffRowY + 16, pixW * nbits - 0.8, stripH);
+    bx += pixW * nbits;
+  });
+  // Borde hasta el fin del strip Huffman
+  ctx.strokeStyle = 'rgba(0,255,68,0.50)'; ctx.lineWidth = 1;
+  ctx.strokeRect(stripX0, huffRowY + 16, bx - stripX0, stripH);
+  // Flecha y ratio al final del strip Huffman
+  ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(bx + 3, huffRowY + 14); ctx.lineTo(bx + 3, huffRowY + 38); ctx.stroke();
+  ctx.setLineDash([]);
+  const ratio = (asciiTotal / huffBits).toFixed(1);
+  ctx.fillStyle = '#ffaa00'; ctx.font = `bold ${fs10 + 1}px sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText(`← ${ratio}× compresión`, bx + 7, huffRowY + 30);
+
+  // Leyenda de colores
+  const legY = huffRowY + stripH + 34;
+  ctx.fillStyle = 'rgba(150,200,255,0.55)'; ctx.font = `${fs10 - 1}px sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText('Colores por símbolo:', stripX0, legY);
+  sortedChars.forEach((c, i) => {
+    const lx = stripX0 + 105 + i * 50;
+    ctx.fillStyle = colorMap[c];
+    ctx.fillRect(lx, legY - 10, 14, 14);
+    ctx.fillStyle = '#ffffff'; ctx.font = `bold ${fs10}px sans-serif`;
+    ctx.fillText(c, lx + 18, legY);
+  });
+
+  // ── Stats ──────────────────────────────────────────────────────
+  const savings = Math.round((1 - huffBits / fixedBits) * 100);
+  const nBitsFixed = Math.ceil(Math.log2(sortedChars.length || 1));
+
+  // Construir el display de bytes ASCII (hex) y Huffman
+  const asciiStr = text.split('').map(c => c.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0')).join(' ');
+  const huffStr  = text.split('').map(c => codes[c]).join(' ');
+
+  document.getElementById('huffStats').innerHTML =
+    `<div style="margin-bottom:6px;">` +
+    `<span style="color:#44aaff;">Texto:</span> <strong>"${text}"</strong> &nbsp;·&nbsp; ` +
+    `${text.length} símbolos, ${sortedChars.length} únicos</div>` +
+    `<div style="margin-bottom:4px; font-family:monospace; font-size:0.83rem;">` +
+    `<span style="color:#ff4444;">ASCII hex:</span> &nbsp;${asciiStr}<br>` +
+    `<span style="color:#ff4444; font-weight:bold;">ASCII bits (${asciiTotal}):</span>&nbsp; ` +
+    text.split('').map(c => `<span style="color:${colorMap[c]}">${c.charCodeAt(0).toString(2).padStart(8,'0')}</span>`).join(' ') + `</div>` +
+    `<div style="font-family:monospace; font-size:0.83rem;">` +
+    `<span style="color:#00ff44; font-weight:bold;">Huffman (${huffBits}):</span>&nbsp; ` +
+    text.split('').map(c => `<span style="color:${colorMap[c]}">${codes[c]}</span>`).join(' ') + `</div>` +
+    `<div style="margin-top:6px;">` +
+    `<span style="color:#ff4444;">Código fijo ${nBitsFixed} bits/símbolo:</span> <strong style="color:#ff4444;">${fixedBits} bits</strong> &nbsp;·&nbsp; ` +
+    `<span style="color:#00ff44;">Huffman:</span> <strong style="color:#00ff44;">${huffBits} bits</strong> &nbsp;` +
+    `<span style="color:#ffaa00;">(ahorro vs. fijo: ${savings}%)</span></div>`;
+
+  document.getElementById('huffLabel').textContent =
+    `Árbol de Huffman — "${text}"  |  Nodos naranja = símbolos (hojas); nodos cyan = internos`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Controles
+// ═══════════════════════════════════════════════════════════════════
+
+document.getElementById('qualSlider').addEventListener('input', function() {
+  document.getElementById('qualVal').textContent = this.value;
+  drawImgCanvas();
+});
+
+function setPreset(i) {
+  currentPreset = i;
+  document.querySelectorAll('#presetBtns .btn').forEach((b, j) =>
+    b.classList.toggle('active', j === i));
+  drawHuffCanvas();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════════════
+
+function init() {
+  origPixels = generateTestImage();
+  drawImgCanvas();
+  drawHuffCanvas();
+}
+
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { drawImgCanvas(); drawHuffCanvas(); });
+</script>
+</body>
+</html>
