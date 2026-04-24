@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Modelos de Difusión · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 2% 5% 2% 5%;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.2em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.3em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.35em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-height: 0;
+}
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 0.85em;
+  color: var(--ink-soft);
+  margin-top: 0.3em;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.svg-holder {
+  display: flex; align-items: stretch;
+  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
+  margin-top: 0.3em; overflow: hidden;
+}
+.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
+
+.title-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.12em;
+  text-transform: uppercase; margin-bottom: 1.5em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.8em; color: var(--ink); }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 0.8em; }
+
+.close-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.close-slide h1 { font-size: 2.2em; max-width: 20em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num {
+  position: absolute; bottom: 1.5%; right: 2.5%;
+  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.08em;
+}
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Modelos de Difusión</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- § 1 · El problema: aprender p(x) -->
+
+<section>
+<div class="section-label">§ 1 · El problema: aprender p(x)</div>
+<h2>Los modelos generativos buscan aprender $p(\mathbf{x})$ desconocida</h2>
+<ul>
+  <li>Cada dato observado (imagen, audio, texto) es un punto en espacio de alta dimensión.</li>
+  <li>La distribución real $p(\mathbf{x})$ concentra su masa en variedades complejas y multimodales.</li>
+  <li>Los modelos de difusión aprenden a revertir un proceso de corrupción cuya distribución estacionaria $\mathcal{N}(\mathbf{0},\mathbf{I})$ sí es conocida.</li>
+</ul>
+<div class="slide-num">2</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema: aprender p(x)</div>
+<h2>El score $\nabla_\mathbf{x}\log p(\mathbf{x})$ apunta hacia los modos de la distribución</h2>
+<div class="svg-holder"><svg viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="qarr" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+      <path d="M0,0.5 L0,4.5 L5,2.5 z" fill="#e8a820"/>
+    </marker>
+  </defs>
+  <text x="185" y="18" text-anchor="middle" font-style="italic" font-size="16" font-weight="bold" fill="#3a7bbf">p(x)</text>
+  <ellipse cx="185" cy="135" rx="155" ry="88" fill="none" stroke="#3a7bbf" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <circle cx="38" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="38" y1="120" x2="43.3" y2="122.8" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="38" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="38" y1="142" x2="43.8" y2="143.7" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="60" cy="98" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="60" y1="98" x2="64.2" y2="102.3" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="60" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="60" y1="120" x2="64.9" y2="123.5" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="60" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="60" y1="142" x2="65.6" y2="144.1" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="60" cy="164" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="60" y1="164" x2="66.0" y2="164.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="82" cy="76" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="82" y1="76" x2="84.7" y2="81.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="82" cy="98" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="82" y1="98" x2="85.3" y2="103.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="82" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="82" y1="120" x2="86.2" y2="124.3" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="82" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="82" y1="142" x2="87.2" y2="145.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="82" cy="186" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="82" y1="186" x2="87.6" y2="183.8" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="104" cy="76" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="104" y1="76" x2="105.5" y2="81.8" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="104" cy="98" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="104" y1="98" x2="105.9" y2="103.7" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="104" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="104" y1="120" x2="106.7" y2="125.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="126" cy="76" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="126" y1="76" x2="126.1" y2="82.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="126" cy="98" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="126" y1="98" x2="126.2" y2="104.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="126" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="126" y1="120" x2="126.2" y2="126.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="126" cy="208" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="126" y1="208" x2="126.3" y2="202.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="148" cy="54" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="148" y1="54" x2="153.2" y2="57.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="148" cy="76" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="148" y1="76" x2="153.7" y2="77.7" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="148" cy="98" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="148" y1="98" x2="146.4" y2="103.8" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="148" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="148" y1="120" x2="145.7" y2="125.5" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="148" cy="208" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="148" y1="208" x2="145.3" y2="202.6" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="170" cy="54" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="170" y1="54" x2="174.7" y2="57.7" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="170" cy="76" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="170" y1="76" x2="175.5" y2="78.3" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="170" cy="98" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="170" y1="98" x2="176.0" y2="98.2" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="170" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="170" y1="120" x2="175.7" y2="118.0" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="170" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="170" y1="142" x2="164.9" y2="145.2" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="170" cy="208" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="170" y1="208" x2="165.7" y2="203.9" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="192" cy="54" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="192" y1="54" x2="195.7" y2="58.7" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="192" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="192" y1="142" x2="195.9" y2="137.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="192" cy="164" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="192" y1="164" x2="186.0" y2="164.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="192" cy="186" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="192" y1="186" x2="186.2" y2="184.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="192" cy="208" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="192" y1="208" x2="186.9" y2="204.8" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="214" cy="54" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="214" y1="54" x2="215.7" y2="59.7" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="214" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="214" y1="142" x2="215.9" y2="136.3" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="214" cy="164" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="214" y1="164" x2="220.0" y2="164.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="214" cy="186" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="214" y1="186" x2="219.7" y2="184.1" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="214" cy="208" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="214" y1="208" x2="218.8" y2="204.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="236" cy="54" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="236" y1="54" x2="235.0" y2="59.9" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="236" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="236" y1="142" x2="240.7" y2="145.8" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="236" cy="186" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="236" y1="186" x2="241.2" y2="183.1" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="236" cy="208" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="236" y1="208" x2="239.7" y2="203.3" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="258" cy="208" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="258" y1="208" x2="259.5" y2="202.2" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="280" cy="76" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="280" y1="76" x2="274.6" y2="78.5" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="280" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="280" y1="120" x2="278.5" y2="125.8" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="280" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="280" y1="142" x2="277.5" y2="147.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="302" cy="98" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="302" y1="98" x2="296.0" y2="98.2" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="302" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="302" y1="120" x2="298.5" y2="124.9" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="302" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="302" y1="142" x2="297.2" y2="145.6" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="302" cy="186" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="302" y1="186" x2="296.7" y2="183.2" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="324" cy="120" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="324" y1="120" x2="319.4" y2="123.9" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="324" cy="142" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="324" y1="142" x2="318.6" y2="144.5" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <circle cx="324" cy="164" r="1.8" fill="#c060c0" opacity="0.7"/>
+  <line x1="324" y1="164" x2="318.0" y2="164.4" stroke="#e8a820" stroke-width="1" opacity="0.8" marker-end="url(#qarr)"/>
+  <ellipse cx="228" cy="100" rx="52" ry="40" fill="none" stroke="#c0392b" stroke-width="1.2" opacity="0.55"/>
+  <ellipse cx="228" cy="100" rx="32" ry="25" fill="#fdecea" stroke="#c0392b" stroke-width="1.2" opacity="0.75"/>
+  <ellipse cx="228" cy="100" rx="14" ry="11" fill="#e74c3c" stroke="none" opacity="0.85"/>
+  <ellipse cx="128" cy="168" rx="48" ry="36" fill="none" stroke="#c0392b" stroke-width="1.2" opacity="0.55"/>
+  <ellipse cx="128" cy="168" rx="29" ry="22" fill="#fdecea" stroke="#c0392b" stroke-width="1.2" opacity="0.75"/>
+  <ellipse cx="128" cy="168" rx="12" ry="9" fill="#e74c3c" stroke="none" opacity="0.85"/>
+  <ellipse cx="268" cy="168" rx="34" ry="26" fill="none" stroke="#c0392b" stroke-width="1" opacity="0.45"/>
+  <ellipse cx="268" cy="168" rx="18" ry="14" fill="#fdecea" stroke="#c0392b" stroke-width="1" opacity="0.6"/>
+  <circle cx="228" cy="100" r="4" fill="#555"/>
+  <line x1="228" y1="96" x2="230" y2="48" stroke="#777" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="230" y="43" text-anchor="middle" font-size="10" fill="#555">imagen A</text>
+  <circle cx="128" cy="168" r="4" fill="#555"/>
+  <line x1="124" y1="166" x2="60" y2="208" stroke="#777" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="56" y="220" text-anchor="middle" font-size="10" fill="#555">imagen B</text>
+  <circle cx="268" cy="168" r="4" fill="#555"/>
+  <line x1="270" y1="165" x2="318" y2="45" stroke="#777" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="322" y="40" text-anchor="middle" font-size="10" fill="#555">imagen C</text>
+  <line x1="390" y1="15" x2="390" y2="215" stroke="#ddd" stroke-width="1.5"/>
+  <text x="555" y="108" text-anchor="middle" font-size="30" font-style="italic" fill="#3a7bbf" font-weight="bold">p(x) = ?</text>
+  <text x="555" y="145" text-anchor="middle" font-size="12" fill="#777">distribución desconocida</text>
+  <text x="555" y="165" text-anchor="middle" font-size="12" fill="#777">en espacio de alta dimensión</text>
+  <text x="555" y="190" text-anchor="middle" font-size="11" fill="#aaa">(imágenes, audio, texto, ...)</text>
+</svg></div>
+<div class="slide-num">3</div>
+</section>
+
+<!-- § 2 · El proceso directo (Forward Diffusion) -->
+
+<section>
+<div class="section-label">§ 2 · El proceso directo (Forward Diffusion)</div>
+<h2>El modelo necesita transformar $p(\mathbf{x})$ desconocida en $\mathcal{N}(\mathbf{0},\mathbf{I})$ conocida</h2>
+<ul>
+  <li>Se construye una <strong>cadena de Markov fija y no entrenable</strong> de $T$ pasos que corrompe $\mathbf{x}_0$ añadiendo ruido gaussiano en cada paso.</li>
+  <li>El hiperparámetro $\beta_t \in (0,1)$ controla cuánto ruido se añade en el paso $t$; el <strong>programa del ruido</strong> (noise schedule) diseña la secuencia $\beta_1 &lt; \cdots &lt; \beta_T$.</li>
+  <li>Cuando $T$ es grande y el schedule es apropiado, $\mathbf{x}_T \approx \mathcal{N}(\mathbf{0},\mathbf{I})$, independientemente del dato original.</li>
+</ul>
+<div class="slide-num">4</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El proceso directo (Forward Diffusion)</div>
+<h2>Cada paso añade ruido gaussiano: $q(\mathbf{x}_t \mid \mathbf{x}_{t-1})$</h2>
+$$q(\mathbf{x}_t \mid \mathbf{x}_{t-1}) = \mathcal{N}\!\left(\mathbf{x}_t;\, \sqrt{1-\beta_t}\,\mathbf{x}_{t-1},\; \beta_t \mathbf{I}\right) \tag{1}$$
+<ul>
+  <li>La media $\sqrt{1-\beta_t}\,\mathbf{x}_{t-1}$ contrae el dato levemente hacia el origen; la varianza $\beta_t\mathbf{I}$ añade ruido isótropo.</li>
+  <li>DDPM original usa schedule lineal: $\beta_1 = 10^{-4}$, $\beta_T = 0.02$ con $T = 1000$.</li>
+  <li>La variante coseno (Nichol y Dhariwal, 2021) degrada más suavemente, asociada a mejor calidad perceptual.</li>
+</ul>
+<div class="slide-num">5</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El proceso directo (Forward Diffusion)</div>
+<h2>Cadena de Markov forward: de $\mathbf{x}_0$ a $\mathbf{x}_T$ en $T$ pasos</h2>
+<div class="svg-holder"><svg viewBox="0 0 820 220" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2a7abf"/>
+    </marker>
+  </defs>
+  <text x="72" y="25" text-anchor="middle" font-size="10" fill="#555">dato original</text>
+  <line x1="72" y1="28" x2="72" y2="64" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="210" y="25" text-anchor="middle" font-size="10" fill="#888">ruido leve</text>
+  <line x1="210" y1="28" x2="210" y2="64" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="350" y="25" text-anchor="middle" font-size="10" fill="#888">más ruido</text>
+  <line x1="350" y1="28" x2="350" y2="64" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="560" y="25" text-anchor="middle" font-size="10" fill="#c0392b">ruido puro ≈ N(0,I)</text>
+  <line x1="560" y1="28" x2="560" y2="64" stroke="#e08080" stroke-width="1" stroke-dasharray="3,2"/>
+  <circle cx="72" cy="105" r="36" fill="#e8f5e9" stroke="#28a745" stroke-width="2"/>
+  <text x="72" y="112" text-anchor="middle" font-size="18" font-weight="bold" fill="#1a5c2a">x₀</text>
+  <line x1="109" y1="105" x2="169" y2="105" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="139" y="96" text-anchor="middle" font-size="10" fill="#333">q(x₁|x₀)</text>
+  <text x="139" y="152" text-anchor="middle" font-size="9" fill="#777">= N(x₀, β₁I)</text>
+  <circle cx="210" cy="105" r="36" fill="#fff9e6" stroke="#e0aa00" stroke-width="2"/>
+  <text x="210" y="112" text-anchor="middle" font-size="18" font-weight="bold" fill="#7a5a00">x₁</text>
+  <line x1="247" y1="105" x2="307" y2="105" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="277" y="96" text-anchor="middle" font-size="10" fill="#333">q(x₂|x₁)</text>
+  <text x="277" y="152" text-anchor="middle" font-size="9" fill="#777">x₂ = √(1−β)x₁ + √β ε</text>
+  <circle cx="350" cy="105" r="36" fill="#fff0e0" stroke="#e06010" stroke-width="2"/>
+  <text x="350" y="112" text-anchor="middle" font-size="18" font-weight="bold" fill="#7a3000">x₂</text>
+  <line x1="388" y1="105" x2="456" y2="105" stroke="#bbb" stroke-width="1.5" stroke-dasharray="5,5"/>
+  <text x="422" y="100" text-anchor="middle" font-size="18" fill="#bbb">···</text>
+  <circle cx="560" cy="105" r="36" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="560" y="112" text-anchor="middle" font-size="18" font-weight="bold" fill="#c0392b">x_T</text>
+  <path d="M 72 143 Q 240 200 386 143" fill="none" stroke="#2a7abf" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr2)"/>
+  <text x="228" y="214" text-anchor="middle" font-size="10" fill="#2a7abf">q(xₜ|x₀) = N(√ᾱₜ x₀, (1−ᾱₜ)I)  — salto analítico directo</text>
+</svg></div>
+<div class="slide-num">6</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El proceso directo (Forward Diffusion)</div>
+<h2>La marginal analítica $q(\mathbf{x}_t|\mathbf{x}_0)$ permite saltar directamente al paso $t$</h2>
+<ul>
+  <li>Definiendo $\alpha_t = 1-\beta_t$ y $\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$, la composición de gaussianas colapsa en una sola:</li>
+</ul>
+$$q(\mathbf{x}_t \mid \mathbf{x}_0) = \mathcal{N}\!\left(\mathbf{x}_t;\, \sqrt{\bar{\alpha}_t}\,\mathbf{x}_0,\; (1-\bar{\alpha}_t)\mathbf{I}\right) \tag{2}$$
+<ul>
+  <li>Una muestra en cualquier instante $t$ se genera directamente, sin iterar los $t$ pasos:</li>
+</ul>
+$$\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\,\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\,\boldsymbol{\epsilon}, \quad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0},\mathbf{I}) \tag{3}$$
+<div class="slide-num">7</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El proceso directo (Forward Diffusion)</div>
+<h2>La ecuación (3) revela una interpolación señal-ruido monótona</h2>
+<ul>
+  <li>$\mathbf{x}_t$ es mezcla lineal del dato (peso $\sqrt{\bar{\alpha}_t}$) y ruido puro (peso $\sqrt{1-\bar{\alpha}_t}$).</li>
+  <li>La relación señal-ruido decae con $t$: $\mathrm{SNR}(t) = \bar{\alpha}_t\,/\,(1-\bar{\alpha}_t)$.</li>
+  <li>Schedule coseno mantiene la señal más tiempo que el lineal; ambos deben llevar $\mathrm{SNR}(T) \approx 0$.</li>
+  <li>Esta propiedad hace el entrenamiento eficiente: se muestrea $t$ uniformemente y se construye $\mathbf{x}_t$ con la ecuación (3).</li>
+</ul>
+<div class="slide-num">8</div>
+</section>
+
+<!-- § 3 · El proceso inverso (Reverse Denoising) -->
+
+<section>
+<div class="section-label">§ 3 · El proceso inverso (Reverse Denoising)</div>
+<h2>Invertir la cadena requiere aprender $q(\mathbf{x}_{t-1}|\mathbf{x}_t)$, que es intratable</h2>
+<ul>
+  <li>La posterior $q(\mathbf{x}_{t-1}|\mathbf{x}_t)$ requiere integrar sobre todos los datos reales — es intratable sin conocer $p(\mathbf{x})$.</li>
+  <li>Sin embargo, si los $\beta_t$ son pequeños, la reversión temporal de difusión gaussiana también es gaussiana.</li>
+  <li>Se aproxima con una red neuronal $\boldsymbol{\epsilon}_\theta$ parametrizada por $\theta$, entrenada para predecir el ruido inyectado.</li>
+</ul>
+<div class="slide-num">9</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El proceso inverso (Reverse Denoising)</div>
+<h2>El proceso inverso $p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t)$ es gaussiano con media predicha</h2>
+$$p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t) = \mathcal{N}\!\left(\mathbf{x}_{t-1};\, \mu_\theta(\mathbf{x}_t, t),\; \Sigma_\theta(\mathbf{x}_t, t)\right) \tag{4}$$
+<ul>
+  <li>La varianza $\Sigma_\theta$ se fija a $\beta_t\mathbf{I}$ (práctica estándar), así la red solo aprende la media.</li>
+  <li>Ho et al. (2020): predecir el ruido $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t,t)$ es equivalente y empíricamente superior a predecir la media directamente.</li>
+</ul>
+$$\mu_\theta(\mathbf{x}_t,t) = \frac{1}{\sqrt{\alpha_t}}\!\left(\mathbf{x}_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\,\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)\right)$$
+<div class="slide-num">10</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El proceso inverso (Reverse Denoising)</div>
+<h2>Proceso bidireccional: forward $q$ fijo y reverse $p_\theta$ aprendido</h2>
+<div class="svg-holder"><svg viewBox="0 0 840 190" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="afwd" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="arev" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2a7abf"/>
+    </marker>
+  </defs>
+  <rect x="340" y="8" width="160" height="30" rx="5" fill="#fff8f0" stroke="#333" stroke-width="1.8"/>
+  <text x="420" y="28" text-anchor="middle" font-size="13" fill="#333">&#x2212;log p&#x03b8;(x&#x2080;)</text>
+  <line x1="420" y1="38" x2="420" y2="68" stroke="#bbb" stroke-width="1" stroke-dasharray="3,2"/>
+  <circle cx="70" cy="108" r="30" fill="none" stroke="#555" stroke-width="2"/>
+  <text x="70" y="115" text-anchor="middle" font-size="16" fill="#333">x&#x2080;</text>
+  <text x="130" y="113" text-anchor="middle" font-size="18" fill="#bbb">&#xB7;&#xB7;&#xB7;</text>
+  <circle cx="248" cy="108" r="34" fill="none" stroke="#555" stroke-width="2.2"/>
+  <text x="248" y="115" text-anchor="middle" font-size="13" fill="#333">x&#x209C;&#x208B;&#x2081;</text>
+  <path d="M 279 94 Q 370 52 421 94" fill="none" stroke="#555" stroke-width="2" marker-end="url(#afwd)"/>
+  <text x="350" y="57" text-anchor="middle" font-size="11" fill="#555">q(x&#x209C; | x&#x209C;&#x208B;&#x2081;)</text>
+  <path d="M 421 122 Q 370 164 282 122" fill="none" stroke="#2a7abf" stroke-width="2" marker-end="url(#arev)"/>
+  <text x="350" y="170" text-anchor="middle" font-size="11" fill="#2a7abf">p&#x03b8;(x&#x209C;&#x208B;&#x2081; | x&#x209C;)</text>
+  <circle cx="460" cy="108" r="34" fill="none" stroke="#555" stroke-width="2.2"/>
+  <text x="460" y="115" text-anchor="middle" font-size="16" fill="#333">x&#x209C;</text>
+  <text x="540" y="113" text-anchor="middle" font-size="18" fill="#bbb">&#xB7;&#xB7;&#xB7;</text>
+  <circle cx="620" cy="108" r="30" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <text x="620" y="115" text-anchor="middle" font-size="16" fill="#c0392b">x&#x209C;</text>
+  <text x="638" y="145" font-size="10" fill="#c0392b">T</text>
+</svg></div>
+<div class="slide-num">11</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El proceso inverso (Reverse Denoising)</div>
+<h2>Pasos pequeños son esenciales: cada posterior local es casi gaussiana</h2>
+<ul>
+  <li>Un único paso $p(\mathbf{x}_0|\mathbf{x}_T)$ sería enormemente complejo y multimodal: dado ruido puro, infinitas imágenes son posibles.</li>
+  <li>Con pasos pequeños, $p(\mathbf{x}_{t-1}|\mathbf{x}_t)$ es casi gaussiana y unimodal: el modelo solo aprende a "des-añadir" ruido leve.</li>
+  <li>Formalmente: cuando $\beta_t \to 0$, la posterior inversa converge a gaussiana — justificando la parametrización (4).</li>
+</ul>
+<div class="slide-num">12</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El proceso inverso (Reverse Denoising)</div>
+<h2>Condicionada en $\mathbf{x}_0$, la posterior $q(\mathbf{x}_{t-1}|\mathbf{x}_t,\mathbf{x}_0)$ es gaussiana tratable</h2>
+<div class="svg-holder"><svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="bfwd" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="brev" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="btrac" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2a7abf"/>
+    </marker>
+  </defs>
+  <path d="M 190 148 A 140 108 0 0 1 530 148" fill="none" stroke="#555" stroke-width="2" marker-end="url(#bfwd)"/>
+  <text x="360" y="44" text-anchor="middle" font-size="12" fill="#333">q(x&#x209C; | x&#x209C;&#x208B;&#x2081;)</text>
+  <circle cx="155" cy="153" r="37" fill="none" stroke="#555" stroke-width="2.2"/>
+  <text x="155" y="160" text-anchor="middle" font-size="13" fill="#333">x&#x209C;&#x208B;&#x2081;</text>
+  <circle cx="565" cy="153" r="37" fill="none" stroke="#555" stroke-width="2.2"/>
+  <text x="565" y="160" text-anchor="middle" font-size="16" fill="#333">x&#x209C;</text>
+  <path d="M 530 168 Q 360 218 193 168" fill="none" stroke="#555" stroke-width="2.5" marker-end="url(#brev)"/>
+  <text x="360" y="218" text-anchor="middle" font-size="12" fill="#333">p&#x03b8;(x&#x209C;&#x208B;&#x2081; | x&#x209C;)</text>
+  <circle cx="360" cy="270" r="27" fill="none" stroke="#aaa" stroke-width="1.8"/>
+  <text x="360" y="277" text-anchor="middle" font-size="15" fill="#666">x&#x2080;</text>
+  <line x1="387" y1="264" x2="537" y2="180" stroke="#bbb" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="333" y1="264" x2="185" y2="180" stroke="#bbb" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <path d="M 533 176 Q 360 318 190 176" fill="none" stroke="#2a7abf" stroke-width="2" stroke-dasharray="7,4" marker-end="url(#btrac)"/>
+  <text x="360" y="312" text-anchor="middle" font-size="11" fill="#2a7abf">q(x&#x209C;&#x208B;&#x2081; | x&#x209C;, x&#x2080;) — posterior tratable</text>
+</svg></div>
+<div class="slide-num">13</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · El proceso inverso (Reverse Denoising)</div>
+<h2>El ELBO minimiza la divergencia KL entre $p_\theta$ y la posterior tratable</h2>
+<div class="svg-holder"><svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <text x="183" y="18" text-anchor="middle" font-size="12" fill="#2a6fa8" font-weight="bold">p&#x03b8;(x&#x209C;&#x208B;&#x2081; | x&#x209C;) = N(&#x03bc;&#x03b8;, &#x03c3;&#x03b8;)</text>
+  <text x="518" y="18" text-anchor="middle" font-size="12" fill="#a03020" font-weight="bold">q(x&#x209C;&#x208B;&#x2081; | x&#x209C;, x&#x2080;) = N(&#x03bc;&#x0303;&#x209C;, &#x03b2;&#x0303;&#x209C;)</text>
+  <line x1="350" y1="24" x2="350" y2="210" stroke="#ddd" stroke-width="1.5"/>
+  <path d="M 43,198 C 43,198 113,48 183,48 C 253,48 323,198 323,198 Z"
+        fill="#c7dff5" stroke="#2a6fa8" stroke-width="2" fill-opacity="0.6"/>
+  <line x1="183" y1="48" x2="183" y2="198" stroke="#2a6fa8" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+  <line x1="183" y1="118" x2="253" y2="118" stroke="#2a6fa8" stroke-width="1.5"/>
+  <line x1="183" y1="118" x2="113" y2="118" stroke="#2a6fa8" stroke-width="1.5"/>
+  <line x1="253" y1="113" x2="253" y2="123" stroke="#2a6fa8" stroke-width="1.5"/>
+  <line x1="113" y1="113" x2="113" y2="123" stroke="#2a6fa8" stroke-width="1.5"/>
+  <text x="183" y="112" text-anchor="middle" font-size="11" fill="#2a6fa8">&#x03c3;&#x03b8;</text>
+  <path d="M 408,198 C 408,198 463,36 518,36 C 573,36 628,198 628,198 Z"
+        fill="#f5c0b0" stroke="#a03020" stroke-width="2" fill-opacity="0.65"/>
+  <line x1="518" y1="36" x2="518" y2="198" stroke="#a03020" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+  <line x1="28" y1="198" x2="650" y2="198" stroke="#888" stroke-width="1.2"/>
+  <text x="350" y="218" text-anchor="middle" font-size="11" fill="#666">objetivo: D&#x2082;KL( p&#x03b8; &#x2225; q ) &#x2192; 0  &#x21D4;  predecir ruido &#x03b5;</text>
+</svg></div>
+<div class="slide-num">14</div>
+</section>
+
+<!-- § 4 · Entrenamiento: el objetivo simplificado -->
+
+<section>
+<div class="section-label">§ 4 · Entrenamiento: el objetivo simplificado</div>
+<h2>Del ELBO a un objetivo MSE: maximizar la cota inferior de la evidencia</h2>
+<ul>
+  <li>El ELBO para la cadena de Markov descompone en términos de consistencia por paso: $\mathbb{E}[D_\mathrm{KL}(q(\mathbf{x}_{t-1}|\mathbf{x}_t,\mathbf{x}_0)\,\|\,p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t))]$.</li>
+  <li>Ho et al. (2020) demostraron que ignorar los pesos de ponderación de cada término produce un objetivo simplificado con mejor rendimiento empírico.</li>
+</ul>
+<div class="slide-num">15</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Entrenamiento: el objetivo simplificado</div>
+<h2>El objetivo simplificado reduce a predecir el ruido inyectado</h2>
+$$\mathcal{L}_{\text{simple}} = \mathbb{E}_{t,\,\mathbf{x}_0,\,\boldsymbol{\epsilon}}\!\left[\|\boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta(\mathbf{x}_t,\,t)\|^2\right] \tag{5}$$
+<ul>
+  <li>$t \sim \mathrm{Uniforme}\{1,\ldots,T\}$; $\mathbf{x}_t$ se construye con la ecuación (3) en un solo paso.</li>
+  <li>La red $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)$ predice el ruido $\boldsymbol{\epsilon}$ que se añadió para generar $\mathbf{x}_t$ a partir de $\mathbf{x}_0$.</li>
+  <li>Es una regresión MSE estándar: el entrenamiento es estable y sin adversarios.</li>
+</ul>
+<div class="slide-num">16</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Entrenamiento: el objetivo simplificado</div>
+<h2>El bucle de entrenamiento por mini-batch tiene solo tres pasos</h2>
+<ul>
+  <li><strong>Paso 1 — Muestrear tiempo:</strong> $t \sim \mathrm{Uniforme}\{1,\ldots,T\}$.</li>
+  <li><strong>Paso 2 — Construir dato ruidoso:</strong> $\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0},\mathbf{I})$; $\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\,\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\,\boldsymbol{\epsilon}$.</li>
+  <li><strong>Paso 3 — Minimizar:</strong> $\|\boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta(\mathbf{x}_t,t)\|^2$ con descenso de gradiente estocástico.</li>
+</ul>
+<p class="note">La red $\boldsymbol{\epsilon}_\theta$ recibe la imagen ruidosa $\mathbf{x}_t$ y el instante $t$ codificado con un embedding sinusoidal (Transformer-style).</p>
+<div class="slide-num">17</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Entrenamiento: el objetivo simplificado</div>
+<h2>Predecir ruido es equivalente a estimar el score de la distribución perturbada</h2>
+<ul>
+  <li>El <strong>score</strong> de una distribución es $\nabla_\mathbf{x}\log p(\mathbf{x})$: apunta hacia las regiones de mayor densidad.</li>
+</ul>
+$$s_\theta(\mathbf{x}_t,t) = -\frac{\boldsymbol{\epsilon}_\theta(\mathbf{x}_t,t)}{\sqrt{1-\bar{\alpha}_t}} \approx \nabla_{\mathbf{x}_t}\log q(\mathbf{x}_t) \tag{6}$$
+<ul>
+  <li>Esta equivalencia une los DDPMs con los Modelos Generativos Basados en Score (Score-based Generative Models, SGMs) de Song y Ermon (2020).</li>
+  <li>Durante la generación, seguir el score desde $\mathbf{x}_T$ equivale a caminar cuesta arriba hacia los modos de $p(\mathbf{x})$.</li>
+</ul>
+<div class="slide-num">18</div>
+</section>
+
+<!-- § 5 · Score Matching y el límite continuo -->
+
+<section>
+<div class="section-label">§ 5 · Score Matching y el límite continuo</div>
+<h2>El límite $T \to \infty$ convierte la cadena discreta en una SDE</h2>
+<ul>
+  <li>Al hacer $T \to \infty$, el proceso discreto converge a una Ecuación Diferencial Estocástica (SDE):</li>
+</ul>
+$$d\mathbf{x} = f(\mathbf{x},t)\,dt + g(t)\,d\mathbf{w}$$
+<ul>
+  <li>$\mathbf{w}$ es un movimiento browniano estándar; $f$ es la deriva (drift) y $g$ la función de difusión.</li>
+  <li>El proceso forward destruye gradualmente la estructura; el proceso inverso (aprendido) la restaura.</li>
+</ul>
+<div class="slide-num">19</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Score Matching y el límite continuo</div>
+<h2>Toda SDE de difusión tiene una ODE de flujo de probabilidad equivalente</h2>
+<ul>
+  <li>Song et al. (2021): para cualquier SDE existe una ODE determinista que describe las mismas marginales $p_t(\mathbf{x})$:</li>
+</ul>
+$$\frac{d\mathbf{x}}{dt} = f(\mathbf{x},t) - \frac{1}{2}\,g(t)^2\,\nabla_\mathbf{x}\log p_t(\mathbf{x})$$
+<ul>
+  <li>La ODE de probabilidad permite calcular verosimilitud exacta con solvers numéricos (DOPRI5).</li>
+  <li>Permite acelerar el muestreo usando integradores de alta precisión, unificando DDPMs con Flujos Normalizados Continuos (CNF).</li>
+</ul>
+<div class="slide-num">20</div>
+</section>
+
+<!-- § 6 · Arquitecturas: U-Net y Diffusion Transformers -->
+
+<section>
+<div class="section-label">§ 6 · Arquitecturas: U-Net y DiT</div>
+<h2>La arquitectura para $\boldsymbol{\epsilon}_\theta$ debe operar a la misma resolución que la entrada</h2>
+<ul>
+  <li>Requisitos clave: expresividad suficiente, entrada y salida de igual dimensión espacial $H \times W \times C$, y condicionamiento en $t$ (y opcionalmente clase o texto $c$).</li>
+  <li><strong>U-Net</strong> (Ronneberger, Fischer y Brox, 2015): autoencoder convolucional con skip connections, diseñado para segmentación biomédica, adaptado como $\boldsymbol{\epsilon}_\theta$ estándar.</li>
+  <li><strong>DiT</strong> (Peebles y Xie, 2023): arquitectura Transformer pura, procesa la imagen como secuencia de parches de $p \times p$ píxeles proyectados a vectores de dimensión $d$.</li>
+</ul>
+<div class="slide-num">21</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Arquitecturas: U-Net y DiT</div>
+<h2>Arquitectura U-Net de tres niveles como $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t,t)$</h2>
+<div class="svg-holder"><svg viewBox="0 0 920 450" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="11" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="mPool2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#c0392b"/>
+    </marker>
+    <marker id="mUp2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#27ae60"/>
+    </marker>
+    <marker id="mSkip2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#666"/>
+    </marker>
+    <marker id="mIO2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <text x="460" y="20" text-anchor="middle" font-weight="bold" font-size="13">Arquitectura U-Net para ε_θ(x_t, t)</text>
+  <text x="72" y="62" text-anchor="middle" font-size="10" font-weight="bold">x_t</text>
+  <line x1="72" y1="67" x2="72" y2="88" stroke="#555" stroke-width="1.5" marker-end="url(#mIO2)"/>
+  <rect x="40" y="90" width="65" height="260" fill="#aec6e8" stroke="#4472c4" stroke-width="1.5"/>
+  <rect x="155" y="160" width="65" height="190" fill="#aec6e8" stroke="#4472c4" stroke-width="1.5"/>
+  <rect x="270" y="228" width="65" height="122" fill="#aec6e8" stroke="#4472c4" stroke-width="1.5"/>
+  <rect x="395" y="278" width="85" height="72" fill="#f4b8bd" stroke="#c0392b" stroke-width="2"/>
+  <text x="437" y="310" text-anchor="middle" font-size="9" font-weight="bold">Bottleneck</text>
+  <text x="437" y="323" text-anchor="middle" font-size="8" fill="#8b0000">512 ch · H/8×W/8</text>
+  <rect x="535" y="228" width="65" height="122" fill="#b7e1cd" stroke="#27ae60" stroke-width="1.5"/>
+  <rect x="650" y="160" width="65" height="190" fill="#b7e1cd" stroke="#27ae60" stroke-width="1.5"/>
+  <rect x="765" y="90" width="65" height="260" fill="#b7e1cd" stroke="#27ae60" stroke-width="1.5"/>
+  <line x1="797" y1="90" x2="797" y2="68" stroke="#555" stroke-width="1.5" marker-end="url(#mIO2)"/>
+  <text x="797" y="62" text-anchor="middle" font-size="10" font-weight="bold">ε_θ</text>
+  <line x1="105" y1="90" x2="155" y2="160" stroke="#c0392b" stroke-width="2" marker-end="url(#mPool2)"/>
+  <line x1="220" y1="160" x2="270" y2="228" stroke="#c0392b" stroke-width="2" marker-end="url(#mPool2)"/>
+  <line x1="335" y1="228" x2="395" y2="278" stroke="#c0392b" stroke-width="2" marker-end="url(#mPool2)"/>
+  <line x1="480" y1="278" x2="535" y2="228" stroke="#27ae60" stroke-width="2" marker-end="url(#mUp2)"/>
+  <line x1="600" y1="228" x2="650" y2="160" stroke="#27ae60" stroke-width="2" marker-end="url(#mUp2)"/>
+  <line x1="715" y1="160" x2="765" y2="90" stroke="#27ae60" stroke-width="2" marker-end="url(#mUp2)"/>
+  <path d="M 105 90 Q 435 38 765 90" stroke="#777" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#mSkip2)"/>
+  <path d="M 220 160 Q 435 108 650 160" stroke="#777" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#mSkip2)"/>
+  <path d="M 335 228 Q 435 188 535 228" stroke="#777" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#mSkip2)"/>
+  <text x="435" y="34" text-anchor="middle" font-size="9" fill="#666">conexiones de salto (concat)</text>
+  <text x="72" y="364" text-anchor="middle" font-size="9" fill="#4472c4">64 ch</text>
+  <text x="72" y="375" text-anchor="middle" font-size="9" fill="#555">H×W</text>
+  <text x="187" y="364" text-anchor="middle" font-size="9" fill="#4472c4">128 ch</text>
+  <text x="187" y="375" text-anchor="middle" font-size="9" fill="#555">H/2×W/2</text>
+  <text x="302" y="364" text-anchor="middle" font-size="9" fill="#4472c4">256 ch</text>
+  <text x="302" y="375" text-anchor="middle" font-size="9" fill="#555">H/4×W/4</text>
+  <text x="437" y="364" text-anchor="middle" font-size="9" fill="#c0392b">512 ch</text>
+  <text x="437" y="375" text-anchor="middle" font-size="9" fill="#555">H/8×W/8</text>
+  <text x="567" y="364" text-anchor="middle" font-size="9" fill="#27ae60">256 ch</text>
+  <text x="567" y="375" text-anchor="middle" font-size="9" fill="#555">H/4×W/4</text>
+  <text x="682" y="364" text-anchor="middle" font-size="9" fill="#27ae60">128 ch</text>
+  <text x="682" y="375" text-anchor="middle" font-size="9" fill="#555">H/2×W/2</text>
+  <text x="797" y="364" text-anchor="middle" font-size="9" fill="#27ae60">64 ch</text>
+  <text x="797" y="375" text-anchor="middle" font-size="9" fill="#555">H×W</text>
+  <text x="187" y="395" text-anchor="middle" font-size="10" fill="#4472c4" font-style="italic">← Encoder (contracción)</text>
+  <text x="437" y="395" text-anchor="middle" font-size="10" fill="#c0392b" font-style="italic">Cuello</text>
+  <text x="682" y="395" text-anchor="middle" font-size="10" fill="#27ae60" font-style="italic">Decoder (expansión) →</text>
+  <rect x="40" y="414" width="12" height="10" fill="#aec6e8" stroke="#4472c4" stroke-width="1"/>
+  <text x="56" y="423" font-size="9">Enc. (Conv×2 + ResBlock)</text>
+  <rect x="230" y="414" width="12" height="10" fill="#f4b8bd" stroke="#c0392b" stroke-width="1"/>
+  <text x="246" y="423" font-size="9">Bottleneck (+ atención)</text>
+  <rect x="420" y="414" width="12" height="10" fill="#b7e1cd" stroke="#27ae60" stroke-width="1"/>
+  <text x="436" y="423" font-size="9">Dec. (Conv×2 + ResBlock)</text>
+  <line x1="610" y1="419" x2="630" y2="419" stroke="#c0392b" stroke-width="2" marker-end="url(#mPool2)"/>
+  <text x="636" y="423" font-size="9">MaxPool ↓</text>
+  <line x1="710" y1="419" x2="730" y2="419" stroke="#27ae60" stroke-width="2" marker-end="url(#mUp2)"/>
+  <text x="736" y="423" font-size="9">Upsample ↑</text>
+  <line x1="800" y1="419" x2="820" y2="419" stroke="#777" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#mSkip2)"/>
+  <text x="826" y="423" font-size="9">Skip/concat</text>
+</svg></div>
+<div class="slide-num">22</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Arquitecturas: U-Net y DiT</div>
+<h2>U-Net: skip connections preservan detalle espacial; embedding de $t$ modula cada bloque</h2>
+<ul>
+  <li>Encoder aplica MaxPool en cada nivel: resolución se reduce a la mitad, canales se duplican (64 → 128 → 256 → 512).</li>
+  <li>Decoder recupera resolución con Upsample; las <strong>skip connections</strong> concatenan activaciones del encoder al nivel simétrico del decoder.</li>
+  <li>El instante $t$ se codifica con embedding sinusoidal y se inyecta en cada bloque residual mediante adición o modulación de normalización.</li>
+</ul>
+<div class="slide-num">23</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Arquitecturas: U-Net y DiT</div>
+<h2>Diffusion Transformer (DiT): reemplaza la U-Net por un Transformer sobre parches de imagen</h2>
+<ul>
+  <li><strong>DiT</strong> (Peebles y Xie, 2023): arquitectura Transformer pura usada como $\boldsymbol{\epsilon}_\theta$. La imagen $H \times W \times C$ se divide en parches de $p \times p$ píxeles, cada uno proyectado a un token de dimensión $d$, formando una secuencia procesada por bloques de atención.</li>
+  <li><strong>adaLN-Zero</strong> (Adaptive Layer Normalization): el instante $t$ y la condición $c$ (clase o texto) se proyectan a $(\gamma, \beta, \alpha)$ que modulan la normalización de capa; el bloque se inicializa como identidad ($\alpha=0$).</li>
+  <li>Los DiT escalan con la misma ley que los LLMs: mayor profundidad/ancho reduce FID de forma predecible — base de generadores de video como Sora.</li>
+</ul>
+<div class="slide-num">24</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Arquitecturas: U-Net y DiT</div>
+<h2>U-Net con embedding de tiempo vs. bloque DiT (adaLN-Zero)</h2>
+<div class="svg-holder"><svg viewBox="0 0 870 230" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="11" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="arr3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <text x="200" y="22" text-anchor="middle" font-weight="bold" font-size="13">U-Net con embedding de tiempo</text>
+  <rect x="160" y="30" width="80" height="30" rx="5" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="200" y="49" text-anchor="middle">xₜ (imagen)</text>
+  <line x1="200" y1="60" x2="200" y2="74" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="140" y="75" width="120" height="28" rx="4" fill="#fff3cd" stroke="#ffc107" stroke-width="1.2"/>
+  <text x="200" y="92" text-anchor="middle">Conv + ResBlock (64ch)</text>
+  <line x1="200" y1="103" x2="200" y2="117" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="120" y="118" width="160" height="28" rx="4" fill="#fff3cd" stroke="#ffc107" stroke-width="1.2"/>
+  <text x="200" y="135" text-anchor="middle">Downsample + ResBlock (128ch)</text>
+  <line x1="200" y1="146" x2="200" y2="160" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="130" y="161" width="140" height="28" rx="4" fill="#f8d7da" stroke="#dc3545" stroke-width="1.5"/>
+  <text x="200" y="178" text-anchor="middle">Atención + ResBlock</text>
+  <line x1="200" y1="189" x2="200" y2="203" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="120" y="204" width="160" height="20" rx="4" fill="#e8f4f8" stroke="#17a2b8" stroke-width="1.2"/>
+  <text x="200" y="218" text-anchor="middle">Upsample + Skip + ResBlock</text>
+  <rect x="300" y="75" width="80" height="28" rx="4" fill="#e8f4f8" stroke="#17a2b8" stroke-width="1.2"/>
+  <text x="340" y="89" text-anchor="middle" font-size="10">Embedding</text>
+  <text x="340" y="100" text-anchor="middle" font-size="10">sinusoidal (t)</text>
+  <line x1="300" y1="89"  x2="261" y2="89"  stroke="#17a2b8" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arr3)"/>
+  <path d="M 300 103 L 300 132 L 281 132" fill="none" stroke="#17a2b8" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arr3)"/>
+  <path d="M 300 103 L 300 175 L 271 175" fill="none" stroke="#17a2b8" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arr3)"/>
+  <path d="M 140 89 L 105 89 L 105 214 L 120 214" fill="none" stroke="#28a745" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <text x="92" y="155" text-anchor="middle" font-size="10" fill="#28a745">skip</text>
+  <text x="650" y="22" text-anchor="middle" font-weight="bold" font-size="13">Bloque DiT (adaLN-Zero)</text>
+  <rect x="590" y="30" width="120" height="28" rx="5" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="650" y="49" text-anchor="middle">Tokens de parches</text>
+  <line x1="650" y1="58" x2="650" y2="72" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="580" y="73" width="140" height="28" rx="4" fill="#fff3cd" stroke="#ffc107" stroke-width="1.2"/>
+  <text x="650" y="91" text-anchor="middle">adaLN (t, c → γ, β, α)</text>
+  <line x1="650" y1="101" x2="650" y2="115" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="580" y="116" width="140" height="28" rx="4" fill="#e8f4f8" stroke="#17a2b8" stroke-width="1.2"/>
+  <text x="650" y="134" text-anchor="middle">Multi-Head Attention</text>
+  <line x1="650" y1="144" x2="650" y2="158" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="580" y="159" width="140" height="28" rx="4" fill="#fff3cd" stroke="#ffc107" stroke-width="1.2"/>
+  <text x="650" y="177" text-anchor="middle">adaLN (t, c → γ, β, α)</text>
+  <line x1="650" y1="187" x2="650" y2="201" stroke="#555" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <rect x="580" y="202" width="140" height="22" rx="4" fill="#e8f4f8" stroke="#17a2b8" stroke-width="1.2"/>
+  <text x="650" y="217" text-anchor="middle">MLP pointwise</text>
+  <rect x="760" y="73" width="90" height="28" rx="4" fill="#f8d7da" stroke="#dc3545" stroke-width="1.2"/>
+  <text x="805" y="87" text-anchor="middle" font-size="10">Embedding</text>
+  <text x="805" y="98" text-anchor="middle" font-size="10">t y clase c</text>
+  <line x1="760" y1="87" x2="722" y2="87" stroke="#dc3545" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arr3)"/>
+  <line x1="760" y1="87" x2="722" y2="173" stroke="#dc3545" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arr3)"/>
+</svg></div>
+<div class="slide-num">25</div>
+</section>
+
+<!-- § 7 · Aceleración del muestreo -->
+
+<section>
+<div class="section-label">§ 7 · Aceleración del muestreo</div>
+<h2>$T = 1000$ evaluaciones secuenciales hacen la generación muy lenta</h2>
+<ul>
+  <li>Cada evaluación de $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t,t)$ es un pase completo por la red — para $T=1000$ esto toma minutos por imagen.</li>
+  <li>El cuello de botella es secuencial: los pasos no pueden paralelizarse porque $\mathbf{x}_{t-1}$ depende de $\mathbf{x}_t$.</li>
+  <li>Tres familias de estrategias: muestreo determinista acelerado (DDIM), destilación (distillation), y difusión en espacio latente (LDM).</li>
+</ul>
+<div class="slide-num">26</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Aceleración del muestreo</div>
+<h2>DDIM: muestreo determinista que reduce $T=1000$ a $S \in \{20,50\}$ pasos</h2>
+<ul>
+  <li>Los Denoising Diffusion Implicit Models (DDIM, Song et al., 2020) observan que $\mathcal{L}_\text{simple}$ no especifica completamente el proceso generativo.</li>
+  <li>Existen distribuciones no-Markovianas con las mismas marginales $q(\mathbf{x}_t|\mathbf{x}_0)$; DDIM escoge la alternativa <strong>determinista</strong> (sin ruido añadido por paso).</li>
+</ul>
+$$\mathbf{x}_{t-1} = \sqrt{\bar{\alpha}_{t-1}}\underbrace{\frac{\mathbf{x}_t - \sqrt{1-\bar{\alpha}_t}\,\boldsymbol{\epsilon}_\theta}{\sqrt{\bar{\alpha}_t}}}_{\text{predicción de } \mathbf{x}_0} + \sqrt{1-\bar{\alpha}_{t-1}}\,\boldsymbol{\epsilon}_\theta$$
+<div class="slide-num">27</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Aceleración del muestreo</div>
+<h2>Destilación y modelos de consistencia: generación en uno o pocos pasos</h2>
+<ul>
+  <li><strong>Destilación progresiva</strong> (Salimans y Ho, 2022): el estudiante aprende en 1 paso lo que el maestro hace en 2; repitiendo la reducción se obtienen modelos de 4–8 pasos.</li>
+  <li><strong>Modelos de consistencia</strong> (Song et al., 2023): se entrenan para que cualquier $\mathbf{x}_t$ en la trayectoria sea mapeado directamente a $\mathbf{x}_0$ en un solo paso, habilitando generación one-step con calidad competitiva.</li>
+</ul>
+<div class="slide-num">28</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Aceleración del muestreo</div>
+<h2>LDM: difusión en espacio latente comprimido reduce el costo 16–64 veces</h2>
+<ul>
+  <li>Operar sobre píxeles de $256 \times 256 \times 3$ requiere procesar $\sim$196k dimensiones en cada uno de los $T$ pasos.</li>
+  <li>Los Modelos de Difusión Latente (LDM, Rombach et al., 2022) codifican con un VAE preentrenado: $\mathbf{z} = \mathcal{E}(\mathbf{x})$, aplican difusión en el espacio latente comprimido, y decodifican con $\mathcal{D}(\mathbf{z})$.</li>
+  <li>Stable Diffusion es la implementación más conocida; la difusión latente se explora en detalle en el notebook G.7.</li>
+</ul>
+<div class="slide-num">29</div>
+</section>
+
+<!-- § 8 · Comparación con otros modelos generativos -->
+
+<section>
+<div class="section-label">§ 8 · Comparación con otros modelos generativos</div>
+<h2>Ninguna familia domina todas las dimensiones relevantes</h2>
+<ul>
+  <li>Las dimensiones prácticas son: acceso a la verosimilitud $p(\mathbf{x})$, estabilidad del entrenamiento, velocidad de generación, y calidad perceptual de las muestras.</li>
+  <li>Difusión y Score-based: entrenamiento estable (MSE), calidad muy alta, generación iterativa lenta $O(T)$.</li>
+  <li>GANs: generación rápida $O(1)$, calidad alta, pero entrenamiento inestable (mode collapse).</li>
+</ul>
+<div class="slide-num">30</div>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Comparación con otros modelos generativos</div>
+<h2>Comparación de familias de modelos generativos profundos</h2>
+<div class="svg-holder"><svg viewBox="0 0 870 320" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <text x="435" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Comparación de familias de modelos generativos profundos</text>
+  <rect x="30" y="40" width="150" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="105" y="60" text-anchor="middle" font-weight="bold" fill="#333">Familia</text>
+  <rect x="185" y="40" width="180" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="275" y="60" text-anchor="middle" font-weight="bold" fill="#333">Verosimilitud p(x)</text>
+  <rect x="370" y="40" width="170" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="455" y="60" text-anchor="middle" font-weight="bold" fill="#333">Entrenamiento</text>
+  <rect x="545" y="40" width="155" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="622" y="60" text-anchor="middle" font-weight="bold" fill="#333">Generación</text>
+  <rect x="705" y="40" width="155" height="32" rx="4" fill="#f0f0f0" stroke="#aaa"/>
+  <text x="782" y="60" text-anchor="middle" font-weight="bold" fill="#333">Calidad típica</text>
+  <rect x="30" y="76" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="98" text-anchor="middle" fill="#2c6aa0" font-weight="bold">VAE</text>
+  <rect x="185" y="76" width="180" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="275" y="98" text-anchor="middle" fill="#856404">Cota inferior (ELBO)</text>
+  <rect x="370" y="76" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="98" text-anchor="middle" fill="#1a7a42">Estable</text>
+  <rect x="545" y="76" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="622" y="98" text-anchor="middle" fill="#1a7a42">Un pase (rápida)</text>
+  <rect x="705" y="76" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="782" y="98" text-anchor="middle" fill="#c0392b">Borrosa</text>
+  <rect x="30" y="114" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="136" text-anchor="middle" fill="#2c6aa0" font-weight="bold">GAN</text>
+  <rect x="185" y="114" width="180" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="275" y="136" text-anchor="middle" fill="#c0392b">No disponible</text>
+  <rect x="370" y="114" width="170" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="455" y="136" text-anchor="middle" fill="#c0392b">Inestable, mode collapse</text>
+  <rect x="545" y="114" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="622" y="136" text-anchor="middle" fill="#1a7a42">Un pase (rápida)</text>
+  <rect x="705" y="114" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="782" y="136" text-anchor="middle" fill="#1a7a42">Muy alta, nítida</text>
+  <rect x="30" y="152" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="174" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Autoregresivo</text>
+  <rect x="185" y="152" width="180" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="275" y="174" text-anchor="middle" fill="#1a7a42">Exacta (regla cadena)</text>
+  <rect x="370" y="152" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="174" text-anchor="middle" fill="#1a7a42">Estable (cross-entropy)</text>
+  <rect x="545" y="152" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="622" y="174" text-anchor="middle" fill="#c0392b">Secuencial O(D)</text>
+  <rect x="705" y="152" width="155" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="782" y="174" text-anchor="middle" fill="#856404">Alta, BPD óptimo</text>
+  <rect x="30" y="190" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="212" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Flujo normalizado</text>
+  <rect x="185" y="190" width="180" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="275" y="212" text-anchor="middle" fill="#1a7a42">Exacta (cambio variable)</text>
+  <rect x="370" y="190" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="212" text-anchor="middle" fill="#1a7a42">Estable (NLL directa)</text>
+  <rect x="545" y="190" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="622" y="212" text-anchor="middle" fill="#1a7a42">Paralela O(1)</text>
+  <rect x="705" y="190" width="155" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="782" y="212" text-anchor="middle" fill="#856404">Media, detalles limitados</text>
+  <rect x="30" y="228" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="250" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Difusión (DDPM)</text>
+  <rect x="185" y="228" width="180" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="275" y="250" text-anchor="middle" fill="#856404">Cota ELBO simplificada</text>
+  <rect x="370" y="228" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="250" text-anchor="middle" fill="#1a7a42">Estable (denoising MSE)</text>
+  <rect x="545" y="228" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="622" y="250" text-anchor="middle" fill="#c0392b">Iterativa O(T pasos)</text>
+  <rect x="705" y="228" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="782" y="250" text-anchor="middle" fill="#1a7a42">Muy alta</text>
+  <rect x="30" y="266" width="150" height="34" rx="4" fill="#eaf2fb" stroke="#4a90d9"/>
+  <text x="105" y="288" text-anchor="middle" fill="#2c6aa0" font-weight="bold">Score-based (SDE)</text>
+  <rect x="185" y="266" width="180" height="34" rx="4" fill="#fef9e7" stroke="#e0a800"/>
+  <text x="275" y="288" text-anchor="middle" fill="#856404">Score matching</text>
+  <rect x="370" y="266" width="170" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="455" y="288" text-anchor="middle" fill="#1a7a42">Estable (DSM)</text>
+  <rect x="545" y="266" width="155" height="34" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+  <text x="622" y="288" text-anchor="middle" fill="#c0392b">Iterativa (SDE solver)</text>
+  <rect x="705" y="266" width="155" height="34" rx="4" fill="#e8f8e8" stroke="#27ae60"/>
+  <text x="782" y="288" text-anchor="middle" fill="#1a7a42">Muy alta</text>
+</svg></div>
+<div class="slide-num">31</div>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Comparación con otros modelos generativos</div>
+<h2>Difusión es la elección dominante cuando se prioriza calidad sobre velocidad</h2>
+<ul>
+  <li>Combina entrenamiento estable (regresión MSE) con calidad perceptual comparable o superior a las GAN.</li>
+  <li>Admite condicionamiento rico: clase, texto (CLIP), máscara — sin modificar la arquitectura base.</li>
+  <li>Limitación principal: latencia de generación; DDIM, destilación y LDM reducen el problema sin sacrificar calidad.</li>
+  <li>Base de Stable Diffusion, DALL-E y Sora; la familias DDPM, SGM y LDM convergen hacia la misma formulación matemática.</li>
+</ul>
+<div class="slide-num">32</div>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>Los modelos de difusión transforman la generación en una cadena de regresiones de ruido, con entrenamiento estable y calidad de estado del arte</h1>
+  <div class="byline" style="margin-top:1.5em; font-size:0.9em; color:var(--ink-soft);">
+    Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a>
+  </div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

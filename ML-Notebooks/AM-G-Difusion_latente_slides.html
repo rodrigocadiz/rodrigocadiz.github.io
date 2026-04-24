@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Modelos de Difusión Latente · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 2% 5% 2% 5%;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.2em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.3em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.35em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-height: 0;
+}
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 0.85em;
+  color: var(--ink-soft);
+  margin-top: 0.3em;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.svg-holder {
+  display: flex; align-items: stretch;
+  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
+  margin-top: 0.3em; overflow: hidden;
+}
+.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
+
+.title-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.12em;
+  text-transform: uppercase; margin-bottom: 1.5em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.8em; color: var(--ink); }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 0.8em; }
+
+.close-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.close-slide h1 { font-size: 2.2em; max-width: 20em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num {
+  position: absolute; bottom: 1.5%; right: 2.5%;
+  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.08em;
+}
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Modelos de Difusión Latente</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- § 1 · El autoencoder perceptual -->
+
+<section>
+<div class="section-label">§ 1 · El autoencoder perceptual</div>
+<h2>Los DDPMs en espacio de píxeles tienen un cuello de botella computacional</h2>
+<ul>
+  <li>Un Denoising Diffusion Probabilistic Model (DDPM) sobre píxeles $512 \times 512$ procesa $\sim$786k unidades espaciales en <em>cada uno</em> de los $T$ pasos del proceso inverso.</li>
+  <li>El costo de procesar $HW$ posiciones espaciales escala cuadráticamente con la resolución, haciendo inviable operar a alta resolución directamente en píxeles.</li>
+  <li>Los <strong>Modelos de Difusión Latente</strong> (LDM, Rombach et al., 2022) resuelven esto separando el problema: primero comprimir con un autoencoder, luego difundir en el espacio latente comprimido.</li>
+</ul>
+<div class="slide-num">2</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El autoencoder perceptual</div>
+<h2>El codificador $\mathcal{E}$ comprime la imagen; el decodificador $\mathcal{D}$ la reconstruye</h2>
+<ul>
+  <li>El codificador proyecta $\mathbf{x} \in \mathbb{R}^{H \times W \times 3}$ a $\mathbf{z} = \mathcal{E}(\mathbf{x}) \in \mathbb{R}^{h \times w \times c}$, con $h = H/f$, $w = W/f$ y factor de compresión $f \in \{4, 8, 16\}$.</li>
+  <li>El decodificador aprende la reconstrucción $\hat{\mathbf{x}} \approx \mathcal{D}(\mathbf{z})$; una vez entrenados, los pesos de $\mathcal{E}$ y $\mathcal{D}$ se <strong>congelan permanentemente</strong> antes de entrenar la difusión.</li>
+  <li>A diferencia de un VAE estándar, el autoencoder perceptual prioriza reconstrucción fotorrealista sobre regularidad del espacio latente: la penalización KL es mínima ($\lambda_\text{KL} \approx 10^{-6}$).</li>
+</ul>
+<div class="slide-num">3</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El autoencoder perceptual</div>
+<h2>La pérdida del autoencoder combina reconstrucción, percepción y adversario</h2>
+$$\mathcal{L}_{\text{AE}} = \mathcal{L}_{\text{rec}} + \lambda_{\text{KL}}\mathcal{L}_{\text{KL}} + \lambda_{\text{perc}}\mathcal{L}_{\text{perc}} + \lambda_{\text{adv}}\mathcal{L}_{\text{adv}} \tag{1}$$
+<ul>
+  <li>$\mathcal{L}_{\text{rec}}$: error píxel a píxel; $\mathcal{L}_{\text{KL}}$: regularización gaussiana muy leve (evita espacio latente disperso).</li>
+  <li>$\mathcal{L}_{\text{perc}}$: diferencia en activaciones de VGG — garantiza fidelidad semántica perceptual.</li>
+  <li>$\mathcal{L}_{\text{adv}}$: discriminador PatchGAN que penaliza artefactos de borrosidad local.</li>
+</ul>
+<div class="slide-num">4</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El autoencoder perceptual</div>
+<h2>LDM: autoencoder congelado en los extremos, difusión en el espacio latente</h2>
+<div class="svg-holder"><svg viewBox="0 0 870 210" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="arrL" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+  <rect x="10" y="60" width="90" height="90" rx="6" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="55" y="98" text-anchor="middle" font-weight="bold" font-size="13">x</text>
+  <text x="55" y="114" text-anchor="middle" font-size="10">H×W×3</text>
+  <text x="55" y="130" text-anchor="middle" font-size="10" fill="#666">imagen</text>
+  <line x1="100" y1="105" x2="145" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <rect x="146" y="75" width="70" height="60" rx="6" fill="#fff3cd" stroke="#ffc107" stroke-width="1.5"/>
+  <text x="181" y="102" text-anchor="middle" font-weight="bold" font-size="11">&#x2130;</text>
+  <text x="181" y="116" text-anchor="middle" font-size="10">(congelado)</text>
+  <line x1="216" y1="105" x2="261" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <rect x="262" y="75" width="80" height="60" rx="6" fill="#e8f4f8" stroke="#17a2b8" stroke-width="1.5"/>
+  <text x="302" y="99" text-anchor="middle" font-weight="bold" font-size="13">z&#x2080;</text>
+  <text x="302" y="114" text-anchor="middle" font-size="10">h&#xD7;w&#xD7;c</text>
+  <text x="302" y="128" text-anchor="middle" font-size="10" fill="#666">latente</text>
+  <line x1="342" y1="105" x2="387" y2="105" stroke="#dc3545" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <text x="364" y="96" text-anchor="middle" font-size="10" fill="#dc3545">difusi&#xF3;n</text>
+  <rect x="388" y="55" width="160" height="100" rx="8" fill="#fdf3f4" stroke="#dc3545" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="468" y="80" text-anchor="middle" font-weight="bold" font-size="12" fill="#dc3545">Difusi&#xF3;n en espacio latente</text>
+  <rect x="398" y="88" width="140" height="40" rx="5" fill="#fff3cd" stroke="#ffc107" stroke-width="1.2"/>
+  <text x="468" y="107" text-anchor="middle" font-size="11">&#x3B5;&#x3B8;(z&#x209C;, t, y)</text>
+  <text x="468" y="121" text-anchor="middle" font-size="10" fill="#888">U-Net condicionada</text>
+  <line x1="548" y1="105" x2="593" y2="105" stroke="#28a745" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <text x="570" y="96" text-anchor="middle" font-size="10" fill="#28a745">denoising</text>
+  <rect x="594" y="75" width="80" height="60" rx="6" fill="#e8f4f8" stroke="#17a2b8" stroke-width="1.5"/>
+  <text x="634" y="99" text-anchor="middle" font-weight="bold" font-size="13">&#x1E91;&#x2080;</text>
+  <text x="634" y="114" text-anchor="middle" font-size="10">h&#xD7;w&#xD7;c</text>
+  <text x="634" y="128" text-anchor="middle" font-size="10" fill="#666">latente limpio</text>
+  <line x1="674" y1="105" x2="719" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <rect x="720" y="75" width="70" height="60" rx="6" fill="#fff3cd" stroke="#ffc107" stroke-width="1.5"/>
+  <text x="755" y="102" text-anchor="middle" font-weight="bold" font-size="11">&#x1D49F;</text>
+  <text x="755" y="116" text-anchor="middle" font-size="10">(congelado)</text>
+  <line x1="790" y1="105" x2="835" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <rect x="836" y="60" width="25" height="90" rx="4" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="848" y="112" text-anchor="middle" font-weight="bold" font-size="12">x&#x302;</text>
+  <rect x="408" y="10" width="120" height="28" rx="5" fill="#f8d7da" stroke="#dc3545" stroke-width="1.2"/>
+  <text x="468" y="29" text-anchor="middle" font-size="11">Condici&#xF3;n y (texto/clase)</text>
+  <line x1="468" y1="38" x2="468" y2="55" stroke="#dc3545" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arrL)"/>
+  <text x="10" y="195" font-size="10" fill="#666">Congelado durante difusi&#xF3;n:</text>
+  <rect x="180" y="185" width="12" height="12" fill="#fff3cd" stroke="#ffc107"/>
+  <text x="196" y="195" font-size="10" fill="#666">autoencoder (&#x2130;, &#x1D4D9;)</text>
+  <text x="310" y="195" font-size="10" fill="#666">Entrenado:</text>
+  <rect x="368" y="185" width="12" height="12" fill="#fdf3f4" stroke="#dc3545"/>
+  <text x="384" y="195" font-size="10" fill="#666">denoiser &#x3B5;&#x3B8;</text>
+</svg></div>
+<div class="slide-num">5</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El autoencoder perceptual</div>
+<h2>Dos variantes del espacio latente: KL-continuo vs. VQ-discreto</h2>
+<ul>
+  <li><strong>LDM-KL</strong> (el más común): codificador predice media y varianza; espacio latente continuo con leve regularización gaussiana. Es el que usa Stable Diffusion.</li>
+  <li><strong>LDM-VQ</strong>: codificador cuantiza el latente con un codebook (tipo VQVAE), produciendo espacio discreto y perfectamente regular, pero con compresión irreversible más agresiva.</li>
+  <li>El latente retiene estructura semántica (formas, texturas globales) y descarta detalles de alta frecuencia imperceptibles — razón por la que la difusión puede operar eficientemente sobre $\mathbf{z}$.</li>
+</ul>
+<div class="slide-num">6</div>
+</section>
+
+<!-- § 2 · Difusión en el espacio latente -->
+
+<section>
+<div class="section-label">§ 2 · Difusión en el espacio latente</div>
+<h2>La difusión en $\mathbf{z}$ sigue la misma matemática del DDPM, solo cambia el dominio</h2>
+<ul>
+  <li>Con $\mathcal{E}$ y $\mathcal{D}$ congelados, el proceso directo corrompe $\mathbf{z}_0 = \mathcal{E}(\mathbf{x})$ hasta ruido gaussiano $\mathbf{z}_T \sim \mathcal{N}(\mathbf{0},\mathbf{I})$.</li>
+  <li>La marginal analítica del DDPM aplica sin cambios: $\mathbf{z}_t = \sqrt{\bar{\alpha}_t}\,\mathbf{z}_0 + \sqrt{1-\bar{\alpha}_t}\,\boldsymbol{\epsilon}$.</li>
+  <li>La red $\boldsymbol{\epsilon}_\theta(\mathbf{z}_t, t)$ predice el ruido en el espacio latente; el algoritmo de entrenamiento por mini-batch es idéntico al del DDPM.</li>
+</ul>
+<div class="slide-num">7</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Difusión en el espacio latente</div>
+<h2>El objetivo LDM es la misma pérdida MSE, pero sobre latentes $\mathcal{E}(\mathbf{x})$</h2>
+$$\mathcal{L}_{\text{LDM}} = \mathbb{E}_{\mathcal{E}(\mathbf{x}),\;\boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I}),\;t}\!\left[\|\boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta(\mathbf{z}_t,\,t)\|^2\right] \tag{2}$$
+<ul>
+  <li>Idéntico a $\mathcal{L}_\text{simple}$ del DDPM, pero la expectativa se toma sobre $\mathcal{E}(\mathbf{x})$ en lugar de los píxeles $\mathbf{x}$ directamente.</li>
+  <li>El entrenamiento de $\boldsymbol{\epsilon}_\theta$ no requiere imágenes completas en memoria: el autoencoder congelado codifica por lotes durante el entrenamiento.</li>
+</ul>
+<div class="slide-num">8</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Difusión en el espacio latente</div>
+<h2>Comprimir por $f$ reduce el costo de procesamiento en $f^4$ frente al espacio de píxeles</h2>
+<ul>
+  <li>El costo cuadrático en el número de posiciones espaciales cae de $O((HW)^2)$ en píxeles a $O((hw)^2)$ en el latente, donde $h = H/f$ y $w = W/f$; ganancia total: $(HW/hw)^2 = f^4$.</li>
+  <li>Para $f = 8$: reducción de $8^4 = 4096\times$ frente al espacio de píxeles. Para $f = 4$: reducción de $256\times$.</li>
+  <li>Stable Diffusion con $f = 8$ opera sobre tensores $64 \times 64$ en lugar de $512 \times 512$ — viable en una GPU de consumidor con 6 GB de VRAM.</li>
+</ul>
+<div class="slide-num">9</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Difusión en el espacio latente</div>
+<h2>$\mathbf{z}$ conserva estructura espacial: no es un único vector de semántica</h2>
+<ul>
+  <li>Error frecuente: creer que $\mathbf{z}$ es un único vector que resume el significado global de la imagen, descartando su estructura espacial (como haría la capa final de una red de clasificación).</li>
+  <li>El latente $\mathbf{z} \in \mathbb{R}^{h \times w \times c}$ tiene $h \times w$ posiciones espaciales; en cada posición hay $c$ canales (dimensiones de características, análogas a los canales RGB pero aprendidas), que codifican textura y estructura local — no solo semántica.</li>
+  <li>La difusión modela una representación espacialmente densa: el autoencoder elimina redundancias de píxeles, no información estructural.</li>
+</ul>
+<div class="slide-num">10</div>
+</section>
+
+<!-- § 3 · Mecanismo de atención -->
+
+<section>
+<div class="section-label">§ 3 · Mecanismo de atención</div>
+<h2>Las convoluciones no capturan dependencias espaciales de largo alcance</h2>
+<ul>
+  <li>Una convolución $k \times k$ agrega solo el vecindario local; alcanzar una región distante requiere $O(H/k)$ capas apiladas.</li>
+  <li>Al restaurar una región puede ser relevante la textura de una zona lejana, o un adjetivo al inicio del prompt — la atención resuelve esto en un solo paso.</li>
+  <li>El <strong>mecanismo de atención</strong> (Vaswani et al., 2017) permite que cada elemento de una secuencia agregue información de todos los demás de forma diferenciable, ponderando la relevancia de cada par.</li>
+</ul>
+<div class="slide-num">11</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Mecanismo de atención</div>
+<h2>Cada posición proyecta en tres roles: Consulta $Q$, Clave $K$, Valor $V$</h2>
+<ul>
+  <li>Dado $X \in \mathbb{R}^{n \times d_\text{in}}$ con $n$ vectores de entrada, las matrices $W_Q, W_K, W_V \in \mathbb{R}^{d_\text{in} \times d}$ producen:</li>
+</ul>
+$$Q = XW_Q \quad (\text{Consultas}),\quad K = XW_K \quad (\text{Claves}),\quad V = XW_V \quad (\text{Valores})$$
+<ul>
+  <li>$Q$ representa "qué busca" cada posición; $K$ representa "qué ofrece"; $V$ es la información que se transmite si hay coincidencia.</li>
+</ul>
+<div class="slide-num">12</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Mecanismo de atención</div>
+<h2>La salida pondera los Valores según la similitud entre Consultas y Claves</h2>
+$$\text{Attention}(Q,K,V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right)V \tag{3}$$
+<ul>
+  <li>$QK^\top \in \mathbb{R}^{n \times n}$: similitud entre todos los pares de posiciones; el factor $1/\sqrt{d}$ evita que los productos saturen el softmax.</li>
+  <li>La salida es una suma ponderada de los valores $V$, donde los pesos reflejan la relevancia de cada posición para responder a cada consulta.</li>
+</ul>
+<div class="slide-num">13</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Mecanismo de atención</div>
+<h2>Auto-atención modela coherencia espacial; atención cruzada alinea texto e imagen</h2>
+<ul>
+  <li><strong>Auto-atención:</strong> $Q$, $K$ y $V$ derivan de la misma secuencia — cada parche espacial del latente atiende a todos los demás, modelando dependencias globales.</li>
+  <li><strong>Atención cruzada (cross-attention):</strong> $Q$ deriva del latente; $K$ y $V$ derivan de una secuencia de texto — cada parche consulta directamente qué tokens del prompt son relevantes para su contenido local.</li>
+  <li>Este segundo mecanismo es el que habilita la generación condicionada por texto, aplicado en múltiples resoluciones dentro de la U-Net del LDM.</li>
+</ul>
+<div class="slide-num">14</div>
+</section>
+
+<!-- § 4 · Generación condicionada y atención cruzada -->
+
+<section>
+<div class="section-label">§ 4 · Generación condicionada y atención cruzada</div>
+<h2>El prompt se inyecta en la U-Net como condición explícita mediante $\tau_\theta$</h2>
+<ul>
+  <li>Para modelar $p(\mathbf{z} \mid y)$, la red recibe el condicionamiento como argumento: $\boldsymbol{\epsilon}_\theta(\mathbf{z}_t, t, y)$, donde $y$ es el prompt de texto o la clase.</li>
+  <li>Un codificador auxiliar $\tau_\theta$ — típicamente CLIP (Contrastive Language-Image Pretraining), entrenado con millones de pares imagen-texto — proyecta $y$ en embeddings $\tau_\theta(y) \in \mathbb{R}^{L \times d}$, donde $L$ es el número de tokens.</li>
+  <li>Estos embeddings se inyectan en la U-Net aplicando la ecuación (3) con $Q$ del latente y $K, V$ de $\tau_\theta(y)$.</li>
+</ul>
+<div class="slide-num">15</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Generación condicionada y atención cruzada</div>
+<h2>La cross-attention alinea regiones espaciales con tokens de texto</h2>
+<ul>
+  <li>Cada parche del latente aprende a atender a los tokens más relevantes: el parche del tejado atiende al token "tejado"; el del gato atiende a "gato naranja".</li>
+  <li>Este alineamiento espacial-textual emerge del entrenamiento, no de supervisión explícita — la red aprende cuáles tokens son relevantes para cada región.</li>
+  <li>La pérdida no cambia respecto a (2): el condicionamiento se propaga por backpropagation a través de los pesos de cross-attention y del codificador $\tau_\theta$.</li>
+</ul>
+<div class="slide-num">16</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Generación condicionada y atención cruzada</div>
+<h2>El condicionamiento por texto combina tres componentes con roles distintos</h2>
+<ul>
+  <li>Error frecuente: atribuir toda la sofisticación semántica al modelo de difusión. En realidad intervienen tres piezas separadas.</li>
+  <li>El <strong>modelo de difusión</strong> sintetiza imágenes coherentes; el <strong>codificador CLIP</strong> transforma el prompt en representación semántica; el <strong>guiado por prompt</strong> (Classifier-Free Guidance, §5) dirige el denoising hacia esa representación.</li>
+  <li>Sustituir CLIP por un codificador de audio o de profundidad daría un modelo condicionado por esas modalidades, sin modificar la difusión subyacente.</li>
+</ul>
+<div class="slide-num">17</div>
+</section>
+
+<!-- § 5 · Classifier-Free Guidance (CFG) -->
+
+<section>
+<div class="section-label">§ 5 · Classifier-Free Guidance (CFG)</div>
+<h2>La difusión condicional no garantiza adherencia estricta al prompt en inferencia</h2>
+<ul>
+  <li>Entrenar $\boldsymbol{\epsilon}_\theta(\mathbf{z}_t, t, y)$ maximiza la verosimilitud condicional promediada, pero no fuerza que las muestras generadas reproduzcan fielmente el prompt específico.</li>
+  <li>El <strong>Classifier-Free Guidance</strong> (CFG, Ho y Salimans, 2022) resuelve esto sin clasificador externo: la misma red aprende simultáneamente el score condicional e incondicional.</li>
+  <li>Durante el entrenamiento, el condicionamiento $y$ se descarta aleatoriamente (reemplazado por token vacío $\varnothing$) con probabilidad $p_\text{drop} \approx 0.1$.</li>
+</ul>
+<div class="slide-num">18</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Classifier-Free Guidance (CFG)</div>
+<h2>El score efectivo extrapola más allá del score condicional con escala $w$</h2>
+$$\tilde{\boldsymbol{\epsilon}}_\theta(\mathbf{z}_t,t,y) = \boldsymbol{\epsilon}_\theta(\mathbf{z}_t,t,\varnothing) + w\cdot\bigl(\boldsymbol{\epsilon}_\theta(\mathbf{z}_t,t,y) - \boldsymbol{\epsilon}_\theta(\mathbf{z}_t,t,\varnothing)\bigr) \tag{4}$$
+<ul>
+  <li>$w &gt; 1$ es la <strong>escala de guía</strong> (guidance scale); valores típicos en producción: $w \in [5, 15]$.</li>
+  <li>Para $w = 1$ se usa el score condicional directamente; para $w &gt; 1$ el vector apunta más extremadamente hacia lo que diferencia lo condicional de lo incondicional.</li>
+  <li>El proceso requiere dos evaluaciones de red por paso (condicional e incondicional) — costo doble en inferencia.</li>
+</ul>
+<div class="slide-num">19</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Classifier-Free Guidance (CFG)</div>
+<h2>La escala $w$ controla el tradeoff fidelidad-diversidad</h2>
+<ul>
+  <li>$w = 0$: score incondicional puro — máxima diversidad, sin adherencia al prompt.</li>
+  <li>$w$ grande: amplifica los rasgos del prompt a expensas de la varianza natural; pueden aparecer artefactos de sobreajuste al texto.</li>
+  <li><strong>Conexión con Bayes:</strong> la diferencia de scores es exactamente el gradiente del clasificador implícito $\nabla\log p(y|\mathbf{z}_t)$, escalado por $w$ para intensidad ajustable.</li>
+</ul>
+<div class="slide-num">20</div>
+</section>
+
+<!-- § 6 · Diffusion Transformers (DiT) y arquitecturas modernas -->
+
+<section>
+<div class="section-label">§ 6 · DiT y arquitecturas modernas</div>
+<h2>Diffusion Transformer (DiT): reemplaza la U-Net por atención global sobre parches</h2>
+<ul>
+  <li><strong>DiT</strong> (Peebles y Xie, 2023): arquitectura puramente atencional — el tensor latente ruidoso se descompone en parches vectorizados procesados como una secuencia con auto-atención global, sin encoder/decoder convolucional.</li>
+  <li>El condicionamiento en $t$ e $y$ se realiza mediante <strong>adaLN-Zero</strong> (Adaptive Layer Normalization): los embeddings de $t$ e $y$ modulan los parámetros $(\gamma, \beta, \alpha)$ de la normalización de capa; $\alpha$ se inicializa a cero para que cada bloque comience como identidad.</li>
+  <li>Los DiT eliminan los sesgos inductivos locales de las convoluciones, capturando dependencias globales desde la primera capa.</li>
+</ul>
+<div class="slide-num">21</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · DiT y arquitecturas modernas</div>
+<h2>Los DiT exhiben leyes de escalado predecibles y sustentan generadores modernos</h2>
+<ul>
+  <li>Peebles y Xie (2023) demostraron que al aumentar profundidad y ancho del Transformer, el FID decae de forma predecible y monótona — contrasta con las U-Nets, donde el escalado es menos sistemático.</li>
+  <li>Esta escalabilidad sustenta generadores de video de alta resolución como <strong>Sora</strong> (OpenAI, 2024).</li>
+  <li>El <strong>Flow Matching</strong> con <strong>Rectified Flows</strong> (Lipman et al., 2022): en lugar de cadena de Markov gaussiana, aprende un campo vectorial sobre <em>trayectorias rectas</em> — permite resolver la ODE en 20 o menos pasos; adoptado en Stable Diffusion 3 y Flux.</li>
+</ul>
+<div class="slide-num">22</div>
+</section>
+
+<!-- § 7 · Stable Diffusion -->
+
+<section>
+<div class="section-label">§ 7 · Stable Diffusion</div>
+<h2>Stable Diffusion: primera implementación LDM accesible en hardware de consumidor</h2>
+<ul>
+  <li>Stable Diffusion (SD, Rombach et al., CVPR 2022) fue la primera implementación de calidad comparable a sistemas privativos ejecutable en una GPU con 6 GB de VRAM.</li>
+  <li>Su clave no es un principio nuevo, sino una cadena de decisiones de diseño: comprimir con autoencoder KL ($f=8$), condicionar por texto con CLIP congelado, y usar CFG para controlar fidelidad.</li>
+  <li>Publicado en agosto de 2022, democratizó la síntesis texto-imagen al ser el primer modelo abierto de esta categoría.</li>
+</ul>
+<div class="slide-num">23</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Stable Diffusion</div>
+<h2>SD 1.x combina tres componentes entrenados independientemente</h2>
+<ul>
+  <li><strong>Autoencoder KL</strong> ($f = 8$): comprime $512 \times 512 \times 3$ a $64 \times 64 \times 4$ (factor 48×); pérdida perceptual + PatchGAN + KL con $\lambda \approx 10^{-6}$.</li>
+  <li><strong>Codificador de texto CLIP</strong> (ViT-L/14, congelado): convierte el prompt en embeddings de dimensión 768 inyectados en la U-Net por cross-attention en resoluciones $8\times$ y $16\times$.</li>
+  <li><strong>U-Net con atención</strong>: opera en $64 \times 64$; recibe $\mathbf{z}_t$, timestep $t$ (Fourier embeddings + MLP) y embeddings de texto; predice $\boldsymbol{\epsilon}_\theta$ con $\mathcal{L}_\text{LDM}$.</li>
+</ul>
+<div class="slide-num">24</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Stable Diffusion</div>
+<h2>Pipeline de inferencia de Stable Diffusion</h2>
+<div class="svg-holder"><svg viewBox="0 0 820 340" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <marker id="arrSD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#999"/>
+    </marker>
+    <marker id="arrbluSD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4e79a7"/>
+    </marker>
+    <marker id="arrornSD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#e88c00"/>
+    </marker>
+    <marker id="arrpurSD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#9b72cf"/>
+    </marker>
+    <marker id="arrgrnSD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2e8b57"/>
+    </marker>
+    <marker id="arrgldSD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#c0a000"/>
+    </marker>
+  </defs>
+  <rect x="20" y="130" width="130" height="80" rx="8" fill="#e8f4fd" stroke="#4e79a7" stroke-width="1.5"/>
+  <text x="85" y="162" text-anchor="middle" font-weight="bold" fill="#2c5f8a">Codificador</text>
+  <text x="85" y="178" text-anchor="middle" font-weight="bold" fill="#2c5f8a">de texto</text>
+  <text x="85" y="196" text-anchor="middle" font-size="11" fill="#555">CLIP ViT-L/14</text>
+  <rect x="20" y="30" width="130" height="44" rx="6" fill="#f5f5f5" stroke="#999" stroke-width="1.2"/>
+  <text x="85" y="54" text-anchor="middle" font-weight="bold" fill="#333">Prompt</text>
+  <text x="85" y="68" text-anchor="middle" font-size="11" fill="#555">"a cat on Mars"</text>
+  <line x1="85" y1="74" x2="85" y2="128" stroke="#999" stroke-width="1.5" marker-end="url(#arrSD)"/>
+  <text x="240" y="92" text-anchor="middle" font-size="11" fill="#4e79a7" font-style="italic">atenci&#xF3;n cruzada</text>
+  <line x1="150" y1="170" x2="290" y2="170" stroke="#4e79a7" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrbluSD)"/>
+  <rect x="20" y="240" width="130" height="60" rx="6" fill="#fff3e0" stroke="#e88c00" stroke-width="1.5"/>
+  <text x="85" y="267" text-anchor="middle" font-weight="bold" fill="#b05e00">Latente</text>
+  <text x="85" y="283" text-anchor="middle" font-weight="bold" fill="#b05e00">ruidoso z_t</text>
+  <text x="85" y="297" text-anchor="middle" font-size="11" fill="#555">64&#xD7;64&#xD7;4</text>
+  <rect x="175" y="270" width="100" height="44" rx="6" fill="#f0eafe" stroke="#9b72cf" stroke-width="1.5"/>
+  <text x="225" y="293" text-anchor="middle" font-weight="bold" fill="#5b2d8e">Embedding</text>
+  <text x="225" y="308" text-anchor="middle" font-weight="bold" fill="#5b2d8e">de timestep t</text>
+  <rect x="290" y="110" width="200" height="170" rx="10" fill="#eafaf1" stroke="#2e8b57" stroke-width="2"/>
+  <text x="390" y="147" text-anchor="middle" font-weight="bold" font-size="15" fill="#1a5c35">U-Net</text>
+  <text x="390" y="166" text-anchor="middle" font-size="11" fill="#2e8b57">(espacio latente)</text>
+  <text x="390" y="190" text-anchor="middle" font-size="11" fill="#444">Encoder &#x2192; Bottleneck</text>
+  <text x="390" y="206" text-anchor="middle" font-size="11" fill="#444">&#x2192; Decoder</text>
+  <text x="390" y="225" text-anchor="middle" font-size="11" fill="#444">Atenci&#xF3;n cruzada en</text>
+  <text x="390" y="241" text-anchor="middle" font-size="11" fill="#444">resoluciones 8&#xD7; y 16&#xD7;</text>
+  <text x="390" y="262" text-anchor="middle" font-size="12" fill="#2e8b57">predice &#x03B5;&#x03B8;(z_t, t, c)</text>
+  <line x1="150" y1="270" x2="288" y2="215" stroke="#e88c00" stroke-width="1.5" marker-end="url(#arrornSD)"/>
+  <line x1="275" y1="292" x2="290" y2="250" stroke="#9b72cf" stroke-width="1.5" marker-end="url(#arrpurSD)"/>
+  <rect x="520" y="130" width="130" height="80" rx="8" fill="#fef9e7" stroke="#c0a000" stroke-width="1.5"/>
+  <text x="585" y="162" text-anchor="middle" font-weight="bold" fill="#7a5f00">Muestreador</text>
+  <text x="585" y="178" text-anchor="middle" font-size="11" fill="#7a5f00">DDIM / DDPM</text>
+  <text x="585" y="196" text-anchor="middle" font-size="11" fill="#555">CFG (w &#x2208; [5,15])</text>
+  <line x1="490" y1="195" x2="518" y2="175" stroke="#2e8b57" stroke-width="1.5" marker-end="url(#arrgrnSD)"/>
+  <rect x="680" y="130" width="120" height="80" rx="8" fill="#fde8e8" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="740" y="162" text-anchor="middle" font-weight="bold" fill="#7b1c1c">Decoder</text>
+  <text x="740" y="178" text-anchor="middle" font-size="11" fill="#7b1c1c">VAE (f=8)</text>
+  <text x="740" y="196" text-anchor="middle" font-size="11" fill="#555">64&#xD7;64&#xD7;4 &#x2192; 512&#xD7;512</text>
+  <line x1="650" y1="170" x2="678" y2="170" stroke="#c0a000" stroke-width="1.5" marker-end="url(#arrgldSD)"/>
+  <rect x="680" y="255" width="120" height="50" rx="6" fill="#f5f5f5" stroke="#999" stroke-width="1.2"/>
+  <text x="740" y="278" text-anchor="middle" font-weight="bold" fill="#333">Imagen</text>
+  <text x="740" y="294" text-anchor="middle" font-size="11" fill="#555">512&#xD7;512 px</text>
+  <line x1="740" y1="210" x2="740" y2="253" stroke="#999" stroke-width="1.5" marker-end="url(#arrSD)"/>
+</svg></div>
+<div class="slide-num">25</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Stable Diffusion</div>
+<h2>SD 2.x mejora el codificador de texto; SD 3 abandona la U-Net completamente</h2>
+<ul>
+  <li><strong>SD 2.x (2022):</strong> reemplaza CLIP ViT-L/14 por OpenCLIP ViT-H/14 (entrenado con datos más limpios, mayor capacidad); resolución base sube a $768 \times 768$.</li>
+  <li><strong>SD 3 (2024):</strong> adopta arquitectura DiT con texto e imagen en una secuencia entrelazada (MM-DiT); sustituye el DDPM por Rectified Flow — generación de alta calidad en 20 o menos pasos.</li>
+  <li><strong>Flux (2024, Black Forest Labs):</strong> evolución de SD 3 con DiT modificado; actualmente el modelo texto-imagen abierto de mayor calidad.</li>
+</ul>
+<div class="slide-num">26</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Stable Diffusion</div>
+<h2>SD supera a los DDPM en píxeles con una fracción del costo computacional</h2>
+<ul>
+  <li>Los DDPM en píxeles escalan cuadráticamente con la resolución: cada paso procesa tensores $H \times W \times 3$ completos.</li>
+  <li>SD con $f = 8$ reportó FID $\approx 5.5$ a $512 \times 512$, con solo $\sim 1/4$ del tiempo de muestreo de DDPMs comparables.</li>
+  <li>La separación entre autoencoder y denoiser permite reutilizar el mismo espacio latente para múltiples modelos: fine-tuning eficiente (DreamBooth, LoRA) sin reentrenar el autoencoder.</li>
+</ul>
+<div class="slide-num">27</div>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>Los LDMs habilitan síntesis texto-imagen de alta fidelidad separando compresión perceptual, atención cruzada y difusión en un espacio latente eficiente</h1>
+  <div class="byline" style="margin-top:1.5em; font-size:0.9em; color:var(--ink-soft);">
+    Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a>
+  </div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

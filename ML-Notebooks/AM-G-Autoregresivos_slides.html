@@ -29,6 +29,7 @@
   .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
 }
 
+
 .reveal, .reveal .slides section {
   font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--ink);
@@ -39,14 +40,16 @@
 
 .reveal .slides section {
   padding: 2% 5% 2% 5%;
+  box-sizing: border-box;
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .section-label {
-  font-size: 0.65em;
+  font-size: 0.75em;
   color: var(--ink-faint);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -61,30 +64,43 @@
   text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
 }
 .reveal h2 {
-  font-size: 1.7em; font-weight: 700; color: var(--pluto-blue);
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
   margin: 0 0 0.35em 0; line-height: 1.2;
   text-transform: none; border: none; flex-shrink: 0;
 }
 
 .reveal p, .reveal li {
-  font-size: 1.45em;
+  font-size: 1.75em;
   line-height: 1.55;
   color: var(--ink);
 }
 .reveal ul {
-  margin: 0 0 0 1.1em;
+  padding-left: 1.3em;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   min-height: 0;
 }
-.reveal li { margin: 0; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
 .reveal strong { font-weight: 700; color: var(--ink); }
 .reveal em { font-style: italic; }
 .reveal a { color: var(--pluto-blue); text-decoration: none; }
 
-.reveal .katex-display { margin: 0.4em 0; font-size: 1.3em; }
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
 
 p.note {
   font-size: 0.85em;
@@ -95,10 +111,11 @@ p.note {
 }
 
 .svg-holder {
-  display: flex; align-items: center; justify-content: flex-start;
-  width: 100%; flex: 1; min-height: 0; margin-top: 0.3em;
+  display: flex; align-items: stretch;
+  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
+  margin-top: 0.3em; overflow: hidden;
 }
-.svg-holder svg { width: 100%; height: 100%; display: block; }
+.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
 
 .title-slide {
   display: flex; flex-direction: column; justify-content: center; height: 100%;
@@ -803,7 +820,7 @@ $$\mathcal{L}(\theta) = -\frac{1}{N} \sum_{n=1}^{N} \sum_{d=1}^{D} \ln p_\theta(
 Reveal.initialize({
   hash: true, controls: true, progress: true, slideNumber: false,
   transition: 'none', backgroundTransition: 'none',
-  width: 1280, height: 800, margin: 0.04,
+  width: 1280, height: 720, margin: 0.03,
   minScale: 0.3, maxScale: 2.5,
   katex: {
     version: 'latest',
