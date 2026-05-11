@@ -59,9 +59,12 @@
                 <details class="abc-input-details" style="margin-top:12px;">
                     <summary class="details-summary">Edit ABC Notation</summary>
                     <textarea id="abcIn" spellcheck="false" placeholder="Paste your ABC notation here..." style="margin-top:8px;">X:1
-T:Motive
-K:C
-!mp! ( .C2 D E2 -F3/2 G/2 ) !mf! A2 &gt;B2 !p! c4</textarea>
+T:
+M:4/4
+L:1/8
+Q:1/4=88
+K:Cmaj
+!mf! C2 !&lt;(! E2 G2 E2 | F2 .D2 !&lt;)! C4 ||</textarea>
                 </details>
             </div>
 
@@ -181,7 +184,7 @@ K:C
                 <p class="model-panel-info">
                     Your trained model lives in this browser's local storage — it persists between page reloads
                     but is tied to this browser and device.
-                    Use <strong>Download</strong> to export the weights as files (<code>.json</code> + <code>.bin</code>)
+                    Use <strong>Download</strong> to export the trained model as a single <code>.json</code> file
                     so you can back them up or load them in another browser or computer via <strong>Load File</strong>.
                 </p>
                 <div id="modelStatus" class="model-status-line"></div>
@@ -191,10 +194,10 @@ K:C
                     <button id="loadModelLs" class="btn-secondary btn-small"
                         data-tooltip="Load the model previously saved to this browser's local storage.">Load from Browser</button>
                     <button id="saveModelDl" class="btn-secondary btn-small"
-                        data-tooltip="Download the model weights as two files (.json + .bin). Use this to back up your model or move it to another device.">Download Files</button>
+                        data-tooltip="Download the trained model as a single .json file. Use this to back up or transfer your model.">Download Files</button>
                     <button id="loadModelFileBtn" class="btn-secondary btn-small"
-                        data-tooltip="Load model weights from downloaded files. Select both the .json and .bin files together.">Load Files</button>
-                    <input type="file" id="loadModelFile" accept=".json,.bin" multiple style="display:none" />
+                        data-tooltip="Load a previously downloaded model .json file.">Load Files</button>
+                    <input type="file" id="loadModelFile" accept=".json" style="display:none" />
                 </div>
             </div>
         </div>

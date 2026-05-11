@@ -48,9 +48,22 @@ async function saveModelDownload(tf) {
     const net = getVarNet();
     const lvt = getLogVarT();
     if (!net) throw new Error("Model not initialized.");
-    await net.save("downloads://variance-controller");
-    const t = lvt ? lvt.dataSync()[0] : -2.0;
-    downloadText("transpose_logvar.json", JSON.stringify({ logVarT: t }, null, 2));
+
+    let artifacts;
+    await net.save(tf.io.withSaveHandler(async a => {
+        artifacts = a;
+        return { modelArtifactsInfo: { dateSaved: new Date(), modelTopologyType: 'JSON' } };
+    }));
+
+    // Encode binary weights as base64 so everything fits in one JSON file
+    const weightB64 = btoa(String.fromCharCode(...new Uint8Array(artifacts.weightData)));
+    const bundle = {
+        modelTopology: artifacts.modelTopology,
+        weightSpecs:   artifacts.weightSpecs,
+        weightData:    weightB64,
+        logVarT:       lvt ? lvt.dataSync()[0] : -2.0
+    };
+    downloadText("variance-controller.json", JSON.stringify(bundle));
 }
 
 async function saveModelLocal(tf) {
@@ -73,6 +86,26 @@ async function loadModelLocal(tf) {
 async function loadModelFromFiles(tf, fileList) {
     const files = Array.from(fileList || []);
     if (!files.length) throw new Error("No files selected.");
+
+    // Single bundled JSON (new format)
+    if (files.length === 1 && files[0].name.endsWith('.json')) {
+        const bundle = JSON.parse(await files[0].text());
+        if (bundle.weightData && bundle.modelTopology) {
+            const weightData = Uint8Array.from(atob(bundle.weightData), c => c.charCodeAt(0)).buffer;
+            const model = await tf.loadLayersModel(
+                tf.io.fromMemory(bundle.modelTopology, bundle.weightSpecs, weightData)
+            );
+            setVarNet(model);
+            setOptimizer(tf.train.adam(0.02));
+            if (bundle.logVarT !== undefined) {
+                const lvt = getLogVarT();
+                if (lvt) lvt.assign(tf.scalar(bundle.logVarT));
+            }
+            return;
+        }
+    }
+
+    // Legacy: separate .json + .bin files
     const model = await tf.loadLayersModel(tf.io.browserFiles(files));
     setVarNet(model);
     setOptimizer(tf.train.adam(0.02));

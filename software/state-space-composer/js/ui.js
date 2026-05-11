@@ -177,9 +177,11 @@ function showVariant(idx, skipQuantize = false) {
     if (carouselSelectedIndex === idx) {
         selectBtn.textContent = "Selected";
         selectBtn.style.background = "var(--success)";
+        selectBtn.style.color = "#0a1520";
     } else {
         selectBtn.textContent = "Select";
         selectBtn.style.background = "";
+        selectBtn.style.color = "";
     }
 }
 
@@ -196,6 +198,7 @@ function selectCurrentVariant() {
     const selectBtn = document.getElementById("varSelect");
     selectBtn.textContent = "Selected";
     selectBtn.style.background = "var(--success)";
+    selectBtn.style.color = "#0a1520";
 }
 
 /* =========================================
