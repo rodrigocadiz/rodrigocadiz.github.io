@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Distorsión — Procesamiento de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_delay/index.html">1. Delay</a>
+  <a href="../02_comb_filter/index.html">2. Comb</a>
+  <a href="../03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="../04_flanger_chorus/index.html">4. Flanger/Chorus</a>
+  <a href="../05_reverb/index.html">5. Reverb</a>
+  <a href="../06_distorsion/index.html" class="active">6. Distorsión</a>
+  <a href="../07_wah/index.html">7. Wah-Wah</a>
+  <a href="../08_armonizador/index.html">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Distorsión</h1>
+      <p class="subtitle">Deformación no lineal de la onda — generación de armónicos por saturación</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Curva de transferencia y forma de onda</h2>
+    <p class="description">
+      La <span class="kw">distorsión</span> es una transformación no lineal aplicada muestra a muestra:
+      cada valor de entrada <em>x[n]</em> se mapea a una salida <em>y[n] = f(x[n])</em> mediante una
+      <span class="kw">curva de transferencia</span>. Si <em>f</em> fuera lineal, no habría cambio de timbre.
+      La no linealidad genera nuevos <span class="kw">armónicos</span> ausentes en la señal original.
+      El <span class="kw">soft clipping</span> (tanh) produce saturación suave con armónicos que decaen
+      gradualmente. El <span class="kw">hard clipping</span> recorta abruptamente generando un espectro
+      más rico (cuadrada con muchos impares). El <span class="kw">fuzz</span> satura casi de inmediato,
+      aproximando una onda cuadrada.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Drive: <span class="val" id="driveVal">5</span></label>
+        <input type="range" id="driveSlider" min="1" max="20" value="5" step="0.5">
+      </div>
+      <div class="btn-group">
+        <button class="btn" id="btnSoft" onclick="setType('soft')">Soft Clip</button>
+        <button class="btn" id="btnHard" onclick="setType('hard')">Hard Clip</button>
+        <button class="btn" id="btnFuzz" onclick="setType('fuzz')">Fuzz</button>
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Soft Clip · drive=5</div>
+    <canvas id="cnvMain" height="380"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Tipos de distorsión</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Soft Clipping — tanh</strong><br>
+        <code>y = tanh(drive · x)</code><br><br>
+        Saturación suave: la curva es continua y diferenciable en todos los puntos.
+        Simula la saturación de tubos de vacío y transistores bipolares. Genera
+        principalmente armónicos impares de amplitud decreciente. Sonido "cálido" y musical.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Hard Clipping</strong><br>
+        <code>y = clamp(drive · x, −1, 1)</code><br><br>
+        Recorte brusco en los picos: la señal se "corta" simétricamente.
+        Produce armónicos impares de gran amplitud (serie de cuadrada).
+        Característico de la distorsión de guitarra eléctrica y overdrives digitales.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff4444;">Fuzz</strong><br>
+        <code>y = sgn(x) · (1 − e^(−drive·|x|))</code><br><br>
+        Saturación extrema que lleva la señal casi inmediatamente a ±1.
+        El resultado se aproxima a una onda cuadrada para cualquier entrada no nula.
+        Sonido agresivo y distorsionado. Implementa la característica I-V de los
+        diodos en los primeros pedales fuzz de los años 60.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ff44;">WaveShaperNode</strong><br>
+        En Web Audio, el <code>WaveShaperNode</code> recibe una tabla de 256 o más
+        valores que definen la curva <em>f(x)</em> de −1 a +1. El nodo aplica
+        interpolación para cada muestra. Con <code>oversample='4x'</code> se reduce
+        el aliasing producido por las frecuencias de los nuevos armónicos.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let drive = 5;
+let distType = 'soft';
+let currentShaper = null;
+
+// Botones de tipo — no llama drawCanvas en tiempo de ejecución del script
+function setType(t) {
+  distType = t;
+  document.getElementById('btnSoft').classList.toggle('active', t === 'soft');
+  document.getElementById('btnHard').classList.toggle('active', t === 'hard');
+  document.getElementById('btnFuzz').classList.toggle('active', t === 'fuzz');
+  if (currentShaper) currentShaper.curve = buildCurve();
+  updateStatus(); drawCanvas();
+}
+
+// ── Curva de transferencia ────────────────────────────────────────────
+function distort(x) {
+  if (distType === 'soft') {
+    return Math.tanh(drive * x);
+  } else if (distType === 'hard') {
+    return Math.max(-1, Math.min(1, drive * x));
+  } else { // fuzz
+    return Math.sign(x) * (1 - Math.exp(-drive * Math.abs(x)));
+  }
+}
+
+function buildCurve() {
+  const n = 512;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / (n - 1) - 1;
+    curve[i] = Math.max(-1, Math.min(1, distort(x)));
+  }
+  return curve;
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────
+function drawCanvas() {
+  const canvas = document.getElementById('cnvMain');
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;  // H=380 from HTML attribute
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0a1520';
+  ctx.fillRect(0, 0, W, H);
+
+  const typeColors = { soft: '#ffaa00', hard: '#00ffff', fuzz: '#ff4444' };
+  const col = typeColors[distType];
+
+  // ── PANEL SUPERIOR: curva de transferencia ──────────────────────────
+  // Cuadrado anclado con padding explícito para garantizar espacio al título
+  const tfPadTop = 36;                                        // espacio sobre el cuadrado
+  const halfH = Math.floor(H / 2) - 10;                     // mitad útil del canvas
+  const side = Math.min(Math.floor(W * 0.38), halfH - tfPadTop - 6);
+  const tfL = Math.floor(W * 0.10);                          // borde izquierdo
+  const tfT = tfPadTop;
+  const tfR = tfL + side, tfB = tfT + side;
+  const tfW = side, tfH = side;
+  const tfCX = tfL + side / 2, tfCY = tfT + side / 2;
+
+  // Bordes del cuadrado
+  ctx.strokeStyle = 'rgba(100,180,255,0.50)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(tfL, tfT, tfW, tfH);
+
+  // Ejes dentro del cuadrado
+  ctx.strokeStyle = 'rgba(100,180,255,0.60)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(tfL, tfCY); ctx.lineTo(tfR, tfCY); ctx.stroke(); // horizontal
+  ctx.beginPath(); ctx.moveTo(tfCX, tfT); ctx.lineTo(tfCX, tfB); ctx.stroke(); // vertical
+
+  // Grid a ±0.5
+  ctx.strokeStyle = 'rgba(100,180,255,0.30)';
+  ctx.setLineDash([3, 5]);
+  [-0.5, 0.5].forEach(v => {
+    const xg = tfCX + v * tfW / 2;
+    const yg = tfCY - v * tfH / 2;
+    ctx.beginPath(); ctx.moveTo(xg, tfT); ctx.lineTo(xg, tfB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tfL, yg); ctx.lineTo(tfR, yg); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // Línea diagonal identidad (referencia)
+  ctx.strokeStyle = 'rgba(150,200,255,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(tfL, tfB); ctx.lineTo(tfR, tfT); ctx.stroke();
+
+  // Curva de transferencia
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let i = 0; i <= 300; i++) {
+    const x = (i / 300) * 2 - 1;
+    const y = distort(x);
+    const px = tfCX + x * tfW / 2;
+    const py = tfCY - y * tfH / 2;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Etiquetas ejes
+  ctx.fillStyle = 'rgba(150,200,255,0.80)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('+1', tfCX + tfW / 2 + 14, tfCY + 4);
+  ctx.fillText('−1', tfCX - tfW / 2 - 14, tfCY + 4);
+  ctx.fillText('+1', tfCX + 4, tfT - 6);
+  ctx.fillText('−1', tfCX + 4, tfB + 14);
+  ctx.fillStyle = 'rgba(150,200,255,0.65)';
+  ctx.fillText('entrada x →', tfCX, tfB + 26);
+  ctx.save();
+  ctx.translate(tfL - 28, tfCY);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('salida y', 0, 0);
+  ctx.restore();
+
+  // Título panel
+  ctx.fillStyle = col;
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Curva de transferencia f(x)', tfCX, tfT - 18);
+
+  // ── Texto explicativo a la derecha de la curva ──────────────────────
+  const txtX = tfR + 28;
+  const names = { soft: 'Soft Clip (tanh)', hard: 'Hard Clip', fuzz: 'Fuzz' };
+  const formulas = { soft: 'y = tanh(drive · x)', hard: 'y = clamp(drive · x, −1, 1)', fuzz: 'y = sgn(x)·(1−e^(−drive·|x|))' };
+  ctx.fillStyle = col;
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(names[distType], txtX, tfT + 20);
+  ctx.fillStyle = 'rgba(150,200,255,0.80)';
+  ctx.font = '12px monospace';
+  ctx.fillText(formulas[distType], txtX, tfT + 44);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(150,200,255,0.65)';
+  ctx.fillText(`drive = ${drive}`, txtX, tfT + 64);
+
+  // ── Separador horizontal ────────────────────────────────────────────
+  const sepY = H / 2 + 4;
+  ctx.strokeStyle = 'rgba(100,180,255,0.30)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 6]);
+  ctx.beginPath(); ctx.moveTo(20, sepY); ctx.lineTo(W - 20, sepY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── PANEL INFERIOR: forma de onda ───────────────────────────────────
+  const wfPadL = 50, wfPadR = 20, wfPadT = sepY + 22, wfPadB = H - 22;
+  const wfW = W - wfPadL - wfPadR;
+  const wfH = wfPadB - wfPadT;
+  const wfMY = wfPadT + wfH / 2;
+
+  // Ejes
+  ctx.strokeStyle = 'rgba(100,180,255,0.55)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(wfPadL, wfMY); ctx.lineTo(wfPadL + wfW, wfMY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(wfPadL, wfPadT); ctx.lineTo(wfPadL, wfPadB); ctx.stroke();
+
+  // Líneas ±1
+  ctx.strokeStyle = 'rgba(100,180,255,0.30)';
+  ctx.setLineDash([2, 5]);
+  const y1top = wfPadT + wfH * 0.04;
+  const y1bot = wfPadB - wfH * 0.04;
+  ctx.beginPath(); ctx.moveTo(wfPadL, y1top); ctx.lineTo(wfPadL + wfW, y1top); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(wfPadL, y1bot); ctx.lineTo(wfPadL + wfW, y1bot); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(150,200,255,0.55)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('+1', wfPadL - 4, y1top + 4);
+  ctx.fillText('−1', wfPadL - 4, y1bot + 4);
+  ctx.fillText(' 0', wfPadL - 4, wfMY + 4);
+
+  const N = 500, cycles = 2, amp = 0.82;
+
+  // Señal de entrada — seno (naranja semitransparente)
+  ctx.strokeStyle = 'rgba(255,170,0,0.50)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * cycles;
+    const x = amp * Math.sin(2 * Math.PI * t);
+    const px = wfPadL + (i / N) * wfW;
+    const py = wfMY - x * wfH * 0.46;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Señal de salida — distorsionada
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * cycles;
+    const x = amp * Math.sin(2 * Math.PI * t);
+    const y = Math.max(-1, Math.min(1, distort(x)));
+    const px = wfPadL + (i / N) * wfW;
+    const py = wfMY - y * wfH * 0.46;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Título y leyenda panel inferior
+  ctx.fillStyle = 'rgba(150,200,255,0.75)';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Forma de onda', wfPadL + wfW / 2, wfPadT - 6);
+  ctx.fillText('tiempo →', wfPadL + wfW / 2, wfPadB + 14);
+
+  ctx.fillStyle = 'rgba(255,170,0,0.70)';
+  ctx.fillRect(wfPadL + wfW - 170, wfPadT + 6, 9, 9);
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('entrada (seno)', wfPadL + wfW - 157, wfPadT + 15);
+  ctx.fillStyle = col;
+  ctx.fillRect(wfPadL + wfW - 170, wfPadT + 22, 9, 9);
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.fillText('salida (distorsionada)', wfPadL + wfW - 157, wfPadT + 31);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function startAudio() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+
+  const osc = actx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = 220;
+
+  const preGain = actx.createGain();
+  preGain.gain.setValueAtTime(0.0, t0);
+  preGain.gain.linearRampToValueAtTime(0.80, t0 + 0.015);
+
+  const shaper = actx.createWaveShaper();
+  shaper.curve = buildCurve();
+  shaper.oversample = '4x';
+  currentShaper = shaper;
+
+  const outGain = actx.createGain();
+  outGain.gain.value = 0.35;
+
+  osc.connect(preGain);
+  preGain.connect(shaper);
+  shaper.connect(outGain);
+  outGain.connect(actx.destination);
+
+  osc.start(t0);
+  _activeNodes.push(osc);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  currentShaper = null;
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('driveSlider').addEventListener('input', function() {
+  drive = +parseFloat(this.value).toFixed(1);
+  document.getElementById('driveVal').textContent = drive;
+  if (currentShaper) currentShaper.curve = buildCurve();
+  updateStatus(); drawCanvas();
+});
+
+function updateStatus() {
+  const names = { soft: 'Soft Clip', hard: 'Hard Clip', fuzz: 'Fuzz' };
+  document.getElementById('statusLabel').textContent =
+    `${names[distType]} · drive=${drive}`;
+}
+
+function init() {
+  // Inicializar botones y dibujar — solo cuando el layout está listo
+  document.getElementById('btnSoft').classList.add('active');
+  updateStatus();
+  drawCanvas();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawCanvas());
+</script>
+</body>
+</html>

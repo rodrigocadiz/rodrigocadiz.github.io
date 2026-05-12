@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Wah-Wah — Procesamiento de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_delay/index.html">1. Delay</a>
+  <a href="../02_comb_filter/index.html">2. Comb</a>
+  <a href="../03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="../04_flanger_chorus/index.html">4. Flanger/Chorus</a>
+  <a href="../05_reverb/index.html">5. Reverb</a>
+  <a href="../06_distorsion/index.html">6. Distorsión</a>
+  <a href="../07_wah/index.html" class="active">7. Wah-Wah</a>
+  <a href="../08_armonizador/index.html">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Wah-Wah</h1>
+      <p class="subtitle">Filtro pasa-banda resonante modulado — barrido formántico del tracto vocal</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Filtro pasa-banda con resonancia barredora</h2>
+    <p class="description">
+      El <span class="kw">wah-wah</span> es un filtro <span class="kw">pasa-banda</span> cuya frecuencia central
+      se barre periódicamente mediante un <span class="kw">LFO</span> (oscilador de baja frecuencia) o
+      un pedal manual. La resonancia <span class="kw">Q</span> determina cuán pronunciado y estrecho
+      es el pico: Q alto produce la característica vocal exagerada. Perceptualmente, el movimiento de
+      la frecuencia central imita el desplazamiento de los <span class="kw">formantes</span> del tracto
+      vocal al pronunciar "wah": el primer formante F1 sube de ~300 Hz a ~800 Hz. El canvas muestra
+      la respuesta en frecuencia del filtro en tiempo real mientras el LFO la barre.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Velocidad LFO: <span class="val" id="rateVal">1.5</span> Hz</label>
+        <input type="range" id="rateSlider" min="0.1" max="8" value="1.5" step="0.1">
+      </div>
+      <div class="control-group">
+        <label>Resonancia Q: <span class="val" id="qVal">8</span></label>
+        <input type="range" id="qSlider" min="1" max="20" value="8" step="0.5">
+      </div>
+      <div class="control-group">
+        <label>Rango: <span class="val" id="rangeVal">400–2400</span> Hz</label>
+        <input type="range" id="rangeSlider" min="1" max="5" value="3" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">LFO=1.5 Hz · Q=8 · rango 400–2400 Hz</div>
+    <canvas id="cnvMain" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Principio del wah-wah</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Filtro pasa-banda resonante</strong><br>
+        El BPF de segundo orden tiene función de transferencia:<br><br>
+        <code>|H(f)| máx. en f₀ con ancho de banda BW = f₀/Q</code><br><br>
+        Q alto → pico estrecho y pronunciado → carácter vocal marcado.<br>
+        Q bajo → curva ancha → efecto sutil, más "musical".
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Modulación por LFO</strong><br>
+        El LFO (oscilador sinusoidal a ~0.1–8 Hz) mueve f₀ entre un mínimo y un máximo.
+        En Web Audio: <code>lfo → lfoGain → filter.frequency</code> (AudioParam).
+        La ganancia del lfoGain determina la profundidad del barrido en Hz.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ff44;">Analogía vocal</strong><br>
+        Al decir "waaah", el primer formante F1 sube desde ~300 Hz (vocal /u/)
+        hasta ~800 Hz (vocal /a/). El wah exagera este movimiento usando frecuencias
+        más altas y Q resonante para imitar la articulación del tracto vocal.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff4444;">Pedal vs LFO automático</strong><br>
+        El pedal wah original (Vox, 1967) mueve f₀ manualmente con el pie.
+        El wah automático usa un LFO. El <strong>auto-wah</strong> o <strong>envelope filter</strong>
+        controla f₀ mediante la envolvente de amplitud de la propia señal: más fuerte
+        → frecuencia más alta (síntesis reactiva).
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let lfoRate = 1.5;
+let qVal = 8;
+let rangeIdx = 3; // índice 1-5 → rangos predefinidos
+
+// Rangos de barrido: [fMin, fMax]
+const RANGES = [
+  null,
+  [200,  800],
+  [300, 1200],
+  [400, 2400],
+  [500, 3500],
+  [600, 5000],
+];
+function getRange() { return RANGES[rangeIdx]; }
+function fCenter()  { const r = getRange(); return (r[0] + r[1]) / 2; }
+function fDepth()   { const r = getRange(); return (r[1] - r[0]) / 2; }
+
+let currentFilter = null;
+let currentLFOGain = null;
+let currentLFO = null;
+let animId = null;
+let startTS = null;
+
+// ── BPF magnitude ─────────────────────────────────────────────────────
+function bpfMag(f, f0, Q) {
+  if (f <= 0 || f0 <= 0) return 0;
+  const r = f / f0;
+  const denom = Math.sqrt((1 - r * r) * (1 - r * r) + (r / Q) * (r / Q));
+  if (denom < 1e-12) return Q;
+  return (r / Q) / denom;
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+const F_MIN = 80, F_MAX = 8000;
+
+function freqToX(f, padL, bw) {
+  return padL + (Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN)) * bw;
+}
+
+function drawCanvas(elapsed) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 56, padR = 20, padT = 24, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  // f0 actual del LFO
+  const lfoVal = Math.sin(2 * Math.PI * lfoRate * (elapsed || 0));
+  const f0 = fCenter() + lfoVal * fDepth();
+
+  // Ejes
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT + bh); ctx.lineTo(padL + bw, padT + bh); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + bh); ctx.stroke();
+
+  // Grid vertical logarítmico (décadas)
+  ctx.setLineDash([2, 5]);
+  ctx.strokeStyle = 'rgba(100,180,255,0.20)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  [100, 200, 500, 1000, 2000, 5000].forEach(f => {
+    const x = freqToX(f, padL, bw);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.60)';
+    ctx.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x, padT + bh + 16);
+  });
+  ctx.setLineDash([]);
+
+  // Grid horizontal (0 dB y −20 dB)
+  ctx.strokeStyle = 'rgba(100,180,255,0.15)';
+  ctx.setLineDash([2, 6]);
+  const y0dB  = padT + bh - bh * 1.00;
+  const ym20  = padT + bh - bh * 0.10;
+  ctx.beginPath(); ctx.moveTo(padL, y0dB); ctx.lineTo(padL + bw, y0dB); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, ym20); ctx.lineTo(padL + bw, ym20); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(150,200,255,0.50)';
+  ctx.textAlign = 'right';
+  ctx.fillText('0 dB', padL - 4, y0dB + 4);
+  ctx.fillText('−20 dB', padL - 4, ym20 + 4);
+
+  // Zona de barrido (sombreado)
+  const r = getRange();
+  const xMin = freqToX(r[0], padL, bw);
+  const xMax = freqToX(r[1], padL, bw);
+  ctx.fillStyle = 'rgba(255,170,0,0.07)';
+  ctx.fillRect(xMin, padT, xMax - xMin, bh);
+
+  // Curva de respuesta del BPF
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  let first = true;
+  const steps = 500;
+  for (let i = 0; i <= steps; i++) {
+    const logF = Math.log(F_MIN) + (i / steps) * Math.log(F_MAX / F_MIN);
+    const f = Math.exp(logF);
+    const mag = bpfMag(f, f0, qVal);
+    const clampedMag = Math.min(mag, 1.05);
+    const x = padL + (i / steps) * bw;
+    const y = padT + bh - clampedMag * bh * 0.92;
+    if (first) { ctx.moveTo(x, y); first = false; }
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Marcador f0 vertical
+  const xF0 = freqToX(f0, padL, bw);
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(xF0, padT); ctx.lineTo(xF0, padT + bh); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ffaa00';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`f₀ = ${Math.round(f0)} Hz`, xF0, padT + 14);
+
+  // Etiquetas de rango
+  ctx.fillStyle = 'rgba(255,170,0,0.55)';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${r[0]}`, xMin, padT + bh - 8);
+  ctx.fillText(`${r[1]}`, xMax, padT + bh - 8);
+
+  // Ejes labels
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('|H|', padL - 4, padT + 16);
+  ctx.textAlign = 'center';
+  ctx.fillText('frecuencia (Hz) →', padL + bw / 2, H - 4);
+
+  // Q label
+  ctx.fillStyle = 'rgba(0,255,255,0.65)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(`Q = ${qVal}`, padL + bw - 4, padT + 14);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function startAudio() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+
+  const osc = actx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = 110;
+  const srcGain = actx.createGain();
+  srcGain.gain.setValueAtTime(0.0, t0);
+  srcGain.gain.linearRampToValueAtTime(0.55, t0 + 0.015);
+  osc.connect(srcGain);
+
+  const filter = actx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = fCenter();
+  filter.Q.value = qVal;
+  currentFilter = filter;
+
+  // LFO oscilador → ganancia → filter.frequency
+  const lfo = actx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.value = lfoRate;
+  const lfoGain = actx.createGain();
+  lfoGain.gain.value = fDepth();
+  currentLFO = lfo;
+  currentLFOGain = lfoGain;
+  lfo.connect(lfoGain);
+  lfoGain.connect(filter.frequency);
+
+  const master = actx.createGain();
+  master.gain.value = 0.5;
+
+  srcGain.connect(filter);
+  filter.connect(master);
+  master.connect(actx.destination);
+
+  osc.start(t0);
+  lfo.start(t0);
+  _activeNodes.push(osc);
+  _activeNodes.push(lfo);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+  startAnimation();
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  currentFilter = null;
+  currentLFO = null;
+  currentLFOGain = null;
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas(0);
+}
+
+// ── Animación ─────────────────────────────────────────────────────────
+function animate(ts) {
+  if (!startTS) startTS = ts;
+  const elapsed = (ts - startTS) / 1000;
+  drawCanvas(elapsed);
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+function startAnimation() {
+  startTS = null;
+  animId = requestAnimationFrame(animate);
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('rateSlider').addEventListener('input', function() {
+  lfoRate = +parseFloat(this.value).toFixed(1);
+  document.getElementById('rateVal').textContent = lfoRate.toFixed(1);
+  if (currentLFO) currentLFO.frequency.value = lfoRate;
+  updateStatus();
+});
+
+document.getElementById('qSlider').addEventListener('input', function() {
+  qVal = +parseFloat(this.value).toFixed(1);
+  document.getElementById('qVal').textContent = qVal;
+  if (currentFilter) currentFilter.Q.value = qVal;
+  updateStatus(); if (!playing) drawCanvas(0);
+});
+
+const rangeLabels = ['', '200–800', '300–1200', '400–2400', '500–3500', '600–5000'];
+document.getElementById('rangeSlider').addEventListener('input', function() {
+  rangeIdx = +this.value;
+  document.getElementById('rangeVal').textContent = rangeLabels[rangeIdx];
+  if (currentFilter) {
+    currentFilter.frequency.value = fCenter();
+    if (currentLFOGain) currentLFOGain.gain.value = fDepth();
+  }
+  updateStatus(); if (!playing) drawCanvas(0);
+});
+
+function updateStatus() {
+  const r = getRange();
+  document.getElementById('statusLabel').textContent =
+    `LFO=${lfoRate.toFixed(1)} Hz · Q=${qVal} · rango ${r[0]}–${r[1]} Hz`;
+}
+
+function init() { drawCanvas(0); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) drawCanvas(0); });
+</script>
+</body>
+</html>

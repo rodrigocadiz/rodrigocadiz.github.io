@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Filtro Comb — Procesamiento de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .block-diagram { display:flex; align-items:center; justify-content:center; margin:12px 0 8px; }
+    .block-diagram svg { max-width:100%; height:auto; }
+  </style>
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_delay/index.html">1. Delay</a>
+  <a href="../02_comb_filter/index.html" class="active">2. Comb</a>
+  <a href="../03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="../04_flanger_chorus/index.html">4. Flanger/Chorus</a>
+  <a href="../05_reverb/index.html">5. Reverb</a>
+  <a href="../06_distorsion/index.html">6. Distorsión</a>
+  <a href="../07_wah/index.html">7. Wah-Wah</a>
+  <a href="../08_armonizador/index.html">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Filtro Comb</h1>
+      <p class="subtitle">FIR, IIR y filtro comb combinado — peaks y notches periódicos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════════ SECCIÓN 1: FIR -->
+<section class="section-card">
+  <h2>FIR Comb — alimentación directa (feedforward)</h2>
+  <p class="description">
+    La versión <span class="kw">FIR</span> (Finite Impulse Response) mezcla la señal directa
+    con una copia retrasada M₁ muestras y escalada por g₁.
+    La ecuación <code>y[n] = x[n] + g₁·x[n−M₁]</code> produce solo
+    <span class="kw">notches</span> en las frecuencias donde los dos caminos se cancelan
+    (si g₁ negativo, también genera peaks). No hay feedback: el filtro es siempre estable.
+  </p>
+
+  <!-- Diagrama de bloques FIR -->
+  <div class="block-diagram">
+    <svg width="560" height="115" viewBox="0 0 560 115" style="font-family:monospace;font-size:13px;">
+      <!-- Etiquetas -->
+      <text x="18" y="44" fill="#99ccff" text-anchor="middle">x(n)</text>
+      <text x="534" y="44" fill="#99ccff" text-anchor="middle">y(n)</text>
+      <!-- Señal directa: x(n) → sumador -->
+      <line x1="32" y1="40" x2="424" y2="40" stroke="#00ffff" stroke-width="2"/>
+      <!-- Flecha → sumador izquierdo -->
+      <polygon points="418,35 426,40 418,45" fill="#00ffff"/>
+      <!-- Sumador (círculo con + blanco) -->
+      <circle cx="440" cy="40" r="14" fill="rgba(0,55,75,0.9)" stroke="#00ffff" stroke-width="2"/>
+      <line x1="440" y1="32" x2="440" y2="48" stroke="white" stroke-width="1.5"/>
+      <line x1="432" y1="40" x2="448" y2="40" stroke="white" stroke-width="1.5"/>
+      <!-- Salida sumador → y(n) -->
+      <line x1="454" y1="40" x2="520" y2="40" stroke="#00ffff" stroke-width="2"/>
+      <polygon points="514,35 520,40 514,45" fill="#00ffff"/>
+      <!-- Punto de bifurcación en la señal directa -->
+      <circle cx="80" cy="40" r="4" fill="#00ffff"/>
+      <!-- Feedforward: baja desde la bifurcación -->
+      <line x1="80" y1="40" x2="80" y2="88" stroke="#00ffff" stroke-width="2"/>
+      <!-- Feedforward: va derecha hacia z^-M1 -->
+      <line x1="80" y1="88" x2="150" y2="88" stroke="#00ffff" stroke-width="2"/>
+      <!-- Bloque z^-M1 -->
+      <rect x="150" y="75" width="94" height="26" rx="4" fill="rgba(0,75,95,0.6)" stroke="#00ffff" stroke-width="1.5"/>
+      <text x="197" y="92" fill="#00ffff" text-anchor="middle">z⁻ᴹ¹</text>
+      <!-- Alambre z^-M1 → g1 -->
+      <line x1="244" y1="88" x2="278" y2="88" stroke="#00ffff" stroke-width="2"/>
+      <polygon points="272,83 278,88 272,93" fill="#00ffff"/>
+      <!-- Triángulo g1 (punta derecha = señal fluye izquierda→derecha) -->
+      <polygon points="278,70 278,106 336,88" fill="rgba(0,75,95,0.6)" stroke="#00ffff" stroke-width="1.5"/>
+      <text x="297" y="93" fill="#ffaa00" text-anchor="middle">g₁</text>
+      <!-- Alambre g1 → bajo el sumador -->
+      <line x1="336" y1="88" x2="440" y2="88" stroke="#00ffff" stroke-width="2"/>
+      <!-- Sube al sumador desde abajo -->
+      <line x1="440" y1="88" x2="440" y2="55" stroke="#00ffff" stroke-width="2"/>
+      <!-- Flecha ↑ hacia sumador por abajo -->
+      <polygon points="435,59 440,54 445,59" fill="#00ffff"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Retardo M₁: <span class="val" id="fir_dtVal">5</span> ms</label>
+      <input type="range" id="fir_dtSlider" min="1" max="30" value="5" step="0.5">
+    </div>
+    <div class="control-group">
+      <label>Ganancia g₁: <span class="val" id="fir_g1Val">+1.00</span></label>
+      <input type="range" id="fir_g1Slider" min="-1" max="1" value="1" step="0.05">
+    </div>
+    <div class="btn-group">
+      <button class="btn play" id="fir_btnPlay" onclick="firTogglePlay()">▶ Escuchar</button>
+    </div>
+  </div>
+
+  <div class="canvas-label" id="fir_statusLabel">FIR — M₁=5 ms · g₁=+1.00</div>
+  <canvas id="fir_cnv" height="220"></canvas>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ SECCIÓN 2: IIR -->
+<section class="section-card">
+  <h2>IIR Comb — realimentación (feedback)</h2>
+  <p class="description">
+    La versión <span class="kw">IIR</span> (Infinite Impulse Response) retroalimenta la salida
+    a través de un retardo M₂ escalado por g₂:
+    <code>y[n] = x[n] + g₂·y[n−M₂]</code>.
+    A diferencia del FIR, produce tanto <span class="kw">peaks</span> pronunciados como notches.
+    La ganancia en los peaks es <code>1/(1−|g₂|)</code>. Con g₂ cercano a 1, el filtro
+    se vuelve inestable. Perceptualmente se escucha un efecto de resonancia o "metalización".
+  </p>
+
+  <!-- Diagrama de bloques IIR -->
+  <div class="block-diagram">
+    <svg width="560" height="115" viewBox="0 0 560 115" style="font-family:monospace;font-size:13px;">
+      <!-- Etiquetas -->
+      <text x="18" y="44" fill="#99ccff" text-anchor="middle">x(n)</text>
+      <text x="534" y="44" fill="#99ccff" text-anchor="middle">y(n)</text>
+      <!-- Entrada → sumador -->
+      <line x1="32" y1="40" x2="104" y2="40" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="98,35 106,40 98,45" fill="#ffaa00"/>
+      <!-- Sumador (círculo con + blanco) -->
+      <circle cx="120" cy="40" r="14" fill="rgba(75,40,0,0.9)" stroke="#ffaa00" stroke-width="2"/>
+      <line x1="120" y1="32" x2="120" y2="48" stroke="white" stroke-width="1.5"/>
+      <line x1="112" y1="40" x2="128" y2="40" stroke="white" stroke-width="1.5"/>
+      <!-- Salida sumador → y(n) -->
+      <line x1="134" y1="40" x2="520" y2="40" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="514,35 520,40 514,45" fill="#ffaa00"/>
+      <!-- Punto de bifurcación en la salida -->
+      <circle cx="430" cy="40" r="4" fill="#ffaa00"/>
+      <!-- Baja al camino de feedback -->
+      <line x1="430" y1="40" x2="430" y2="88" stroke="#ffaa00" stroke-width="2"/>
+      <!-- Izquierda hacia g2 -->
+      <line x1="430" y1="88" x2="357" y2="88" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="363,83 357,88 363,93" fill="#ffaa00"/>
+      <!-- Triángulo g2 (punta izquierda: señal fluye derecha→izquierda) -->
+      <polygon points="357,70 357,106 297,88" fill="rgba(75,40,0,0.6)" stroke="#ffaa00" stroke-width="1.5"/>
+      <text x="337" y="93" fill="#00ffff" text-anchor="middle">g₂</text>
+      <!-- g2 → z^-M2 -->
+      <line x1="297" y1="88" x2="244" y2="88" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="250,83 244,88 250,93" fill="#ffaa00"/>
+      <!-- Bloque z^-M2 -->
+      <rect x="150" y="75" width="94" height="26" rx="4" fill="rgba(75,40,0,0.5)" stroke="#ffaa00" stroke-width="1.5"/>
+      <text x="197" y="92" fill="#ffaa00" text-anchor="middle">z⁻ᴹ²</text>
+      <!-- z^-M2 izquierda → sumador (horizontal) -->
+      <line x1="150" y1="88" x2="120" y2="88" stroke="#ffaa00" stroke-width="2"/>
+      <!-- Sube al sumador desde abajo -->
+      <line x1="120" y1="88" x2="120" y2="55" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="115,59 120,54 125,59" fill="#ffaa00"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Retardo M₂: <span class="val" id="iir_dtVal">5</span> ms</label>
+      <input type="range" id="iir_dtSlider" min="1" max="30" value="5" step="0.5">
+    </div>
+    <div class="control-group">
+      <label>Feedback g₂: <span class="val" id="iir_g2Val">0.70</span></label>
+      <input type="range" id="iir_g2Slider" min="0" max="0.92" value="0.70" step="0.02">
+    </div>
+    <div class="btn-group">
+      <button class="btn play" id="iir_btnPlay" onclick="iirTogglePlay()">▶ Escuchar</button>
+    </div>
+  </div>
+
+  <div class="canvas-label" id="iir_statusLabel">IIR — M₂=5 ms · g₂=0.70 · ganancia peak: 3.3</div>
+  <canvas id="iir_cnv" height="220"></canvas>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ SECCIÓN 3: Combinado -->
+<section class="section-card">
+  <h2>Filtro Comb Combinado — feedforward + feedback</h2>
+  <p class="description">
+    El filtro comb <span class="kw">combinado</span> integra ambas ramas:
+    <code>y[n] = x[n] + g₁·x[n−M₁] + g₂·y[n−M₂]</code>.
+    La rama feedforward (g₁, M₁) fija la posición de los notches;
+    la rama feedback (g₂, M₂) añade peaks resonantes. Si M₁ = M₂,
+    peaks y notches se alternan regularmente. Con M₁ ≠ M₂, la
+    respuesta se vuelve más compleja. Este esquema es la base de los filtros comb
+    de la reverberación de Schroeder y de los flangers con feedback.
+  </p>
+
+  <!-- Diagrama de bloques Combinado -->
+  <div class="block-diagram">
+    <svg width="640" height="175" viewBox="0 0 640 175" style="font-family:monospace;font-size:12px;">
+      <!-- Leyenda -->
+      <line x1="32" y1="8" x2="52" y2="8" stroke="#00ff44" stroke-width="2"/>
+      <text x="56" y="12" fill="#00ff44" font-size="11">feedforward</text>
+      <line x1="155" y1="8" x2="175" y2="8" stroke="#ffaa00" stroke-width="2"/>
+      <text x="179" y="12" fill="#ffaa00" font-size="11">feedback</text>
+      <!-- Etiquetas -->
+      <text x="18" y="59" fill="#99ccff" text-anchor="middle">x(n)</text>
+      <text x="626" y="59" fill="#99ccff" text-anchor="middle">y(n)</text>
+
+      <!-- ── Señal directa (verde) — gap en x=94-106 donde sube el feedback ── -->
+      <line x1="32" y1="55" x2="94" y2="55" stroke="#00ff44" stroke-width="2"/>
+      <line x1="106" y1="55" x2="473" y2="55" stroke="#00ff44" stroke-width="2"/>
+      <polygon points="467,50 475,55 467,60" fill="#00ff44"/>
+      <!-- Sumador -->
+      <circle cx="490" cy="55" r="15" fill="rgba(0,60,0,0.9)" stroke="#00ff44" stroke-width="2"/>
+      <line x1="490" y1="47" x2="490" y2="63" stroke="white" stroke-width="1.5"/>
+      <line x1="482" y1="55" x2="498" y2="55" stroke="white" stroke-width="1.5"/>
+      <!-- Salida → y(n) -->
+      <line x1="505" y1="55" x2="620" y2="55" stroke="#00ff44" stroke-width="2"/>
+      <polygon points="614,50 620,55 614,60" fill="#00ff44"/>
+
+      <!-- Puntos de bifurcación -->
+      <circle cx="80" cy="55" r="4" fill="#00ff44"/>
+      <circle cx="555" cy="55" r="4" fill="#ffaa00"/>
+
+      <!-- ── Feedforward (verde) ── -->
+      <!-- Baja desde bifurcación -->
+      <line x1="80" y1="55" x2="80" y2="105" stroke="#00ff44" stroke-width="2"/>
+      <!-- Horizontal con gap en x=94-106 donde sube el feedback -->
+      <line x1="80" y1="105" x2="94" y2="105" stroke="#00ff44" stroke-width="2"/>
+      <line x1="106" y1="105" x2="152" y2="105" stroke="#00ff44" stroke-width="2"/>
+      <!-- z^-M1 -->
+      <rect x="152" y="92" width="94" height="26" rx="4" fill="rgba(0,60,0,0.5)" stroke="#00ff44" stroke-width="1.5"/>
+      <text x="199" y="110" fill="#00ff44" text-anchor="middle">z⁻ᴹ¹</text>
+      <!-- z^-M1 → g1 -->
+      <line x1="246" y1="105" x2="280" y2="105" stroke="#00ff44" stroke-width="2"/>
+      <polygon points="274,100 280,105 274,110" fill="#00ff44"/>
+      <!-- g1 (punta derecha) -->
+      <polygon points="280,87 280,123 340,105" fill="rgba(0,60,0,0.5)" stroke="#00ff44" stroke-width="1.5"/>
+      <text x="300" y="110" fill="#ffaa00" text-anchor="middle">g₁</text>
+      <!-- g1 → sumador (horizontal + sube) -->
+      <line x1="340" y1="105" x2="484" y2="105" stroke="#00ff44" stroke-width="2"/>
+      <line x1="484" y1="105" x2="484" y2="71" stroke="#00ff44" stroke-width="2"/>
+      <polygon points="479,75 484,70 489,75" fill="#00ff44"/>
+
+      <!-- ── Feedback (naranja) ── -->
+      <!-- Baja desde bifurcación de salida -->
+      <line x1="555" y1="55" x2="555" y2="148" stroke="#ffaa00" stroke-width="2"/>
+      <!-- Izquierda → z^-M2 -->
+      <line x1="555" y1="148" x2="462" y2="148" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="468,143 462,148 468,153" fill="#ffaa00"/>
+      <!-- z^-M2 -->
+      <rect x="368" y="135" width="94" height="26" rx="4" fill="rgba(75,40,0,0.5)" stroke="#ffaa00" stroke-width="1.5"/>
+      <text x="415" y="153" fill="#ffaa00" text-anchor="middle">z⁻ᴹ²</text>
+      <!-- z^-M2 → g2 -->
+      <line x1="368" y1="148" x2="332" y2="148" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="338,143 332,148 338,153" fill="#ffaa00"/>
+      <!-- g2 (punta izquierda) -->
+      <polygon points="332,130 332,166 272,148" fill="rgba(75,40,0,0.5)" stroke="#ffaa00" stroke-width="1.5"/>
+      <text x="312" y="153" fill="#00ffff" text-anchor="middle">g₂</text>
+      <!-- g2 → izquierda -->
+      <line x1="272" y1="148" x2="100" y2="148" stroke="#ffaa00" stroke-width="2"/>
+      <!-- Sube por x=100 (las líneas verdes tienen gap aquí) -->
+      <line x1="100" y1="148" x2="100" y2="20" stroke="#ffaa00" stroke-width="2"/>
+      <!-- Derecha hacia el sumador por arriba -->
+      <line x1="100" y1="20" x2="490" y2="20" stroke="#ffaa00" stroke-width="2"/>
+      <!-- Baja al sumador desde arriba -->
+      <line x1="490" y1="20" x2="490" y2="39" stroke="#ffaa00" stroke-width="2"/>
+      <polygon points="485,35 490,40 495,35" fill="#ffaa00"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>M₁ (feedforward): <span class="val" id="cmb_m1Val">5</span> ms</label>
+      <input type="range" id="cmb_m1Slider" min="1" max="30" value="5" step="0.5">
+    </div>
+    <div class="control-group">
+      <label>g₁ (feedforward): <span class="val" id="cmb_g1Val">+0.80</span></label>
+      <input type="range" id="cmb_g1Slider" min="-1" max="1" value="0.80" step="0.05">
+    </div>
+    <div class="control-group">
+      <label>M₂ (feedback): <span class="val" id="cmb_m2Val">5</span> ms</label>
+      <input type="range" id="cmb_m2Slider" min="1" max="30" value="5" step="0.5">
+    </div>
+    <div class="control-group">
+      <label>g₂ (feedback): <span class="val" id="cmb_g2Val">0.60</span></label>
+      <input type="range" id="cmb_g2Slider" min="0" max="0.92" value="0.60" step="0.02">
+    </div>
+    <div class="btn-group">
+      <button class="btn play" id="cmb_btnPlay" onclick="cmbTogglePlay()">▶ Escuchar</button>
+    </div>
+  </div>
+
+  <div class="canvas-label" id="cmb_statusLabel">Combinado — M₁=5 ms · g₁=+0.80 · M₂=5 ms · g₂=0.60</div>
+  <canvas id="cmb_cnv" height="220"></canvas>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ SECCIÓN 4: Info -->
+<section class="section-card">
+  <h2>Comparación y aplicaciones</h2>
+
+  <div class="info-box" style="margin-bottom:16px;">
+    <strong style="color:#ffffff;">Notación z⁻ᴹ — bloque de retardo</strong><br><br>
+    En los diagramas de bloques, <span class="kw">z⁻ᴹ</span> representa simplemente un
+    <strong>retardo de M muestras</strong>: si la señal de entrada en el instante n es x[n],
+    la salida del bloque es x[n−M] (la misma señal, pero M muestras antes en el tiempo).
+    A 44 100 Hz de frecuencia de muestreo, un retardo de M = 220 muestras equivale a
+    5 ms. La letra z viene de la <em>transformada Z</em>, herramienta matemática para
+    analizar sistemas digitales, pero <strong>no es necesario conocerla</strong> para entender
+    estos filtros: z⁻ᴹ = "esperar M muestras".
+  </div>
+
+  <div class="two-col">
+    <div class="info-box">
+      <strong style="color:#00ffff;">FIR Comb — solo notches</strong><br>
+      <code>y[n] = x[n] + g₁·x[n−M₁]</code><br><br>
+      Siempre estable. Notches en <em>f = (2k+1)/(2M₁)</em> (con g₁&gt;0).
+      Con g₁&lt;0: peaks en esos puntos, notches en los múltiplos de 1/M₁.
+      Espaciado entre features: <em>1/D</em> Hz.
+    </div>
+    <div class="info-box">
+      <strong style="color:#ffaa00;">IIR Comb — peaks resonantes</strong><br>
+      <code>y[n] = x[n] + g₂·y[n−M₂]</code><br><br>
+      Peaks en f = k/M₂ con ganancia 1/(1−g₂). Inestable si |g₂| ≥ 1.
+      Perceptualmente: metalización y resonancias características.
+    </div>
+    <div class="info-box ok">
+      <strong style="color:#00ff44;">Aplicaciones</strong><br>
+      <strong>Flanger:</strong> IIR comb, D muy corto (1–15 ms), modulado por LFO.<br>
+      <strong>Chorus:</strong> FIR comb, D medio (10–50 ms), varias voces.<br>
+      <strong>Reverb Schroeder:</strong> red de combs IIR + all-pass en serie.
+    </div>
+    <div class="info-box">
+      <strong style="color:#00ffff;">Espaciado de peaks/notches</strong><br>
+      Con D=5 ms: peaks cada 200 Hz (en 200, 400, 600…).
+      Con D=1 ms: peaks cada 1000 Hz.<br>
+      Retardos cortos → "peines" amplios; retardos largos → peines muy densos.
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════
+// SHARED — frequency response drawing helper
+// ════════════════════════════════════════════════════════════
+function drawCombResponse(canvasId, params) {
+  const canvas = document.getElementById(canvasId);
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 24, padT = 20, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const { D1, g1, D2, g2, mode, color } = params;
+
+  // Frequency axis max: show at least 6 peaks
+  const Dmin = Math.min(D1 || D2, D2 || D1);
+  const fMax = Math.min(20000, Math.max(6 / Dmin, 8000));
+
+  // Compute magnitude
+  function mag(f) {
+    if (mode === 'fir') {
+      const ph = 2 * Math.PI * f * D1;
+      const re = 1 + g1 * Math.cos(ph);
+      const im = -g1 * Math.sin(ph);
+      return Math.sqrt(re * re + im * im);
+    } else if (mode === 'iir') {
+      const ph = 2 * Math.PI * f * D2;
+      const re = 1 - g2 * Math.cos(ph);
+      const im = g2 * Math.sin(ph);
+      return 1 / Math.sqrt(re * re + im * im);
+    } else {
+      // combined: H(z) = (1 + g1*z^-M1) / (1 - g2*z^-M2)
+      const ph1 = 2 * Math.PI * f * D1;
+      const ph2 = 2 * Math.PI * f * D2;
+      const numRe = 1 + g1 * Math.cos(ph1);
+      const numIm = -g1 * Math.sin(ph1);
+      const denRe = 1 - g2 * Math.cos(ph2);
+      const denIm = g2 * Math.sin(ph2);
+      const num = Math.sqrt(numRe * numRe + numIm * numIm);
+      const den = Math.sqrt(denRe * denRe + denIm * denIm);
+      return num / Math.max(den, 1e-6);
+    }
+  }
+
+  const dbMax = mode === 'iir' || mode === 'combined' ? 20 : 8;
+  const zeroY = padT + bh * 0.55;
+
+  function magToY(m) {
+    const db = 20 * Math.log10(Math.max(1e-6, m));
+    const dbC = Math.max(-30, Math.min(dbMax, db));
+    return zeroY - (dbC / dbMax) * bh * 0.45;
+  }
+
+  // 0 dB line
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, zeroY); ctx.lineTo(padL + bw, zeroY); ctx.stroke();
+
+  // Grid vertical at 1/D intervals
+  const spacing = 1 / Dmin;
+  for (let k = 1; k * spacing <= fMax; k++) {
+    const x = padL + (k * spacing / fMax) * bw;
+    ctx.strokeStyle = 'rgba(100,180,255,0.15)';
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+    if (k <= 6) {
+      ctx.fillStyle = 'rgba(150,200,255,0.45)';
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      const fkhz = k * spacing / 1000;
+      ctx.fillText(fkhz < 1 ? Math.round(k * spacing) + '' : fkhz.toFixed(1) + 'k',
+                   x, padT + bh + 14);
+    }
+  }
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('0 dB', padL - 4, zeroY + 4);
+  ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz) →', padL + bw / 2, H - 4);
+  ctx.save(); ctx.translate(14, padT + bh / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Magnitud', 0, 0); ctx.restore();
+
+  // Response curve
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  const N = 700;
+  for (let i = 0; i <= N; i++) {
+    const f = (i / N) * fMax;
+    const y = magToY(mag(f));
+    const x = padL + (f / fMax) * bw;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Fill under curve
+  const fillColor = color.replace(')', ',0.07)').replace('rgb', 'rgba').replace('#', '');
+  ctx.fillStyle = color === '#00ffff' ? 'rgba(0,255,255,0.07)' :
+                  color === '#ffaa00' ? 'rgba(255,170,0,0.07)' : 'rgba(0,255,68,0.07)';
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const f = (i / N) * fMax;
+    const y = magToY(mag(f));
+    const x = padL + (f / fMax) * bw;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.lineTo(padL + bw, zeroY); ctx.lineTo(padL, zeroY);
+  ctx.closePath(); ctx.fill();
+}
+
+// ════════════════════════════════════════════════════════════
+// FIR COMB
+// ════════════════════════════════════════════════════════════
+let firPlaying = false;
+let firD = 0.005, firG1 = 1.0;
+let firDelay = null, firFwdGain = null, firActx = null;
+
+function firDraw() {
+  drawCombResponse('fir_cnv', { D1: firD, g1: firG1, mode: 'fir', color: '#00ffff' });
+}
+
+function firUpdateStatus() {
+  document.getElementById('fir_statusLabel').textContent =
+    `FIR — M₁=${(firD * 1000).toFixed(1)} ms · g₁=${firG1 >= 0 ? '+' : ''}${firG1.toFixed(2)}`;
+}
+
+function firStartAudio() {
+  firActx = getAudioContext();
+  const bufLen = firActx.sampleRate * 2;
+  const buf = firActx.createBuffer(1, bufLen, firActx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+  const src = firActx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+
+  const srcGain = firActx.createGain();
+  const t0 = firActx.currentTime + 0.01;
+  srcGain.gain.setValueAtTime(0, t0);
+  srcGain.gain.linearRampToValueAtTime(0.40, t0 + 0.015);
+  src.connect(srcGain);
+
+  const delayNode = firActx.createDelay(1.0);
+  delayNode.delayTime.value = firD;
+  firDelay = delayNode;
+
+  const fwdGain = firActx.createGain();
+  fwdGain.gain.value = firG1;
+  firFwdGain = fwdGain;
+
+  const master = firActx.createGain();
+  master.gain.value = 0.38;
+  master.connect(firActx.destination);
+
+  srcGain.connect(master);           // direct path
+  srcGain.connect(delayNode);
+  delayNode.connect(fwdGain);
+  fwdGain.connect(master);           // feedforward path
+
+  src.start(t0);
+  _activeNodes.push(src);
+}
+
+function firTogglePlay() {
+  if (firPlaying) {
+    firPlaying = false;
+    stopAllAudio();
+    firDelay = null; firFwdGain = null; firActx = null;
+    document.getElementById('fir_btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('fir_btnPlay').classList.remove('active');
+    firDraw();
+    return;
+  }
+  firPlaying = true;
+  document.getElementById('fir_btnPlay').textContent = '■ Detener';
+  document.getElementById('fir_btnPlay').classList.add('active');
+  firStartAudio();
+}
+
+document.getElementById('fir_dtSlider').addEventListener('input', function() {
+  firD = +this.value / 1000;
+  document.getElementById('fir_dtVal').textContent = this.value;
+  if (firDelay) firDelay.delayTime.value = firD;
+  firUpdateStatus(); firDraw();
+});
+document.getElementById('fir_g1Slider').addEventListener('input', function() {
+  firG1 = +parseFloat(this.value).toFixed(2);
+  document.getElementById('fir_g1Val').textContent = (firG1 >= 0 ? '+' : '') + firG1.toFixed(2);
+  if (firFwdGain) firFwdGain.gain.value = firG1;
+  firUpdateStatus(); firDraw();
+});
+
+// ════════════════════════════════════════════════════════════
+// IIR COMB
+// ════════════════════════════════════════════════════════════
+let iirPlaying = false;
+let iirD = 0.005, iirG2 = 0.70;
+let iirDelay = null, iirFBGain = null, iirActx = null;
+
+function iirDraw() {
+  drawCombResponse('iir_cnv', { D2: iirD, g2: iirG2, mode: 'iir', color: '#ffaa00' });
+}
+
+function iirUpdateStatus() {
+  const peakGain = (1 / (1 - iirG2)).toFixed(1);
+  document.getElementById('iir_statusLabel').textContent =
+    `IIR — M₂=${(iirD * 1000).toFixed(1)} ms · g₂=${iirG2.toFixed(2)} · ganancia peak: ${peakGain}`;
+}
+
+function iirStartAudio() {
+  iirActx = getAudioContext();
+  const bufLen = iirActx.sampleRate * 2;
+  const buf = iirActx.createBuffer(1, bufLen, iirActx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+  const src = iirActx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+
+  const srcGain = iirActx.createGain();
+  const t0 = iirActx.currentTime + 0.01;
+  srcGain.gain.setValueAtTime(0, t0);
+  srcGain.gain.linearRampToValueAtTime(0.35, t0 + 0.015);
+  src.connect(srcGain);
+
+  const delayNode = iirActx.createDelay(1.0);
+  delayNode.delayTime.value = iirD;
+  iirDelay = delayNode;
+
+  const fbGain = iirActx.createGain();
+  fbGain.gain.value = iirG2;
+  iirFBGain = fbGain;
+
+  const master = iirActx.createGain();
+  master.gain.value = 0.40;
+  master.connect(iirActx.destination);
+
+  srcGain.connect(master);
+  srcGain.connect(delayNode);
+  delayNode.connect(fbGain);
+  fbGain.connect(delayNode);         // feedback loop
+  delayNode.connect(master);
+
+  src.start(t0);
+  _activeNodes.push(src);
+}
+
+function iirTogglePlay() {
+  if (iirPlaying) {
+    iirPlaying = false;
+    stopAllAudio();
+    iirDelay = null; iirFBGain = null; iirActx = null;
+    document.getElementById('iir_btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('iir_btnPlay').classList.remove('active');
+    iirDraw();
+    return;
+  }
+  iirPlaying = true;
+  document.getElementById('iir_btnPlay').textContent = '■ Detener';
+  document.getElementById('iir_btnPlay').classList.add('active');
+  iirStartAudio();
+}
+
+document.getElementById('iir_dtSlider').addEventListener('input', function() {
+  iirD = +this.value / 1000;
+  document.getElementById('iir_dtVal').textContent = this.value;
+  if (iirDelay) iirDelay.delayTime.value = iirD;
+  iirUpdateStatus(); iirDraw();
+});
+document.getElementById('iir_g2Slider').addEventListener('input', function() {
+  iirG2 = +parseFloat(this.value).toFixed(2);
+  document.getElementById('iir_g2Val').textContent = iirG2.toFixed(2);
+  if (iirFBGain) iirFBGain.gain.value = iirG2;
+  iirUpdateStatus(); iirDraw();
+});
+
+// ════════════════════════════════════════════════════════════
+// COMBINED COMB
+// ════════════════════════════════════════════════════════════
+let cmbPlaying = false;
+let cmbM1 = 0.005, cmbG1 = 0.80, cmbM2 = 0.005, cmbG2 = 0.60;
+let cmbDelay1 = null, cmbFwdGain = null, cmbDelay2 = null, cmbFBGain = null, cmbActx = null;
+
+function cmbDraw() {
+  drawCombResponse('cmb_cnv', {
+    D1: cmbM1, g1: cmbG1, D2: cmbM2, g2: cmbG2, mode: 'combined', color: '#00ff44'
+  });
+}
+
+function cmbUpdateStatus() {
+  document.getElementById('cmb_statusLabel').textContent =
+    `Combinado — M₁=${(cmbM1*1000).toFixed(1)}ms · g₁=${cmbG1 >= 0 ? '+' : ''}${cmbG1.toFixed(2)} · M₂=${(cmbM2*1000).toFixed(1)}ms · g₂=${cmbG2.toFixed(2)}`;
+}
+
+function cmbStartAudio() {
+  cmbActx = getAudioContext();
+  const bufLen = cmbActx.sampleRate * 2;
+  const buf = cmbActx.createBuffer(1, bufLen, cmbActx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+  const src = cmbActx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+
+  const srcGain = cmbActx.createGain();
+  const t0 = cmbActx.currentTime + 0.01;
+  srcGain.gain.setValueAtTime(0, t0);
+  srcGain.gain.linearRampToValueAtTime(0.35, t0 + 0.015);
+  src.connect(srcGain);
+
+  // IIR feedback path (M2)
+  const d2 = cmbActx.createDelay(1.0);
+  d2.delayTime.value = cmbM2;
+  cmbDelay2 = d2;
+  const fbGain = cmbActx.createGain();
+  fbGain.gain.value = cmbG2;
+  cmbFBGain = fbGain;
+
+  // Sumador implícito: el sumNode recibe señal directa, feedforward y feedback
+  const sumGain = cmbActx.createGain();
+  sumGain.gain.value = 1.0;
+
+  // Feedforward path (M1)
+  const d1 = cmbActx.createDelay(1.0);
+  d1.delayTime.value = cmbM1;
+  cmbDelay1 = d1;
+  const fwdGain = cmbActx.createGain();
+  fwdGain.gain.value = cmbG1;
+  cmbFwdGain = fwdGain;
+
+  const master = cmbActx.createGain();
+  master.gain.value = 0.38;
+  master.connect(cmbActx.destination);
+
+  srcGain.connect(sumGain);          // direct path to summer
+  srcGain.connect(d1);
+  d1.connect(fwdGain);
+  fwdGain.connect(sumGain);         // feedforward into summer
+
+  sumGain.connect(d2);
+  d2.connect(fbGain);
+  fbGain.connect(sumGain);          // feedback loop
+
+  sumGain.connect(master);
+
+  src.start(t0);
+  _activeNodes.push(src);
+}
+
+function cmbTogglePlay() {
+  if (cmbPlaying) {
+    cmbPlaying = false;
+    stopAllAudio();
+    cmbDelay1 = null; cmbFwdGain = null; cmbDelay2 = null; cmbFBGain = null; cmbActx = null;
+    document.getElementById('cmb_btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('cmb_btnPlay').classList.remove('active');
+    cmbDraw();
+    return;
+  }
+  cmbPlaying = true;
+  document.getElementById('cmb_btnPlay').textContent = '■ Detener';
+  document.getElementById('cmb_btnPlay').classList.add('active');
+  cmbStartAudio();
+}
+
+document.getElementById('cmb_m1Slider').addEventListener('input', function() {
+  cmbM1 = +this.value / 1000;
+  document.getElementById('cmb_m1Val').textContent = this.value;
+  if (cmbDelay1) cmbDelay1.delayTime.value = cmbM1;
+  cmbUpdateStatus(); cmbDraw();
+});
+document.getElementById('cmb_g1Slider').addEventListener('input', function() {
+  cmbG1 = +parseFloat(this.value).toFixed(2);
+  document.getElementById('cmb_g1Val').textContent = (cmbG1 >= 0 ? '+' : '') + cmbG1.toFixed(2);
+  if (cmbFwdGain) cmbFwdGain.gain.value = cmbG1;
+  cmbUpdateStatus(); cmbDraw();
+});
+document.getElementById('cmb_m2Slider').addEventListener('input', function() {
+  cmbM2 = +this.value / 1000;
+  document.getElementById('cmb_m2Val').textContent = this.value;
+  if (cmbDelay2) cmbDelay2.delayTime.value = cmbM2;
+  cmbUpdateStatus(); cmbDraw();
+});
+document.getElementById('cmb_g2Slider').addEventListener('input', function() {
+  cmbG2 = +parseFloat(this.value).toFixed(2);
+  document.getElementById('cmb_g2Val').textContent = cmbG2.toFixed(2);
+  if (cmbFBGain) cmbFBGain.gain.value = cmbG2;
+  cmbUpdateStatus(); cmbDraw();
+});
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+function init() {
+  firDraw(); firUpdateStatus();
+  iirDraw(); iirUpdateStatus();
+  cmbDraw(); cmbUpdateStatus();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { firDraw(); iirDraw(); cmbDraw(); });
+</script>
+</body>
+</html>

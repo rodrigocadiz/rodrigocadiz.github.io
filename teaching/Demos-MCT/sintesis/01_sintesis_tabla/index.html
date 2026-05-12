@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Síntesis de Tabla — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html" class="active">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html">4. AM</a>
+  <a href="../05_modulacion_fm/index.html">5. FM</a>
+  <a href="../06_sintesis_granular/index.html">6. Granular</a>
+  <a href="../07_karplus_strong/index.html">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Síntesis de Tabla</h1>
+      <p class="subtitle">Wavetable synthesis — lectura cíclica de un buffer de onda</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Tabla de onda y cabezal de lectura</h2>
+    <p class="description">
+      La <span class="kw">síntesis de tabla</span> almacena exactamente un ciclo de una forma de onda
+      en un buffer de <span class="kw">N muestras</span>. Reproducirlo en bucle a distintas
+      <span class="kw">tasas de lectura</span> genera cualquier frecuencia sin necesidad de
+      recalcular la forma. La tasa es <em>r = f · N / Fs</em>, donde f es la frecuencia deseada y
+      Fs la tasa de muestreo del sistema.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Forma de onda: <span class="val" id="shapeVal">Seno</span></label>
+        <select id="shapeSelect" style="background:#0d1a2e;color:#99ccff;border:1px solid rgba(100,180,255,0.3);padding:5px 10px;border-radius:6px;font-size:0.82rem;cursor:pointer;">
+          <option value="sine">Seno</option>
+          <option value="saw">Diente de sierra</option>
+          <option value="square">Cuadrada</option>
+          <option value="triangle">Triangular</option>
+          <option value="custom">Personalizada (dibuja con el mouse)</option>
+        </select>
+      </div>
+      <div class="btn-group" id="customPresets" style="display:none;">
+        <span style="align-self:center;font-size:0.78rem;color:#99ccff;">Partir de →</span>
+        <button class="btn" onclick="loadPreset('sine')"     style="border-color:#ff44ff;color:#ff44ff;">Seno</button>
+        <button class="btn" onclick="loadPreset('saw')"      style="border-color:#ffaa00;color:#ffaa00;">Sierra</button>
+        <button class="btn" onclick="loadPreset('square')"   style="border-color:#00ff44;color:#00ff44;">Cuadrada</button>
+        <button class="btn" onclick="loadPreset('triangle')" style="border-color:#00ffff;color:#00ffff;">Triangular</button>
+        <button class="btn" onclick="loadPreset('zero')"     style="border-color:#ff4444;color:#ff4444;">Silencio</button>
+      </div>
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqVal">220</span> Hz</label>
+        <input type="range" id="freqSlider" min="55" max="880" value="220" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="rateLabel">tabla N = 2048 · tasa de lectura: —</div>
+    <canvas id="waveCanvas" height="220"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Frecuencia y tasa de lectura</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Fórmula</strong><br>
+        Para una tabla de N muestras reproducida a Fs Hz, la tasa de lectura que
+        produce una frecuencia f es:<br><br>
+        <em style="color:#ffaa00;">r = f · N / Fs</em><br><br>
+        A 220 Hz con N=2048 y Fs=44100: r ≈ 10.2 muestras/ciclo de audio.
+        Al doblar la frecuencia, se dobla la tasa — mismo timbre, tono más agudo.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Historia</strong><br>
+        El Prophet-VS (1986) y el PPG Wave popularizaron la síntesis de tabla.
+        Permiten <em>mezclar</em> distintas tablas en el tiempo (morphing), creando
+        timbres en evolución. Hoy, prácticamente todos los sintetizadores digitales
+        usan esta técnica como base o complemento de otras formas de síntesis.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+  const TABLE_SIZE = 2048;
+  const FS_DISPLAY = 44100; // para mostrar la fórmula antes de crear AudioContext
+  let playing = false;
+  let animId = null;
+  let phase = 0;
+  let lastTs = null;
+  let currentSrc = null;
+
+  // Tabla personalizada (inicializada a seno)
+  const customTable = new Float32Array(TABLE_SIZE);
+  for (let i = 0; i < TABLE_SIZE; i++)
+    customTable[i] = Math.sin(2 * Math.PI * i / TABLE_SIZE);
+
+  // ── Construir tabla ──
+  function buildTable(shape) {
+    const t = new Float32Array(TABLE_SIZE);
+    for (let i = 0; i < TABLE_SIZE; i++) {
+      const p = i / TABLE_SIZE;
+      switch (shape) {
+        case 'sine':     t[i] = Math.sin(2 * Math.PI * p); break;
+        case 'saw':      t[i] = 2 * p - 1; break;
+        case 'square':   t[i] = p < 0.5 ? 1 : -1; break;
+        case 'triangle': t[i] = p < 0.5 ? 4 * p - 1 : 3 - 4 * p; break;
+        case 'zero':     t[i] = 0; break;
+      }
+    }
+    return t;
+  }
+
+  // ── Audio ──
+  function startAudio(shape, freq) {
+    stopAllAudio();
+    const actx = getAudioContext();
+    const table = shape === 'custom' ? customTable : buildTable(shape);
+
+    const buf = actx.createBuffer(1, TABLE_SIZE, actx.sampleRate);
+    buf.copyToChannel(table, 0);
+
+    const src = actx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    src.playbackRate.value = freq * TABLE_SIZE / actx.sampleRate;
+
+    const g = actx.createGain();
+    const t0 = actx.currentTime + 0.01;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.15, t0 + 0.02);
+
+    src.connect(g);
+    g.connect(actx.destination);
+    src.start(t0);
+    _activeNodes.push(src);
+    return src;
+  }
+
+  // ── Canvas ──
+  function drawCanvas(headPhase) {
+    const canvas = document.getElementById('waveCanvas');
+    canvas.width = canvas.offsetWidth || 800;
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+
+    const shape = document.getElementById('shapeSelect').value;
+    const freq = parseInt(document.getElementById('freqSlider').value);
+    const table = shape === 'custom' ? customTable : buildTable(shape);
+
+    const padL = 46, padR = 20, padT = 30, padB = 34;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const midY = padT + plotH / 2;
+
+    // Ejes
+    ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padL, midY); ctx.lineTo(W - padR, midY);
+    ctx.stroke();
+
+    // Grid
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);       ctx.lineTo(W - padR, padT);
+    ctx.moveTo(padL, padT + plotH); ctx.lineTo(W - padR, padT + plotH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Etiquetas Y
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('+1', padL - 4, padT + 5);
+    ctx.fillText(' 0', padL - 4, midY + 4);
+    ctx.fillText('−1', padL - 4, padT + plotH + 5);
+
+    // Etiquetas X
+    ctx.textAlign = 'left';
+    ctx.fillText('0', padL + 2, padT + plotH + 16);
+    ctx.textAlign = 'center';
+    ctx.fillText('N/2', padL + plotW / 2, padT + plotH + 16);
+    ctx.textAlign = 'right';
+    ctx.fillText('N−1', W - padR, padT + plotH + 16);
+
+    // Forma de onda de la tabla
+    const waveColor = { sine:'#ff44ff', saw:'#ffaa00', square:'#ff44ff', triangle:'#00ffff', custom:'#00ff44' }[shape] || '#ff44ff';
+    ctx.beginPath();
+    ctx.strokeStyle = waveColor;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < TABLE_SIZE; i++) {
+      const x = padL + (i / (TABLE_SIZE - 1)) * plotW;
+      const y = midY - table[i] * (plotH / 2 - 3);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Cabezal de lectura animado
+    if (headPhase !== null) {
+      const headX = padL + (headPhase / TABLE_SIZE) * plotW;
+
+      ctx.strokeStyle = '#ffaa00';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(headX, padT);
+      ctx.lineTo(headX, padT + plotH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const idx = Math.floor(headPhase) % TABLE_SIZE;
+      const py = midY - table[idx] * (plotH / 2 - 3);
+      ctx.fillStyle = '#ffaa00';
+      ctx.beginPath();
+      ctx.arc(headX, py, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Etiqueta de posición
+      ctx.fillStyle = '#ffaa00';
+      ctx.font = '11px monospace';
+      ctx.textAlign = headX > W * 0.85 ? 'right' : 'left';
+      const labelX = headX > W * 0.85 ? headX - 6 : headX + 6;
+      ctx.fillText(`i = ${idx}`, labelX, padT + 14);
+    }
+
+    // Hint en modo personalizado
+    if (shape === 'custom' && headPhase === null) {
+      ctx.fillStyle = 'rgba(0,255,68,0.30)';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('↑ arrastra aquí para dibujar tu tabla de onda', padL + plotW / 2, midY - plotH * 0.28);
+    }
+
+    // Tasa de lectura
+    const rate = (freq * TABLE_SIZE / FS_DISPLAY).toFixed(2);
+    const rateHint = shape === 'custom' ? '  ·  arrastra ↑ para redibujar' : ' muestras/muestra de audio';
+    document.getElementById('rateLabel').textContent =
+      `tabla N = ${TABLE_SIZE}  ·  f = ${freq} Hz  →  tasa = ${rate}${rateHint}`;
+  }
+
+  // ── Animación del cabezal ──
+  function animate(ts) {
+    if (!lastTs) lastTs = ts;
+    const dt = (ts - lastTs) / 1000;
+    lastTs = ts;
+    const freq = parseInt(document.getElementById('freqSlider').value);
+    phase = (phase + freq * TABLE_SIZE * dt) % TABLE_SIZE;
+    drawCanvas(phase);
+    if (playing) animId = requestAnimationFrame(animate);
+  }
+
+  // ── Play / Stop ──
+  function togglePlay() {
+    if (playing) { stopPlayback(); return; }
+    playing = true;
+    const shape = document.getElementById('shapeSelect').value;
+    const freq = parseInt(document.getElementById('freqSlider').value);
+    document.getElementById('btnPlay').textContent = '■ Detener';
+    document.getElementById('btnPlay').classList.add('active');
+    currentSrc = startAudio(shape, freq);
+    lastTs = null; phase = 0;
+    animId = requestAnimationFrame(animate);
+  }
+
+  function stopPlayback() {
+    playing = false;
+    stopAllAudio();
+    currentSrc = null;
+    document.getElementById('btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('btnPlay').classList.remove('active');
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    drawCanvas(null);
+  }
+
+  // ── Controles en vivo ──
+  document.getElementById('freqSlider').addEventListener('input', function () {
+    const v = parseInt(this.value);
+    document.getElementById('freqVal').textContent = v;
+    if (playing && currentSrc) {
+      const actx = getAudioContext();
+      currentSrc.playbackRate.value = v * TABLE_SIZE / actx.sampleRate;
+    }
+    if (!playing) drawCanvas(null);
+  });
+
+  document.getElementById('shapeSelect').addEventListener('change', function () {
+    const labels = { sine: 'Seno', saw: 'Diente de sierra', square: 'Cuadrada', triangle: 'Triangular', custom: 'Personalizada' };
+    document.getElementById('shapeVal').textContent = labels[this.value] || this.value;
+    const isCustom = this.value === 'custom';
+    document.getElementById('customPresets').style.display = isCustom ? '' : 'none';
+    document.getElementById('waveCanvas').style.cursor = isCustom ? 'crosshair' : 'default';
+    if (playing) {
+      const freq = parseInt(document.getElementById('freqSlider').value);
+      currentSrc = startAudio(this.value, freq);
+    } else {
+      drawCanvas(null);
+    }
+  });
+
+  // ── Dibujo de tabla personalizada ────────────────────────────────────
+  let _isDrawing = false;
+  let _prevIdx = null;
+  let _prevVal = null;
+
+  function _waveCanvasCoords(e) {
+    const cv = document.getElementById('waveCanvas');
+    const rect = cv.getBoundingClientRect();
+    return {
+      mx: (e.clientX - rect.left) * (cv.width / rect.width),
+      my: (e.clientY - rect.top)  * (cv.height / rect.height)
+    };
+  }
+
+  function paintCustom(mx, my, isStart) {
+    if (document.getElementById('shapeSelect').value !== 'custom') return;
+    const cv = document.getElementById('waveCanvas');
+    const W = cv.width, H = cv.height;
+    const padL = 46, padR = 20, padT = 30, padB = 34;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+
+    if (mx < padL || mx > W - padR || my < padT || my > padT + plotH) {
+      if (isStart) _isDrawing = false;
+      return;
+    }
+    if (isStart) _isDrawing = true;
+    if (!_isDrawing) return;
+
+    const curIdx = Math.round((mx - padL) / plotW * (TABLE_SIZE - 1));
+    const curVal = Math.max(-1, Math.min(1, 1 - (my - padT) / plotH * 2));
+
+    if (_prevIdx !== null && Math.abs(curIdx - _prevIdx) > 0) {
+      const i0 = Math.min(_prevIdx, curIdx), i1 = Math.max(_prevIdx, curIdx);
+      const span = curIdx - _prevIdx;
+      for (let i = i0; i <= i1; i++) {
+        const t = (i - _prevIdx) / span;
+        customTable[Math.max(0, Math.min(TABLE_SIZE - 1, i))] = _prevVal + (curVal - _prevVal) * t;
+      }
+    } else {
+      customTable[Math.max(0, Math.min(TABLE_SIZE - 1, curIdx))] = curVal;
+    }
+    _prevIdx = curIdx;
+    _prevVal = curVal;
+    if (!playing) drawCanvas(null);
+  }
+
+  function endDraw() {
+    if (!_isDrawing) return;
+    _isDrawing = false;
+    _prevIdx = null;
+    _prevVal = null;
+    if (playing && document.getElementById('shapeSelect').value === 'custom') {
+      currentSrc = startAudio('custom', parseInt(document.getElementById('freqSlider').value));
+    }
+  }
+
+  function loadPreset(shape) {
+    const src = shape === 'zero' ? new Float32Array(TABLE_SIZE) : buildTable(shape);
+    customTable.set(src);
+    if (!playing) drawCanvas(null);
+    else if (document.getElementById('shapeSelect').value === 'custom') {
+      currentSrc = startAudio('custom', parseInt(document.getElementById('freqSlider').value));
+    }
+  }
+
+  (function attachDrawEvents() {
+    const cv = document.getElementById('waveCanvas');
+    cv.addEventListener('mousedown', e => {
+      _prevIdx = null; _prevVal = null;
+      const p = _waveCanvasCoords(e); paintCustom(p.mx, p.my, true);
+    });
+    cv.addEventListener('mousemove', e => {
+      if (!_isDrawing) return;
+      const p = _waveCanvasCoords(e); paintCustom(p.mx, p.my, false);
+    });
+    cv.addEventListener('mouseup',    endDraw);
+    cv.addEventListener('mouseleave', endDraw);
+    cv.addEventListener('touchstart', e => {
+      e.preventDefault();
+      _prevIdx = null; _prevVal = null;
+      const p = _waveCanvasCoords(e.touches[0]); paintCustom(p.mx, p.my, true);
+    }, { passive: false });
+    cv.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!_isDrawing) return;
+      const p = _waveCanvasCoords(e.touches[0]); paintCustom(p.mx, p.my, false);
+    }, { passive: false });
+    cv.addEventListener('touchend', endDraw);
+  })();
+
+  function init() { drawCanvas(null); }
+  window.addEventListener('load', init);
+  window.addEventListener('resize', () => drawCanvas(playing ? phase : null));
+</script>
+</body>
+</html>

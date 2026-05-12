@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Síntesis Aditiva — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .tab-bar { display:flex; gap:4px; margin-bottom:14px; }
+    .tab { padding:6px 18px; border-radius:6px 6px 0 0; border:1px solid var(--border);
+           border-bottom:none; background:rgba(255,255,255,0.03);
+           color:var(--text-dim); font-size:0.84rem; cursor:pointer; transition:all .15s; }
+    .tab.active { background:rgba(255,68,255,0.10); color:#ff44ff; border-color:#ff44ff; }
+    .tab:hover:not(.active) { background:rgba(255,255,255,0.06); color:var(--text-primary); }
+  </style>
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html" class="active">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html">4. AM</a>
+  <a href="../05_modulacion_fm/index.html">5. FM</a>
+  <a href="../06_sintesis_granular/index.html">6. Granular</a>
+  <a href="../07_karplus_strong/index.html">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Síntesis Aditiva</h1>
+      <p class="subtitle">Construcción de formas de onda complejas sumando sinusoides</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Suma de sinusoides — Series de Fourier</h2>
+
+    <div class="tab-bar">
+      <div class="tab active" id="tabFormula"    onclick="switchView('formula')">Forma de Onda</div>
+      <div class="tab"        id="tabEditor"     onclick="switchView('editor')">Editor Espectral</div>
+      <div class="tab"        id="tabParciales"  onclick="switchView('parciales')">Parciales</div>
+    </div>
+
+    <p class="description" id="descText">
+      Cualquier señal periódica puede representarse como la suma de <span class="kw">sinusoides</span>
+      con frecuencias múltiplo entero de la fundamental. Selecciona la <span class="kw">forma de onda</span>
+      y ajusta cuántos armónicos incluir para ver cómo la señal se construye paso a paso.
+    </p>
+
+    <div class="controls">
+      <!-- Frecuencia — visible en formula y editor -->
+      <div class="control-group" id="cgFreq">
+        <label>Frecuencia: <span class="val" id="freqVal">220</span> Hz</label>
+        <input type="range" id="freqSlider" min="55" max="880" value="220" step="1">
+      </div>
+
+      <!-- N slider — formula only -->
+      <div class="control-group" id="cgN">
+        <label>Armónicos N: <span class="val" id="nVal">4</span></label>
+        <input type="range" id="nSlider" min="1" max="16" value="4" step="1">
+      </div>
+
+      <!-- Wave buttons — formula only -->
+      <div class="btn-group" id="bgWave">
+        <button class="btn" id="btnSaw" onclick="setWave('sawtooth')" style="border-color:#ffaa00;color:#ffaa00;">Diente de Sierra</button>
+        <button class="btn active" id="btnSq" onclick="setWave('square')" style="background:rgba(255,68,255,0.12);border-color:#ff44ff;color:#ff44ff;">Cuadrada</button>
+        <button class="btn" id="btnTri" onclick="setWave('triangle')" style="border-color:#00ffff;color:#00ffff;">Triangular</button>
+      </div>
+
+      <!-- Editor controls -->
+      <div class="btn-group" id="bgReset" style="display:none;">
+        <button class="btn" onclick="resetToFormula()" style="border-color:#00ff44;color:#00ff44;">↺ Reset a Fórmula</button>
+        <button class="btn" onclick="clearAll()" style="border-color:#ff4444;color:#ff4444;">✕ Silenciar todo</button>
+      </div>
+
+      <!-- Parciales controls -->
+      <div class="btn-group" id="bgParciales" style="display:none;">
+        <span style="align-self:center;font-size:0.78rem;color:#99ccff;">Clic=agregar · doble clic=eliminar · ↕amp · ↔freq · fase abajo</span>
+        <button class="btn" onclick="clearAllPartials()" style="border-color:#ff4444;color:#ff4444;">✕ Limpiar</button>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Cuadrada — 4 armónico(s)</div>
+    <canvas id="cnvMain" height="380"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Amplitudes, fases y parciales</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Diente de Sierra</strong><br>
+        Todos los armónicos: <code>aₖ = (2/π) / k</code><br>
+        Rico en agudos, timbre brillante.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Cuadrada / Triangular</strong><br>
+        Solo impares: <code>aₖ = (4/π) / k</code> cuadrada,<br>
+        <code>aₖ = (8/π²) / k²</code> triangular.<br>
+        Convergencia lenta vs. rápida.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Fase</strong><br>
+        La fase de cada parcial afecta la forma de onda combinada pero NO el timbre percibido
+        (el oído es insensible a la fase relativa de los armónicos de un mismo tono).
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Parciales inarmónicos</strong><br>
+        Cuando las frecuencias NO son múltiplos enteros de la fundamental, la señal
+        no es periódica: se percibe como <em>disonancia</em>, campanas o ruido de banda angosta.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Constantes ────────────────────────────────────────────────────────
+const MAX_HARM = 16;
+const MAX_PARTIALS = 12;
+const FREQ_MIN = 50, FREQ_MAX = 8000;
+const LOG_RANGE = Math.log10(FREQ_MAX / FREQ_MIN);
+
+// ── Estado global ─────────────────────────────────────────────────────
+let playing = false;
+let activeView = 'formula'; // 'formula' | 'editor' | 'parciales'
+let waveType = 'square';
+let N = 4;
+let freq = 220;
+
+// Armónicos (formula/editor)
+const ampValues   = new Float32Array(MAX_HARM);
+const phaseValues = new Float32Array(MAX_HARM); // 0 to 2π
+
+// Parciales
+const partials = [];     // [{freq, amp, phase}]
+const partialOscs = [];  // [{osc, gainNode}] — parallel to partials[]
+
+// Audio
+let actxRef = null;
+let masterGainNode = null;
+const oscBank = []; // [{osc, gainNode}] for harmonic bank
+
+// ── Layout vars (shared with mouse handlers) ──────────────────────────
+let _padL = 52, _bw = 800;
+let _specY = 0, _specH = 0;          // editor amp bars
+let _phaseY = 0, _phaseH = 0;         // editor phase strip
+let _freqY = 0, _freqH = 0;           // parciales freq canvas
+let _partPhaseY = 0, _partPhaseH = 0; // parciales phase strip
+
+// ── Colores ───────────────────────────────────────────────────────────
+const COLORS = { sawtooth: '#ffaa00', square: '#ff44ff', triangle: '#00ffff' };
+
+// ── Helpers: freq ↔ canvas x (parciales) ─────────────────────────────
+function xFromFreq(f) {
+  return _padL + Math.log10(Math.max(FREQ_MIN, f) / FREQ_MIN) / LOG_RANGE * _bw;
+}
+function freqFromX(x) {
+  const t = Math.max(0, Math.min(1, (x - _padL) / _bw));
+  return FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, t);
+}
+
+// ── Funciones de amplitud armónica ────────────────────────────────────
+function harmonicAmp(type, k) {
+  if (type === 'sawtooth') return (2 / Math.PI) / k;
+  if (type === 'square')   return (k % 2) ? (4 / Math.PI) / k : 0;
+  return (k % 2) ? (8 / (Math.PI * Math.PI)) * Math.pow(-1, (k-1)/2) / (k*k) : 0;
+}
+
+function computeAmpsFromFormula() {
+  for (let k = 1; k <= MAX_HARM; k++)
+    ampValues[k-1] = k <= N ? Math.abs(harmonicAmp(waveType, k)) : 0;
+}
+
+function computeWave(ns) {
+  const y = new Float32Array(ns);
+  for (let i = 0; i < ns; i++) {
+    const t = i / ns;
+    let v = 0;
+    for (let k = 1; k <= MAX_HARM; k++)
+      v += ampValues[k-1] * Math.sin(2 * Math.PI * k * t + phaseValues[k-1]);
+    y[i] = v;
+  }
+  return y;
+}
+
+function computePartialWave(ns) {
+  const duration = 0.040; // 40ms window
+  const y = new Float32Array(ns);
+  for (let i = 0; i < ns; i++) {
+    const t = (i / ns) * duration;
+    let v = 0;
+    for (const p of partials) v += p.amp * Math.sin(2 * Math.PI * p.freq * t + p.phase);
+    y[i] = v;
+  }
+  return y;
+}
+
+// ── Audio — banco armónico ─────────────────────────────────────────────
+function _initMaster() {
+  actxRef = getAudioContext();
+  masterGainNode = actxRef.createGain();
+  masterGainNode.gain.value = 0;
+  masterGainNode.connect(actxRef.destination);
+}
+
+function buildOscBank() {
+  oscBank.length = 0;
+  const t0 = actxRef.currentTime + 0.01;
+  for (let k = 1; k <= MAX_HARM; k++) {
+    const osc = actxRef.createOscillator();
+    const g   = actxRef.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq * k;
+    g.gain.value = 0;
+    osc.connect(g); g.connect(masterGainNode);
+    const phaseDelay = phaseValues[k-1] / (2 * Math.PI * freq * k);
+    osc.start(t0 - phaseDelay);
+    oscBank.push({ osc, gainNode: g });
+    _activeNodes.push(osc);
+  }
+}
+
+function applyGains(fadeSec) {
+  if (!actxRef || oscBank.length === 0) return;
+  const fade = fadeSec !== undefined ? fadeSec : 0.04;
+  const t = actxRef.currentTime;
+  let sumAbs = 0;
+  for (let i = 0; i < MAX_HARM; i++) sumAbs += ampValues[i];
+  const norm = sumAbs > 1e-6 ? Math.min(1, 1.0 / sumAbs) : 1;
+  for (let k = 0; k < MAX_HARM; k++) {
+    const g = oscBank[k].gainNode;
+    const target = ampValues[k] * norm;
+    g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(g.gain.value, t);
+    g.gain.linearRampToValueAtTime(target, t + fade);
+  }
+}
+
+// ── Audio — banco de parciales ─────────────────────────────────────────
+function buildPartialOscs() {
+  partialOscs.length = 0;
+  const t0 = actxRef.currentTime + 0.01;
+  const total = partials.reduce((s, p) => s + p.amp, 0);
+  const norm = total > 1e-6 ? Math.min(1, 1.0 / total) : 1;
+  partials.forEach(p => {
+    const osc = actxRef.createOscillator();
+    const g   = actxRef.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = p.freq;
+    g.gain.value = p.amp * norm;
+    const phaseDelay = p.phase / (2 * Math.PI * p.freq);
+    osc.start(t0 - phaseDelay);
+    osc.connect(g); g.connect(masterGainNode);
+    partialOscs.push({ osc, gainNode: g });
+    _activeNodes.push(osc);
+  });
+}
+
+function applyPartialGains(fadeSec) {
+  if (!actxRef) return;
+  const fade = fadeSec !== undefined ? fadeSec : 0.04;
+  const t = actxRef.currentTime;
+  const total = partials.reduce((s, p) => s + p.amp, 0);
+  const norm = total > 1e-6 ? Math.min(1, 1.0 / total) : 1;
+  partials.forEach((p, i) => {
+    if (!partialOscs[i]) return;
+    const g = partialOscs[i].gainNode;
+    const target = p.amp * norm;
+    g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(g.gain.value, t);
+    g.gain.linearRampToValueAtTime(target, t + fade);
+  });
+}
+
+// ── Fade master ───────────────────────────────────────────────────────
+function fadeInMaster() {
+  if (!actxRef || !masterGainNode) return;
+  const t = actxRef.currentTime;
+  masterGainNode.gain.cancelScheduledValues(t);
+  masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, t);
+  masterGainNode.gain.linearRampToValueAtTime(0.18, t + 0.03);
+}
+
+function fadeOutMaster(onDone) {
+  if (!actxRef || !masterGainNode) { if (onDone) onDone(); return; }
+  const t = actxRef.currentTime;
+  masterGainNode.gain.cancelScheduledValues(t);
+  masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, t);
+  masterGainNode.gain.linearRampToValueAtTime(0, t + 0.025);
+  setTimeout(onDone || function(){}, 40);
+}
+
+// ── Debounced rebuilds (for phase changes) ────────────────────────────
+let _phaseRebuildTimer = null, _partialPhaseRebuildTimer = null;
+
+function schedulePhaseRebuild() {
+  if (!playing) return;
+  clearTimeout(_phaseRebuildTimer);
+  _phaseRebuildTimer = setTimeout(() => {
+    fadeOutMaster(() => {
+      oscBank.forEach(({osc}) => { try { osc.stop(); } catch(e){} });
+      oscBank.length = 0;
+      _activeNodes.length = 0;
+      const t0 = actxRef.currentTime + 0.005;
+      for (let k = 1; k <= MAX_HARM; k++) {
+        const osc = actxRef.createOscillator();
+        const g   = actxRef.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq * k;
+        g.gain.value = 0;
+        osc.connect(g); g.connect(masterGainNode);
+        osc.start(t0 - phaseValues[k-1] / (2 * Math.PI * freq * k));
+        oscBank.push({ osc, gainNode: g });
+        _activeNodes.push(osc);
+      }
+      applyGains(0.01);
+      fadeInMaster();
+    });
+  }, 220);
+}
+
+function schedulePartialPhaseRebuild() {
+  if (!playing || activeView !== 'parciales') return;
+  clearTimeout(_partialPhaseRebuildTimer);
+  _partialPhaseRebuildTimer = setTimeout(() => {
+    fadeOutMaster(() => {
+      partialOscs.forEach(({osc}) => { try { osc.stop(); } catch(e){} });
+      partialOscs.length = 0;
+      _activeNodes.length = 0;
+      buildPartialOscs();
+      applyPartialGains(0.01);
+      fadeInMaster();
+    });
+  }, 220);
+}
+
+// ── Toggle Play ───────────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) {
+    playing = false;
+    clearTimeout(_phaseRebuildTimer);
+    clearTimeout(_partialPhaseRebuildTimer);
+    document.getElementById('btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('btnPlay').classList.remove('active');
+    if (activeView === 'parciales') {
+      fadeOutMaster(() => {
+        partialOscs.forEach(({osc}) => { try { osc.stop(); } catch(e){} });
+        partialOscs.length = 0;
+        _activeNodes.length = 0;
+        actxRef = null; masterGainNode = null;
+      });
+    } else {
+      fadeOutMaster(() => {
+        oscBank.forEach(({osc}) => { try { osc.stop(); } catch(e){} });
+        oscBank.length = 0;
+        _activeNodes.length = 0;
+        actxRef = null; masterGainNode = null;
+      });
+    }
+    return;
+  }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  _initMaster();
+  if (activeView === 'parciales') {
+    buildPartialOscs();
+  } else {
+    buildOscBank();
+    applyGains(0.04);
+  }
+  fadeInMaster();
+}
+
+// ── Parciales management ──────────────────────────────────────────────
+function addPartial(mx, my) {
+  if (partials.length >= MAX_PARTIALS) return;
+  const f = Math.round(Math.max(FREQ_MIN, Math.min(FREQ_MAX, freqFromX(mx))));
+  const a = Math.max(0.05, Math.min(1, 1 - (my - _freqY) / _freqH));
+  const p = { freq: f, amp: a, phase: 0 };
+  partials.push(p);
+  if (playing && actxRef && masterGainNode) {
+    const t0 = actxRef.currentTime + 0.01;
+    const osc = actxRef.createOscillator();
+    const g   = actxRef.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = f;
+    g.gain.setValueAtTime(0, t0);
+    osc.start(t0);
+    osc.connect(g); g.connect(masterGainNode);
+    partialOscs.push({ osc, gainNode: g });
+    _activeNodes.push(osc);
+    applyPartialGains(0.04);
+  }
+  drawCanvas(); updateStatus();
+}
+
+function removePartial(idx) {
+  if (idx < 0 || idx >= partials.length) return;
+  if (playing && partialOscs[idx]) {
+    const { osc, gainNode } = partialOscs[idx];
+    const t = actxRef.currentTime;
+    gainNode.gain.cancelScheduledValues(t);
+    gainNode.gain.setValueAtTime(gainNode.gain.value, t);
+    gainNode.gain.linearRampToValueAtTime(0, t + 0.03);
+    setTimeout(() => { try { osc.stop(); } catch(e){} }, 50);
+    const ni = _activeNodes.indexOf(osc);
+    if (ni >= 0) _activeNodes.splice(ni, 1);
+    partialOscs.splice(idx, 1);
+  } else if (partialOscs[idx]) {
+    partialOscs.splice(idx, 1);
+  }
+  partials.splice(idx, 1);
+  if (playing && actxRef) applyPartialGains(0.03);
+  drawCanvas(); updateStatus();
+}
+
+function clearAllPartials() {
+  if (playing) {
+    stopAllAudio();
+    try { masterGainNode && masterGainNode.disconnect(); } catch(e) {}
+    partialOscs.length = 0;
+    actxRef = null; masterGainNode = null;
+    playing = false;
+    document.getElementById('btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('btnPlay').classList.remove('active');
+  }
+  partials.length = 0;
+  drawCanvas(); updateStatus();
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  const heights = { formula: 380, editor: 460, parciales: 490 };
+  canvas.height = heights[activeView];
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 20, padT = 20, padB = 30;
+  const bw = W - padL - padR;
+  _padL = padL; _bw = bw;
+
+  if (activeView === 'parciales') {
+    drawParcialesView(padL, padR, padT, padB, bw, H);
+  } else {
+    drawHarmonicsView(padL, padR, padT, padB, bw, H);
+  }
+}
+
+// ── Harmonics view (formula + editor) ────────────────────────────────
+function drawHarmonicsView(padL, padR, padT, padB, bw, H) {
+  const waveH  = (activeView === 'editor') ? 145 : 160;
+  const gapA   = 18;
+  const specH  = (activeView === 'editor') ? 120 : 150;
+  const gapB   = (activeView === 'editor') ? 14 : 0;
+  const phaseH = (activeView === 'editor') ? 62 : 0;
+  const specY  = padT + waveH + gapA;
+  const phaseY = specY + specH + gapB;
+  _specY = specY; _specH = specH;
+  _phaseY = phaseY; _phaseH = phaseH;
+
+  const midY   = padT + waveH / 2;
+  const yScale = waveH / 2 * 0.85;
+  const color  = activeView === 'editor' ? '#00ffff' : COLORS[waveType];
+
+  // Waveform grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (waveH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('+1', padL-4, padT+8);
+  ctx.fillText('0',  padL-4, midY+4);
+  ctx.fillText('−1', padL-4, padT+waveH);
+  ctx.textAlign = 'center';
+  ctx.fillText('tiempo →', padL + bw/2, padT + waveH + 14);
+
+  // Individual harmonic curves (dim)
+  const SAMPLES = 512;
+  for (let k = 1; k <= MAX_HARM; k++) {
+    const amp = ampValues[k-1];
+    if (amp < 0.001) continue;
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(180,180,180,0.18)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= SAMPLES; i++) {
+      const t = i / SAMPLES;
+      const x = padL + t * bw;
+      const y = midY - amp * Math.sin(2 * Math.PI * k * t + phaseValues[k-1]) * yScale;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // Summed waveform
+  const wave = computeWave(SAMPLES);
+  let waveMax = 0;
+  for (let i = 0; i < SAMPLES; i++) waveMax = Math.max(waveMax, Math.abs(wave[i]));
+  const dynScale = waveMax > 0.01 ? yScale / waveMax : yScale;
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+  for (let i = 0; i <= SAMPLES; i++) {
+    const x = padL + (i / SAMPLES) * bw;
+    const y = midY - wave[i] * dynScale;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Spectrum section separator
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, specY); ctx.lineTo(padL+bw, specY); ctx.stroke();
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('amp', padL-4, specY+10);
+
+  const barW = Math.min(28, (bw / MAX_HARM) * 0.72);
+  let maxAmp = 0;
+  for (let i = 0; i < MAX_HARM; i++) maxAmp = Math.max(maxAmp, ampValues[i]);
+  const barScale = maxAmp > 0.01 ? specH * 0.92 / maxAmp : specH * 0.92;
+
+  for (let k = 1; k <= MAX_HARM; k++) {
+    const amp = ampValues[k-1];
+    const x   = padL + ((k - 0.5) / MAX_HARM) * bw;
+    const isActive = amp > 0.001;
+
+    if (activeView === 'editor') {
+      const editorBarH = amp * specH;
+      ctx.fillStyle = isActive ? '#00ffff' : 'rgba(80,80,80,0.4)';
+      ctx.fillRect(x - barW/2, specY + specH - editorBarH, barW, editorBarH);
+      if (isActive) {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        const ty = specY + specH - editorBarH - 1;
+        ctx.moveTo(x-5, ty+6); ctx.lineTo(x+5, ty+6); ctx.lineTo(x, ty);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#00ffff';
+        ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(amp.toFixed(2), x, specY + specH - editorBarH - 8);
+      }
+    } else {
+      const barH = amp * barScale;
+      ctx.fillStyle = isActive ? color : 'rgba(80,80,80,0.3)';
+      ctx.fillRect(x - barW/2, specY + specH - barH, barW, barH);
+    }
+
+    ctx.fillStyle = isActive ? 'rgba(150,200,255,0.70)' : 'rgba(100,100,100,0.4)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(k, x, specY + specH + 10);
+  }
+
+  if (activeView === 'editor' && maxAmp < 0.01) {
+    ctx.fillStyle = 'rgba(150,200,255,0.5)';
+    ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('↕ Arrastra las barras para fijar amplitudes', padL + bw/2, specY + specH/2);
+  }
+
+  // Phase strip (editor only)
+  if (activeView === 'editor') {
+    ctx.strokeStyle = 'rgba(100,180,255,0.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, phaseY); ctx.lineTo(padL+bw, phaseY); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('fase', padL-4, phaseY + phaseH/2 + 4);
+
+    const trackH = 8, trackY = phaseY + (phaseH - trackH)/2, dotR = 6;
+    for (let k = 1; k <= MAX_HARM; k++) {
+      const phase = phaseValues[k-1];
+      const cx = padL + ((k - 0.5) / MAX_HARM) * bw;
+      const isActive = ampValues[k-1] > 0.001;
+      ctx.fillStyle = isActive ? 'rgba(100,150,200,0.30)' : 'rgba(60,60,60,0.25)';
+      ctx.fillRect(cx - barW/2, trackY, barW, trackH);
+      const dotX = cx - barW/2 + (phase / (2*Math.PI)) * barW;
+      ctx.fillStyle = isActive ? '#ffaa00' : 'rgba(100,100,100,0.5)';
+      ctx.beginPath(); ctx.arc(dotX, trackY+trackH/2, dotR, 0, Math.PI*2); ctx.fill();
+      if (isActive) {
+        ctx.fillStyle = '#ffaa00'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(Math.round(phase*180/Math.PI)+'°', cx, phaseY+10);
+      }
+    }
+    ctx.fillStyle = 'rgba(150,200,255,0.40)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('↔ arrastra para cambiar fase', padL + bw/2, phaseY + phaseH + 2);
+  }
+}
+
+// ── Parciales view ────────────────────────────────────────────────────
+function drawParcialesView(padL, padR, padT, padB, bw, H) {
+  const waveH      = 110;
+  const freqY      = padT + waveH + 12;
+  const freqH      = 175;
+  const partPhaseY = freqY + freqH + 24; // +24 for freq x-axis labels
+  const partPhaseH = 65;
+
+  _freqY = freqY; _freqH = freqH;
+  _partPhaseY = partPhaseY; _partPhaseH = partPhaseH;
+
+  // ── Waveform (40ms window) ────────────────────────────────────────
+  const midY   = padT + waveH/2;
+  const yScale = waveH/2 * 0.85;
+  const SAMPLES = 512;
+
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (waveH/4)*i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+bw, y); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('+1', padL-4, padT+8);
+  ctx.fillText('0',  padL-4, midY+4);
+  ctx.fillText('−1', padL-4, padT+waveH);
+  ctx.textAlign = 'center';
+  ctx.fillText('tiempo → 40 ms', padL+bw/2, padT+waveH+12);
+
+  if (partials.length > 0) {
+    // Dim individual partials
+    partials.forEach(p => {
+      const dur = 0.040;
+      ctx.beginPath(); ctx.strokeStyle = 'rgba(0,255,255,0.15)'; ctx.lineWidth = 1;
+      for (let i = 0; i <= SAMPLES; i++) {
+        const t = (i/SAMPLES)*dur;
+        const x = padL + (i/SAMPLES)*bw;
+        const y = midY - p.amp * Math.sin(2*Math.PI*p.freq*t + p.phase) * yScale;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+    // Combined
+    const wave = computePartialWave(SAMPLES);
+    let wMax = 0;
+    for (let i = 0; i < SAMPLES; i++) wMax = Math.max(wMax, Math.abs(wave[i]));
+    const ds = wMax > 0.01 ? yScale/wMax : yScale;
+    ctx.beginPath(); ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 2.5;
+    for (let i = 0; i <= SAMPLES; i++) {
+      const x = padL + (i/SAMPLES)*bw;
+      const y = midY - wave[i]*ds;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // ── Frequency canvas ───────────────────────────────────────────────
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, freqY); ctx.lineTo(padL+bw, freqY); ctx.stroke();
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('amp', padL-4, freqY+10);
+
+  // Freq grid lines
+  [100, 200, 500, 1000, 2000, 5000, 8000].forEach(f => {
+    const x = xFromFreq(f);
+    ctx.strokeStyle = 'rgba(100,180,255,0.30)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, freqY); ctx.lineTo(x, freqY+freqH); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.60)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(f >= 1000 ? (f/1000)+'k' : f, x, freqY+freqH+14);
+  });
+  ctx.fillStyle = 'rgba(150,200,255,0.60)'; ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz) →', padL+bw/2, freqY+freqH+14);
+
+  // Amp grid
+  [0.25, 0.5, 0.75, 1.0].forEach(a => {
+    const y = freqY + freqH - a*freqH;
+    ctx.strokeStyle = 'rgba(100,180,255,0.18)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+bw, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.40)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(a.toFixed(2), padL-4, y+4);
+  });
+
+  // Partial bars
+  const barW = 14;
+  partials.forEach((p, i) => {
+    const px = xFromFreq(p.freq);
+    const barH = p.amp * freqH;
+    const isSelected = (dragging === 'partial' && dragIdx === i);
+    ctx.fillStyle = isSelected ? '#ffff44' : '#00ffff';
+    ctx.fillRect(px - barW/2, freqY + freqH - barH, barW, barH);
+    // Freq label above bar
+    ctx.fillStyle = isSelected ? '#ffff44' : '#00ffff';
+    ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(p.freq+'Hz', px, freqY + freqH - barH - 4);
+    // Amp inside bar (if tall enough)
+    if (barH > 22) {
+      ctx.fillStyle = '#001020'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(p.amp.toFixed(2), px, freqY + freqH - barH + 14);
+    }
+  });
+
+  if (partials.length === 0) {
+    ctx.fillStyle = 'rgba(150,200,255,0.50)'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Haz clic aquí para agregar un parcial', padL+bw/2, freqY+freqH/2);
+  } else if (partials.length < MAX_PARTIALS) {
+    ctx.fillStyle = 'rgba(150,200,255,0.30)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(`${partials.length}/${MAX_PARTIALS} parciales — clic para agregar`, padL+bw/2, freqY+freqH+24);
+  }
+
+  // ── Phase strip ────────────────────────────────────────────────────
+  ctx.strokeStyle = 'rgba(100,180,255,0.25)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, partPhaseY); ctx.lineTo(padL+bw, partPhaseY); ctx.stroke();
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('fase', padL-4, partPhaseY + partPhaseH/2 + 4);
+
+  const trackW = 48, trackH = 8, trackY = partPhaseY + (partPhaseH-trackH)/2, dotR = 6;
+  partials.forEach((p, i) => {
+    const px = xFromFreq(p.freq);
+    const tLeft = px - trackW/2;
+    ctx.fillStyle = 'rgba(100,150,200,0.30)';
+    ctx.fillRect(tLeft, trackY, trackW, trackH);
+    const dotX = tLeft + (p.phase / (2*Math.PI)) * trackW;
+    ctx.fillStyle = '#ffaa00'; ctx.beginPath();
+    ctx.arc(dotX, trackY+trackH/2, dotR, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffaa00'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(Math.round(p.phase*180/Math.PI)+'°', px, partPhaseY+10);
+  });
+
+  if (partials.length === 0) {
+    ctx.fillStyle = 'rgba(150,200,255,0.40)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('↔ La fase de cada parcial aparece aquí', padL+bw/2, partPhaseY+partPhaseH/2+4);
+  } else {
+    ctx.fillStyle = 'rgba(150,200,255,0.38)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('↔ arrastra para cambiar fase', padL+bw/2, partPhaseY+partPhaseH+2);
+  }
+}
+
+// ── Mouse / Touch ─────────────────────────────────────────────────────
+let dragging = null; // null | 'amp' | 'phase' | 'partial' | 'partial-phase'
+let dragIdx = -1;
+let _dragStartMx = 0, _dragStartMy = 0, _dragAxis = null;
+let _lastClickTime = 0, _lastClickIdx = -1;
+const DRAG_THRESH = 8;
+
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    mx: (e.clientX - rect.left) * (canvas.width / rect.width),
+    my: (e.clientY - rect.top)  * (canvas.height / rect.height)
+  };
+}
+
+function nearestPartialAt(mx, radius) {
+  const r = radius !== undefined ? radius : 18;
+  let best = r, bestIdx = -1;
+  partials.forEach((p, i) => {
+    const dist = Math.abs(mx - xFromFreq(p.freq));
+    if (dist < best) { best = dist; bestIdx = i; }
+  });
+  return bestIdx;
+}
+
+function barIndexAt(mx) {
+  const idx = Math.floor((mx - _padL) / _bw * MAX_HARM);
+  return (idx >= 0 && idx < MAX_HARM) ? idx : -1;
+}
+
+function setBarAmp(idx, my) {
+  ampValues[idx] = Math.max(0, Math.min(1, 1 - (my - _specY) / _specH));
+  drawCanvas();
+  if (playing) applyGains(0.02);
+}
+
+function setBarPhase(idx, mx) {
+  const barW = Math.min(28, (_bw / MAX_HARM) * 0.72);
+  const cx   = _padL + ((idx + 0.5) / MAX_HARM) * _bw;
+  phaseValues[idx] = Math.max(0, Math.min(2*Math.PI, ((mx - (cx - barW/2)) / barW) * 2*Math.PI));
+  drawCanvas();
+  // Phase changes are not rebuilt in audio: the ear is insensitive to harmonic phase
+}
+
+function updatePartialPhase(idx, mx) {
+  const px = xFromFreq(partials[idx].freq);
+  const trackW = 48;
+  const raw = (mx - (px - trackW/2)) / trackW;
+  partials[idx].phase = Math.max(0, Math.min(2*Math.PI, raw * 2*Math.PI));
+  drawCanvas();
+  // Phase changes are not rebuilt in audio: the ear is insensitive to harmonic phase
+}
+
+function handleDown(mx, my) {
+  if (activeView === 'editor') {
+    if (my >= _specY - 4 && my <= _specY + _specH + 20) {
+      const idx = barIndexAt(mx);
+      if (idx >= 0) { dragging = 'amp'; dragIdx = idx; setBarAmp(idx, my); return; }
+    }
+    if (my >= _phaseY - 6 && my <= _phaseY + _phaseH + 6) {
+      const idx = barIndexAt(mx);
+      if (idx >= 0) { dragging = 'phase'; dragIdx = idx; setBarPhase(idx, mx); return; }
+    }
+  } else if (activeView === 'parciales') {
+    if (my >= _freqY && my <= _freqY + _freqH) {
+      const now = Date.now();
+      const idx = nearestPartialAt(mx);
+      if (now - _lastClickTime < 300 && idx >= 0 && idx === _lastClickIdx) {
+        removePartial(idx);
+        _lastClickTime = 0; _lastClickIdx = -1;
+        return;
+      }
+      _lastClickTime = now; _lastClickIdx = idx;
+      if (idx >= 0) {
+        dragging = 'partial'; dragIdx = idx;
+        _dragStartMx = mx; _dragStartMy = my; _dragAxis = null;
+      } else {
+        addPartial(mx, my);
+      }
+    } else if (my >= _partPhaseY - 6 && my <= _partPhaseY + _partPhaseH + 6) {
+      const idx = nearestPartialAt(mx, 30);
+      if (idx >= 0) {
+        dragging = 'partial-phase'; dragIdx = idx;
+        updatePartialPhase(idx, mx);
+      }
+    }
+  }
+}
+
+function handleMove(mx, my) {
+  if (!dragging) {
+    // Update cursor
+    if (activeView === 'editor') {
+      if (my >= _specY && my <= _specY + _specH) canvas.style.cursor = 'ns-resize';
+      else if (my >= _phaseY - 6 && my <= _phaseY + _phaseH + 6) canvas.style.cursor = 'ew-resize';
+      else canvas.style.cursor = 'default';
+    } else if (activeView === 'parciales') {
+      if (my >= _freqY && my <= _freqY + _freqH)
+        canvas.style.cursor = nearestPartialAt(mx) >= 0 ? 'move' : 'crosshair';
+      else if (my >= _partPhaseY - 6 && my <= _partPhaseY + _partPhaseH + 6)
+        canvas.style.cursor = 'ew-resize';
+      else canvas.style.cursor = 'default';
+    }
+    return;
+  }
+
+  if (dragging === 'amp')   { setBarAmp(dragIdx, my); return; }
+  if (dragging === 'phase') { setBarPhase(dragIdx, mx); return; }
+
+  if (dragging === 'partial') {
+    if (_dragAxis === null) {
+      const dx = Math.abs(mx - _dragStartMx), dy = Math.abs(my - _dragStartMy);
+      if (dx > DRAG_THRESH || dy > DRAG_THRESH) _dragAxis = dy >= dx ? 'amp' : 'freq';
+    }
+    if (_dragAxis === 'amp') {
+      partials[dragIdx].amp = Math.max(0.02, Math.min(1, 1 - (my - _freqY) / _freqH));
+      if (playing) applyPartialGains(0.02);
+      drawCanvas();
+    } else if (_dragAxis === 'freq') {
+      const f = Math.round(Math.max(FREQ_MIN, Math.min(FREQ_MAX, freqFromX(mx))));
+      partials[dragIdx].freq = f;
+      if (playing && partialOscs[dragIdx]) partialOscs[dragIdx].osc.frequency.value = f;
+      drawCanvas();
+    }
+    return;
+  }
+
+  if (dragging === 'partial-phase') { updatePartialPhase(dragIdx, mx); return; }
+}
+
+canvas.addEventListener('mousedown', e => { const p = getCanvasPos(e); handleDown(p.mx, p.my); });
+canvas.addEventListener('mousemove', e => { const p = getCanvasPos(e); handleMove(p.mx, p.my); });
+canvas.addEventListener('mouseup', () => { dragging = null; dragIdx = -1; _dragAxis = null; });
+canvas.addEventListener('mouseleave', () => { dragging = null; dragIdx = -1; _dragAxis = null; canvas.style.cursor = 'default'; });
+
+function getTouchPos(touch) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    mx: (touch.clientX - rect.left) * (canvas.width / rect.width),
+    my: (touch.clientY - rect.top)  * (canvas.height / rect.height)
+  };
+}
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const p = getTouchPos(e.touches[0]);
+  handleDown(p.mx, p.my);
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const p = getTouchPos(e.touches[0]);
+  handleMove(p.mx, p.my);
+}, { passive: false });
+canvas.addEventListener('touchend', () => { dragging = null; dragIdx = -1; _dragAxis = null; });
+
+// ── Controles armónicos ───────────────────────────────────────────────
+function setWave(type) {
+  waveType = type;
+  ['btnSaw','btnSq','btnTri'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).style.background = '';
+  });
+  const map = { sawtooth:'btnSaw', square:'btnSq', triangle:'btnTri' };
+  const btn = document.getElementById(map[type]);
+  btn.classList.add('active');
+  btn.style.background = { sawtooth:'rgba(255,170,0,0.12)', square:'rgba(255,68,255,0.12)', triangle:'rgba(0,255,255,0.12)' }[type];
+  computeAmpsFromFormula();
+  drawCanvas(); updateStatus();
+  if (playing) applyGains(0.06);
+}
+
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = +this.value;
+  document.getElementById('freqVal').textContent = freq;
+  oscBank.forEach(({osc}, i) => { osc.frequency.value = freq * (i+1); });
+  drawCanvas();
+});
+
+document.getElementById('nSlider').addEventListener('input', function() {
+  N = +this.value;
+  document.getElementById('nVal').textContent = N;
+  computeAmpsFromFormula();
+  drawCanvas(); updateStatus();
+  if (playing) applyGains(0.05);
+});
+
+// ── Vista ─────────────────────────────────────────────────────────────
+function switchView(v) {
+  if (activeView === v) return;
+
+  // Stop audio cleanly on view switch
+  if (playing) {
+    playing = false;
+    clearTimeout(_phaseRebuildTimer);
+    clearTimeout(_partialPhaseRebuildTimer);
+    document.getElementById('btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('btnPlay').classList.remove('active');
+    stopAllAudio();
+    oscBank.length = 0;
+    partialOscs.length = 0;
+    try { masterGainNode && masterGainNode.disconnect(); } catch(e) {}
+    actxRef = null; masterGainNode = null;
+  }
+
+  activeView = v;
+  ['tabFormula','tabEditor','tabParciales'].forEach(id =>
+    document.getElementById(id).classList.toggle('active', id === 'tab'+v.charAt(0).toUpperCase()+v.slice(1))
+  );
+  document.getElementById('cgFreq').style.display    = v === 'parciales' ? 'none' : '';
+  document.getElementById('cgN').style.display       = v === 'formula' ? '' : 'none';
+  document.getElementById('bgWave').style.display    = v === 'formula' ? '' : 'none';
+  document.getElementById('bgReset').style.display   = v === 'editor' ? '' : 'none';
+  document.getElementById('bgParciales').style.display = v === 'parciales' ? '' : 'none';
+  canvas.style.cursor = 'default';
+
+  const descText = document.getElementById('descText');
+  if (v === 'formula') {
+    descText.innerHTML = 'Cualquier señal periódica puede representarse como la suma de <span class="kw">sinusoides</span> con frecuencias múltiplo entero de la fundamental. Selecciona la <span class="kw">forma de onda</span> y ajusta cuántos armónicos incluir.';
+    computeAmpsFromFormula();
+  } else if (v === 'editor') {
+    descText.innerHTML = 'Arrastra las <span class="kw">barras del espectro</span> verticalmente para fijar la amplitud de cada armónico. En la franja de <span class="kw">fase</span> inferior, arrastra horizontalmente para ajustar el desfase (0°–360°).';
+  } else {
+    descText.innerHTML = 'Agrega <span class="kw">parciales</span> a frecuencias arbitrarias. Clic en el espectro para insertar un parcial — arrastra <strong>verticalmente</strong> para amplitud, <strong>horizontalmente</strong> para frecuencia. Usa la franja de <span class="kw">fase</span> para ajustar el desfase de cada componente. Doble clic para eliminar.';
+  }
+
+  drawCanvas(); updateStatus();
+}
+
+function resetToFormula() {
+  computeAmpsFromFormula();
+  phaseValues.fill(0);
+  drawCanvas(); updateStatus();
+  if (playing) { applyGains(0.05); schedulePhaseRebuild(); }
+}
+
+function clearAll() {
+  ampValues.fill(0);
+  phaseValues.fill(0);
+  drawCanvas();
+  if (playing) applyGains(0.05);
+}
+
+function updateStatus() {
+  const names = { sawtooth:'Diente de Sierra', square:'Cuadrada', triangle:'Triangular' };
+  let txt = '';
+  if (activeView === 'formula')
+    txt = `${names[waveType]} — ${N} armónico(s)`;
+  else if (activeView === 'editor')
+    txt = `Editor Espectral — ${ampValues.filter(a=>a>0.001).length} armónico(s) activos`;
+  else
+    txt = partials.length === 0
+      ? 'Haz clic en el espectro para agregar parciales'
+      : `${partials.length} parcial(es) — ${partials.map(p=>p.freq+'Hz').join(', ')}`;
+  document.getElementById('statusLabel').textContent = txt;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+function init() {
+  computeAmpsFromFormula();
+  drawCanvas();
+  updateStatus();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', drawCanvas);
+</script>
+</body>
+</html>

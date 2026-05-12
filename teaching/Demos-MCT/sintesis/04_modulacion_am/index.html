@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Modulación de Amplitud — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html" class="active">4. AM</a>
+  <a href="../05_modulacion_fm/index.html">5. FM</a>
+  <a href="../06_sintesis_granular/index.html">6. Granular</a>
+  <a href="../07_karplus_strong/index.html">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Modulación de Amplitud</h1>
+      <p class="subtitle">Multiplicación de señales: bandas laterales y tremolo</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>AM: portadora × moduladora</h2>
+    <p class="description">
+      La modulación de amplitud <span class="kw">multiplica</span> dos señales. La señal
+      <span class="kw">portadora</span> (carrier) tiene su amplitud variada por la
+      <span class="kw">moduladora</span>. Si fm es lento (< 20 Hz), se percibe como
+      <em>tremolo</em>; si fm es audible, aparecen <span class="kw">bandas laterales</span>
+      en fc ± fm. Ring AM suprime la portadora; AM estándar la conserva.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Portadora fc: <span class="val" id="fcVal">440</span> Hz</label>
+        <input type="range" id="fcSlider" min="50" max="4000" value="440" step="1">
+      </div>
+      <div class="control-group">
+        <label>Moduladora fm: <span class="val" id="fmVal">60</span> Hz</label>
+        <input type="range" id="fmSlider" min="1" max="2000" value="60" step="1">
+      </div>
+      <div class="control-group">
+        <label>Índice M: <span class="val" id="mVal">1.0</span></label>
+        <input type="range" id="mSlider" min="0" max="2" value="1.0" step="0.05">
+      </div>
+      <div class="control-group">
+        <label>Modo:</label>
+        <div class="btn-group" style="margin-bottom:0;">
+          <button class="btn active" id="btnAM" onclick="setMode('am')" style="background:rgba(255,170,0,0.12);border-color:#ffaa00;color:#ffaa00;">AM Estándar</button>
+          <button class="btn" id="btnRing" onclick="setMode('ring')" style="border-color:#ff44ff;color:#ff44ff;">Ring Mod</button>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">AM Estándar — fc=440 Hz, fm=60 Hz, M=1.0</div>
+    <canvas id="cnvMain" height="360"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Derivación por prostaféresis</h2>
+    <p class="description">
+      La <span class="kw">prostaféresis</span> es la identidad trigonométrica que convierte un
+      <em>producto</em> de sinusoides en una <em>suma</em> de cosenos, revelando directamente
+      la posición de las bandas laterales.
+    </p>
+
+    <div class="info-box" style="margin-bottom:14px;">
+      <strong style="color:#ffffff;">Identidad fundamental</strong><br><br>
+      <code>sin(A) · sin(B) = ½ · [cos(A − B) − cos(A + B)]</code>
+    </div>
+
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Ring Modulation</strong><br><br>
+        Aplicando la identidad directamente a la multiplicación portadora × moduladora:<br><br>
+        <code>sin(2π f<sub>m</sub> t) · sin(2π f<sub>c</sub> t)</code><br><br>
+        <code>&nbsp;= ½ · cos(2π(f<sub>c</sub> − f<sub>m</sub>)t)</code><br>
+        <code>&nbsp;− ½ · cos(2π(f<sub>c</sub> + f<sub>m</sub>)t)</code><br><br>
+        La portadora <em>desaparece</em>: solo quedan dos componentes simétricas
+        a distancia f<sub>m</sub> de f<sub>c</sub>, cada una con amplitud ½.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">AM Estándar</strong><br><br>
+        Se expande el factor <code>(1 + M·sin(2π f<sub>m</sub> t))</code> y se aplica la identidad
+        al término de producto:<br><br>
+        <code>(1 + M·sin(2π f<sub>m</sub> t)) · sin(2π f<sub>c</sub> t)</code><br><br>
+        <code>&nbsp;= sin(2π f<sub>c</sub> t)</code><br>
+        <code>&nbsp;+ M · sin(2π f<sub>m</sub> t) · sin(2π f<sub>c</sub> t)</code><br><br>
+        <code>&nbsp;= sin(2π f<sub>c</sub> t)</code><br>
+        <code>&nbsp;+ <sup>M</sup>/<sub>2</sub> · cos(2π(f<sub>c</sub> − f<sub>m</sub>)t)</code><br>
+        <code>&nbsp;− <sup>M</sup>/<sub>2</sub> · cos(2π(f<sub>c</sub> + f<sub>m</sub>)t)</code><br><br>
+        La portadora <em>se conserva</em> con amplitud 1; las bandas laterales tienen amplitud M/2.
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>Matemáticas de la modulación de amplitud</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">AM Estándar (Tipo 2)</strong><br>
+        <code>y(t) = 0.5·(1 + M·sin(2π f<sub>m</sub> t))·sin(2π f<sub>c</sub> t)</code><br><br>
+        Espectro: fc conservada + dos bandas laterales en fc±fm con amplitud M/2.
+        Con M=0 solo suena la portadora; con M=1 (100%) las bandas tienen la mitad de amplitud.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Ring Modulation (Tipo 1)</strong><br>
+        <code>y(t) = sin(2π f<sub>m</sub> t) · sin(2π f<sub>c</sub> t)</code><br><br>
+        La portadora queda <em>suprimida</em>. Por identidad trigonométrica:<br>
+        <code>= ½[cos(2π(f<sub>c</sub>−f<sub>m</sub>)t) − cos(2π(f<sub>c</sub>+f<sub>m</sub>)t)]</code><br>
+        Solo aparecen fc−fm y fc+fm.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let fc = 440, fm = 60, M = 1.0;
+let mode = 'am'; // 'am' | 'ring'
+let animId = null;
+let t0_audio = 0;
+let currentCarrier = null, currentMod = null, currentDC = null;
+let currentCarrierGain = null, currentModScale = null;
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas(elapsed) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 72, padR = 20, padT = 16, padB = 30;
+  const totalH = H - padT - padB;
+  // 3 rows for signals + 1 row for spectrum
+  const rowH = Math.floor(totalH * 0.22);
+  const specH = Math.floor(totalH * 0.26);
+  const gapH = Math.floor(totalH * 0.03);
+  const bw = W - padL - padR;
+
+  const rows = [
+    { label: 'portadora', y: padT },
+    { label: 'moduladora', y: padT + rowH + gapH },
+    { label: 'resultado', y: padT + (rowH + gapH) * 2 }
+  ];
+  const specY = padT + (rowH + gapH) * 3 + 4;
+
+  // Show enough time to see the AM envelope: at least 2 modulator periods, capped at 80ms
+  const tMax = Math.min(4 / Math.min(fc, fm), 0.08);
+  const SAMPLES = 400;
+
+  const colors = { portadora: '#00ffff', moduladora: '#ffaa00', resultado: mode === 'ring' ? '#ff44ff' : '#00ff44' };
+
+  rows.forEach(({ label, y }) => {
+    const midY = y + rowH / 2;
+    const yScale = rowH / 2 * 0.85;
+
+    // Grid line
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, midY); ctx.lineTo(padL + bw, midY); ctx.stroke();
+
+    // Row label
+    ctx.fillStyle = colors[label];
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(label, padL - 4, midY + 4);
+
+    ctx.beginPath();
+    ctx.strokeStyle = colors[label];
+    ctx.lineWidth = 1.8;
+    for (let i = 0; i <= SAMPLES; i++) {
+      const t = (i / SAMPLES) * tMax;
+      const x = padL + (i / SAMPLES) * bw;
+      let sig;
+      const carrier_val = Math.sin(2 * Math.PI * fc * t);
+      const mod_val = Math.sin(2 * Math.PI * fm * t);
+      if (label === 'portadora') sig = carrier_val;
+      else if (label === 'moduladora') sig = mod_val;
+      else {
+        sig = mode === 'ring'
+          ? mod_val * carrier_val
+          : 0.5 * (1 + M * mod_val) * carrier_val;
+      }
+      const py = midY - sig * yScale;
+      i === 0 ? ctx.moveTo(x, py) : ctx.lineTo(x, py);
+    }
+    ctx.stroke();
+  });
+
+  // ── Spectrum ──────────────────────────────────────────────────────
+  ctx.fillStyle = 'rgba(100,180,255,0.35)';
+  ctx.fillRect(padL, specY + specH, bw, 1);
+
+  // Determine what frequencies and amplitudes to show
+  let freqs, amps, barColor;
+  if (mode === 'ring') {
+    freqs = [fc - fm, fc + fm];
+    amps = [0.5, 0.5];
+    barColor = '#ff44ff';
+  } else {
+    freqs = [fc - fm, fc, fc + fm];
+    amps = [M * 0.5, 1.0, M * 0.5];
+    barColor = '#00ff44';
+  }
+
+  const maxFreqShow = Math.max(fc + fm * 2, 600);
+  const barW = Math.min(20, bw / 12);
+
+  freqs.forEach((f, i) => {
+    if (f <= 0) return;
+    const x = padL + (f / maxFreqShow) * bw;
+    const barH = amps[i] * specH * 0.88;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x - barW / 2, specY + specH - barH, barW, barH);
+    ctx.fillStyle = '#99ccff';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    const label = f === fc - fm ? 'fc−fm' : f === fc ? 'fc' : 'fc+fm';
+    ctx.fillText(label, x, specY + specH + 14);
+    ctx.fillText(Math.round(f)+'Hz', x, specY + specH + 25);
+    ctx.fillStyle = barColor;
+    ctx.fillText(amps[i].toFixed(2), x, specY + specH - barH - 4);
+  });
+
+  // Spectrum axis label
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Espectro — frecuencia →', padL + bw / 2, H - 4);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function startAudio() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+
+  currentCarrier = actx.createOscillator();
+  currentMod = actx.createOscillator();
+  currentCarrierGain = actx.createGain();
+  const masterGain = actx.createGain();
+
+  currentCarrier.type = 'sine';
+  currentCarrier.frequency.value = fc;
+  currentMod.type = 'sine';
+  currentMod.frequency.value = fm;
+  masterGain.gain.value = 0.25;
+
+  if (mode === 'ring') {
+    // Ring: output = mod(t) * carrier(t)
+    currentCarrierGain.gain.value = 0;
+    currentMod.connect(currentCarrierGain.gain);
+    currentCarrier.connect(currentCarrierGain);
+  } else {
+    // AM: output = 0.5*(1 + M*mod(t)) * carrier(t)
+    currentCarrierGain.gain.value = 0;
+    currentDC = actx.createConstantSource();
+    currentDC.offset.value = 0.5;
+    currentModScale = actx.createGain();
+    currentModScale.gain.value = M * 0.5;
+    currentDC.connect(currentCarrierGain.gain);
+    currentMod.connect(currentModScale);
+    currentModScale.connect(currentCarrierGain.gain);
+    currentCarrier.connect(currentCarrierGain);
+    currentDC.start(t0);
+    _activeNodes.push(currentDC);
+  }
+
+  currentCarrierGain.connect(masterGain);
+  masterGain.connect(actx.destination);
+
+  currentCarrier.start(t0);
+  currentMod.start(t0);
+  _activeNodes.push(currentCarrier, currentMod);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  currentCarrier = null; currentMod = null; currentDC = null;
+  currentCarrierGain = null; currentModScale = null;
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas(0);
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  ['btnAM','btnRing'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).style.background = '';
+  });
+  const id = m === 'am' ? 'btnAM' : 'btnRing';
+  document.getElementById(id).classList.add('active');
+  document.getElementById(id).style.background = m === 'am' ? 'rgba(255,170,0,0.12)' : 'rgba(255,68,255,0.12)';
+  updateStatus();
+  drawCanvas(0);
+  if (playing) { stopPlayback(); togglePlay(); }
+}
+
+document.getElementById('fcSlider').addEventListener('input', function() {
+  fc = +this.value;
+  document.getElementById('fcVal').textContent = fc;
+  if (currentCarrier) currentCarrier.frequency.value = fc;
+  updateStatus(); drawCanvas(0);
+});
+
+document.getElementById('fmSlider').addEventListener('input', function() {
+  fm = +this.value;
+  document.getElementById('fmVal').textContent = fm;
+  if (currentMod) currentMod.frequency.value = fm;
+  updateStatus(); drawCanvas(0);
+});
+
+document.getElementById('mSlider').addEventListener('input', function() {
+  M = +parseFloat(this.value).toFixed(2);
+  document.getElementById('mVal').textContent = M;
+  if (currentModScale) currentModScale.gain.value = M * 0.5;
+  updateStatus(); drawCanvas(0);
+});
+
+function updateStatus() {
+  const modeName = mode === 'ring' ? 'Ring Modulation' : 'AM Estándar';
+  document.getElementById('statusLabel').textContent =
+    `${modeName} — fc=${fc} Hz, fm=${fm} Hz, M=${M}`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+function init() { drawCanvas(0); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawCanvas(0));
+</script>
+</body>
+</html>

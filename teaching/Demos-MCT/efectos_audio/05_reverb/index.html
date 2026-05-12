@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Reverberación Artificial — Procesamiento de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_delay/index.html">1. Delay</a>
+  <a href="../02_comb_filter/index.html">2. Comb</a>
+  <a href="../03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="../04_flanger_chorus/index.html">4. Flanger/Chorus</a>
+  <a href="../05_reverb/index.html" class="active">5. Reverb</a>
+  <a href="../06_distorsion/index.html">6. Distorsión</a>
+  <a href="../07_wah/index.html">7. Wah-Wah</a>
+  <a href="../08_armonizador/index.html">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. Reverberación Artificial</h1>
+      <p class="subtitle">Convolución con respuesta al impulso sintética — simulación de espacios acústicos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Convolución con respuesta al impulso</h2>
+    <p class="description">
+      La <span class="kw">reverberación artificial</span> por convolución reproduce la acústica de un espacio
+      aplicando una <span class="kw">respuesta al impulso</span> (IR) a la señal de audio. La IR captura cómo
+      el espacio responde a un disparo ideal e incluye las <span class="kw">reflexiones tempranas</span>
+      (0–80 ms, discretas) y la <span class="kw">cola difusa</span> que decae exponencialmente hasta el
+      nivel de ruido. El tiempo de reverberación <span class="kw">TR60</span> es el tiempo en que
+      la energía cae 60 dB. Con el <span class="kw">ConvolverNode</span> de Web Audio la IR completa se
+      aplica en tiempo real mediante convolución en bloques.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>TR60: <span class="val" id="rt60Val">2.0</span> s</label>
+        <input type="range" id="rt60Slider" min="0.3" max="6" value="2.0" step="0.1">
+      </div>
+      <div class="control-group">
+        <label>Pre-delay: <span class="val" id="preVal">20</span> ms</label>
+        <input type="range" id="preSlider" min="0" max="100" value="20" step="5">
+      </div>
+      <div class="control-group">
+        <label>Mix wet: <span class="val" id="mixVal">60</span> %</label>
+        <input type="range" id="mixSlider" min="0" max="100" value="60" step="5">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">TR60=2.0 s · pre-delay=20 ms · mix=60%</div>
+    <canvas id="cnvMain" height="240"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Arquitectura del reverb por convolución</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Respuesta al impulso (IR)</strong><br>
+        Una IR de reverb tiene tres zonas: el <strong>sonido directo</strong> (t=0),
+        las <strong>reflexiones tempranas</strong> (0–80 ms, discretas y de alta amplitud)
+        y la <strong>cola difusa</strong> (densidad creciente, decaimiento exponencial).
+        La densidad de reflexiones aumenta con el tiempo hasta volverse ruido coloreado.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">ConvolverNode en Web Audio</strong><br>
+        <code>convolver.normalize = true</code> normaliza la energía de la IR para evitar
+        sobrecarga. Al activarlo, la ganancia de salida se reduce — se compensa con
+        <code>gain.value ≈ 2.8</code>. El pre-delay desplaza temporalmente el inicio
+        de la IR, separando perceptualmente el sonido directo del reverb.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ff44;">TR60 y absorción</strong><br>
+        En la IR sintética, el decaimiento exponencial se calibra: la envolvente
+        <code>e^(−6·ln(10)·t / TR60)</code> reduce la amplitud exactamente 60 dB en TR60 segundos.
+        Iglesias y catedrales: TR60 ≥ 4 s. Salas de conciertos: 1.5–2.5 s.
+        Estudios de grabación: TR60 ≤ 0.4 s.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff4444;">Dry/Wet mix</strong><br>
+        El balance entre la señal <strong>dry</strong> (directa, sin procesar) y la
+        señal <strong>wet</strong> (convolucionada) determina la "distancia" percibida:
+        mix alto → fuente lejana y sumergida en el espacio; mix bajo → fuente cercana
+        con ambiente sutil.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let rt60 = 2.0;
+let preDelay = 0.020;
+let mix = 0.60;
+
+let currentDryGain = null;
+let currentWetGain = null;
+let currentConvolver = null;
+let burstTimer = null;
+let actxRef = null;
+const BURST_DUR = 0.05;
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 56, padR = 20, padT = 28, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const maxT = Math.min(rt60 + 0.8, 8.0);
+
+  // Eje horizontal
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  ctx.lineTo(padL + bw, padT + bh);
+  ctx.stroke();
+
+  // Eje vertical
+  ctx.beginPath();
+  ctx.moveTo(padL, padT);
+  ctx.lineTo(padL, padT + bh);
+  ctx.stroke();
+
+  // Grid vertical cada 0.5 s
+  ctx.setLineDash([2, 5]);
+  ctx.strokeStyle = 'rgba(100,180,255,0.20)';
+  for (let t = 0.5; t < maxT; t += 0.5) {
+    const x = padL + (t / maxT) * bw;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.60)';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(t.toFixed(1) + 's', x, padT + bh + 16);
+  }
+  ctx.setLineDash([]);
+
+  // Zona pre-delay (gris)
+  if (preDelay > 0.005) {
+    const xPre = padL + (preDelay / maxT) * bw;
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fillRect(padL, padT, xPre - padL, bh);
+    ctx.fillStyle = 'rgba(180,180,180,0.50)';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('pre-delay', padL + (xPre - padL) / 2, padT + 14);
+  }
+
+  // Zona reflexiones tempranas (80 ms desde fin del pre-delay)
+  const earlyEnd = preDelay + 0.080;
+  const xPreEnd = padL + (preDelay / maxT) * bw;
+  const xEarlyEnd = padL + (earlyEnd / maxT) * bw;
+  ctx.fillStyle = 'rgba(255,170,0,0.07)';
+  ctx.fillRect(xPreEnd, padT, xEarlyEnd - xPreEnd, bh);
+
+  // Curva de envolvente IR (decaimiento exponencial)
+  const decayK = -6 * Math.log(10) / rt60;
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  let first = true;
+  for (let px = 0; px <= bw; px++) {
+    const t = (px / bw) * maxT;
+    const tEff = t - preDelay;
+    const amp = tEff <= 0 ? 0 : Math.exp(decayK * tEff);
+    const y = padT + bh - amp * bh * 0.88;
+    if (first) { ctx.moveTo(padL + px, y); first = false; }
+    else ctx.lineTo(padL + px, y);
+  }
+  ctx.stroke();
+
+  // Spike del impulso en t=preDelay (naranja)
+  const xImp = padL + (preDelay / maxT) * bw;
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(xImp, padT + bh);
+  ctx.lineTo(xImp, padT + bh * 0.06);
+  ctx.stroke();
+
+  // Línea TR60 (roja discontinua)
+  const xRT = padL + (rt60 / maxT) * bw;
+  if (xRT <= padL + bw) {
+    ctx.strokeStyle = 'rgba(255,68,68,0.75)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(xRT, padT); ctx.lineTo(xRT, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ff4444';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('TR60', xRT, padT + 12);
+    // Nivel −60 dB
+    ctx.strokeStyle = 'rgba(255,68,68,0.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 6]);
+    const y60 = padT + bh - 0.001 * bh * 0.88; // amp=0.001 (−60dB)
+    ctx.beginPath(); ctx.moveTo(padL, y60); ctx.lineTo(padL + bw, y60); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,68,68,0.55)';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('−60 dB', padL - 2, y60 + 4);
+  }
+
+  // Labels
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('amp', padL - 4, padT + 16);
+  ctx.textAlign = 'center';
+  ctx.fillText('tiempo →', padL + bw / 2, H - 4);
+
+  // Leyendas de zonas
+  ctx.fillStyle = 'rgba(255,170,0,0.70)';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('reflexiones tempranas', xPreEnd + 4, padT + 24);
+  ctx.fillStyle = 'rgba(0,255,255,0.65)';
+  ctx.fillText('cola difusa', xEarlyEnd + 4, padT + 24);
+
+  // Mix label
+  ctx.fillStyle = 'rgba(150,200,255,0.55)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(`mix wet: ${Math.round(mix * 100)}%`, padL + bw - 4, padT + 14);
+}
+
+// ── Construcción de IR sintética ──────────────────────────────────────
+function buildIR(actx) {
+  const sr = actx.sampleRate;
+  const preSamples = Math.floor(preDelay * sr);
+  const tailSamples = Math.ceil(rt60 * sr * 1.1);
+  const total = preSamples + tailSamples;
+  const buf = actx.createBuffer(2, total, sr);
+  const decayPerSample = Math.log(1e-6) / tailSamples;
+  const earlyEndSample = preSamples + Math.floor(0.080 * sr);
+
+  for (let c = 0; c < 2; c++) {
+    const ch = buf.getChannelData(c);
+    for (let i = 0; i < preSamples; i++) ch[i] = 0;
+    // Reflexiones tempranas: spikes dispersos
+    for (let i = preSamples; i < Math.min(earlyEndSample, total); i++) {
+      if (Math.random() < 0.01) {
+        ch[i] = (Math.random() * 2 - 1) * Math.exp(decayPerSample * (i - preSamples));
+      }
+    }
+    // Cola difusa: ruido coloreado decreciente
+    for (let i = earlyEndSample; i < total; i++) {
+      ch[i] = (Math.random() * 2 - 1) * Math.exp(decayPerSample * (i - preSamples));
+    }
+  }
+  return buf;
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function getPeriodMs() {
+  return Math.min(Math.max(rt60 * 1000 + 800, 1800), 7000);
+}
+
+function fireBurst() {
+  if (!actxRef || !currentConvolver) return;
+  const t0 = actxRef.currentTime + 0.005;
+  const osc = actxRef.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = 330;
+  const env = actxRef.createGain();
+  env.gain.setValueAtTime(0.0, t0);
+  env.gain.linearRampToValueAtTime(0.60, t0 + 0.004);
+  env.gain.exponentialRampToValueAtTime(0.001, t0 + BURST_DUR);
+  osc.connect(env);
+  if (currentDryGain) env.connect(currentDryGain);
+  env.connect(currentConvolver);
+  osc.start(t0);
+  osc.stop(t0 + BURST_DUR + 0.02);
+  _activeNodes.push(osc);
+}
+
+function scheduleBurst() {
+  if (!playing) return;
+  fireBurst();
+  burstTimer = setTimeout(scheduleBurst, getPeriodMs());
+}
+
+function startAudio() {
+  actxRef = getAudioContext();
+
+  const convolver = actxRef.createConvolver();
+  convolver.normalize = true;
+  convolver.buffer = buildIR(actxRef);
+  currentConvolver = convolver;
+
+  const dryGain = actxRef.createGain();
+  dryGain.gain.value = (1 - mix) * 0.9;
+  currentDryGain = dryGain;
+
+  const wetGain = actxRef.createGain();
+  wetGain.gain.value = mix * 2.8;
+  currentWetGain = wetGain;
+
+  const master = actxRef.createGain();
+  master.gain.value = 0.50;
+
+  convolver.connect(wetGain);
+  dryGain.connect(master);
+  wetGain.connect(master);
+  master.connect(actxRef.destination);
+
+  scheduleBurst();
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  if (burstTimer) { clearTimeout(burstTimer); burstTimer = null; }
+  stopAllAudio();
+  try { currentConvolver && currentConvolver.disconnect(); } catch(e) {}
+  try { currentDryGain && currentDryGain.disconnect(); } catch(e) {}
+  try { currentWetGain && currentWetGain.disconnect(); } catch(e) {}
+  currentConvolver = null;
+  currentDryGain = null;
+  currentWetGain = null;
+  actxRef = null;
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('rt60Slider').addEventListener('input', function() {
+  rt60 = +parseFloat(this.value).toFixed(1);
+  document.getElementById('rt60Val').textContent = rt60.toFixed(1);
+  if (playing) { stopPlayback(); }
+  updateStatus(); drawCanvas();
+});
+
+document.getElementById('preSlider').addEventListener('input', function() {
+  preDelay = +this.value / 1000;
+  document.getElementById('preVal').textContent = this.value;
+  updateStatus(); drawCanvas();
+});
+
+document.getElementById('mixSlider').addEventListener('input', function() {
+  mix = +this.value / 100;
+  document.getElementById('mixVal').textContent = this.value;
+  if (currentDryGain) currentDryGain.gain.value = (1 - mix) * 0.9;
+  if (currentWetGain) currentWetGain.gain.value = mix * 2.8;
+  updateStatus(); drawCanvas();
+});
+
+function updateStatus() {
+  document.getElementById('statusLabel').textContent =
+    `TR60=${rt60.toFixed(1)} s · pre-delay=${Math.round(preDelay * 1000)} ms · mix=${Math.round(mix * 100)}%`;
+}
+
+function init() { drawCanvas(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawCanvas());
+</script>
+</body>
+</html>

@@ -310,6 +310,12 @@ canvas {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.sec-sintesis header h1 {
+  background: linear-gradient(90deg, #ff44ff, #ffaa00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Card grid (índices de sección) ── */
 .card-grid {

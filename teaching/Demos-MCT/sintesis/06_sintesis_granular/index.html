@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Síntesis Granular — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html">4. AM</a>
+  <a href="../05_modulacion_fm/index.html">5. FM</a>
+  <a href="../06_sintesis_granular/index.html" class="active">6. Granular</a>
+  <a href="../07_karplus_strong/index.html">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Síntesis Granular</h1>
+      <p class="subtitle">Texturas sonoras construidas desde micro-fragmentos — granos acústicos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Nube de granos — visualización en tiempo real</h2>
+    <p class="description">
+      La síntesis granular (Gabor, 1947) concibe el sonido como una nube de
+      <span class="kw">granos</span>: micro-fragmentos sinusoidales con una
+      <span class="kw">envolvente gaussiana</span>. Cada grano tiene su propia frecuencia,
+      amplitud y posición temporal. El resultado perceptivo emerge de la
+      <span class="kw">densidad</span> y <span class="kw">dispersión</span> del conjunto.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia central: <span class="val" id="freqVal">440</span> Hz</label>
+        <input type="range" id="freqSlider" min="100" max="2000" value="440" step="1">
+      </div>
+      <div class="control-group">
+        <label>Densidad: <span class="val" id="densityVal">15</span> granos/s</label>
+        <input type="range" id="densitySlider" min="2" max="60" value="15" step="1">
+      </div>
+      <div class="control-group">
+        <label>Duración del grano: <span class="val" id="durVal">60</span> ms</label>
+        <input type="range" id="durSlider" min="10" max="200" value="60" step="5">
+      </div>
+      <div class="control-group">
+        <label>Dispersión (scatter): <span class="val" id="scatterVal">20</span> %</label>
+        <input type="range" id="scatterSlider" min="0" max="100" value="20" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Granos: frecuencia=440 Hz · densidad=15/s · dur=60 ms · scatter=20%</div>
+    <canvas id="cnvMain" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Tipos de síntesis granular</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Sincrónica</strong><br>
+        Granos con período constante → envolvente periódica.
+        Es un caso especial de AM que produce bandas laterales discretas.
+        Con alta densidad se percibe como un tono con timbre característico.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Quasi-sincrónica</strong><br>
+        Período variable entre granos → envolvente no periódica.
+        Bandas laterales más espaciadas, contenido espectral más rico.
+        Semeja la salida de un filtro resonante.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Asincrónica</strong><br>
+        Propiedades de los granos variadas aleatoriamente. Genera texturas
+        de ruido coloreado o "nubes" sonoras. Muy usada en música electrónica
+        y efectos de sonido (Rivers&shy;run de Truax, 1986).
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Envolvente gaussiana</strong><br>
+        Cada grano = sinusoide × e<sup>−(t−μ)²/2σ²</sup>.<br>
+        La campana gaussiana evita clicks en el inicio/fin del grano y
+        corresponde al "cuanto acústico" de Gabor.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let baseFreq = 440, density = 15, grainDurMs = 60, scatter = 20;
+let animId = null;
+let scheduleTimer = null;
+let nextGrainTime = 0;
+
+// Visual grain ring buffer
+const MAX_VIS_GRAINS = 120;
+const visGrains = [];
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas(now) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 20, padT = 20, padB = 36;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (bh / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+
+  // Freq axis labels (log scale)
+  const fMin = 80, fMax = 4000;
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  [100, 200, 500, 1000, 2000].forEach(f => {
+    const x = padL + Math.log2(f / fMin) / Math.log2(fMax / fMin) * bw;
+    ctx.textAlign = 'center';
+    ctx.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x, padT + bh + 14);
+    ctx.strokeStyle = 'rgba(100,180,255,0.20)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+  });
+
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.textAlign = 'right';
+  ctx.fillText('freq', padL - 4, padT + 10);
+  ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz, eje log) →', padL + bw / 2, H - 4);
+
+  // Draw grains
+  const nowMs = performance.now();
+  visGrains.forEach(g => {
+    const age = nowMs - g.birthMs;
+    const dur = g.durMs;
+    if (age > dur) return;
+
+    const progress = age / dur;
+    // Gaussian envelope
+    const mu = 0.4, sigma = 0.2;
+    const env = Math.exp(-Math.pow((progress - mu), 2) / (2 * sigma * sigma));
+
+    const freqClamp = Math.max(fMin, Math.min(fMax, g.freq));
+    const x = padL + Math.log2(freqClamp / fMin) / Math.log2(fMax / fMin) * bw;
+    // y position = envelope height from mid
+    const midY = padT + bh / 2;
+    const radius = 4 + env * 10;
+
+    ctx.globalAlpha = Math.max(0.5, env);
+    ctx.fillStyle = g.color;
+    ctx.beginPath();
+    ctx.arc(x + (Math.random() - 0.5) * 2, midY - env * bh * 0.35 + g.yOff, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Center frequency marker
+  const fcX = padL + Math.log2(baseFreq / fMin) / Math.log2(fMax / fMin) * bw;
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(fcX, padT); ctx.lineTo(fcX, padT + bh); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('f₀=' + baseFreq + 'Hz', fcX, padT - 5);
+
+  if (playing) animId = requestAnimationFrame(drawCanvas);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+const GRAIN_COLORS = ['#ff44ff', '#ffaa00', '#00ffff', '#ff8844', '#44ffaa', '#ffff44'];
+
+function triggerGrain(t) {
+  const actx = getAudioContext();
+  const scatterFrac = scatter / 100;
+  const freqRatio = 1 + (Math.random() - 0.5) * scatterFrac * 2;
+  const grainFreq = Math.max(50, baseFreq * freqRatio);
+  const dur = grainDurMs / 1000;
+
+  const osc = actx.createOscillator();
+  const env = actx.createGain();
+
+  osc.type = 'sine';
+  osc.frequency.value = grainFreq;
+
+  // Gaussian-approximated envelope using linear ramps
+  const peak = t + dur * 0.4;
+  env.gain.setValueAtTime(0, t);
+  env.gain.linearRampToValueAtTime(0.08 / Math.max(density / 15, 1), peak);
+  env.gain.linearRampToValueAtTime(0, t + dur);
+
+  osc.connect(env);
+  env.connect(actx.destination);
+  osc.start(t);
+  osc.stop(t + dur + 0.01);
+  _activeNodes.push(osc);
+
+  // Add to visual buffer
+  const color = GRAIN_COLORS[Math.floor(Math.random() * GRAIN_COLORS.length)];
+  const yOff = (Math.random() - 0.5) * 40;
+  visGrains.push({ birthMs: performance.now(), durMs: grainDurMs, freq: grainFreq, color, yOff });
+  if (visGrains.length > MAX_VIS_GRAINS) visGrains.splice(0, visGrains.length - MAX_VIS_GRAINS);
+}
+
+function scheduleGrains() {
+  const actx = getAudioContext();
+  const lookahead = 0.12;
+
+  while (nextGrainTime < actx.currentTime + lookahead) {
+    triggerGrain(nextGrainTime);
+    const interval = 1 / density;
+    nextGrainTime += interval * (0.8 + Math.random() * 0.4); // slight timing jitter
+  }
+  scheduleTimer = setTimeout(scheduleGrains, 50);
+}
+
+function startAudio() {
+  const actx = getAudioContext();
+  nextGrainTime = actx.currentTime + 0.05;
+  scheduleGrains();
+  animId = requestAnimationFrame(drawCanvas);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  if (scheduleTimer) { clearTimeout(scheduleTimer); scheduleTimer = null; }
+  stopAllAudio();
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  visGrains.length = 0;
+  drawIdle();
+}
+
+function drawIdle() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 52, padR = 20, padT = 20, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (bh / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(150,200,255,0.5)';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Presiona ▶ Escuchar para iniciar la nube de granos', padL + bw / 2, H / 2);
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('freqSlider').addEventListener('input', function() {
+  baseFreq = +this.value;
+  document.getElementById('freqVal').textContent = baseFreq;
+  updateStatus();
+});
+document.getElementById('densitySlider').addEventListener('input', function() {
+  density = +this.value;
+  document.getElementById('densityVal').textContent = density;
+  updateStatus();
+});
+document.getElementById('durSlider').addEventListener('input', function() {
+  grainDurMs = +this.value;
+  document.getElementById('durVal').textContent = grainDurMs;
+  updateStatus();
+});
+document.getElementById('scatterSlider').addEventListener('input', function() {
+  scatter = +this.value;
+  document.getElementById('scatterVal').textContent = scatter;
+  updateStatus();
+});
+
+function updateStatus() {
+  document.getElementById('statusLabel').textContent =
+    `Granos: f₀=${baseFreq} Hz · densidad=${density}/s · dur=${grainDurMs} ms · scatter=${scatter}%`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+function init() { drawIdle(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) drawIdle(); });
+</script>
+</body>
+</html>

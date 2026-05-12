@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Modulación de Frecuencia — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html">4. AM</a>
+  <a href="../05_modulacion_fm/index.html" class="active">5. FM</a>
+  <a href="../06_sintesis_granular/index.html">6. Granular</a>
+  <a href="../07_karplus_strong/index.html">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. Modulación de Frecuencia</h1>
+      <p class="subtitle">Síntesis FM de Chowning — espectro complejo con dos osciladores</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>FM: frecuencia instantánea modulada</h2>
+    <p class="description">
+      La <span class="kw">modulación de frecuencia (FM)</span> varía la frecuencia instantánea
+      de la portadora en función de la moduladora. Con solo dos osciladores se obtiene un
+      espectro rico con <span class="kw">bandas laterales</span> en fc ± n·fm, cuyas amplitudes
+      siguen las <span class="kw">funciones de Bessel</span> Jₙ(M). El
+      <span class="kw">índice de modulación M</span> controla la riqueza espectral.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Portadora fc: <span class="val" id="fcVal">440</span> Hz</label>
+        <input type="range" id="fcSlider" min="50" max="2000" value="440" step="1">
+      </div>
+      <div class="control-group">
+        <label>Moduladora fm: <span class="val" id="fmVal">220</span> Hz</label>
+        <input type="range" id="fmSlider" min="10" max="1000" value="220" step="1">
+      </div>
+      <div class="control-group">
+        <label>Índice M: <span class="val" id="mVal">1.0</span></label>
+        <input type="range" id="mSlider" min="0" max="10" value="1.0" step="0.1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Espectro FM — fc=440 Hz, fm=220 Hz, M=1.0</div>
+    <canvas id="cnvMain" height="340"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Espectro FM y funciones de Bessel</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Frecuencia instantánea</strong><br>
+        <code>f<sub>inst</sub>(t) = f<sub>c</sub> + f<sub>m</sub>·M·sin(2π f<sub>m</sub> t)</code><br><br>
+        <code>y(t) = sin(2π f<sub>c</sub> t + M·sin(2π f<sub>m</sub> t))</code><br><br>
+        M = F<sub>dv</sub> / f<sub>m</sub>, donde F<sub>dv</sub> es la desviación de frecuencia.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Bandas laterales</strong><br>
+        Las componentes espectrales se ubican en: <code>f<sub>c</sub> ± n·f<sub>m</sub></code>
+        para n = 0, 1, 2, 3 …<br><br>
+        Amplitud de cada banda: <code>Jₙ(M)</code> (función de Bessel de orden n).<br>
+        Con M pequeño solo importan J₀ y J₁. Con M grande aparecen docenas de bandas.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Ratio fc/fm y timbre</strong><br>
+        Si fc/fm es un número entero, el espectro es armónico → sonido musical.<br>
+        Si es irracional, el espectro es inarmónico → campanadas, metales, percusión.
+      </div>
+      <div class="info-box warn">
+        <strong style="color:#ff4444;">Chowning (1973)</strong><br>
+        John Chowning descubrió esta técnica en Stanford y la licenció a Yamaha,
+        dando origen al sintetizador DX7 (1983), uno de los sintetizadores más
+        vendidos de la historia.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let fc = 440, fm = 220, M = 1.0;
+let animId = null;
+let analyser = null, analyserData = null;
+let currentCarrier = null, currentMod = null, currentModDepth = null;
+
+// ── Funciones de Bessel ───────────────────────────────────────────────
+function factorial(n) {
+  let f = 1;
+  for (let i = 2; i <= n; i++) f *= i;
+  return f;
+}
+
+function besselJ(n, x) {
+  if (Math.abs(x) < 1e-12) return n === 0 ? 1 : 0;
+  let sum = 0;
+  const absN = Math.abs(n);
+  for (let m = 0; m <= 25; m++) {
+    const term = Math.pow(-1, m) / (factorial(m) * factorial(m + absN))
+                 * Math.pow(x / 2, 2 * m + absN);
+    sum += term;
+    if (Math.abs(term) < 1e-12) break;
+  }
+  return sum;
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+function drawBessel() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 20, padT = 20, padB = 36;
+  const waveH = Math.floor((H - padT - padB) * 0.38);
+  const specH = Math.floor((H - padT - padB) * 0.50);
+  const specY = padT + waveH + 18;
+  const bw = W - padL - padR;
+
+  // ── Waveform section ──────────────────────────────────────────────
+  const SAMPLES = 512;
+  const midY = padT + waveH / 2;
+  const yScale = waveH / 2 * 0.85;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, midY); ctx.lineTo(padL + bw, midY); ctx.stroke();
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('y(t)', padL - 4, padT + 10);
+
+  // FM waveform: y(t) = sin(2π fc t + M sin(2π fm t))
+  const tMax = Math.max(4 / fc, 4 / fm);
+  ctx.beginPath();
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 2;
+  for (let i = 0; i <= SAMPLES; i++) {
+    const t = (i / SAMPLES) * tMax;
+    const x = padL + (i / SAMPLES) * bw;
+    const y_val = Math.sin(2 * Math.PI * fc * t + M * Math.sin(2 * Math.PI * fm * t));
+    const py = midY - y_val * yScale;
+    i === 0 ? ctx.moveTo(x, py) : ctx.lineTo(x, py);
+  }
+  ctx.stroke();
+
+  // Waveform label
+  ctx.fillStyle = '#99ccff';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('forma de onda y(t) →', padL + bw / 2, padT + waveH + 12);
+
+  // ── Spectrum with Bessel amplitudes ──────────────────────────────
+  const maxN = 8;
+  const maxAmp = 1.0;
+  const barW = Math.min(22, bw / (maxN * 2 + 3) * 0.7);
+
+  // Show bands from fc - maxN*fm to fc + maxN*fm
+  const allBands = [];
+  for (let n = -maxN; n <= maxN; n++) {
+    const f = fc + n * fm;
+    if (f < 0) continue;
+    const amp = Math.abs(besselJ(n, M));
+    allBands.push({ f, amp, n });
+  }
+
+  // Find max amp for scaling
+  const maxBandAmp = Math.max(...allBands.map(b => b.amp), 0.01);
+
+  // freq range to show
+  const fMin = Math.max(0, fc - maxN * fm - fm);
+  const fMax = fc + maxN * fm + fm;
+  const fRange = fMax - fMin;
+
+  // Grid lines for spectrum
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = specY + (specH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+
+  // dB labels on spectrum
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('amp', padL - 4, specY + 10);
+  ctx.fillText('J₀', padL - 4, specY + 24);
+
+  // Horizontal axis
+  ctx.strokeStyle = 'rgba(100,180,255,0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, specY + specH); ctx.lineTo(padL + bw, specY + specH); ctx.stroke();
+
+  // Draw bands
+  allBands.forEach(({ f, amp, n }) => {
+    const x = padL + ((f - fMin) / fRange) * bw;
+    const barH = (amp / maxBandAmp) * specH * 0.88;
+    const isCarrier = (n === 0);
+
+    // Color: carrier in yellow, positive sidebands in cyan, negative-folded in orange
+    const color = isCarrier ? '#ffff44' : n > 0 ? '#00ffff' : '#ff8844';
+    ctx.fillStyle = color;
+    ctx.fillRect(x - barW / 2, specY + specH - barH, barW, barH);
+
+    // Label n index
+    if (barH > 6) {
+      ctx.fillStyle = '#99ccff';
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('n=' + n, x, specY + specH + 12);
+    }
+
+    // Amplitude label on top
+    if (amp > 0.05) {
+      ctx.fillStyle = color;
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(amp.toFixed(2), x, specY + specH - barH - 3);
+    }
+  });
+
+  // fc label
+  const fcX = padL + ((fc - fMin) / fRange) * bw;
+  ctx.fillStyle = '#ffff44';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('fc=' + fc + 'Hz', fcX, specY + specH + 24);
+
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.fillText('Espectro FM (amplitudes de Bessel) →', padL + bw / 2, H - 4);
+}
+
+function drawWithAnalyser() {
+  if (!analyser) return;
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  analyser.getByteFrequencyData(analyserData);
+  const padL = 52, padR = 20, padT = 20, padB = 36;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+
+  const binCount = analyser.frequencyBinCount;
+  const sr = getAudioContext().sampleRate;
+  const nyquist = sr / 2;
+  const maxFreqShow = Math.min(nyquist, Math.max(fc + 10 * fm + 500, 4000));
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (bh / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+
+  // Spectrum fill
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  for (let i = 1; i < binCount; i++) {
+    const f = (i / binCount) * nyquist;
+    if (f > maxFreqShow) break;
+    const x = padL + (f / maxFreqShow) * bw;
+    const y = padT + bh - (analyserData[i] / 255) * bh;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(padL + bw, padT + bh);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,170,0,0.18)';
+  ctx.fill();
+
+  ctx.beginPath();
+  let first = true;
+  for (let i = 1; i < binCount; i++) {
+    const f = (i / binCount) * nyquist;
+    if (f > maxFreqShow) break;
+    const x = padL + (f / maxFreqShow) * bw;
+    const y = padT + bh - (analyserData[i] / 255) * bh;
+    first ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    first = false;
+  }
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Sideband markers
+  for (let n = -8; n <= 8; n++) {
+    const f = fc + n * fm;
+    if (f <= 0 || f > maxFreqShow) continue;
+    const x = padL + (f / maxFreqShow) * bw;
+    const amp = Math.abs(besselJ(n, M));
+    const color = n === 0 ? '#ffff44' : '#00ffff';
+    ctx.strokeStyle = color + '88';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+    if (amp > 0.05) {
+      ctx.fillStyle = color;
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('n=' + n, x, padT + bh + 14);
+    }
+  }
+
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz) →', padL + bw / 2, H - 4);
+
+  animId = requestAnimationFrame(drawWithAnalyser);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function startAudio() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+
+  currentCarrier = actx.createOscillator();
+  currentMod = actx.createOscillator();
+  currentModDepth = actx.createGain();
+
+  currentCarrier.type = 'sine';
+  currentCarrier.frequency.value = fc;
+  currentMod.type = 'sine';
+  currentMod.frequency.value = fm;
+  currentModDepth.gain.value = fm * M;
+
+  analyser = actx.createAnalyser();
+  analyser.fftSize = 4096;
+  analyser.smoothingTimeConstant = 0.8;
+  analyserData = new Uint8Array(analyser.frequencyBinCount);
+
+  const gain = actx.createGain();
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(0.15, t0 + 0.02);
+
+  currentMod.connect(currentModDepth);
+  currentModDepth.connect(currentCarrier.frequency);
+  currentCarrier.connect(gain);
+  gain.connect(analyser);
+  analyser.connect(actx.destination);
+
+  currentCarrier.start(t0);
+  currentMod.start(t0);
+  _activeNodes.push(currentCarrier, currentMod);
+
+  drawWithAnalyser();
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  analyser = null;
+  currentCarrier = null; currentMod = null; currentModDepth = null;
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawBessel();
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('fcSlider').addEventListener('input', function() {
+  fc = +this.value;
+  document.getElementById('fcVal').textContent = fc;
+  if (currentCarrier) currentCarrier.frequency.value = fc;
+  updateStatus();
+  if (!playing) drawBessel();
+});
+
+document.getElementById('fmSlider').addEventListener('input', function() {
+  fm = +this.value;
+  document.getElementById('fmVal').textContent = fm;
+  if (currentMod) currentMod.frequency.value = fm;
+  if (currentModDepth) currentModDepth.gain.value = fm * M;
+  updateStatus();
+  if (!playing) drawBessel();
+});
+
+document.getElementById('mSlider').addEventListener('input', function() {
+  M = +parseFloat(this.value).toFixed(1);
+  document.getElementById('mVal').textContent = M;
+  if (currentModDepth) currentModDepth.gain.value = fm * M;
+  updateStatus();
+  if (!playing) drawBessel();
+});
+
+function updateStatus() {
+  const ratio = (fc / fm).toFixed(2);
+  document.getElementById('statusLabel').textContent =
+    `FM — fc=${fc} Hz, fm=${fm} Hz, M=${M}, ratio fc/fm=${ratio}`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+function init() { drawBessel(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) drawBessel(); });
+</script>
+</body>
+</html>

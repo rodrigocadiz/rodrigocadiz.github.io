@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Karplus-Strong — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html">4. AM</a>
+  <a href="../05_modulacion_fm/index.html">5. FM</a>
+  <a href="../06_sintesis_granular/index.html">6. Granular</a>
+  <a href="../07_karplus_strong/index.html" class="active">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Modelamiento Físico</h1>
+      <p class="subtitle">Karplus-Strong — introducción al modelamiento físico</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Cuerda pulsada — algoritmo Karplus-Strong</h2>
+    <p class="description">
+      El algoritmo <span class="kw">Karplus-Strong</span> (Karplus &amp; Strong, 1983) produce
+      sonidos convincentes de cuerda pulsada con un mecanismo muy simple: un
+      <span class="kw">buffer de retardo</span> inicializado con ruido aleatorio y
+      un filtro de promediado que amortigua progresivamente las frecuencias altas.
+      Es una técnica <em>eficiente e intuitiva</em>, pero <strong>no es modelamiento físico</strong>
+      en el sentido estricto: no parte de las ecuaciones de onda ni de la física de la cuerda,
+      sino de una observación empírica sobre el resultado sonoro. Se la considera una
+      <span class="kw">introducción</span> al modelamiento físico real, que opera mediante
+      guías de onda digitales.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Amortiguamiento: <span class="val" id="stretchVal">0.996</span></label>
+        <input type="range" id="stretchSlider" min="0.980" max="0.999" value="0.996" step="0.001">
+      </div>
+    </div>
+
+    <!-- Piano keyboard -->
+    <div style="margin: 14px 0 10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <span style="color:#99ccff; font-size:0.82rem;">Toca una nota:</span>
+      <div id="keyboard" style="display:flex; gap:4px; flex-wrap:wrap;"></div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Presiona una tecla para escuchar</div>
+    <canvas id="cnvMain" height="200"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Diagrama de señal</h2>
+    <p class="description">
+      Un <span class="kw">ruido blanco</span> inicial es sumado a la señal de retroalimentación y
+      enviado a la salida. Simultáneamente, la señal recorre un
+      <span class="kw">retardo Z⁻ᴸ</span> de L muestras (L = SR / f₀) y luego un
+      <span class="kw">filtro pasa-bajos</span> que suaviza y amortigua la señal antes de
+      realimentarse al sumador. Cada ciclo refuerza los armónicos graves y atenúa los agudos,
+      imitando el decaimiento natural de una cuerda pulsada.
+    </p>
+    <canvas id="cnvDiagram" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>El algoritmo</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Paso 1 — Inicialización</strong><br>
+        Se crea un buffer de longitud N = round(SR / f₀) con muestras de
+        ruido aleatorio uniforme [−1, +1]. Este buffer representa el estado
+        inicial de la cuerda al ser pulsada.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Paso 2 — Lazo de retardo</strong><br>
+        En cada muestra n:<br>
+        <code>y[n] = buffer[ptr]</code><br>
+        <code>buffer[ptr] = s · ½ · (buffer[ptr] + buffer[next])</code><br>
+        donde <em>s</em> es el factor de amortiguamiento (stretch) y
+        <em>next</em> es el índice siguiente en el buffer circular.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Por qué funciona</strong><br>
+        El promediado actúa como un <em>filtro pasa-bajos</em> de primer orden.
+        Las frecuencias altas se atenúan más rápido que las bajas, imitando
+        el comportamiento real de una cuerda donde la fricción amortigua
+        los armónicos superiores primero.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Parámetros</strong><br>
+        <strong>N</strong> = SR / f₀ determina la frecuencia fundamental.<br>
+        <strong>s</strong> cercano a 1 → cuerda larga (decaimiento lento).<br>
+        <strong>s</strong> pequeño → percusión seca (decaimiento rápido).<br>
+        Extensión: añadir un filtro pasa-todo para afinación fina.
+      </div>
+    </div>
+  </section>
+  <section class="section-card">
+    <h2>Hacia el modelamiento físico real</h2>
+    <p class="description">
+      El modelamiento físico genuino parte de las <span class="kw">ecuaciones de onda</span>
+      que describen el comportamiento físico del instrumento y las resuelve numéricamente en
+      tiempo real. La técnica más influyente son las
+      <span class="kw">guías de onda digitales</span> (Julius O. Smith III, Stanford CCRMA, 1986),
+      que permiten simular cuerdas, tubos y membranas con gran realismo y bajo costo computacional.
+    </p>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Guías de onda digitales</strong><br>
+        Una cuerda vibrantese modela como dos ondas viajeras en direcciones opuestas,
+        cada una representada por una línea de retardo. La reflexión en los extremos,
+        la rigidez, la dispersión y el acoplamiento con el cuerpo del instrumento se añaden
+        como filtros en los extremos del lazo. Smith demostró formalmente que
+        Karplus-Strong es un caso límite y simplificado de este modelo.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Diferencias clave con Karplus-Strong</strong><br>
+        <strong>KS:</strong> empírico, sin base física explícita; el filtro de promediado
+        es una aproximación ad-hoc del amortiguamiento.<br><br>
+        <strong>Waveguides:</strong> derivan directamente de la ecuación de onda 1D;
+        permiten controlar parámetros físicos reales (tensión, masa lineal, rigidez,
+        impedancia en los puentes) y modelar instrumentos de viento, percusión y cuerdas
+        con alta fidelidad.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ff44;">Otros enfoques de modelamiento físico</strong><br>
+        <strong>Diferencias finitas (FDTD):</strong> discretizan la ecuación de onda en
+        una malla 2D o 3D; usados para membranas y salas.<br><br>
+        <strong>Elementos finitos (FEM):</strong> geometrías complejas como el cuerpo
+        de un violín o la campana de una trompeta.<br><br>
+        <strong>Modal synthesis:</strong> descompone la vibración en modos propios
+        y simula cada modo como un oscilador amortiguado.
+      </div>
+      <div class="info-box warn">
+        <strong style="color:#ff4444;">Por qué estudiar Karplus-Strong</strong><br>
+        A pesar de su simplicidad, KS ilustra el principio central del modelamiento físico:
+        usar un <em>lazo de retroalimentación con retardo</em> para crear periodicidad,
+        y un <em>filtro</em> para modelar el decaimiento diferencial por frecuencia.
+        Es el punto de partida conceptual antes de abordar guías de onda y métodos más rigurosos.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Diagrama de señal ─────────────────────────────────────────────────
+function drawDiagram() {
+  const dc = document.getElementById('cnvDiagram');
+  dc.width = dc.offsetWidth || 800;
+  const W = dc.width, H = dc.height;
+  const g = dc.getContext('2d');
+  g.clearRect(0, 0, W, H);
+  const sc = Math.min(W / 800, H / 260);
+
+  // ── Layout ─────────────────────────────────────────────────────────
+  const topY = 78 * sc;   // top row center y  (noise burst, sum junction, speaker)
+  const botY = 168 * sc;  // bottom row center y (filter, delay)
+
+  // Noise burst box
+  const NW = 112 * sc, NH = 68 * sc;
+  const NX1 = 22 * sc,  NX2 = NX1 + NW;
+  const NY1 = topY - NH / 2, NY2 = topY + NH / 2;
+
+  // Summing junction circle
+  const SCX = 238 * sc, SCY = topY, SR = 22 * sc;
+
+  // Speaker (right side)
+  const SPKX = 680 * sc;
+
+  // Filter block — centered directly below sum junction
+  const FW = 162 * sc, FH = 52 * sc;
+  const FCX = SCX;
+  const FX1 = FCX - FW / 2, FX2 = FCX + FW / 2;
+  const FY1 = botY - FH / 2, FY2 = botY + FH / 2;
+
+  // Delay block (Z^{-L})
+  const DW = 118 * sc, DH = 52 * sc;
+  const DCX = 528 * sc;
+  const DX1 = DCX - DW / 2, DX2 = DCX + DW / 2;
+  const DY1 = botY - DH / 2, DY2 = botY + DH / 2;
+
+  // ── Arrowhead helper ──────────────────────────────────────────────
+  function arw(x, y, dir) {
+    const a = 9 * sc, b = 5.5 * sc;
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    if (dir === 'right') { g.moveTo(x, y); g.lineTo(x - a, y - b); g.lineTo(x - a, y + b); }
+    if (dir === 'left')  { g.moveTo(x, y); g.lineTo(x + a, y - b); g.lineTo(x + a, y + b); }
+    if (dir === 'down')  { g.moveTo(x, y); g.lineTo(x - b, y - a); g.lineTo(x + b, y - a); }
+    if (dir === 'up')    { g.moveTo(x, y); g.lineTo(x - b, y + a); g.lineTo(x + b, y + a); }
+    g.closePath(); g.fill();
+  }
+
+  // ── Signal lines (drawn first, behind blocks) ─────────────────────
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 2.5 * sc;
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+
+  // 1. Noise burst → sum junction (horizontal)
+  g.beginPath(); g.moveTo(NX2, topY); g.lineTo(SCX - SR, topY); g.stroke();
+  arw(SCX - SR, topY, 'right');
+
+  // 2. Sum junction → speaker (output line)
+  g.beginPath(); g.moveTo(SCX + SR, topY); g.lineTo(SPKX - 8 * sc, topY); g.stroke();
+  arw(SPKX - 8 * sc, topY, 'right');
+
+  // 3. Tap on output line → down into delay
+  g.beginPath(); g.moveTo(DCX, topY); g.lineTo(DCX, DY1); g.stroke();
+  arw(DCX, DY1, 'down');
+  g.fillStyle = '#ffffff'; // junction dot
+  g.beginPath(); g.arc(DCX, topY, 4.5 * sc, 0, Math.PI * 2); g.fill();
+
+  // 4. Delay → filter (going left)
+  g.beginPath(); g.moveTo(DX1, botY); g.lineTo(FX2, botY); g.stroke();
+  arw(FX2, botY, 'left');
+
+  // 5. Filter → sum junction (feedback, going up)
+  g.beginPath(); g.moveTo(FCX, FY1); g.lineTo(FCX, SCY + SR); g.stroke();
+  arw(FCX, SCY + SR, 'up');
+
+  // ── Noise burst box ───────────────────────────────────────────────
+  g.fillStyle = 'rgba(255,255,255,0.05)';
+  g.fillRect(NX1, NY1, NW, NH);
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 2 * sc;
+  g.strokeRect(NX1, NY1, NW, NH);
+
+  // Horizontal midline inside
+  g.strokeStyle = 'rgba(255,255,255,0.25)';
+  g.lineWidth = 1 * sc;
+  g.beginPath(); g.moveTo(NX1 + 4 * sc, topY); g.lineTo(NX2 - 4 * sc, topY); g.stroke();
+
+  // Noise bars
+  const seed = [0.62,0.22,0.88,0.48,0.72,0.14,0.56,0.93,0.34,0.68,0.18,0.82,0.52,0.63,0.31,0.77];
+  const nBars = seed.length;
+  const barStep = (NW - 8 * sc) / nBars;
+  for (let i = 0; i < nBars; i++) {
+    const h = seed[i] * NH * 0.72;
+    const bx = NX1 + 4 * sc + i * barStep;
+    g.fillStyle = `rgba(255,255,255,${(0.28 + seed[i] * 0.38).toFixed(2)})`;
+    g.fillRect(bx, topY - h / 2, barStep - 1.5 * sc, h);
+  }
+
+  // Label
+  g.fillStyle = '#ffffff';
+  g.font = `${12 * sc}px sans-serif`;
+  g.textAlign = 'center';
+  g.fillText('Ruido blanco', NX1 + NW / 2, NY2 + 16 * sc);
+
+  // ── Summing junction circle ───────────────────────────────────────
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 2.5 * sc;
+  g.beginPath(); g.arc(SCX, SCY, SR, 0, Math.PI * 2); g.stroke();
+  const ps = SR * 0.55;
+  g.beginPath();
+  g.moveTo(SCX - ps, SCY); g.lineTo(SCX + ps, SCY);
+  g.moveTo(SCX, SCY - ps); g.lineTo(SCX, SCY + ps);
+  g.stroke();
+
+  // ── Filter block with LP curve ────────────────────────────────────
+  g.fillStyle = 'rgba(255,255,255,0.05)';
+  g.fillRect(FX1, FY1, FW, FH);
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 2 * sc;
+  g.strokeRect(FX1, FY1, FW, FH);
+
+  const cm = 7 * sc;
+  const cww = FW - 2 * cm, chh = FH - 2 * cm;
+  g.strokeStyle = '#00ffff';
+  g.lineWidth = 2 * sc;
+  g.beginPath();
+  for (let i = 0; i <= 60; i++) {
+    const t = i / 60;
+    const x = FX1 + cm + t * cww;
+    const r = 1 / (1 + Math.pow(t / 0.28, 3));
+    const y = FY1 + cm + (1 - r) * chh;
+    i === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+  }
+  g.stroke();
+
+  g.fillStyle = '#ffffff';
+  g.font = `${12 * sc}px sans-serif`;
+  g.textAlign = 'center';
+  g.fillText('Filtro', FCX, FY2 + 16 * sc);
+
+  // ── Delay block ───────────────────────────────────────────────────
+  g.fillStyle = 'rgba(255,255,255,0.05)';
+  g.fillRect(DX1, DY1, DW, DH);
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 2 * sc;
+  g.strokeRect(DX1, DY1, DW, DH);
+
+  // Z^{-L} rendered as two text draws
+  g.fillStyle = '#ffffff';
+  g.font = `bold ${20 * sc}px serif`;
+  g.textAlign = 'center';
+  g.fillText('Z', DCX - 8 * sc, botY + 7 * sc);
+  g.font = `bold ${13 * sc}px serif`;
+  g.fillText('-L', DCX + 10 * sc, botY - 4 * sc);
+
+  g.font = `${12 * sc}px sans-serif`;
+  g.fillText('Retardo', DCX, DY2 + 16 * sc);
+
+  // ── Speaker icon ─────────────────────────────────────────────────
+  const spkH = 26 * sc, spkW = 10 * sc;
+  g.fillStyle = 'rgba(255,255,255,0.10)';
+  g.fillRect(SPKX, topY - spkH / 2, spkW, spkH);
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 2 * sc;
+  g.strokeRect(SPKX, topY - spkH / 2, spkW, spkH);
+
+  // Cone
+  g.beginPath();
+  g.moveTo(SPKX + spkW, topY - spkH / 2);
+  g.lineTo(SPKX + spkW + 24 * sc, topY - spkH - 10 * sc);
+  g.lineTo(SPKX + spkW + 24 * sc, topY + spkH + 10 * sc);
+  g.lineTo(SPKX + spkW, topY + spkH / 2);
+  g.closePath();
+  g.fillStyle = 'rgba(255,255,255,0.07)';
+  g.fill();
+  g.strokeStyle = '#ffffff';
+  g.stroke();
+
+  // Output label
+  g.fillStyle = '#ffffff';
+  g.font = `${12 * sc}px sans-serif`;
+  g.textAlign = 'left';
+  g.fillText('Salida', SPKX + spkW + 28 * sc, topY + 5 * sc);
+}
+
+// ── Estado ────────────────────────────────────────────────────────────
+let stretch = 0.996;
+let currentWaveform = null;
+let animId = null;
+let animStartMs = 0;
+
+const NOTES = [
+  { name: 'Do₄',  freq: 261.63 },
+  { name: 'Re₄',  freq: 293.66 },
+  { name: 'Mi₄',  freq: 329.63 },
+  { name: 'Fa₄',  freq: 349.23 },
+  { name: 'Sol₄', freq: 392.00 },
+  { name: 'La₄',  freq: 440.00 },
+  { name: 'Si₄',  freq: 493.88 },
+  { name: 'Do₅',  freq: 523.25 },
+];
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+function drawIdle() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 52, padR = 20, padT = 20, padB = 28;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT + bh / 2); ctx.lineTo(padL + bw, padT + bh / 2); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(150,200,255,0.45)';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Toca una nota para ver la forma de onda', padL + bw / 2, padT + bh / 2 - 10);
+}
+
+function drawWaveform(samples, showSamples) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 20, padT = 20, padB = 28;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const midY = padT + bh / 2;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (bh / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+  }
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('+1', padL - 4, padT + 6);
+  ctx.fillText('0', padL - 4, midY + 4);
+  ctx.fillText('−1', padL - 4, padT + bh - 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('tiempo →', padL + bw / 2, H - 4);
+
+  if (!samples || showSamples <= 0) return;
+
+  const n = Math.min(showSamples, samples.length);
+  ctx.beginPath();
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 2;
+  for (let i = 0; i < n; i++) {
+    const x = padL + (i / (n - 1)) * bw;
+    const y = midY - samples[i] * bh / 2 * 0.88;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function animateWaveform() {
+  if (!currentWaveform) return;
+  const elapsed = (performance.now() - animStartMs) / 1000;
+  const actx = getAudioContext();
+  const sr = actx.sampleRate;
+  const displayDuration = 3.0;
+  const displaySamples = Math.floor(displayDuration * sr);
+  const showSamples = Math.min(
+    Math.floor(elapsed / displayDuration * displaySamples) + 1,
+    displaySamples
+  );
+  drawWaveform(currentWaveform, showSamples);
+  if (showSamples < displaySamples) {
+    animId = requestAnimationFrame(animateWaveform);
+  }
+}
+
+// ── Karplus-Strong algorithm ───────────────────────────────────────────
+function karplusStrong(freq, durationSec, s, sr) {
+  const N = Math.max(2, Math.round(sr / freq));
+  const numSamples = Math.floor(durationSec * sr);
+  const out = new Float32Array(numSamples);
+  const dl = new Float32Array(N);
+
+  for (let i = 0; i < N; i++) dl[i] = Math.random() * 2 - 1;
+
+  let ptr = 0;
+  for (let n = 0; n < numSamples; n++) {
+    const next = (ptr + 1) % N;
+    out[n] = dl[ptr];
+    dl[ptr] = s * 0.5 * (dl[ptr] + dl[next]);
+    ptr = next;
+  }
+  return out;
+}
+
+function playNote(freq, name) {
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  stopAllAudio();
+
+  const actx = getAudioContext();
+  const sr = actx.sampleRate;
+  const dur = 3.0;
+  const samples = karplusStrong(freq, dur, stretch, sr);
+  currentWaveform = samples;
+
+  const buffer = actx.createBuffer(1, samples.length, sr);
+  buffer.copyToChannel(samples, 0);
+
+  const source = actx.createBufferSource();
+  source.buffer = buffer;
+
+  const gain = actx.createGain();
+  gain.gain.setValueAtTime(0.5, actx.currentTime);
+  gain.gain.setValueAtTime(0.5, actx.currentTime + dur * 0.8);
+  gain.gain.linearRampToValueAtTime(0, actx.currentTime + dur);
+
+  source.connect(gain);
+  gain.connect(actx.destination);
+  source.start();
+  _activeNodes.push(source);
+
+  document.getElementById('statusLabel').textContent =
+    `${name} (${freq.toFixed(2)} Hz) — amortiguamiento s=${stretch}`;
+
+  animStartMs = performance.now();
+  animateWaveform();
+
+  // Highlight active key
+  document.querySelectorAll('.key-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('key-' + name).classList.add('active');
+  setTimeout(() => {
+    const el = document.getElementById('key-' + name);
+    if (el) el.classList.remove('active');
+  }, 400);
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────
+const keyboard = document.getElementById('keyboard');
+NOTES.forEach(({ name, freq }) => {
+  const btn = document.createElement('button');
+  btn.className = 'btn key-btn';
+  btn.id = 'key-' + name;
+  btn.textContent = name;
+  btn.style.cssText = 'border-color:#ffaa00;color:#ffaa00;min-width:52px;font-size:0.8rem;';
+  btn.addEventListener('click', () => playNote(freq, name));
+  keyboard.appendChild(btn);
+});
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('stretchSlider').addEventListener('input', function() {
+  stretch = +parseFloat(this.value).toFixed(3);
+  document.getElementById('stretchVal').textContent = stretch;
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+function init() { drawIdle(); drawDiagram(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => {
+  if (currentWaveform) drawWaveform(currentWaveform, currentWaveform.length);
+  else drawIdle();
+  drawDiagram();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8. Waveshaping — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html">4. AM</a>
+  <a href="../05_modulacion_fm/index.html">5. FM</a>
+  <a href="../06_sintesis_granular/index.html">6. Granular</a>
+  <a href="../07_karplus_strong/index.html">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html" class="active">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>8. Waveshaping</h1>
+      <p class="subtitle">Modelamiento de onda — distorsión armónica mediante funciones no lineales</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Función de transferencia y forma de onda resultante</h2>
+    <p class="description">
+      El <span class="kw">waveshaping</span> aplica una función no lineal <em>f(x)</em> a cada muestra de
+      una señal simple (típicamente un seno). La no linealidad genera
+      <span class="kw">armónicos</span> ausentes en la señal original: el timbre cambia completamente
+      con un solo oscilador. La cantidad de <span class="kw">drive</span> controla cuánto
+      se amplifica la señal antes de pasar por la función, determinando la riqueza espectral.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Función: <span class="val" id="typeVal">Saturación suave (tanh)</span></label>
+        <select id="typeSelect" style="background:#0d1a2e;color:#99ccff;border:1px solid rgba(100,180,255,0.3);padding:5px 10px;border-radius:6px;font-size:0.82rem;cursor:pointer;">
+          <option value="tanh">Saturación suave (tanh)</option>
+          <option value="clip">Corte duro (hard clip)</option>
+          <option value="fold">Plegado (wave fold)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Drive: <span class="val" id="driveVal">3</span>×</label>
+        <input type="range" id="driveSlider" min="1" max="10" value="3" step="0.5">
+      </div>
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqVal">220</span> Hz</label>
+        <input type="range" id="freqSlider" min="55" max="880" value="220" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label">Izquierda: función de transferencia f(x) · Derecha: forma de onda de salida</div>
+    <canvas id="wsCanvas" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Función de transferencia libre — dibuja con el mouse</h2>
+    <p class="description">
+      Diseña tu propia <span class="kw">función de transferencia</span> arrastrando el mouse
+      sobre el panel izquierdo. La curva se aplica en tiempo real al audio mediante
+      <span class="kw">WaveShaperNode</span>: escucha cómo cambia el timbre mientras dibujas.
+      El panel derecho muestra la forma de onda resultante de aplicar tu función a un seno.
+      A diferencia del módulo de Distorsión, la curva es completamente <span class="kw">arbitraria</span>
+      — sin restricción a funciones analíticas. Los presets muestran casos canónicos:
+      la identidad (sin cambio), la escalón (cuadrada) y el plegado de onda.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn" id="btnFreeReset">↺ Identidad</button>
+        <button class="btn" id="btnFreeSquare">⊓ Cuadrada</button>
+        <button class="btn" id="btnFreeFold">⟿ Plegada</button>
+        <button class="btn play" id="btnPlayFree" onclick="togglePlayFree()">▶ Escuchar</button>
+      </div>
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqFreeVal">220</span> Hz</label>
+        <input type="range" id="freqFreeSlider" min="55" max="880" value="220" step="1">
+      </div>
+    </div>
+    <div class="canvas-label">Arrastra en el panel izquierdo para dibujar f(x) · La curva se aplica al audio en tiempo real</div>
+    <canvas id="cnvFree" height="280" style="cursor:crosshair;"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Tipos de waveshaping</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Saturación tanh</strong><br>
+        Función impar (simetría antisimétrica) → genera solo
+        <em style="color:#ffaa00;">armónicos impares</em> (3°, 5°, 7°…).
+        Suena cálido y analógico; imita la saturación de transformadores
+        y etapas de válvula.<br><br>
+        <strong style="color:#ff4444;">Corte duro</strong><br>
+        Recorta la señal en ±1. Genera armónicos impares muy ricos,
+        con caída lenta (espectro parecido a una cuadrada). Distorsión
+        de guitarra tipo <em>fuzz</em>.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Plegado (wave fold)</strong><br>
+        Cuando la señal supera ±1, se "dobla" sobre sí misma en lugar
+        de recortarse. Genera una mezcla de armónicos pares e impares
+        de gran riqueza espectral. Sintetizadores como el Buchla 259 o
+        el Serge lo usan para timbres metálicos y percusivos.<br><br>
+        El drive controla cuántas veces se produce el plegado, cambiando
+        radicalmente la densidad armónica.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+
+<script src="../../shared/audio.js"></script>
+<script>
+  let playing = false;
+  let audioNodes = null;
+
+  // ── Función de transferencia ──
+  function applyShaper(x, type, drive) {
+    const dx = x * drive;
+    switch (type) {
+      case 'tanh':
+        return Math.tanh(dx);
+      case 'clip':
+        return Math.max(-1, Math.min(1, dx));
+      case 'fold': {
+        let y = dx;
+        // Plegar en [-1, 1]: reflejar cada vez que se sale
+        let folding = true;
+        while (folding) {
+          folding = false;
+          if (y > 1)  { y = 2 - y;  folding = true; }
+          if (y < -1) { y = -2 - y; folding = true; }
+        }
+        return y;
+      }
+    }
+    return x;
+  }
+
+  // ── Curva para WaveShaperNode (256 puntos, dominio [-1,1]) ──
+  function buildCurve(type, drive) {
+    const N = 512;
+    const curve = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const x = (2 * i / (N - 1)) - 1;
+      curve[i] = Math.max(-1, Math.min(1, applyShaper(x, type, drive)));
+    }
+    return curve;
+  }
+
+  // ── Audio ──
+  function startAudio(type, drive, freq) {
+    stopAllAudio();
+    const actx = getAudioContext();
+    const t0 = actx.currentTime + 0.01;
+
+    const osc = actx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+
+    const shaper = actx.createWaveShaper();
+    shaper.curve = buildCurve(type, drive);
+    shaper.oversample = '4x';
+
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.18, t0 + 0.02);
+
+    osc.connect(shaper);
+    shaper.connect(g);
+    g.connect(actx.destination);
+    osc.start(t0);
+    _activeNodes.push(osc);
+
+    return { osc, shaper, g };
+  }
+
+  // ── Canvas ──
+  function drawCanvas() {
+    const canvas = document.getElementById('wsCanvas');
+    canvas.width = canvas.offsetWidth || 800;
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+
+    const type  = document.getElementById('typeSelect').value;
+    const drive = parseFloat(document.getElementById('driveSlider').value);
+
+    const pad = 16;
+    const halfW = (W - 3 * pad) / 2;
+    const midH = H / 2;
+
+    // ── Panel izquierdo: función de transferencia ──
+    const Lx = pad, Ly = pad;
+    const Lw = halfW, Lh = H - 2 * pad;
+    drawTransferPanel(ctx, Lx, Ly, Lw, Lh, type, drive);
+
+    // ── Separador ──
+    ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad * 2 + halfW, pad);
+    ctx.lineTo(pad * 2 + halfW, H - pad);
+    ctx.stroke();
+
+    // ── Panel derecho: forma de onda de salida ──
+    const Rx = pad * 2 + halfW, Ry = pad;
+    const Rw = halfW, Rh = H - 2 * pad;
+    drawWavePanel(ctx, Rx, Ry, Rw, Rh, type, drive);
+  }
+
+  function drawTransferPanel(ctx, x0, y0, w, h, type, drive) {
+    const midX = x0 + w / 2;
+    const midY = y0 + h / 2;
+    const pL = 36, pR = 8, pT = 18, pB = 22;
+    const pw = w - pL - pR, ph = h - pT - pB;
+    const ox = x0 + pL, oy = y0 + pT;
+
+    // Etiqueta panel
+    ctx.fillStyle = '#99ccff';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Función de transferencia  f(x)', x0 + w / 2, y0 + pT - 6);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+    ctx.setLineDash([3, 5]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // Eje X (y=0)
+    ctx.moveTo(ox, oy + ph / 2); ctx.lineTo(ox + pw, oy + ph / 2);
+    // Eje Y (x=0)
+    ctx.moveTo(ox + pw / 2, oy); ctx.lineTo(ox + pw / 2, oy + ph);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Borde del panel
+    ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ox, oy, pw, ph);
+
+    // Etiquetas ejes
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('+1', ox - 3, oy + 5);
+    ctx.fillText(' 0', ox - 3, oy + ph / 2 + 4);
+    ctx.fillText('−1', ox - 3, oy + ph + 5);
+    ctx.textAlign = 'center';
+    ctx.fillText('−1', ox + 3, oy + ph + 14);
+    ctx.fillText('+1', ox + pw - 2, oy + ph + 14);
+    ctx.fillText('entrada x', ox + pw / 2, oy + ph + 14);
+
+    // Línea identidad (diagonal)
+    ctx.strokeStyle = 'rgba(100,180,255,0.30)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(ox, oy + ph);
+    ctx.lineTo(ox + pw, oy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Curva de transferencia
+    const colors = { tanh: '#ff44ff', clip: '#ff4444', fold: '#00ffff' };
+    ctx.strokeStyle = colors[type] || '#ffaa00';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    const steps = 300;
+    for (let i = 0; i <= steps; i++) {
+      const xn = (2 * i / steps) - 1; // [-1, 1]
+      const yn = applyShaper(xn, type, drive);
+      const px = ox + (xn + 1) / 2 * pw;
+      const py = oy + (1 - yn) / 2 * ph;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  function drawWavePanel(ctx, x0, y0, w, h, type, drive) {
+    const pL = 8, pR = 16, pT = 18, pB = 22;
+    const pw = w - pL - pR, ph = h - pT - pB;
+    const ox = x0 + pL, oy = y0 + pT;
+
+    ctx.fillStyle = '#99ccff';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Onda de salida  y(t) = f(sin 2πt)', x0 + w / 2, y0 + pT - 6);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+    ctx.setLineDash([3, 5]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy + ph / 2); ctx.lineTo(ox + pw, oy + ph / 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ox, oy, pw, ph);
+
+    // Etiquetas
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('+1', ox - 2, oy + 5);
+    ctx.fillText('−1', ox - 2, oy + ph + 5);
+    ctx.textAlign = 'center';
+    ctx.fillText('0', ox + 4, oy + ph + 14);
+    ctx.fillText('T/2', ox + pw / 2, oy + ph + 14);
+    ctx.fillText('T', ox + pw - 2, oy + ph + 14);
+
+    // Seno de entrada (en color tenue)
+    ctx.strokeStyle = 'rgba(255,68,255,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const steps = 400;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const yn = Math.sin(2 * Math.PI * t);
+      const px = ox + t * pw;
+      const py = oy + (1 - yn) / 2 * ph;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Onda de salida
+    const colors = { tanh: '#ff44ff', clip: '#ff4444', fold: '#00ffff' };
+    ctx.strokeStyle = colors[type] || '#ffaa00';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const xn = Math.sin(2 * Math.PI * t);
+      const yn = applyShaper(xn, type, drive);
+      const px = ox + t * pw;
+      const py = oy + (1 - yn) / 2 * ph;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // ── Play / Stop ──
+  function togglePlay() {
+    if (playing) { stopPlayback(); return; }
+    stopPlaybackFree();
+    playing = true;
+    const type  = document.getElementById('typeSelect').value;
+    const drive = parseFloat(document.getElementById('driveSlider').value);
+    const freq  = parseInt(document.getElementById('freqSlider').value);
+    document.getElementById('btnPlay').textContent = '■ Detener';
+    document.getElementById('btnPlay').classList.add('active');
+    audioNodes = startAudio(type, drive, freq);
+  }
+
+  function stopPlayback() {
+    playing = false;
+    stopAllAudio();
+    audioNodes = null;
+    document.getElementById('btnPlay').textContent = '▶ Escuchar';
+    document.getElementById('btnPlay').classList.remove('active');
+  }
+
+  // ── Controles en vivo ──
+  document.getElementById('typeSelect').addEventListener('change', function () {
+    const labels = {
+      tanh: 'Saturación suave (tanh)',
+      clip: 'Corte duro (hard clip)',
+      fold: 'Plegado (wave fold)'
+    };
+    document.getElementById('typeVal').textContent = labels[this.value];
+    drawCanvas();
+    if (playing) {
+      const drive = parseFloat(document.getElementById('driveSlider').value);
+      const freq  = parseInt(document.getElementById('freqSlider').value);
+      audioNodes = startAudio(this.value, drive, freq);
+    }
+  });
+
+  document.getElementById('driveSlider').addEventListener('input', function () {
+    const v = parseFloat(this.value);
+    document.getElementById('driveVal').textContent = v % 1 === 0 ? v : v.toFixed(1);
+    drawCanvas();
+    if (playing && audioNodes) {
+      const type = document.getElementById('typeSelect').value;
+      const freq = parseInt(document.getElementById('freqSlider').value);
+      audioNodes.shaper.curve = buildCurve(type, v);
+    }
+  });
+
+  document.getElementById('freqSlider').addEventListener('input', function () {
+    const v = parseInt(this.value);
+    document.getElementById('freqVal').textContent = v;
+    if (playing && audioNodes) {
+      audioNodes.osc.frequency.setValueAtTime(v, getAudioContext().currentTime);
+    }
+  });
+
+  function init() { drawCanvas(); }
+  window.addEventListener('load', init);
+  window.addEventListener('resize', drawCanvas);
+
+  // ── Función de transferencia libre ────────────────────────────────────
+
+  const FREE_N = 512;
+  const freeCurve = new Float32Array(FREE_N);
+  let playingFree = false;
+  let freeAudioNodes = null;
+  let isDrawingFree = false;
+  let prevFreeIdx = null;
+  let prevFreeVal = null;
+
+  function initFreeCurveIdentity() {
+    for (let i = 0; i < FREE_N; i++) {
+      freeCurve[i] = (2 * i / (FREE_N - 1)) - 1;
+    }
+  }
+
+  function squareFreeCurve() {
+    for (let i = 0; i < FREE_N; i++) {
+      const x = (2 * i / (FREE_N - 1)) - 1;
+      freeCurve[i] = x > 0 ? 0.9 : (x < 0 ? -0.9 : 0);
+    }
+    updateFreeShaper(); drawFreeCanvas();
+  }
+
+  function foldFreeCurve() {
+    for (let i = 0; i < FREE_N; i++) {
+      const x = (2 * i / (FREE_N - 1)) - 1;
+      let y = x * 2.5;
+      let ok = true;
+      while (ok) {
+        ok = false;
+        if (y > 1)  { y = 2 - y; ok = true; }
+        if (y < -1) { y = -2 - y; ok = true; }
+      }
+      freeCurve[i] = y;
+    }
+    updateFreeShaper(); drawFreeCanvas();
+  }
+
+  function resetFreeCurve() {
+    initFreeCurveIdentity(); updateFreeShaper(); drawFreeCanvas();
+  }
+
+  function updateFreeShaper() {
+    if (freeAudioNodes && freeAudioNodes.shaper) {
+      freeAudioNodes.shaper.curve = new Float32Array(freeCurve);
+    }
+  }
+
+  function getFreePanels(W, H) {
+    const pL = 44, pR = 16, pT = 28, pB = 32, gap = 18;
+    const usable = W - pL - pR - gap;
+    const lw = Math.floor(usable * 0.45);
+    return {
+      tf: { ox: pL, oy: pT, pw: lw, ph: H - pT - pB },
+      wf: { ox: pL + lw + gap, oy: pT, pw: usable - lw, ph: H - pT - pB }
+    };
+  }
+
+  function drawFreeCanvas() {
+    const canvas = document.getElementById('cnvFree');
+    canvas.width = canvas.offsetWidth || 800;
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#0a1520';
+    ctx.fillRect(0, 0, W, H);
+
+    const { tf, wf } = getFreePanels(W, H);
+
+    // Panel izquierdo: transferencia dibujada
+    ctx.fillStyle = '#99ccff';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tu función f(x) — arrastra aquí', tf.ox + tf.pw / 2, tf.oy - 10);
+
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+    ctx.setLineDash([3, 5]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(tf.ox, tf.oy + tf.ph / 2); ctx.lineTo(tf.ox + tf.pw, tf.oy + tf.ph / 2);
+    ctx.moveTo(tf.ox + tf.pw / 2, tf.oy); ctx.lineTo(tf.ox + tf.pw / 2, tf.oy + tf.ph);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(tf.ox, tf.oy, tf.pw, tf.ph);
+
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('+1', tf.ox - 3, tf.oy + 5);
+    ctx.fillText(' 0', tf.ox - 3, tf.oy + tf.ph / 2 + 4);
+    ctx.fillText('−1', tf.ox - 3, tf.oy + tf.ph + 5);
+    ctx.textAlign = 'center';
+    ctx.fillText('−1', tf.ox + 3, tf.oy + tf.ph + 14);
+    ctx.fillText('+1', tf.ox + tf.pw - 2, tf.oy + tf.ph + 14);
+    ctx.fillText('entrada x', tf.ox + tf.pw / 2, tf.oy + tf.ph + 14);
+
+    // Identidad de referencia
+    ctx.strokeStyle = 'rgba(100,180,255,0.22)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(tf.ox, tf.oy + tf.ph);
+    ctx.lineTo(tf.ox + tf.pw, tf.oy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Curva del usuario
+    ctx.strokeStyle = '#ffaa00';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i < FREE_N; i++) {
+      const xn = (2 * i / (FREE_N - 1)) - 1;
+      const px = tf.ox + (xn + 1) / 2 * tf.pw;
+      const py = tf.oy + (1 - freeCurve[i]) / 2 * tf.ph;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Separador
+    ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(tf.ox + tf.pw + 9, tf.oy);
+    ctx.lineTo(tf.ox + tf.pw + 9, tf.oy + tf.ph);
+    ctx.stroke();
+
+    // Panel derecho: onda de salida
+    ctx.fillStyle = '#99ccff';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Onda de salida  y(t) = f(sin 2πt)', wf.ox + wf.pw / 2, wf.oy - 10);
+
+    ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+    ctx.setLineDash([3, 5]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(wf.ox, wf.oy + wf.ph / 2); ctx.lineTo(wf.ox + wf.pw, wf.oy + wf.ph / 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(150,200,255,0.70)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(wf.ox, wf.oy, wf.pw, wf.ph);
+
+    ctx.fillStyle = 'rgba(150,200,255,0.70)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('+1', wf.ox - 2, wf.oy + 5);
+    ctx.fillText('−1', wf.ox - 2, wf.oy + wf.ph + 5);
+    ctx.textAlign = 'center';
+    ctx.fillText('T', wf.ox + wf.pw - 2, wf.oy + wf.ph + 14);
+
+    // Seno de entrada (tenue)
+    ctx.strokeStyle = 'rgba(255,170,0,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const steps = 400;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const yn = Math.sin(2 * Math.PI * t);
+      const px = wf.ox + t * wf.pw;
+      const py = wf.oy + (1 - yn) / 2 * wf.ph;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Onda procesada con freeCurve (interpolación lineal)
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const xn = Math.sin(2 * Math.PI * t);
+      const rawIdx = (xn + 1) / 2 * (FREE_N - 1);
+      const lo = Math.floor(rawIdx);
+      const hi = Math.min(FREE_N - 1, lo + 1);
+      const frac = rawIdx - lo;
+      const yn = freeCurve[lo] * (1 - frac) + freeCurve[hi] * frac;
+      const px = wf.ox + t * wf.pw;
+      const py = wf.oy + (1 - yn) / 2 * wf.ph;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // ── Mouse / touch sobre el panel de transferencia ─────────────────────
+  function paintFree(clientX, clientY, isStart) {
+    const canvas = document.getElementById('cnvFree');
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const W = canvas.width, H = canvas.height;
+    const { tf } = getFreePanels(W, H);
+
+    const mx = (clientX - rect.left) * scaleX;
+    const my = (clientY - rect.top) * scaleY;
+
+    if (mx < tf.ox || mx > tf.ox + tf.pw || my < tf.oy || my > tf.oy + tf.ph) {
+      if (isStart) isDrawingFree = false;
+      return;
+    }
+    if (isStart) isDrawingFree = true;
+    if (!isDrawingFree) return;
+
+    const curIdx = Math.round((mx - tf.ox) / tf.pw * (FREE_N - 1));
+    const curVal = Math.max(-1, Math.min(1, 1 - (my - tf.oy) / tf.ph * 2));
+
+    if (prevFreeIdx !== null && Math.abs(curIdx - prevFreeIdx) > 0) {
+      const i0 = Math.min(prevFreeIdx, curIdx);
+      const i1 = Math.max(prevFreeIdx, curIdx);
+      const span = curIdx - prevFreeIdx;
+      for (let i = i0; i <= i1; i++) {
+        const t = (i - prevFreeIdx) / span;
+        freeCurve[Math.max(0, Math.min(FREE_N - 1, i))] = prevFreeVal + (curVal - prevFreeVal) * t;
+      }
+    } else {
+      freeCurve[Math.max(0, Math.min(FREE_N - 1, curIdx))] = curVal;
+    }
+
+    prevFreeIdx = curIdx;
+    prevFreeVal = curVal;
+    updateFreeShaper();
+    drawFreeCanvas();
+  }
+
+  // ── Audio libre ────────────────────────────────────────────────────────
+  function startAudioFree() {
+    stopAllAudio();
+    const actx = getAudioContext();
+    const t0 = actx.currentTime + 0.01;
+    const freq = parseInt(document.getElementById('freqFreeSlider').value);
+
+    const osc = actx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+
+    const shaper = actx.createWaveShaper();
+    shaper.curve = new Float32Array(freeCurve);
+    shaper.oversample = '4x';
+
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.18, t0 + 0.02);
+
+    osc.connect(shaper);
+    shaper.connect(g);
+    g.connect(actx.destination);
+    osc.start(t0);
+    _activeNodes.push(osc);
+
+    freeAudioNodes = { osc, shaper, g };
+  }
+
+  function togglePlayFree() {
+    if (playingFree) { stopPlaybackFree(); return; }
+    stopPlayback();
+    playingFree = true;
+    document.getElementById('btnPlayFree').textContent = '■ Detener';
+    document.getElementById('btnPlayFree').classList.add('active');
+    startAudioFree();
+  }
+
+  function stopPlaybackFree() {
+    playingFree = false;
+    freeAudioNodes = null;
+    stopAllAudio();
+    document.getElementById('btnPlayFree').textContent = '▶ Escuchar';
+    document.getElementById('btnPlayFree').classList.remove('active');
+  }
+
+  function initFree() {
+    initFreeCurveIdentity();
+    drawFreeCanvas();
+
+    const canvas = document.getElementById('cnvFree');
+    canvas.addEventListener('mousedown', e => {
+      prevFreeIdx = null; prevFreeVal = null;
+      paintFree(e.clientX, e.clientY, true);
+    });
+    canvas.addEventListener('mousemove', e => {
+      if (isDrawingFree) paintFree(e.clientX, e.clientY, false);
+    });
+    canvas.addEventListener('mouseup',    () => { isDrawingFree = false; prevFreeIdx = null; });
+    canvas.addEventListener('mouseleave', () => { isDrawingFree = false; prevFreeIdx = null; });
+
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      prevFreeIdx = null; prevFreeVal = null;
+      paintFree(e.touches[0].clientX, e.touches[0].clientY, true);
+    }, { passive: false });
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (isDrawingFree) paintFree(e.touches[0].clientX, e.touches[0].clientY, false);
+    }, { passive: false });
+    canvas.addEventListener('touchend', () => { isDrawingFree = false; });
+
+    document.getElementById('btnFreeReset').addEventListener('click', resetFreeCurve);
+    document.getElementById('btnFreeSquare').addEventListener('click', squareFreeCurve);
+    document.getElementById('btnFreeFold').addEventListener('click', foldFreeCurve);
+
+    document.getElementById('freqFreeSlider').addEventListener('input', function () {
+      const v = parseInt(this.value);
+      document.getElementById('freqFreeVal').textContent = v;
+      if (playingFree && freeAudioNodes) {
+        freeAudioNodes.osc.frequency.setValueAtTime(v, getAudioContext().currentTime);
+      }
+    });
+  }
+
+  window.addEventListener('load', initFree);
+  window.addEventListener('resize', drawFreeCanvas);
+</script>
+</body>
+</html>

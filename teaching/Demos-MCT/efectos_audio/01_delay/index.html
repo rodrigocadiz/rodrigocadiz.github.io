@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Delay y Eco — Procesamiento de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_delay/index.html" class="active">1. Delay</a>
+  <a href="../02_comb_filter/index.html">2. Comb</a>
+  <a href="../03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="../04_flanger_chorus/index.html">4. Flanger/Chorus</a>
+  <a href="../05_reverb/index.html">5. Reverb</a>
+  <a href="../06_distorsion/index.html">6. Distorsión</a>
+  <a href="../07_wah/index.html">7. Wah-Wah</a>
+  <a href="../08_armonizador/index.html">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Delay y Eco</h1>
+      <p class="subtitle">Retardo temporal con retroalimentación — ecos discretos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Delay con feedback</h2>
+    <p class="description">
+      El <span class="kw">delay</span> retarda la señal un tiempo D y la mezcla con la señal
+      original. Cuando la señal retardada se vuelve a realimentar, se producen ecos sucesivos
+      con amplitud decreciente: <em>A, A·fb, A·fb², ...</em>
+      El <span class="kw">tiempo de retardo</span> (D) determina el ritmo de los ecos;
+      el <span class="kw">feedback</span> (fb) controla cuántos ecos se escuchan y
+      el <span class="kw">mix</span> (dry/wet) equilibra la señal procesada con la original.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Retardo D: <span class="val" id="dtVal">300</span> ms</label>
+        <input type="range" id="dtSlider" min="30" max="800" value="300" step="10">
+      </div>
+      <div class="control-group">
+        <label>Feedback fb: <span class="val" id="fbVal">0.55</span></label>
+        <input type="range" id="fbSlider" min="0" max="0.90" value="0.55" step="0.05">
+      </div>
+      <div class="control-group">
+        <label>Mix wet: <span class="val" id="mixVal">60</span> %</label>
+        <input type="range" id="mixSlider" min="0" max="100" value="60" step="5">
+      </div>
+      <div class="control-group">
+        <label>Volumen: <span class="val" id="volVal">50</span> %</label>
+        <input type="range" id="volSlider" min="0" max="100" value="50" step="5">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">D=300 ms · fb=0.55 · mix=60%</div>
+    <canvas id="cnvMain" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Arquitectura del efecto</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Señal directa (dry)</strong><br>
+        La señal original sin procesar. El fader dry controla su nivel. Con mix=0% se escucha
+        solo la señal directa; con mix=100% se escucha solo el delay (sin señal directa).
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Lazo de retroalimentación</strong><br>
+        Cada eco se realimenta al input del delay: produce el eco siguiente con amplitud
+        fb × la del anterior. Con fb=0 hay un solo eco; con fb → 1 los ecos no decaen
+        (riesgo de inestabilidad).
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Tiempo sincronizado</strong><br>
+        En producción musical, D se sincroniza con el tempo: D = 60000/BPM ms (negra),
+        D/2 (corchea), D*3/4 (negra con puntillo). Así los ecos caen en los tiempos del ritmo.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Filtro comb resultante</strong><br>
+        Un delay con feedback es un filtro IIR recursivo: crea picos en el espectro en
+        f = n/D para n=1,2,3... y notches entre ellos. A mayor fb, más pronunciados los picos
+        (ver viñeta 2).
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ──────────────────────────────────────────────────────────────
+let playing = false;
+let delayTime = 0.300;
+let feedback  = 0.55;
+let mix       = 0.60;
+let volume    = 0.50;
+
+let delayNode = null, feedbackGain = null;
+let dryGain   = null, wetGain = null, masterGain = null;
+let burstTimer = null;
+let actxRef    = null;
+let lastBurstCtxTime = -1;
+let animId     = null;
+
+const BURST_DUR = 0.07; // duración del pulso (s)
+
+// ── Canvas ───────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx    = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 20, padT = 20, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const midY = padT + bh * 0.55;
+  const maxTime = Math.max(6 * delayTime, 2.0);
+  const barW    = Math.max(10, bw * delayTime / maxTime * 0.18);
+
+  // tiempo transcurrido desde el último pulso (AudioContext)
+  const elapsed = (actxRef && lastBurstCtxTime >= 0)
+    ? actxRef.currentTime - lastBurstCtxTime
+    : -1;
+
+  // Grid horizontal (línea del cero)
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, midY); ctx.lineTo(padL + bw, midY); ctx.stroke();
+
+  // Grid vertical (una línea por cada tiempo de retardo)
+  const nMarks = Math.ceil(maxTime / delayTime);
+  for (let k = 1; k <= nMarks; k++) {
+    const x = padL + (k * delayTime / maxTime) * bw;
+    if (x > padL + bw) break;
+    ctx.strokeStyle = 'rgba(100,180,255,0.20)';
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Etiquetas ejes
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('+A', padL - 5, padT + 12);
+  ctx.fillText('0',  padL - 5, midY + 4);
+  ctx.textAlign = 'center';
+  ctx.fillText('tiempo →', padL + bw / 2, H - 4);
+
+  // Cursor / playhead — avanza desde el último pulso
+  if (elapsed >= 0 && elapsed <= maxTime) {
+    const cx = padL + (elapsed / maxTime) * bw;
+    ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Señal directa (dry) — se ilumina al disparar el pulso
+  let dryAlpha = elapsed >= 0
+    ? (elapsed < BURST_DUR ? 1.0 : Math.max(0.45, 1 - (elapsed - BURST_DUR) * 5))
+    : 0.60;
+  const dryH = Math.max(4, (1 - mix) * bh * 0.48);
+  ctx.fillStyle = `rgba(255,170,0,${dryAlpha.toFixed(2)})`;
+  ctx.fillRect(padL - barW / 2, midY - dryH, barW, dryH);
+  ctx.fillStyle = '#ffaa00';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('directa', padL, padT - 5);
+
+  // Ecos — se iluminan cuando el playhead los alcanza
+  // amp = mix * fb^(k-1): el primer eco (k=1) siempre existe aunque fb=0
+  for (let k = 1; k <= 12; k++) {
+    const amp = Math.pow(feedback, k - 1) * mix;
+    if (amp < 0.004) break;
+    const t = k * delayTime;
+    const x = padL + (t / maxTime) * bw;
+    if (x > padL + bw - 4) break;
+
+    const baseOp = Math.min(1, amp * 1.8 + 0.25);
+    let flash = 0;
+    if (elapsed >= 0) {
+      const dist = elapsed - t;
+      if (dist >= -0.02) flash = dist < BURST_DUR ? 1.0 : Math.max(0, 1 - (dist - BURST_DUR) * 5);
+    }
+    const echoAlpha = baseOp * (0.42 + 0.58 * flash);
+
+    const echoH = amp * bh * 0.48;
+    ctx.fillStyle = `rgba(0,255,255,${echoAlpha.toFixed(2)})`;
+    ctx.fillRect(x - barW / 2, midY - echoH, barW, echoH);
+
+    if (k <= 5) {
+      ctx.fillStyle = 'rgba(150,200,255,0.65)';
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${(t * 1000).toFixed(0)}ms`, x, padT + bh + 16);
+    }
+    if (k <= 3) {
+      ctx.fillStyle = `rgba(0,255,255,${echoAlpha.toFixed(2)})`;
+      ctx.font = '9px monospace';
+      ctx.fillText(k === 1 ? '×wet' : `fb^${k-1}`, x, midY - echoH - 4);
+    }
+  }
+
+  // Leyenda
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffaa00';
+  ctx.fillRect(padL + bw - 140, padT + 4, 10, 10);
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.fillText('Directa (dry)', padL + bw - 126, padT + 14);
+  ctx.fillStyle = '#00ffff';
+  ctx.fillRect(padL + bw - 140, padT + 20, 10, 10);
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.fillText('Ecos (wet)',    padL + bw - 126, padT + 30);
+}
+
+// ── Audio ─────────────────────────────────────────────────────────────────
+function getPeriodMs() {
+  // esperar a que los ecos caigan por debajo del 0.5% de amplitud
+  if (feedback < 0.05) return Math.max(delayTime * 2000 + 500, 1500);
+  const kDecay = Math.ceil(Math.log(0.005) / Math.log(feedback));
+  return Math.min(Math.max(kDecay * delayTime * 1000 + 500, delayTime * 2000, 1500), 5000);
+}
+
+function fireBurst() {
+  if (!playing || !delayNode) return;
+  const t0 = actxRef.currentTime + 0.005;
+  lastBurstCtxTime = t0;
+
+  const osc = actxRef.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = 440;
+
+  const env = actxRef.createGain();
+  env.gain.setValueAtTime(0, t0);
+  env.gain.linearRampToValueAtTime(0.55, t0 + 0.004);  // ataque 4 ms
+  env.gain.exponentialRampToValueAtTime(0.001, t0 + BURST_DUR);
+
+  osc.connect(env);
+  env.connect(dryGain);   // señal directa
+  env.connect(delayNode); // alimenta el lazo de delay
+
+  osc.start(t0);
+  osc.stop(t0 + BURST_DUR + 0.02);
+  _activeNodes.push(osc);
+}
+
+function scheduleBurst() {
+  if (!playing) return;
+  fireBurst();
+  burstTimer = setTimeout(scheduleBurst, getPeriodMs());
+}
+
+function startAudio() {
+  actxRef = getAudioContext();
+
+  // Red de delay persistente
+  delayNode = actxRef.createDelay(3.0);
+  delayNode.delayTime.value = delayTime;
+
+  feedbackGain = actxRef.createGain();
+  feedbackGain.gain.value = feedback;
+  delayNode.connect(feedbackGain);
+  feedbackGain.connect(delayNode); // bucle de retroalimentación
+
+  masterGain = actxRef.createGain();
+  masterGain.gain.value = volume * 0.9;
+  masterGain.connect(actxRef.destination);
+
+  dryGain = actxRef.createGain();
+  dryGain.gain.value = 1 - mix;
+  dryGain.connect(masterGain);
+
+  wetGain = actxRef.createGain();
+  wetGain.gain.value = mix;
+  delayNode.connect(wetGain);
+  wetGain.connect(masterGain);
+
+  fireBurst();                                          // primer pulso inmediato
+  burstTimer = setTimeout(scheduleBurst, getPeriodMs());
+  animId = requestAnimationFrame(animate);
+}
+
+function animate() {
+  drawCanvas();
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  if (burstTimer) { clearTimeout(burstTimer); burstTimer = null; }
+  if (animId)     { cancelAnimationFrame(animId); animId = null; }
+  stopAllAudio();
+  try { delayNode    && delayNode.disconnect();    } catch(e) {}
+  try { feedbackGain && feedbackGain.disconnect(); } catch(e) {}
+  try { dryGain      && dryGain.disconnect();      } catch(e) {}
+  try { wetGain      && wetGain.disconnect();      } catch(e) {}
+  try { masterGain   && masterGain.disconnect();   } catch(e) {}
+  delayNode = null; feedbackGain = null; dryGain = null;
+  wetGain   = null; masterGain   = null; actxRef = null;
+  lastBurstCtxTime = -1;
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ─────────────────────────────────────────────────────────────
+document.getElementById('dtSlider').addEventListener('input', function() {
+  delayTime = +this.value / 1000;
+  document.getElementById('dtVal').textContent = this.value;
+  if (delayNode) delayNode.delayTime.value = delayTime;
+  updateStatus(); drawCanvas();
+});
+
+document.getElementById('fbSlider').addEventListener('input', function() {
+  feedback = +parseFloat(this.value).toFixed(2);
+  document.getElementById('fbVal').textContent = feedback;
+  if (feedbackGain) feedbackGain.gain.value = feedback;
+  updateStatus(); drawCanvas();
+});
+
+document.getElementById('mixSlider').addEventListener('input', function() {
+  mix = +this.value / 100;
+  document.getElementById('mixVal').textContent = this.value;
+  if (dryGain) dryGain.gain.value = 1 - mix;
+  if (wetGain) wetGain.gain.value = mix * 0.85;
+  updateStatus(); drawCanvas();
+});
+
+document.getElementById('volSlider').addEventListener('input', function() {
+  volume = +this.value / 100;
+  document.getElementById('volVal').textContent = this.value;
+  if (masterGain) masterGain.gain.value = volume * 0.9;
+});
+
+function updateStatus() {
+  document.getElementById('statusLabel').textContent =
+    `D=${(delayTime*1000).toFixed(0)} ms · fb=${feedback} · mix=${Math.round(mix*100)}%`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+function init() { drawCanvas(); updateStatus(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawCanvas());
+</script>
+</body>
+</html>

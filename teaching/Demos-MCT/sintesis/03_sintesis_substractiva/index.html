@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Síntesis Substractiva — Síntesis de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-sintesis">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sintesis_tabla/index.html">1. Sínt. de Tabla</a>
+  <a href="../02_sintesis_aditiva/index.html">2. Aditiva</a>
+  <a href="../03_sintesis_substractiva/index.html" class="active">3. Substractiva</a>
+  <a href="../04_modulacion_am/index.html">4. AM</a>
+  <a href="../05_modulacion_fm/index.html">5. FM</a>
+  <a href="../06_sintesis_granular/index.html">6. Granular</a>
+  <a href="../07_karplus_strong/index.html">7. Karplus-Strong</a>
+  <a href="../08_waveshaping/index.html">8. Waveshaping</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Síntesis Substractiva</h1>
+      <p class="subtitle">Filtrado de fuentes ricas en armónicos para modelar timbre</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Oscilador + Filtro — Espectro en tiempo real</h2>
+    <p class="description">
+      La síntesis substractiva parte de una fuente con <span class="kw">espectro rico</span> (sawtooth,
+      cuadrada, ruido blanco) y utiliza un <span class="kw">filtro</span> para atenuar o resaltar
+      rangos de frecuencia. La curva brillante superpuesta muestra la
+      <span class="kw">respuesta en frecuencia</span> del filtro activo.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Fuente:</label>
+        <div class="btn-group" style="margin-bottom:0;">
+          <button class="btn active" id="btnSaw" onclick="setOsc('sawtooth')" style="background:rgba(255,170,0,0.12);border-color:#ffaa00;color:#ffaa00;">Diente de Sierra</button>
+          <button class="btn" id="btnSq" onclick="setOsc('square')" style="border-color:#ff44ff;color:#ff44ff;">Cuadrada</button>
+          <button class="btn" id="btnNoise" onclick="setOsc('noise')" style="border-color:#00ff44;color:#00ff44;">Ruido Blanco</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqVal">220</span> Hz</label>
+        <input type="range" id="freqSlider" min="55" max="880" value="220">
+      </div>
+      <div class="control-group">
+        <label>Filtro:</label>
+        <div class="btn-group" style="margin-bottom:0;">
+          <button class="btn active" id="btnLP" onclick="setFilter('lowpass')" style="background:rgba(0,255,255,0.12);border-color:#00ffff;color:#00ffff;">Pasa-Bajos</button>
+          <button class="btn" id="btnHP" onclick="setFilter('highpass')" style="border-color:#ff4444;color:#ff4444;">Pasa-Altos</button>
+          <button class="btn" id="btnBP" onclick="setFilter('bandpass')" style="border-color:#ffaa00;color:#ffaa00;">Pasa-Banda</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Cutoff: <span class="val" id="cutoffVal">1200</span> Hz</label>
+        <input type="range" id="cutoffSlider" min="100" max="8000" value="1200" step="10">
+      </div>
+      <div class="control-group">
+        <label>Resonancia Q: <span class="val" id="qVal">1.0</span></label>
+        <input type="range" id="qSlider" min="0.5" max="12" value="1.0" step="0.1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Respuesta del filtro (presiona ▶ para ver el espectro en tiempo real)</div>
+    <canvas id="cnvMain" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Tipos de filtro</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Pasa-Bajos (LP)</strong><br>
+        Deja pasar frecuencias por debajo del cutoff. Atenúa los agudos.
+        Con Q alto produce una resonancia pronunciada en la frecuencia de corte —
+        efecto "wah" del sintetizador analógico.
+      </div>
+      <div class="info-box warn">
+        <strong style="color:#ff4444;">Pasa-Altos (HP)</strong><br>
+        Atenúa las frecuencias bajas. Útil para eliminar la fundamental y
+        dar al sonido un carácter "aireado" o metálico.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Pasa-Banda (BP)</strong><br>
+        Solo deja pasar una banda alrededor del cutoff, cuyo ancho es determinado por Q.
+        Simula las resonancias del tracto vocal (formantes).
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Cadena típica</strong><br>
+        Oscilador → Filtro → VCA (amplificador controlado por voltaje/envolvente).
+        La envolvente ADSR modifica el cutoff con el tiempo para crear sonidos expresivos.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let oscType = 'sawtooth';
+let filterType = 'lowpass';
+let freq = 220, cutoff = 1200, Q = 1.0;
+let animId = null;
+let analyser = null, analyserData = null;
+let currentFilter = null, currentSource = null;
+let _previewFilter = null;
+
+// dB coordinate system: -60 to +12 (72 dB total range — room for resonance peaks)
+const DB_MIN = -60, DB_MAX = 12, DB_RANGE = 72;
+
+function dbToY(db, padT, bh) {
+  return padT + (1 - (Math.max(DB_MIN, Math.min(DB_MAX, db)) - DB_MIN) / DB_RANGE) * bh;
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+// ── Preview filter (for display when not playing) ─────────────────────
+function ensurePreviewFilter() {
+  try {
+    const actx = getAudioContext();
+    if (!_previewFilter) _previewFilter = actx.createBiquadFilter();
+    _previewFilter.type = filterType;
+    _previewFilter.frequency.value = cutoff;
+    _previewFilter.Q.value = Q;
+  } catch(e) {}
+  return _previewFilter;
+}
+
+// ── Filter response curve ─────────────────────────────────────────────
+function drawFilterCurve(padL, bw, padT, bh) {
+  const pf = (playing && currentFilter) ? currentFilter : ensurePreviewFilter();
+  if (!pf) return;
+
+  const N = 300;
+  const freqs = new Float32Array(N);
+  const mags  = new Float32Array(N);
+  const phas  = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    freqs[i] = 50 * Math.pow(8000 / 50, i / (N - 1));
+  }
+  try { pf.getFrequencyResponse(freqs, mags, phas); } catch(e) { return; }
+
+  const filterColors = { lowpass: '#00ffff', highpass: '#ff4444', bandpass: '#ffaa00' };
+  const fillColors   = { lowpass: 'rgba(0,255,255,0.12)', highpass: 'rgba(255,68,68,0.12)', bandpass: 'rgba(255,170,0,0.12)' };
+  const color = filterColors[filterType];
+
+  // Semi-transparent fill below curve
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  for (let i = 0; i < N; i++) {
+    const x = padL + (i / (N - 1)) * bw;
+    const db = 20 * Math.log10(Math.max(mags[i], 1e-9));
+    ctx.lineTo(x, dbToY(db, padT, bh));
+  }
+  ctx.lineTo(padL + bw, padT + bh);
+  ctx.closePath();
+  ctx.fillStyle = fillColors[filterType];
+  ctx.fill();
+
+  // Curve line
+  ctx.beginPath();
+  for (let i = 0; i < N; i++) {
+    const x = padL + (i / (N - 1)) * bw;
+    const db = 20 * Math.log10(Math.max(mags[i], 1e-9));
+    const y = dbToY(db, padT, bh);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+}
+
+// ── Grid helper ───────────────────────────────────────────────────────
+function drawGrid(padL, padR, padT, padB, bw, bh) {
+  const W = canvas.width, H = canvas.height;
+  const freqLabels = [100, 200, 500, 1000, 2000, 5000, 8000];
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.font = '10px sans-serif';
+
+  freqLabels.forEach(f => {
+    const x = padL + Math.log10(f / 50) / Math.log10(8000 / 50) * bw;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.60)';
+    ctx.textAlign = 'center';
+    ctx.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x, padT + bh + 14);
+  });
+
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia (Hz) →', padL + bw / 2, H - 4);
+
+  // dB grid lines at 0, -20, -40, -60
+  const dbLines = [0, -20, -40, -60];
+  dbLines.forEach(db => {
+    const y = dbToY(db, padT, bh);
+    ctx.strokeStyle = db === 0 ? 'rgba(255,255,255,0.20)' : 'rgba(100,180,255,0.20)';
+    ctx.lineWidth = db === 0 ? 1.5 : 1;
+    ctx.setLineDash(db === 0 ? [4, 4] : []);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = db === 0 ? 'rgba(255,255,255,0.55)' : 'rgba(150,200,255,0.60)';
+    ctx.textAlign = 'right';
+    ctx.fillText(db + 'dB', padL - 4, y + 4);
+  });
+}
+
+// ── drawIdle ──────────────────────────────────────────────────────────
+function drawIdle() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 20, padT = 20, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  drawGrid(padL, padR, padT, padB, bw, bh);
+  drawFilterCurve(padL, bw, padT, bh);
+
+  // Cutoff marker
+  if (cutoff >= 50 && cutoff <= 8000) {
+    const cx = padL + Math.log10(cutoff / 50) / Math.log10(8000 / 50) * bw;
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('fc=' + cutoff + 'Hz', cx, padT - 4);
+  }
+
+  // Hint text
+  ctx.fillStyle = 'rgba(150,200,255,0.45)';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('▶ Presiona Escuchar para ver el espectro en tiempo real', padL + bw / 2, padT + bh * 0.78);
+}
+
+// ── drawSpectrum (real-time FFT) ──────────────────────────────────────
+function drawSpectrum() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 20, padT = 20, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  analyser.getByteFrequencyData(analyserData);
+  const binCount = analyser.frequencyBinCount;
+  const nyquist = getAudioContext().sampleRate / 2;
+  const maxBin = Math.floor(8000 / nyquist * binCount);
+
+  drawGrid(padL, padR, padT, padB, bw, bh);
+
+  // Spectrum fill — map analyserData 0-255 → -60..+12 dB
+  const filterColors = { lowpass: '#00ffff', highpass: '#ff4444', bandpass: '#ffaa00' };
+  const color = filterColors[filterType];
+
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  for (let i = 1; i < maxBin; i++) {
+    const f = (i / binCount) * nyquist;
+    if (f < 50) continue;
+    const x = padL + Math.log10(f / 50) / Math.log10(8000 / 50) * bw;
+    const db = analyserData[i] / 255 * DB_RANGE + DB_MIN;
+    ctx.lineTo(x, dbToY(db, padT, bh));
+  }
+  ctx.lineTo(padL + bw, padT + bh);
+  ctx.closePath();
+  ctx.fillStyle = color.replace('#', 'rgba(').replace(/(..)(..)(..)/, (_, r, g, b) =>
+    parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)) + ',0.20)';
+  // Simpler fill approach:
+  const specFill = { lowpass: 'rgba(0,255,255,0.18)', highpass: 'rgba(255,68,68,0.18)', bandpass: 'rgba(255,170,0,0.18)' };
+  ctx.fillStyle = specFill[filterType];
+  ctx.fill();
+
+  ctx.beginPath();
+  let first = true;
+  for (let i = 1; i < maxBin; i++) {
+    const f = (i / binCount) * nyquist;
+    if (f < 50) continue;
+    const x = padL + Math.log10(f / 50) / Math.log10(8000 / 50) * bw;
+    const db = analyserData[i] / 255 * DB_RANGE + DB_MIN;
+    const y = dbToY(db, padT, bh);
+    first ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    first = false;
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Filter response overlay (on top of spectrum)
+  drawFilterCurve(padL, bw, padT, bh);
+
+  // Cutoff line
+  const cutoffX = padL + Math.log10(cutoff / 50) / Math.log10(8000 / 50) * bw;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(cutoffX, padT); ctx.lineTo(cutoffX, padT + bh); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('fc=' + cutoff + 'Hz', cutoffX, padT - 4);
+
+  animId = requestAnimationFrame(drawSpectrum);
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function createNoiseBuffer(actx) {
+  const len = actx.sampleRate * 2;
+  const buf = actx.createBuffer(1, len, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = actx.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  return src;
+}
+
+function startAudio() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+
+  if (oscType === 'noise') {
+    currentSource = createNoiseBuffer(actx);
+    currentSource.start(t0);
+  } else {
+    currentSource = actx.createOscillator();
+    currentSource.type = oscType;
+    currentSource.frequency.value = freq;
+    currentSource.start(t0);
+  }
+
+  currentFilter = actx.createBiquadFilter();
+  currentFilter.type = filterType;
+  currentFilter.frequency.value = cutoff;
+  currentFilter.Q.value = Q;
+
+  analyser = actx.createAnalyser();
+  analyser.fftSize = 2048;
+  analyserData = new Uint8Array(analyser.frequencyBinCount);
+
+  const gain = actx.createGain();
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(0.15, t0 + 0.02);
+
+  currentSource.connect(currentFilter);
+  currentFilter.connect(gain);
+  gain.connect(analyser);
+  analyser.connect(actx.destination);
+
+  _activeNodes.push(currentSource);
+  drawSpectrum();
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  currentFilter = null; currentSource = null; analyser = null;
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawIdle();
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+function setOsc(type) {
+  oscType = type;
+  ['btnSaw', 'btnSq', 'btnNoise'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).style.background = '';
+  });
+  const map = { sawtooth: 'btnSaw', square: 'btnSq', noise: 'btnNoise' };
+  document.getElementById(map[type]).classList.add('active');
+  const bg = { sawtooth: 'rgba(255,170,0,0.12)', square: 'rgba(255,68,255,0.12)', noise: 'rgba(0,255,68,0.12)' };
+  document.getElementById(map[type]).style.background = bg[type];
+  document.getElementById('freqSlider').disabled = (type === 'noise');
+  if (playing) { stopPlayback(); togglePlay(); }
+}
+
+function setFilter(type) {
+  filterType = type;
+  ['btnLP', 'btnHP', 'btnBP'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).style.background = '';
+  });
+  const map = { lowpass: 'btnLP', highpass: 'btnHP', bandpass: 'btnBP' };
+  document.getElementById(map[type]).classList.add('active');
+  const bg = { lowpass: 'rgba(0,255,255,0.12)', highpass: 'rgba(255,68,68,0.12)', bandpass: 'rgba(255,170,0,0.12)' };
+  document.getElementById(map[type]).style.background = bg[type];
+  if (currentFilter) currentFilter.type = type;
+  ensurePreviewFilter();
+  if (!playing) drawIdle();
+}
+
+document.getElementById('freqSlider').addEventListener('input', function () {
+  freq = +this.value;
+  document.getElementById('freqVal').textContent = freq;
+  if (currentSource && currentSource.frequency) currentSource.frequency.value = freq;
+});
+
+document.getElementById('cutoffSlider').addEventListener('input', function () {
+  cutoff = +this.value;
+  document.getElementById('cutoffVal').textContent = cutoff;
+  if (currentFilter) currentFilter.frequency.value = cutoff;
+  ensurePreviewFilter();
+  if (!playing) drawIdle();
+});
+
+document.getElementById('qSlider').addEventListener('input', function () {
+  Q = +parseFloat(this.value).toFixed(1);
+  document.getElementById('qVal').textContent = Q;
+  if (currentFilter) currentFilter.Q.value = Q;
+  ensurePreviewFilter();
+  if (!playing) drawIdle();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+function init() { drawIdle(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) drawIdle(); });
+</script>
+</body>
+</html>

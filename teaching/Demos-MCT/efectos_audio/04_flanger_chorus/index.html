@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Flanger y Chorus — Procesamiento de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_delay/index.html">1. Delay</a>
+  <a href="../02_comb_filter/index.html">2. Comb</a>
+  <a href="../03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="../04_flanger_chorus/index.html" class="active">4. Flanger/Chorus</a>
+  <a href="../05_reverb/index.html">5. Reverb</a>
+  <a href="../06_distorsion/index.html">6. Distorsión</a>
+  <a href="../07_wah/index.html">7. Wah-Wah</a>
+  <a href="../08_armonizador/index.html">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Flanger y Chorus</h1>
+      <p class="subtitle">Filtro comb modulado por LFO — notches y engrosamiento espectral</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Retardo modulado por LFO</h2>
+    <p class="description">
+      El <span class="kw">flanger</span> y el <span class="kw">chorus</span> usan un
+      <span class="kw">LFO</span> (oscilador de baja frecuencia) para modular uno o más
+      retardos cortos. La diferencia principal <strong>no es solo el largo del retardo</strong>:
+      el flanger usa <em>una sola</em> línea de retardo corta (1–15 ms) con feedback,
+      creando notches metálicos que barren; el chorus usa <em>múltiples líneas</em> (típicamente 2–4 "voces")
+      con retardos más largos (10–50 ms) y LFOs desfasados entre sí, imitando el comportamiento
+      de varios instrumentistas tocando la misma nota con pequeñas diferencias de afinación y tiempo.
+      La <span class="kw">tasa</span> controla qué tan rápido oscila el retardo;
+      la <span class="kw">profundidad</span> controla cuánto varía el retardo (variación de pitch);
+      el <span class="kw">feedback</span> refuerza los peaks del filtro comb (solo flanger).
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Modo:</label>
+        <div class="btn-group" style="margin-bottom:0;">
+          <button class="btn active" id="btnFlanger" onclick="setMode('flanger')" style="background:rgba(0,255,255,0.12);border-color:#00ffff;color:#00ffff;">Flanger (1 voz)</button>
+          <button class="btn" id="btnChorus" onclick="setMode('chorus')" style="border-color:#ffaa00;color:#ffaa00;">Chorus (3 voces)</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Tasa LFO: <span class="val" id="rateVal">0.5</span> Hz
+          <span style="font-size:0.75rem;color:rgba(150,200,255,0.55);"> — velocidad del barrido</span></label>
+        <input type="range" id="rateSlider" min="0.05" max="8" value="0.5" step="0.05">
+      </div>
+      <div class="control-group">
+        <label>Profundidad: <span class="val" id="depthVal">50</span> %
+          <span style="font-size:0.75rem;color:rgba(150,200,255,0.55);"> — variación de retardo (pitch)</span></label>
+        <input type="range" id="depthSlider" min="0" max="100" value="50" step="5">
+      </div>
+      <div class="control-group">
+        <label>Feedback: <span class="val" id="fbVal">0.70</span>
+          <span style="font-size:0.75rem;color:rgba(150,200,255,0.55);"> — resonancia comb (solo Flanger)</span></label>
+        <input type="range" id="fbSlider" min="0" max="0.90" value="0.70" step="0.05">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Flanger — LFO=0.5 Hz · depth=50% · fb=0.70</div>
+    <canvas id="cnvMain" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Flanger vs Chorus</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Flanger — 1 voz</strong><br>
+        Una sola línea de retardo (D = 1–15 ms) modulada por LFO. Feedback alto crea
+        peaks resonantes que barren el espectro: el efecto "jet-plane" o "whoosh" metálico.
+        El nombre viene de presionar el <em>flange</em> (brida) de una bobina de cinta.
+        Estructura: señal directa + 1 eco modulado en feedback.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Chorus — múltiples voces</strong><br>
+        Dos o más líneas de retardo (D = 10–50 ms cada una) con LFOs desfasados entre sí.
+        Cada voz imita a un instrumentista distinto: pequeñas diferencias de afinación y
+        tiempo. Sin feedback (o mínimo). El efecto es un engrosamiento "espacioso",
+        no un barrido metálico.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Parámetros del LFO</strong><br>
+        <strong>Tasa:</strong> velocidad del barrido (Hz). Lento (0.1–1 Hz) → barrido largo y suave.
+        Rápido (3–8 Hz) → vibrato de timbre.<br>
+        <strong>Profundidad:</strong> cuánto varía D(t) = D_center ± depth. Mayor profundidad
+        = mayor variación de pitch → efecto más pronunciado.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Feedback (solo Flanger)</strong><br>
+        Retroalimenta la salida del delay a su entrada, amplificando los peaks del filtro comb.
+        Sin feedback, el flanger produce solo notches. Con feedback alto (0.7–0.9), aparecen
+        peaks resonantes pronunciados sobre los notches: el barrido es más dramático y metálico.
+        El chorus no usa feedback para mantener el carácter "orgánico".
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let mode = 'flanger';
+let lfoRate = 0.5;
+let depth = 0.50;
+let fb = 0.70;
+let animId = null;
+let startTS = null;
+
+// Parámetros de modo
+const MODES = {
+  flanger: { dCenter: 0.005, depthScale: 0.004, feedbackDefault: 0.70 },
+  chorus:  { dCenter: 0.025, depthScale: 0.012, feedbackDefault: 0.00 }
+};
+// Chorus: 3 voces con LFOs desfasados 0°, 120°, 240°
+const CHORUS_PHASES = [0, 2 * Math.PI / 3, 4 * Math.PI / 3];
+
+let currentDelay = null, currentFBGain = null, currentLFO = null, currentLFOGain = null;
+let chorusDelays = [], chorusLFOs = [], chorusLFOGains = [];
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas(elapsed) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 58, padR = 24, padT = 20, padB = 40;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const topH = bh * 0.38; // LFO row
+  const botH = bh * 0.52; // Spectrum row
+  const gapH = bh * 0.10;
+  const topY = padT;
+  const botY = padT + topH + gapH;
+
+  const t = elapsed || 0;
+  const m = MODES[mode];
+  const dDepth = m.depthScale * depth;
+  const dNow = m.dCenter + dDepth * Math.sin(2 * Math.PI * lfoRate * t);
+
+  // ── LFO waveform ──────────────────────────────────────────────────
+  const lfoMidY = topY + topH / 2;
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, lfoMidY); ctx.lineTo(padL + bw, lfoMidY); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('LFO', padL - 5, lfoMidY + 4);
+  ctx.fillText(`D(t)`, padL - 5, topY + 12);
+
+  // Dibujar LFO: tiempo → frecuencias de notch position
+  const lfoColor = mode === 'flanger' ? '#00ffff' : '#ffaa00';
+  const tWindow = Math.max(4 / lfoRate, 1.0);
+  ctx.strokeStyle = lfoColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const N = 400;
+  for (let i = 0; i <= N; i++) {
+    const tt = (i / N) * tWindow + (t - tWindow / 2);
+    const d = m.dCenter + dDepth * Math.sin(2 * Math.PI * lfoRate * tt);
+    const x = padL + (i / N) * bw;
+    const y = lfoMidY - ((d - m.dCenter) / dDepth) * topH * 0.42;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Marcador de posición actual
+  ctx.fillStyle = lfoColor;
+  const cursorX = padL + bw * 0.5;
+  const cursorY = lfoMidY - ((dNow - m.dCenter) / Math.max(dDepth, 1e-6)) * topH * 0.42;
+  ctx.beginPath(); ctx.arc(cursorX, cursorY, 5, 0, Math.PI * 2); ctx.fill();
+
+  // D actual label
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`D=${(dNow * 1000).toFixed(2)}ms`, cursorX + 8, cursorY - 5);
+
+  // ── Comb filter spectrum (con D actual) ──────────────────────────
+  const specMidY = botY + botH * 0.55;
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, specMidY); ctx.lineTo(padL + bw, specMidY); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(150,200,255,0.60)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('|H(f)|', padL - 5, botY + 12);
+  ctx.textAlign = 'center';
+  ctx.fillText('frecuencia →', padL + bw / 2, H - 4);
+
+  const fMax = Math.min(16000, Math.max(1 / dNow * 10, 5000));
+
+  // Curva comb
+  ctx.strokeStyle = lfoColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const NS = 500;
+  const fbVal = mode === 'flanger' ? fb : 0;
+  for (let i = 0; i <= NS; i++) {
+    const f = (i / NS) * fMax;
+    const phase = 2 * Math.PI * f * dNow;
+    let mag;
+    if (mode === 'flanger') {
+      const re = 1 - fbVal * Math.cos(phase);
+      const im = fbVal * Math.sin(phase);
+      mag = 1 / Math.sqrt(re * re + im * im);
+    } else {
+      const re = 1 + Math.cos(phase);
+      const im = Math.sin(phase);
+      mag = Math.sqrt(re * re + im * im) / 2;
+    }
+    mag = Math.min(mag, 4.0);
+    const x = padL + (f / fMax) * bw;
+    const y = specMidY - mag * botH * 0.20;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Fill
+  ctx.fillStyle = mode === 'flanger' ? 'rgba(0,255,255,0.06)' : 'rgba(255,170,0,0.06)';
+  ctx.beginPath();
+  for (let i = 0; i <= NS; i++) {
+    const f = (i / NS) * fMax;
+    const phase = 2 * Math.PI * f * dNow;
+    let mag;
+    if (mode === 'flanger') {
+      const re = 1 - fbVal * Math.cos(phase);
+      const im = fbVal * Math.sin(phase);
+      mag = 1 / Math.sqrt(re * re + im * im);
+    } else {
+      const re = 1 + Math.cos(phase);
+      const im = Math.sin(phase);
+      mag = Math.sqrt(re * re + im * im) / 2;
+    }
+    mag = Math.min(mag, 4.0);
+    const x = padL + (f / fMax) * bw;
+    const y = specMidY - mag * botH * 0.20;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.lineTo(padL + bw, specMidY); ctx.lineTo(padL, specMidY);
+  ctx.closePath(); ctx.fill();
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function startAudio() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+  const m = MODES[mode];
+
+  // Fuente: sawtooth rico en armónicos
+  const osc = actx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = 110;
+  const srcGain = actx.createGain();
+  srcGain.gain.setValueAtTime(0.0, t0);
+  srcGain.gain.linearRampToValueAtTime(0.40, t0 + 0.015);
+  osc.connect(srcGain);
+
+  const masterGain = actx.createGain();
+  masterGain.gain.value = 0.40;
+  masterGain.connect(actx.destination);
+
+  // Señal seca
+  const dryGain = actx.createGain();
+  dryGain.gain.value = 0.7;
+  srcGain.connect(dryGain);
+  dryGain.connect(masterGain);
+
+  // Limpiar arrays
+  chorusDelays = []; chorusLFOs = []; chorusLFOGains = [];
+
+  if (mode === 'flanger') {
+    // Una sola línea de retardo con feedback
+    const delayNode = actx.createDelay(0.5);
+    delayNode.delayTime.value = m.dCenter;
+    currentDelay = delayNode;
+
+    const lfo = actx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = lfoRate;
+    const lfoGain = actx.createGain();
+    lfoGain.gain.value = m.depthScale * depth;
+    lfo.connect(lfoGain);
+    lfoGain.connect(delayNode.delayTime);
+    currentLFO = lfo; currentLFOGain = lfoGain;
+
+    const fbGain = actx.createGain();
+    fbGain.gain.value = fb;
+    currentFBGain = fbGain;
+
+    srcGain.connect(delayNode);
+    delayNode.connect(fbGain);
+    fbGain.connect(delayNode);
+    delayNode.connect(masterGain);
+
+    osc.start(t0); lfo.start(t0);
+    _activeNodes.push(osc, lfo);
+  } else {
+    // Chorus: 3 voces con LFOs desfasados 0°/120°/240°
+    currentFBGain = null; currentLFO = null; currentLFOGain = null;
+    const voiceGain = 1 / 3;
+    CHORUS_PHASES.forEach((phase, i) => {
+      const delayNode = actx.createDelay(0.5);
+      delayNode.delayTime.value = m.dCenter;
+
+      // LFO con offset de fase inicial via WaveShaper trick: usa ConstantSource + osc
+      const lfo = actx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = lfoRate;
+      // Desfase: modificar el tiempo de inicio del LFO
+      const lfoGain = actx.createGain();
+      lfoGain.gain.value = m.depthScale * depth;
+      lfo.connect(lfoGain);
+      lfoGain.connect(delayNode.delayTime);
+
+      const wetG = actx.createGain();
+      wetG.gain.value = voiceGain;
+      srcGain.connect(delayNode);
+      delayNode.connect(wetG);
+      wetG.connect(masterGain);
+
+      // Iniciar con desfase temporal: cada voz empieza en diferente punto del ciclo LFO
+      const lfoStartOffset = phase / (2 * Math.PI * lfoRate);
+      lfo.start(t0 - lfoStartOffset);
+
+      chorusDelays.push(delayNode);
+      chorusLFOs.push(lfo);
+      chorusLFOGains.push(lfoGain);
+      _activeNodes.push(lfo);
+    });
+    osc.start(t0);
+    _activeNodes.push(osc);
+  }
+}
+
+// ── Animación ─────────────────────────────────────────────────────────
+function animate(ts) {
+  if (!startTS) startTS = ts;
+  const elapsed = (ts - startTS) / 1000;
+  drawCanvas(elapsed);
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+  startTS = null;
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  currentDelay = null; currentFBGain = null; currentLFO = null; currentLFOGain = null;
+  chorusDelays = []; chorusLFOs = []; chorusLFOGains = [];
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas(0);
+}
+
+function setMode(m) {
+  mode = m;
+  ['btnFlanger','btnChorus'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).style.background = '';
+  });
+  const id = m === 'flanger' ? 'btnFlanger' : 'btnChorus';
+  document.getElementById(id).classList.add('active');
+  document.getElementById(id).style.background =
+    m === 'flanger' ? 'rgba(0,255,255,0.12)' : 'rgba(255,170,0,0.12)';
+  fb = MODES[m].feedbackDefault;
+  document.getElementById('fbSlider').value = fb;
+  document.getElementById('fbVal').textContent = fb.toFixed(2);
+  updateStatus();
+  if (!playing) drawCanvas(0);
+  if (playing) { stopPlayback(); togglePlay(); }
+}
+
+document.getElementById('rateSlider').addEventListener('input', function() {
+  lfoRate = +parseFloat(this.value).toFixed(2);
+  document.getElementById('rateVal').textContent = lfoRate;
+  if (currentLFO) currentLFO.frequency.value = lfoRate;
+  chorusLFOs.forEach(l => { l.frequency.value = lfoRate; });
+  updateStatus();
+});
+
+document.getElementById('depthSlider').addEventListener('input', function() {
+  depth = +this.value / 100;
+  document.getElementById('depthVal').textContent = this.value;
+  const m = MODES[mode];
+  if (currentLFOGain) currentLFOGain.gain.value = m.depthScale * depth;
+  chorusLFOGains.forEach(g => { g.gain.value = m.depthScale * depth; });
+  updateStatus();
+});
+
+document.getElementById('fbSlider').addEventListener('input', function() {
+  fb = +parseFloat(this.value).toFixed(2);
+  document.getElementById('fbVal').textContent = fb;
+  if (currentFBGain && mode === 'flanger') currentFBGain.gain.value = fb;
+  updateStatus();
+});
+
+function updateStatus() {
+  const m = MODES[mode];
+  document.getElementById('statusLabel').textContent =
+    `${mode === 'flanger' ? 'Flanger' : 'Chorus'} — LFO=${lfoRate} Hz · depth=${Math.round(depth*100)}% · D_center=${(m.dCenter*1000).toFixed(0)}ms`;
+}
+
+function init() { drawCanvas(0); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => { if (!playing) drawCanvas(0); });
+</script>
+</body>
+</html>

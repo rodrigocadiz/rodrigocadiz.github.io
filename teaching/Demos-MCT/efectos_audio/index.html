@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Procesamiento de Sonidos — Demos MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="01_delay/index.html">1. Delay</a>
+  <a href="02_comb_filter/index.html">2. Comb</a>
+  <a href="03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="04_flanger_chorus/index.html">4. Flanger/Chorus</a>
+  <a href="05_reverb/index.html">5. Reverb</a>
+  <a href="06_distorsion/index.html">6. Distorsión</a>
+  <a href="07_wah/index.html">7. Wah-Wah</a>
+  <a href="08_armonizador/index.html">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1 style="background:linear-gradient(90deg,#00ffff,#ff44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Procesamiento de Sonidos</h1>
+      <p class="subtitle">Efectos de audio: delay, modulación, distorsión y transformación tonal</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="card-grid">
+
+    <a href="01_delay/index.html" class="vineta-card">
+      <div class="num" style="color:#ffaa00;">1 ⏱</div>
+      <h3 style="color:#ffaa00;">Delay y Eco</h3>
+      <p>Retardo temporal de la señal con retroalimentación. Produce ecos discretos cuya separación y decaimiento determinan el carácter rítmico y espacial del efecto.</p>
+    </a>
+
+    <a href="02_comb_filter/index.html" class="vineta-card">
+      <div class="num" style="color:#00ffff;">2 ⌇</div>
+      <h3 style="color:#00ffff;">Filtro Comb</h3>
+      <p>El delay con feedback es un filtro comb IIR: crea picos y notches periódicos en el espectro. La versión FIR (sin feedback) produce solo notches. Base de flanger, chorus y reverb.</p>
+    </a>
+
+    <a href="03_ping_pong/index.html" class="vineta-card">
+      <div class="num" style="color:#00ff44;">3 ↔</div>
+      <h3 style="color:#00ff44;">Ping-Pong Delay</h3>
+      <p>Variante estéreo del delay donde cada eco alterna entre canal izquierdo y derecho, creando un efecto de pelota rebotando en el espacio entre los parlantes.</p>
+    </a>
+
+    <a href="04_flanger_chorus/index.html" class="vineta-card">
+      <div class="num" style="color:#00ffff;">4 〜</div>
+      <h3 style="color:#00ffff;">Flanger y Chorus</h3>
+      <p>Filtro comb modulado por un LFO. El flanger usa retardos cortos con feedback para barrer notches; el chorus usa retardos más largos para simular voces adicionales.</p>
+    </a>
+
+    <a href="05_reverb/index.html" class="vineta-card">
+      <div class="num" style="color:#44aaff;">5 🏛</div>
+      <h3 style="color:#44aaff;">Reverberación Artificial</h3>
+      <p>Convolución con una respuesta al impulso sintética que simula la acústica de un espacio. Unifica reflexiones tempranas y cola difusa en un proceso unificado.</p>
+    </a>
+
+    <a href="06_distorsion/index.html" class="vineta-card">
+      <div class="num" style="color:#ff4444;">6 ⚡</div>
+      <h3 style="color:#ff4444;">Distorsión</h3>
+      <p>Deformación no lineal de la onda que genera nuevos armónicos. Desde el suave soft clipping hasta el recorte duro del fuzz, visualizable mediante la curva de transferencia.</p>
+    </a>
+
+    <a href="07_wah/index.html" class="vineta-card">
+      <div class="num" style="color:#ffaa00;">7 〉</div>
+      <h3 style="color:#ffaa00;">Wah-Wah</h3>
+      <p>Filtro pasa-banda con resonancia barrida por LFO o pedal manual. La vocal característica imita el movimiento formántico del tracto vocal humano.</p>
+    </a>
+
+    <a href="08_armonizador/index.html" class="vineta-card">
+      <div class="num" style="color:#ff44ff;">8 ♬</div>
+      <h3 style="color:#ff44ff;">Pitch Shifting y Armonizador</h3>
+      <p>Transposición de altura sin alterar la duración. El armonizador añade voces a intervalos musicales definidos sobre la señal original, creando acordes en tiempo real.</p>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+</body>
+</html>

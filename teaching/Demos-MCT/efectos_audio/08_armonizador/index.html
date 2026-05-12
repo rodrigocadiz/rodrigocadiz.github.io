@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8. Pitch Shifting y Armonizador — Procesamiento de Sonidos</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-efectos">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_delay/index.html">1. Delay</a>
+  <a href="../02_comb_filter/index.html">2. Comb</a>
+  <a href="../03_ping_pong/index.html">3. Ping-Pong</a>
+  <a href="../04_flanger_chorus/index.html">4. Flanger/Chorus</a>
+  <a href="../05_reverb/index.html">5. Reverb</a>
+  <a href="../06_distorsion/index.html">6. Distorsión</a>
+  <a href="../07_wah/index.html">7. Wah-Wah</a>
+  <a href="../08_armonizador/index.html" class="active">8. Armonizador</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>8. Pitch Shifting y Armonizador</h1>
+      <p class="subtitle">Transposición de altura — voces adicionales a intervalos musicales</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Armonizador de intervalos musicales</h2>
+    <p class="description">
+      El <span class="kw">pitch shifting</span> transpone la altura de una señal sin cambiar su duración.
+      El <span class="kw">armonizador</span> añade una o más copias pitch-shifted a la señal original,
+      creando acordes en tiempo real. Los algoritmos profesionales usan el
+      <span class="kw">vocoder de fase</span> o <span class="kw">PSOLA</span> para trasladar frecuencias
+      sin artefactos. Esta demo muestra el principio: múltiples osciladores a los intervalos seleccionados
+      en <span class="kw">temperamento igual</span> (cada semitono = factor 2^(1/12) ≈ 1.0595).
+      Activa intervalos con los botones y observa cómo los parciales de cada voz se distribuyen en el espectro.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia base: <span class="val" id="baseVal">220</span> Hz</label>
+        <input type="range" id="baseSlider" min="80" max="440" value="220" step="10">
+      </div>
+      <div class="btn-group" id="intervalBtns">
+        <!-- se generan por JS -->
+      </div>
+      <div class="btn-group" style="margin-top:6px;">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+
+    <div class="canvas-label" id="statusLabel">Unísono activo · base 220 Hz</div>
+    <canvas id="cnvMain" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Conceptos de pitch shifting</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Temperamento igual</strong><br>
+        En el sistema de 12 tonos por octava, cada semitono es un factor
+        <code>2^(1/12) ≈ 1.0595</code>. N semitonos equivalen al factor
+        <code>2^(N/12)</code>. Una 5ª justa (+7 st) = ×1.498 ≈ 3/2.
+        Una 3ª mayor (+4 st) = ×1.260 ≈ 5/4. La octava siempre es ×2.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Vocoder de fase (Phase Vocoder)</strong><br>
+        Transforma la señal al dominio frecuencial (STFT), escala las frecuencias
+        de los bins por el ratio de pitch deseado y reconstruye la señal.
+        Preserva la duración porque opera en frecuencia, no en tiempo.
+        Artefactos típicos: "fantasma de fase", musicalización artificial.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ff44;">PSOLA</strong><br>
+        <em>Pitch Synchronous Overlap and Add:</em> extrae períodos de la señal
+        sincronizados con la frecuencia fundamental, los redistribuye en el tiempo
+        para cambiar la tasa de repetición (= pitch) y los solapa con OLA.
+        Funciona bien para señales monofónicas con F0 claro (voz, instrumentos melódicos).
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff4444;">Armonizador hardware</strong><br>
+        El Eventide H910 (1975) fue el primer armonizador digital. Usaba delay variable
+        modulado para aproximar el pitch shift. Los algoritmos modernos (Melodyne, Auto-Tune)
+        operan polifónicamente, corrigiendo y transponiendo voces individuales dentro
+        de una mezcla compleja.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Demostraciones de Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Intervalos ────────────────────────────────────────────────────────
+const INTERVALS = [
+  { name: '8ª baja',   semitones: -12, color: '#ffffff', active: false },
+  { name: '5ª baja',   semitones:  -7, color: '#aaddff', active: false },
+  { name: 'Unísono',   semitones:   0, color: '#ffaa00', active: true  },
+  { name: '3ª m',      semitones:   3, color: '#00ffff', active: false },
+  { name: '3ª M',      semitones:   4, color: '#00ff44', active: false },
+  { name: '4ª justa',  semitones:   5, color: '#44aaff', active: false },
+  { name: '5ª justa',  semitones:   7, color: '#ff44ff', active: false },
+  { name: 'Octava',    semitones:  12, color: '#ff4444', active: false },
+];
+
+function ratio(st) { return Math.pow(2, st / 12); }
+
+// ── Estado ────────────────────────────────────────────────────────────
+let playing = false;
+let baseFreq = 220;
+let masterGainNode = null;
+const voiceNodes = {}; // semitones → { osc, gainNode }
+
+// ── Voz individual ────────────────────────────────────────────────────
+function addVoice(iv) {
+  if (!masterGainNode) return;
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+  const osc = actx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = baseFreq * ratio(iv.semitones);
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0.0, t0);
+  g.gain.linearRampToValueAtTime(0.75, t0 + 0.015);
+  osc.connect(g);
+  g.connect(masterGainNode);
+  osc.start(t0);
+  voiceNodes[iv.semitones] = { osc, gainNode: g };
+  _activeNodes.push(osc);
+}
+
+function removeVoice(iv) {
+  const v = voiceNodes[iv.semitones];
+  if (!v) return;
+  const actx = getAudioContext();
+  const tEnd = actx.currentTime + 0.020;
+  v.gainNode.gain.setValueAtTime(v.gainNode.gain.value, actx.currentTime);
+  v.gainNode.gain.linearRampToValueAtTime(0.0, tEnd);
+  try { v.osc.stop(tEnd + 0.01); } catch(e) {}
+  delete voiceNodes[iv.semitones];
+}
+
+// ── Botones de intervalo ──────────────────────────────────────────────
+const btnContainer = document.getElementById('intervalBtns');
+INTERVALS.forEach((iv) => {
+  const btn = document.createElement('button');
+  btn.className = 'btn' + (iv.active ? ' active' : '');
+  btn.textContent = iv.name;
+  btn.style.borderColor = iv.color;
+  btn.style.color = iv.active ? '#000' : iv.color;
+  btn.style.background = iv.active ? iv.color : 'transparent';
+  btn.addEventListener('click', () => {
+    if (iv.semitones === 0) return; // unísono siempre activo
+    iv.active = !iv.active;
+    btn.classList.toggle('active', iv.active);
+    btn.style.color = iv.active ? '#000' : iv.color;
+    btn.style.background = iv.active ? iv.color : 'transparent';
+    if (playing) {
+      if (iv.active) addVoice(iv);
+      else removeVoice(iv);
+    }
+    updateStatus(); drawCanvas();
+  });
+  btnContainer.appendChild(btn);
+});
+
+// ── Canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('cnvMain');
+const ctx = canvas.getContext('2d');
+
+const F_MIN = 50, F_MAX = 8000;
+
+function freqToX(f, padL, bw) {
+  if (f <= F_MIN) return padL;
+  return padL + (Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN)) * bw;
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 16, padR = 16, padT = 32, padB = 36;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  // Eje horizontal
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  ctx.lineTo(padL + bw, padT + bh);
+  ctx.stroke();
+
+  // Grid frecuencial logarítmico
+  ctx.setLineDash([2, 5]);
+  ctx.strokeStyle = 'rgba(100,180,255,0.20)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  [100, 200, 440, 1000, 2000, 5000].forEach(f => {
+    const x = freqToX(f, padL, bw);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.55)';
+    ctx.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x, padT + bh + 16);
+  });
+  ctx.setLineDash([]);
+
+  // Barras por cada intervalo activo
+  INTERVALS.filter(iv => iv.active).forEach(iv => {
+    const f0 = baseFreq * ratio(iv.semitones);
+
+    // Armónicos de la onda diente de sierra (1/k amplitud)
+    for (let k = 1; k <= 16; k++) {
+      const fk = f0 * k;
+      if (fk > F_MAX) break;
+      const amp = 1 / k;
+      const barH = amp * bh * 0.85;
+      const x = freqToX(fk, padL, bw);
+      const barW = Math.max(3, bw * 0.008);
+
+      const alpha = k === 1 ? 0.95 : Math.max(0.35, 0.70 / k);
+      ctx.fillStyle = iv.color.startsWith('#') ?
+        hexToRGBA(iv.color, alpha) : iv.color;
+      ctx.fillRect(x - barW / 2, padT + bh - barH, barW, barH);
+    }
+
+    // Etiqueta del fundamental
+    const xF0 = freqToX(f0, padL, bw);
+    ctx.fillStyle = iv.color;
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    const label = iv.semitones === 0 ? 'base' : iv.name;
+    ctx.fillText(label, xF0, padT - 4);
+    ctx.fillText(Math.round(f0) + ' Hz', xF0, padT + 8);
+  });
+
+  // Eje x label
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('frecuencia (Hz) →', padL + bw / 2, H - 4);
+}
+
+function hexToRGBA(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
+}
+
+// ── Audio ──────────────────────────────────────────────────────────────
+function startAudio() {
+  const actx = getAudioContext();
+  const master = actx.createGain();
+  master.gain.value = 0.40;
+  master.connect(actx.destination);
+  masterGainNode = master;
+  Object.keys(voiceNodes).forEach(k => delete voiceNodes[k]);
+  INTERVALS.filter(iv => iv.active).forEach(iv => addVoice(iv));
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+}
+
+function stopPlayback() {
+  playing = false;
+  stopAllAudio();
+  masterGainNode = null;
+  Object.keys(voiceNodes).forEach(k => delete voiceNodes[k]);
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────────────────
+document.getElementById('baseSlider').addEventListener('input', function() {
+  baseFreq = +this.value;
+  document.getElementById('baseVal').textContent = baseFreq;
+  Object.entries(voiceNodes).forEach(([st, v]) => {
+    v.osc.frequency.value = baseFreq * ratio(+st);
+  });
+  updateStatus(); drawCanvas();
+});
+
+function updateStatus() {
+  const active = INTERVALS.filter(iv => iv.active).map(iv => iv.name).join(' + ');
+  document.getElementById('statusLabel').textContent =
+    `${active} · base ${baseFreq} Hz`;
+}
+
+function init() { drawCanvas(); }
+window.addEventListener('load', init);
+window.addEventListener('resize', () => drawCanvas());
+</script>
+</body>
+</html>
