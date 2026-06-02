@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Dinámicas — La Música y sus Parámetros</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sonido_silencio/index.html">1. El Sonido y el Silencio</a>
+  <a href="../02_tempo/index.html">2. Tempo y Pulso</a>
+  <a href="../03_dinamica/index.html" class="active">3. Dinámicas</a>
+  <a href="../04_articulacion/index.html">4. Articulación</a>
+  <a href="../05_consonancia_disonancia/index.html">5. Consonancia y Disonancia</a>
+  <a href="../06_expectativa/index.html">6. Expectativa Musical</a>
+  <a href="../07_formas_musicales/index.html">7. Formas Musicales</a>
+  <a href="../08_linea_tiempo/index.html">8. Línea de Tiempo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Dinámicas</h1>
+      <p class="subtitle">Variaciones de intensidad sonora: de pianissimo a fortissimo</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Marcas de dinámica y envolvente de amplitud</h2>
+    <p class="description">
+      Las <span class="kw">dinámicas</span> indican cuán fuerte o suave debe sonar la música.
+      El <span class="kw">crescendo</span> (regulador que abre) y <span class="kw">decrescendo</span> (regulador que cierra)
+      son transiciones graduales de intensidad. Selecciona una marca dinámica y una forma; observa cómo se anota
+      en la partitura y cómo se traduce en la envolvente física del sonido.
+    </p>
+    <div class="controls">
+      <div class="control-group" style="min-width:auto;">
+        <label>Marca dinámica</label>
+        <div class="btn-group" style="margin-bottom:0; flex-wrap:wrap;">
+          <button class="btn" id="btnPP" onclick="setDynamic('pp')"><em>pp</em></button>
+          <button class="btn" id="btnP"  onclick="setDynamic('p')"><em>p</em></button>
+          <button class="btn" id="btnMP" onclick="setDynamic('mp')"><em>mp</em></button>
+          <button class="btn" id="btnMF" onclick="setDynamic('mf')"><em>mf</em></button>
+          <button class="btn active" id="btnF"  onclick="setDynamic('f')"><em>f</em></button>
+          <button class="btn" id="btnFF" onclick="setDynamic('ff')"><em>ff</em></button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Forma: <span class="val" id="shapeVal">estático</span></label>
+        <input type="range" id="shapeSlider" min="0" max="3" value="0" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label">Notación musical</div>
+    <canvas id="cvNotacion" height="170"></canvas>
+    <div class="canvas-label" id="dynLabel" style="margin-top:14px;">f — forte</div>
+    <canvas id="cvMain" height="220"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Significado expresivo y notación</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Marcas estáticas</strong><br>
+        Se escriben en <em>negrita cursiva</em> bajo el pentagrama:<br>
+        <span style="color:#ffffff;">pp</span> pianissimo · <span style="color:#ffffff;">p</span> piano ·
+        <span style="color:#ffffff;">mp</span> mezzo-piano<br>
+        <span style="color:#ffffff;">mf</span> mezzo-forte · <span style="color:#ffffff;">f</span> forte ·
+        <span style="color:#ffffff;">ff</span> fortissimo<br>
+        También existen <em>fff</em>, <em>ppp</em> y acentos como <em>sf</em> (sforzando).
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffcc00;">Reguladores (hairpins)</strong><br>
+        Las transiciones graduales se anotan con cuñas alargadas:<br>
+        <strong>crescendo</strong> ⟨ &lt; ⟩ — la cuña <em>abre</em> hacia la derecha.<br>
+        <strong>decrescendo</strong> ⟨ &gt; ⟩ — la cuña <em>cierra</em>.<br>
+        También con palabras: <em>cresc.</em> y <em>dim.</em> (diminuendo).
+        Crean arcos expresivos que dan forma a las frases.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Definiciones ───────────────────────────────────────────
+const DYNAMICS = {
+  pp: { gain: 0.03, mark: 'pp', label: 'pp — pianissimo' },
+  p:  { gain: 0.07, mark: 'p',  label: 'p — piano' },
+  mp: { gain: 0.12, mark: 'mp', label: 'mp — mezzo-piano' },
+  mf: { gain: 0.18, mark: 'mf', label: 'mf — mezzo-forte' },
+  f:  { gain: 0.28, mark: 'f',  label: 'f — forte' },
+  ff: { gain: 0.45, mark: 'ff', label: 'ff — fortissimo' }
+};
+const SHAPES = ['estático', 'crescendo', 'decrescendo', 'crescendo-decrescendo'];
+
+// Escala ordenada de dinámicas (de más suave a más fuerte) para los reguladores.
+// El "otro extremo" de un crescendo/decrescendo se deriva de la marca seleccionada,
+// nunca de un valor fijo: así la dirección del regulador siempre es coherente.
+const DYN_SCALE = ['ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'];
+function softMark(markKey) {
+  const idx = DYN_SCALE.indexOf(markKey);
+  return DYN_SCALE[Math.max(0, idx - 2)]; // dos niveles más suave (con piso en ppp)
+}
+
+let currentDynamic = 'f';
+let shapeMode = 0;
+let playing = false;
+let animId = null;
+let startAudioTime = null;
+const NOTE_DURATION = 3.5;
+
+// ════════════════════════════════════════════════════════════
+//  NOTACIÓN MUSICAL (pentagrama en clave de sol)
+// ════════════════════════════════════════════════════════════
+const nCanvas = document.getElementById('cvNotacion');
+const nctx = nCanvas.getContext('2d');
+
+// step diatónico desde Mi4 (línea inferior = 0)
+const DIATONIC = { C4:-2, D4:-1, E4:0, F4:1, G4:2, A4:3, B4:4, C5:5, D5:6, E5:7, F5:8, G5:9 };
+
+function drawStaff(c, x0, x1, baseY, gap) {
+  c.strokeStyle = 'rgba(150,200,255,0.75)';
+  c.lineWidth = 1.4;
+  for (let i = 0; i < 5; i++) {
+    const y = baseY - i * gap;
+    c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke();
+  }
+  // Clave de sol (glifo unicode)
+  c.fillStyle = '#ffcc00';
+  c.font = `${gap * 4}px serif`;
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillText('\u{1D11E}', x0 + 6, baseY + gap * 0.5);
+}
+
+function drawNote(c, x, pitch, baseY, gap, color) {
+  const step = DIATONIC[pitch] ?? 0;
+  const y = baseY - step * (gap / 2);
+  const rx = gap * 0.62, ry = gap * 0.44;
+
+  // Ledger lines (fuera del pentagrama)
+  c.strokeStyle = 'rgba(150,200,255,0.75)';
+  c.lineWidth = 1.4;
+  if (step < 0) {
+    for (let s = -2; s >= step; s -= 2) {
+      const ly = baseY - s * (gap / 2);
+      c.beginPath(); c.moveTo(x - rx - 5, ly); c.lineTo(x + rx + 5, ly); c.stroke();
+    }
+  } else if (step > 8) {
+    for (let s = 10; s <= step; s += 2) {
+      const ly = baseY - s * (gap / 2);
+      c.beginPath(); c.moveTo(x - rx - 5, ly); c.lineTo(x + rx + 5, ly); c.stroke();
+    }
+  }
+
+  // Cabeza (negra rellena, ligeramente rotada)
+  c.save();
+  c.translate(x, y);
+  c.rotate(-0.32);
+  c.beginPath();
+  c.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+  c.fillStyle = color;
+  c.fill();
+  c.restore();
+
+  // Plica
+  c.strokeStyle = color;
+  c.lineWidth = 2;
+  const stemUp = step < 4;
+  c.beginPath();
+  if (stemUp) {
+    c.moveTo(x + rx - 1, y);
+    c.lineTo(x + rx - 1, y - gap * 3.2);
+  } else {
+    c.moveTo(x - rx + 1, y);
+    c.lineTo(x - rx + 1, y + gap * 3.2);
+  }
+  c.stroke();
+}
+
+function drawNotation() {
+  nCanvas.width = nCanvas.offsetWidth || 800;
+  const W = nCanvas.width, H = nCanvas.height;
+  nctx.clearRect(0, 0, W, H);
+
+  const gap = 13;
+  const baseY = 64;             // línea inferior del pentagrama
+  const x0 = 14, x1 = W - 14;
+
+  drawStaff(nctx, x0, x1, baseY, gap);
+
+  // Cuatro negras
+  const notes = ['G4', 'A4', 'G4', 'E4'];
+  const noteX0 = x0 + gap * 5;
+  const noteSpan = (x1 - noteX0 - 20);
+  const xs = notes.map((_, i) => noteX0 + (noteSpan) * (i + 0.5) / notes.length);
+  notes.forEach((p, i) => drawNote(nctx, xs[i], p, baseY, gap, '#ffffff'));
+
+  // --- Dinámica / reguladores debajo del pentagrama ---
+  const dynY = baseY + gap * 3.2;
+  const dyn = DYNAMICS[currentDynamic];
+  const soft = softMark(currentDynamic); // extremo suave del regulador
+  const left = xs[0] - gap, right = xs[xs.length - 1] + gap;
+
+  nctx.textBaseline = 'middle';
+  function drawMark(text, cx, color) {
+    nctx.fillStyle = color;
+    nctx.font = `italic bold ${gap * 1.7}px Georgia, serif`;
+    nctx.textAlign = 'center';
+    nctx.fillText(text, cx, dynY);
+  }
+  function hairpinOpen(xa, xb, y, color) { // crescendo <
+    nctx.strokeStyle = color; nctx.lineWidth = 2;
+    nctx.beginPath();
+    nctx.moveTo(xb, y - gap * 0.9); nctx.lineTo(xa, y);
+    nctx.lineTo(xb, y + gap * 0.9);
+    nctx.stroke();
+  }
+  function hairpinClose(xa, xb, y, color) { // decrescendo >
+    nctx.strokeStyle = color; nctx.lineWidth = 2;
+    nctx.beginPath();
+    nctx.moveTo(xa, y - gap * 0.9); nctx.lineTo(xb, y);
+    nctx.lineTo(xa, y + gap * 0.9);
+    nctx.stroke();
+  }
+
+  if (shapeMode === 0) {
+    // Estático: una sola marca
+    drawMark(dyn.mark, (left + right) / 2, '#00ffff');
+  } else if (shapeMode === 1) {
+    // Crescendo: del extremo suave a la marca (suave → fuerte)
+    drawMark(soft, left + gap, '#99ccff');
+    hairpinOpen(left + gap * 3, right - gap * 3, dynY, '#ffcc00');
+    drawMark(dyn.mark, right - gap, '#00ffff');
+  } else if (shapeMode === 2) {
+    // Decrescendo: de la marca al extremo suave (fuerte → suave)
+    drawMark(dyn.mark, left + gap, '#00ffff');
+    hairpinClose(left + gap * 3, right - gap * 3, dynY, '#ffcc00');
+    drawMark(soft, right - gap, '#99ccff');
+  } else {
+    // Crescendo-decrescendo: suave → marca (cima) → suave
+    const mid = (left + right) / 2;
+    drawMark(soft, left + gap, '#99ccff');
+    hairpinOpen(left + gap * 3, mid - gap * 1.6, dynY, '#ffcc00');
+    drawMark(dyn.mark, mid, '#00ffff');
+    hairpinClose(mid + gap * 1.6, right - gap * 3, dynY, '#ffcc00');
+    drawMark(soft, right - gap, '#99ccff');
+  }
+  nctx.textBaseline = 'alphabetic';
+}
+
+// ════════════════════════════════════════════════════════════
+//  ENVOLVENTE FÍSICA
+// ════════════════════════════════════════════════════════════
+const canvas = document.getElementById('cvMain');
+const ctx = canvas.getContext('2d');
+
+function getEnvelopeValues() {
+  const baseGain = DYNAMICS[currentDynamic].gain;
+  const minGain = 0.015;
+  const N = 200;
+  const vals = [];
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1);
+    let g;
+    switch (shapeMode) {
+      case 0: g = baseGain; break;
+      case 1: g = minGain + (baseGain - minGain) * t; break;
+      case 2: g = baseGain - (baseGain - minGain) * t; break;
+      case 3:
+        g = t < 0.5 ? minGain + (baseGain - minGain) * (t * 2)
+                    : baseGain - (baseGain - minGain) * ((t - 0.5) * 2);
+        break;
+    }
+    vals.push(g);
+  }
+  return vals;
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 20, padT = 22, padB = 38;
+  const bw = W - padL - padR, bh = H - padT - padB;
+
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  const labels = { 0:'0', 0.25:'pp', 0.5:'mf', 0.75:'f', 1:'ff' };
+  [0, 0.25, 0.5, 0.75, 1].forEach(v => {
+    const y = padT + bh * (1 - v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.55)';
+    ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(labels[v] || '', padL - 4, y + 4);
+  });
+  ctx.strokeStyle = 'rgba(100,180,255,0.15)';
+  for (let i = 1; i <= 4; i++) {
+    const x = padL + (bw / 4) * i;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+  }
+
+  const vals = getEnvelopeValues();
+  const maxGain = 0.45;
+
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  vals.forEach((g, i) => {
+    const x = padL + (i / (vals.length - 1)) * bw;
+    ctx.lineTo(x, padT + bh * (1 - g / maxGain));
+  });
+  ctx.lineTo(padL + bw, padT + bh);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,255,255,0.08)';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2.5;
+  vals.forEach((g, i) => {
+    const x = padL + (i / (vals.length - 1)) * bw;
+    const y = padT + bh * (1 - g / maxGain);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Onda dentro de la envolvente
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(255,204,0,0.55)'; ctx.lineWidth = 1;
+  for (let i = 0; i < bw; i++) {
+    const t = i / bw;
+    const g = vals[Math.round(t * (vals.length - 1))];
+    const envH = bh * (g / maxGain);
+    const v = Math.sin(t * 14 * Math.PI);
+    const x = padL + i, y = padT + bh / 2 - v * envH * 0.45;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  if (playing && startAudioTime !== null) {
+    const actx = getAudioContext();
+    const t = Math.min((actx.currentTime - startAudioTime) / NOTE_DURATION, 1);
+    const x = padL + t * bw;
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  ctx.fillStyle = 'rgba(150,200,255,0.50)';
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('tiempo →', padL + bw / 2, H - 4);
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function startAudio() {
+  const actx = getAudioContext();
+  const osc = actx.createOscillator();
+  const gainNode = actx.createGain();
+  const t0 = actx.currentTime + 0.01;
+  startAudioTime = t0;
+  osc.type = 'sine'; osc.frequency.value = 220;
+
+  const baseGain = DYNAMICS[currentDynamic].gain;
+  const minGain = 0.015;
+  const tEnd = t0 + NOTE_DURATION;
+  gainNode.gain.setValueAtTime(0, t0);
+
+  switch (shapeMode) {
+    case 0:
+      gainNode.gain.linearRampToValueAtTime(baseGain, t0 + 0.02);
+      gainNode.gain.setValueAtTime(baseGain, tEnd - 0.02); break;
+    case 1:
+      gainNode.gain.linearRampToValueAtTime(minGain, t0 + 0.02);
+      gainNode.gain.linearRampToValueAtTime(baseGain, tEnd - 0.02); break;
+    case 2:
+      gainNode.gain.linearRampToValueAtTime(baseGain, t0 + 0.02);
+      gainNode.gain.linearRampToValueAtTime(minGain, tEnd - 0.02); break;
+    case 3:
+      gainNode.gain.linearRampToValueAtTime(minGain, t0 + 0.02);
+      gainNode.gain.linearRampToValueAtTime(baseGain, t0 + NOTE_DURATION / 2);
+      gainNode.gain.linearRampToValueAtTime(minGain, tEnd - 0.02); break;
+  }
+  gainNode.gain.linearRampToValueAtTime(0, tEnd);
+
+  osc.connect(gainNode); gainNode.connect(actx.destination);
+  osc.start(t0); osc.stop(tEnd + 0.05);
+  _activeNodes.push(osc);
+  setTimeout(() => { if (playing) stopPlayback(); }, NOTE_DURATION * 1000 + 200);
+}
+
+// ── Toggle ─────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  startAudioTime = null;
+  stopAllAudio();
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+function animate() {
+  drawCanvas();
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setDynamic(d) {
+  currentDynamic = d;
+  ['pp','p','mp','mf','f','ff'].forEach(k => {
+    const el = document.getElementById('btn' + k.toUpperCase());
+    if (el) el.classList.remove('active');
+  });
+  const el = document.getElementById('btn' + d.toUpperCase());
+  if (el) el.classList.add('active');
+  document.getElementById('dynLabel').textContent = DYNAMICS[d].label;
+  drawNotation();
+  if (!playing) drawCanvas();
+}
+
+document.getElementById('shapeSlider').addEventListener('input', function() {
+  shapeMode = +this.value;
+  document.getElementById('shapeVal').textContent = SHAPES[shapeMode];
+  drawNotation();
+  if (!playing) drawCanvas();
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { drawNotation(); drawCanvas(); });
+window.addEventListener('resize', () => { drawNotation(); if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

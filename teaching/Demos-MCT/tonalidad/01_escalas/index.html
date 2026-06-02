@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Escalas y Modos — Tonalidad y Atonalidad</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_escalas/index.html" class="active">1. Escalas y Modos</a>
+  <a href="../02_acordes/index.html">2. Acordes y Armonía</a>
+  <a href="../03_tonica_jerarquia/index.html">3. La Tónica y la Jerarquía</a>
+  <a href="../04_atonalidad/index.html">4. Atonalidad</a>
+  <a href="../05_serie_dodecafonica/index.html">5. La Serie Dodecafónica</a>
+  <a href="../06_transformaciones/index.html">6. Transformaciones</a>
+  <a href="../07_modos_messiaen/index.html">7. Modos de Messiaen</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Escalas y Modos</h1>
+      <p class="subtitle">El "abecedario" del sistema tonal: mayor, menor y los modos griegos comparten su patrón de tonos y semitonos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Construye escalas y modos</h2>
+    <p class="description">
+      El sistema tonal usa series ordenadas de sonidos llamadas <span class="kw">escalas</span> o <span class="kw">modos</span>.
+      Los dos más usados son el <span class="kw">modo mayor</span> (brillante) y el <span class="kw">modo menor</span> (oscuro),
+      pero existen otros <span class="kw">modos griegos</span> —dórico, frigio, lidio, mixolidio, locrio— que usan las mismas siete notas
+      empezando en un grado distinto. Lo esencial es su <span class="kw">patrón de intervalos</span>: tonos (T) y semitonos (S).
+      Al cambiar la tónica cambia la altura, pero la estructura del "idioma" se mantiene.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Tónica: <span class="val" id="tonicVal">Do</span></label>
+        <input type="range" id="tonicSlider" min="0" max="11" value="0" step="1">
+      </div>
+      <div class="btn-group" id="modeButtons">
+        <button class="btn active" data-mode="ionian"     onclick="setMode('ionian')">Mayor (Jónico)</button>
+        <button class="btn"        data-mode="aeolian"    onclick="setMode('aeolian')">Menor (Eólico)</button>
+        <button class="btn"        data-mode="dorian"     onclick="setMode('dorian')">Dórico</button>
+        <button class="btn"        data-mode="phrygian"   onclick="setMode('phrygian')">Frigio</button>
+        <button class="btn"        data-mode="lydian"     onclick="setMode('lydian')">Lidio</button>
+        <button class="btn"        data-mode="mixolydian" onclick="setMode('mixolydian')">Mixolidio</button>
+        <button class="btn"        data-mode="locrian"    onclick="setMode('locrian')">Locrio</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Tocar escala</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Do mayor (jónico) · patrón T–T–S–T–T–T–S</div>
+    <canvas id="cvKeys" height="300"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Melodías en la escala seleccionada</h2>
+    <p class="description">
+      Estas figuras melódicas usan <span class="kw">solo las notas de la escala elegida arriba</span>. El modo lo defines tú con el selector de arriba;
+      aquí solo escuchas cómo suena. Cambia la tónica o el modo y vuelve a tocarlas: la misma figura suena distinta —ese es el <span class="kw">color</span> del modo—.
+      La escala y el arpegio la recorren entera; los <span class="kw">tetracordos</span> (mitad inferior 1·2·3·4 y superior 5·6·7·8)
+      concentran la atención en los grados donde más se nota la diferencia entre un modo y otro.
+      Y la <span class="kw">melodía</span> es una tonada conocida (Estrellita): pásala de mayor a menor —o a un modo griego— y oirás cómo cambia su carácter, de alegre a triste o exótico.
+    </p>
+    <div class="controls">
+      <div class="btn-group" id="melButtons">
+        <button class="btn active" data-mel="0" onclick="setMel(0)">🎵 Melodía (Estrellita)</button>
+        <button class="btn" data-mel="1" onclick="setMel(1)">Escala ↕</button>
+        <button class="btn" data-mel="2" onclick="setMel(2)">Arpegio</button>
+        <button class="btn" data-mel="3" onclick="setMel(3)">Tetracordo 1·2·3·4</button>
+        <button class="btn" data-mel="4" onclick="setMel(4)">Tetracordo 5·6·7·8</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnMel" onclick="toggleMel()">▶ Tocar melodía</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="melLabel">Melodía (Estrellita) · Do mayor (jónico)</div>
+    <canvas id="cvMel" height="200"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>El mismo material, distinto carácter</h2>
+    <div class="two-col">
+      <div class="info-box ok">
+        <strong style="color:#ffd24a;">Mayor y menor</strong><br>
+        El <strong>mayor</strong> (T T S T T T S) tiene tercera mayor y suena brillante; el <strong>menor</strong>
+        (T S T T S T T) tiene tercera menor y suena oscuro. Son los dos pilares de la armonía tonal.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Modos griegos</strong><br>
+        Si tocas solo las teclas blancas empezando en cada nota distinta obtienes un modo: <strong>dórico</strong> (re),
+        <strong>frigio</strong> (mi), <strong>lidio</strong> (fa), <strong>mixolidio</strong> (sol), <strong>eólico/menor</strong> (la),
+        <strong>locrio</strong> (si). Mismas notas, distinto centro → distinto color.
+      </div>
+    </div>
+    <p class="description" style="margin-top:14px;">
+      Cualquier escala o modo puede construirse desde <span class="kw">cualquier tónica</span> conservando su patrón de tonos y semitonos:
+      eso es transponer. En la viñeta 7 veremos los <span class="kw">modos de Messiaen</span>, que rompen este esquema de siete notas.
+    </p>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Constantes ─────────────────────────────────────────────
+const NOTE_NAMES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+const WHITE_PC = [0,2,4,5,7,9,11];
+const BLACK_PC = [1,3,6,8,10];
+// Cada modo: 7 intervalos consecutivos (suman 12 semitonos)
+const MODES = {
+  ionian:     { label: 'mayor (jónico)', steps: [2,2,1,2,2,2,1] },
+  aeolian:    { label: 'menor (eólico)', steps: [2,1,2,2,1,2,2] },
+  dorian:     { label: 'dórico',         steps: [2,1,2,2,2,1,2] },
+  phrygian:   { label: 'frigio',         steps: [1,2,2,2,1,2,2] },
+  lydian:     { label: 'lidio',          steps: [2,2,2,1,2,2,1] },
+  mixolydian: { label: 'mixolidio',      steps: [2,2,1,2,2,1,2] },
+  locrian:    { label: 'locrio',         steps: [1,2,2,1,2,2,2] }
+};
+const START_MIDI = 60, END_MIDI = 84;
+function noteFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+// Desplazamientos acumulados (8 notas, incluida la octava)
+function modeOffsets(mode) {
+  const out = [0]; let acc = 0;
+  MODES[mode].steps.forEach(s => { acc += s; out.push(acc); });
+  return out; // longitud 8, último = 12
+}
+function stepLabels(mode) { return MODES[mode].steps.map(s => s === 2 ? 'T' : 'S'); }
+
+// ── Estado ─────────────────────────────────────────────────
+let tonicPC = 0;
+let mode = 'ionian';
+let playing = false;
+let playTimers = [];
+let activeNote = -1;
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvKeys');
+const ctx = canvas.getContext('2d');
+
+function scaleMidis() {
+  const root = START_MIDI + tonicPC;
+  return modeOffsets(mode).map(s => root + s);
+}
+function buildWhites() {
+  const w = [];
+  for (let m = START_MIDI; m <= END_MIDI; m++) if (WHITE_PC.includes(m % 12)) w.push(m);
+  return w;
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 16, padR = 16, padT = 70, padB = 24;
+  const bw = W - padL - padR;
+  const keyTop = padT, whiteH = H - padT - padB, blackH = whiteH * 0.62;
+  const whites = buildWhites();
+  const ww = bw / whites.length;
+  const scaleSet = scaleMidis();
+  const root = START_MIDI + tonicPC;
+
+  function keyX(m) {
+    if (WHITE_PC.includes(m % 12)) return padL + whites.indexOf(m) * ww + ww / 2;
+    return padL + (whites.indexOf(m - 1) + 1) * ww;
+  }
+  const degOf = (m) => scaleSet.indexOf(m);
+
+  // Teclas blancas
+  whites.forEach((m, i) => {
+    const x = padL + i * ww;
+    const inScale = scaleSet.includes(m);
+    const isActive = (m === activeNote);
+    ctx.fillStyle = isActive ? '#ffffff'
+                  : (m === root) ? '#ffd24a'
+                  : inScale ? 'rgba(0,229,255,0.55)'
+                  : '#eef4ff';
+    ctx.fillRect(x, keyTop, ww - 1.5, whiteH);
+    ctx.strokeStyle = 'rgba(10,21,32,0.85)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x, keyTop, ww - 1.5, whiteH);
+    if (inScale) {
+      const d = degOf(m);
+      ctx.fillStyle = '#0a1520'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText((d === 7 ? '8' : (d + 1)), x + ww / 2, keyTop + whiteH - 26);
+      ctx.font = '10px sans-serif';
+      ctx.fillText(NOTE_NAMES[m % 12], x + ww / 2, keyTop + whiteH - 10);
+    }
+  });
+  // Teclas negras
+  for (let m = START_MIDI; m <= END_MIDI; m++) {
+    if (!BLACK_PC.includes(m % 12)) continue;
+    const cx = keyX(m), bwid = ww * 0.62;
+    const inScale = scaleSet.includes(m);
+    const isActive = (m === activeNote);
+    ctx.fillStyle = isActive ? '#ffffff'
+                  : (m === root) ? '#ffd24a'
+                  : inScale ? 'rgba(0,229,255,0.85)'
+                  : '#0d1a2e';
+    ctx.fillRect(cx - bwid / 2, keyTop, bwid, blackH);
+    ctx.strokeStyle = '#000'; ctx.strokeRect(cx - bwid / 2, keyTop, bwid, blackH);
+    if (inScale) {
+      const d = degOf(m);
+      ctx.fillStyle = '#0a1520'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText((d === 7 ? '8' : (d + 1)), cx, keyTop + blackH - 6);
+    }
+  }
+
+  // Patrón de tonos/semitonos arriba
+  const labels = stepLabels(mode);
+  const sm = scaleSet;
+  for (let i = 0; i < labels.length; i++) {
+    const x1 = keyX(sm[i]), x2 = keyX(sm[i + 1]);
+    const mx = (x1 + x2) / 2, yBr = padT - 30;
+    ctx.strokeStyle = labels[i] === 'T' ? 'rgba(255,210,74,0.9)' : 'rgba(255,68,68,0.95)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x1 + 3, yBr); ctx.lineTo(x2 - 3, yBr); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x1 + 3, yBr); ctx.lineTo(x1 + 3, yBr + 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2 - 3, yBr); ctx.lineTo(x2 - 3, yBr + 7); ctx.stroke();
+    ctx.fillStyle = labels[i] === 'T' ? '#ffd24a' : '#ff6666';
+    ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(labels[i], mx, yBr - 6);
+  }
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('T = tono (2 semitonos)   S = semitono', padL, 22);
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function playNoteAt(freq, t0, dur) {
+  const actx = getAudioContext();
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.type = 'triangle'; osc.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.22, t0 + 0.015);
+  g.gain.setValueAtTime(0.22, t0 + dur - 0.04);
+  g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0); osc.stop(t0 + dur);
+  _activeNodes.push(osc);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  if (melPlaying) stopMel();
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  const actx = getAudioContext();
+  const sm = scaleMidis();
+  const step = 0.42, t0 = actx.currentTime + 0.05;
+  sm.forEach((m, i) => {
+    playNoteAt(noteFreq(m), t0 + i * step, step * 0.95);
+    playTimers.push(setTimeout(() => { activeNote = m; drawCanvas(); }, i * step * 1000 + 30));
+  });
+  playTimers.push(setTimeout(() => { if (playing) stopPlayback(); }, sm.length * step * 1000 + 200));
+}
+
+function stopPlayback() {
+  playing = false;
+  playTimers.forEach(clearTimeout); playTimers = [];
+  stopAllAudio();
+  activeNote = -1;
+  document.getElementById('btnPlay').textContent = '▶ Tocar escala';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('#modeButtons .btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === m));
+  updateStatus();
+  if (playing) stopPlayback(); else drawCanvas();
+  stopMel(); updateMelLabel(); drawMel();
+}
+function updateStatus() {
+  const name = NOTE_NAMES[tonicPC];
+  const pat = stepLabels(mode).join('–');
+  document.getElementById('statusLabel').textContent = `${name} ${MODES[mode].label} · patrón ${pat}`;
+}
+document.getElementById('tonicSlider').addEventListener('input', function () {
+  tonicPC = +this.value;
+  document.getElementById('tonicVal').textContent = NOTE_NAMES[tonicPC];
+  updateStatus();
+  if (playing) stopPlayback(); else drawCanvas();
+  stopMel(); updateMelLabel(); drawMel();
+});
+
+// ── Melodías modales ───────────────────────────────────────
+// Cada melodía es una secuencia de [grado(0–6), octava(0/1)] realizada en el modo y tónica actuales
+// Cada nota es [grado(0–6), octava(0/1), duración(en pulsos, opcional=1)]
+const MELODIES = [
+  { name: 'Melodía (Estrellita)', notes: [[0,0],[0,0],[4,0],[4,0],[5,0],[5,0],[4,0,2],[3,0],[3,0],[2,0],[2,0],[1,0],[1,0],[0,0,2]] },
+  { name: 'Escala',               notes: [[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[0,1],[6,0],[5,0],[4,0],[3,0],[2,0],[1,0],[0,0]] },
+  { name: 'Arpegio',              notes: [[0,0],[2,0],[4,0],[0,1],[4,0],[2,0],[0,0]] },
+  { name: 'Tetracordo 1·2·3·4',   notes: [[0,0],[1,0],[2,0],[3,0],[2,0],[1,0],[0,0]] },
+  { name: 'Tetracordo 5·6·7·8',   notes: [[4,0],[5,0],[6,0],[0,1],[6,0],[5,0],[4,0]] }
+];
+let melIdx = 0, melPlaying = false, melTimers = [], melActive = -1;
+const melCanvas = document.getElementById('cvMel');
+const mctx = melCanvas.getContext('2d');
+
+function melMidi(nn) { return (START_MIDI + tonicPC) + modeOffsets(mode)[nn[0]] + 12 * nn[1]; }
+
+function drawMel() {
+  melCanvas.width = melCanvas.offsetWidth || 800;
+  const W = melCanvas.width, H = melCanvas.height;
+  mctx.clearRect(0, 0, W, H);
+  const mel = MELODIES[melIdx].notes;
+  const root = START_MIDI + tonicPC, offs = modeOffsets(mode);
+  const semis = mel.map(n => offs[n[0]] + 12 * n[1]);
+  const minS = Math.min(...semis), maxS = Math.max(...semis);
+  const padL = 24, padR = 24, padT = 22, padB = 42;
+  const bw = W - padL - padR, bh = H - padT - padB, n = mel.length;
+  const xOf = i => padL + (n === 1 ? bw / 2 : i * (bw / (n - 1)));
+  const yOf = s => (padT + bh) - ((s - minS) / ((maxS - minS) || 1)) * bh;
+
+  mctx.strokeStyle = 'rgba(100,180,255,0.18)'; mctx.lineWidth = 1;
+  mctx.beginPath(); mctx.moveTo(padL, padT + bh); mctx.lineTo(padL + bw, padT + bh); mctx.stroke();
+
+  mctx.strokeStyle = 'rgba(255,210,74,0.6)'; mctx.lineWidth = 2;
+  mctx.beginPath();
+  semis.forEach((s, i) => { const x = xOf(i), y = yOf(s); i ? mctx.lineTo(x, y) : mctx.moveTo(x, y); });
+  mctx.stroke();
+
+  semis.forEach((s, i) => {
+    const x = xOf(i), y = yOf(s), active = (i === melActive);
+    const isTonic = (mel[i][0] === 0);
+    mctx.beginPath(); mctx.arc(x, y, active ? 10 : 7, 0, Math.PI * 2);
+    mctx.fillStyle = active ? '#ffffff' : (isTonic ? '#ffd24a' : 'rgba(0,229,255,0.85)');
+    mctx.fill();
+    mctx.lineWidth = active ? 3 : 1.5; mctx.strokeStyle = active ? '#ffffff' : 'rgba(10,21,32,0.8)'; mctx.stroke();
+    mctx.fillStyle = active ? '#ffffff' : 'rgba(150,200,255,0.8)';
+    mctx.font = '10px sans-serif'; mctx.textAlign = 'center';
+    mctx.fillText(NOTE_NAMES[(root + s) % 12], x, padT + bh + 16);
+    mctx.fillStyle = 'rgba(150,200,255,0.55)';
+    mctx.fillText((mel[i][0] === 0 && mel[i][1] === 1) ? '8' : (mel[i][0] + 1), x, padT + bh + 30);
+  });
+}
+
+function toggleMel() {
+  if (melPlaying) { stopMel(); return; }
+  if (playing) stopPlayback();
+  melPlaying = true;
+  document.getElementById('btnMel').textContent = '■ Detener';
+  document.getElementById('btnMel').classList.add('active');
+  const actx = getAudioContext();
+  const mel = MELODIES[melIdx].notes;
+  const beat = 0.42, t0 = actx.currentTime + 0.05;
+  let acc = 0;
+  mel.forEach((nn, i) => {
+    const dur = (nn[2] || 1) * beat;
+    playNoteAt(noteFreq(melMidi(nn)), t0 + acc, dur * 0.95);
+    melTimers.push(setTimeout(() => { melActive = i; drawMel(); }, acc * 1000 + 15));
+    acc += dur;
+  });
+  melTimers.push(setTimeout(() => { if (melPlaying) stopMel(); }, acc * 1000 + 200));
+}
+
+function stopMel() {
+  melPlaying = false;
+  melTimers.forEach(clearTimeout); melTimers = [];
+  stopAllAudio();
+  melActive = -1;
+  const b = document.getElementById('btnMel');
+  if (b) { b.textContent = '▶ Tocar melodía'; b.classList.remove('active'); }
+  drawMel();
+}
+
+function setMel(i) {
+  melIdx = i;
+  document.querySelectorAll('#melButtons .btn').forEach(b => b.classList.toggle('active', +b.dataset.mel === i));
+  stopMel(); updateMelLabel(); drawMel();
+}
+
+function updateMelLabel() {
+  document.getElementById('melLabel').textContent =
+    `${MELODIES[melIdx].name} · ${NOTE_NAMES[tonicPC]} ${MODES[mode].label}`;
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { updateStatus(); drawCanvas(); updateMelLabel(); drawMel(); });
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); if (!melPlaying) drawMel(); });
+</script>
+</body>
+</html>

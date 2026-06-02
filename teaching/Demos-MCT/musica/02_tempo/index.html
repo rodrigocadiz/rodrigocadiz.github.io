@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Tempo y Pulso — La Música y sus Parámetros</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sonido_silencio/index.html">1. El Sonido y el Silencio</a>
+  <a href="../02_tempo/index.html" class="active">2. Tempo y Pulso</a>
+  <a href="../03_dinamica/index.html">3. Dinámicas</a>
+  <a href="../04_articulacion/index.html">4. Articulación</a>
+  <a href="../05_consonancia_disonancia/index.html">5. Consonancia y Disonancia</a>
+  <a href="../06_expectativa/index.html">6. Expectativa Musical</a>
+  <a href="../07_formas_musicales/index.html">7. Formas Musicales</a>
+  <a href="../08_linea_tiempo/index.html">8. Línea de Tiempo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Tempo y Pulso</h1>
+      <p class="subtitle">La velocidad de la música: compases simples, compuestos e irregulares</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Metrónomo interactivo con jerarquía de acentos</h2>
+    <p class="description">
+      El <span class="kw">tempo</span> define qué tan rápido suena la música (BPM).
+      El <span class="kw">compás</span> agrupa los pulsos, pero <strong>no todos los acentos son iguales</strong>:
+      hay tiempos <span style="color:#ffaa00;">fuertes</span>, <span style="color:#ff44aa;">semifuertes</span> y
+      <span style="color:#00ffff;">débiles</span>. En compases <span class="kw">compuestos</span> (6/8) e
+      <span class="kw">irregulares</span> (5/8, 7/8) el acento secundario cae en lugares inesperados.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Tempo: <span class="val" id="bpmVal">96</span> BPM</label>
+        <input type="range" id="bpmSlider" min="40" max="208" value="96" step="1">
+      </div>
+    </div>
+    <div style="margin-bottom:6px; font-size:0.78rem; color:#99ccff;">Compases simples</div>
+    <div class="btn-group">
+      <button class="btn" id="m_2_4" onclick="setMeter('2/4')">2/4</button>
+      <button class="btn" id="m_3_4" onclick="setMeter('3/4')">3/4</button>
+      <button class="btn active" id="m_4_4" onclick="setMeter('4/4')">4/4</button>
+      <button class="btn" id="m_2_2" onclick="setMeter('2/2')">2/2 ¢</button>
+    </div>
+    <div style="margin-bottom:6px; font-size:0.78rem; color:#99ccff;">Compases compuestos e irregulares</div>
+    <div class="btn-group">
+      <button class="btn" id="m_6_8" onclick="setMeter('6/8')">6/8</button>
+      <button class="btn" id="m_9_8" onclick="setMeter('9/8')">9/8</button>
+      <button class="btn" id="m_5_8" onclick="setMeter('5/8')">5/8</button>
+      <button class="btn" id="m_5_4" onclick="setMeter('5/4')">5/4</button>
+      <button class="btn" id="m_7_8" onclick="setMeter('7/8')">7/8</button>
+    </div>
+    <div class="btn-group">
+      <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Iniciar</button>
+    </div>
+    <div class="canvas-label" id="tempoLabel">Moderato — 96 BPM — 4/4 (agrupación 2+2)</div>
+    <canvas id="cvMain" height="300"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Tipos de compás y acentuación</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Simples y compuestos</strong><br>
+        En el <strong>compás simple</strong> (2/4, 3/4, 4/4) cada pulso se divide en dos.
+        El <strong>4/4</strong> tiene un acento fuerte en 1 y uno semifuerte en 3.
+        En el <strong>compás compuesto</strong> (6/8, 9/8) cada pulso se divide en tres:
+        6/8 se siente como <em>dos</em> pulsos (1-2-3 / 4-5-6), no como seis.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44aa;">Compases irregulares</strong><br>
+        El <strong>5/8</strong> se agrupa como <em>3+2</em> o <em>2+3</em>;
+        el <strong>7/8</strong> como <em>2+2+3</em>. Los acentos secundarios caen
+        de forma asimétrica, produciendo el carácter "cojo" típico de la música
+        balcánica, de Stravinsky o del jazz contemporáneo. El <strong>2/2</strong>
+        (<em>alla breve</em>) cuenta blancas: dos pulsos amplios y rápidos.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Definición de compases ─────────────────────────────────
+// accents: nivel por subdivisión — 2=fuerte, 1=semifuerte, 0=débil
+// grouping: agrupación de subdivisiones (para separación visual)
+const METERS = {
+  '2/4': { accents: [2, 0],                grouping: [1, 1],    name: 'simple', desc: '2/4 (agrupación 1+1)' },
+  '3/4': { accents: [2, 0, 0],             grouping: [1, 1, 1], name: 'simple', desc: '3/4 (agrupación 1+1+1)' },
+  '4/4': { accents: [2, 0, 1, 0],          grouping: [2, 2],    name: 'simple', desc: '4/4 (agrupación 2+2)' },
+  '2/2': { accents: [2, 1],                grouping: [1, 1],    name: 'alla breve', desc: '2/2 alla breve (blancas)' },
+  '6/8': { accents: [2, 0, 0, 1, 0, 0],    grouping: [3, 3],    name: 'compuesto', desc: '6/8 compuesto (3+3)' },
+  '9/8': { accents: [2, 0, 0, 1, 0, 0, 1, 0, 0], grouping: [3, 3, 3], name: 'compuesto', desc: '9/8 compuesto (3+3+3)' },
+  '5/8': { accents: [2, 0, 0, 1, 0],       grouping: [3, 2],    name: 'irregular', desc: '5/8 irregular (3+2)' },
+  '5/4': { accents: [2, 0, 0, 1, 0],       grouping: [3, 2],    name: 'irregular', desc: '5/4 irregular (3+2)' },
+  '7/8': { accents: [2, 0, 1, 0, 1, 0, 0], grouping: [2, 2, 3], name: 'irregular', desc: '7/8 irregular (2+2+3)' }
+};
+
+// Niveles de acento → sonido y color
+const ACCENT_STYLE = {
+  2: { freq: 1500, gain: 0.30, color: '#ffaa00', label: 'fuerte' },
+  1: { freq: 1100, gain: 0.20, color: '#ff44aa', label: 'semifuerte' },
+  0: { freq: 820,  gain: 0.11, color: '#00ffff', label: 'débil' }
+};
+
+let bpm = 96;
+let meterKey = '4/4';
+let playing = false;
+let animId = null;
+let currentSub = 0;        // subdivisión actual mostrada
+let lastSubTS = null;
+let subPulse = 0;
+let schedulerTimer = null;
+let nextSubTime = 0;
+let scheduledSub = 0;
+const LOOKAHEAD = 0.1;
+
+// ── Nombre de tempo ────────────────────────────────────────
+function tempoName(b) {
+  if (b <= 60) return 'Largo';
+  if (b <= 76) return 'Andante';
+  if (b <= 98) return 'Moderato';
+  if (b <= 120) return 'Allegretto';
+  if (b <= 168) return 'Allegro';
+  if (b <= 200) return 'Presto';
+  return 'Prestissimo';
+}
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const meter = METERS[meterKey];
+  const accents = meter.accents;
+  const N = accents.length;
+  const cx = W / 2;
+
+  // --- Fila de subdivisiones (dots) con agrupación ---
+  const dotY = 48;
+  const dotR = 15;
+  const groupGap = 26;   // separación extra entre grupos
+  const dotGap = 40;     // separación entre dots del mismo grupo
+  // calcular ancho total
+  let totalW = 0;
+  meter.grouping.forEach((g, gi) => {
+    totalW += g * dotGap;
+    if (gi < meter.grouping.length - 1) totalW += groupGap;
+  });
+  totalW -= dotGap; // último dot no necesita gap completo
+  let x = cx - totalW / 2;
+
+  let subIdx = 0;
+  meter.grouping.forEach((groupSize, gi) => {
+    for (let k = 0; k < groupSize; k++) {
+      const lvl = accents[subIdx];
+      const st = ACCENT_STYLE[lvl];
+      const isActive = playing && (currentSub % N === subIdx);
+      const r = dotR * (lvl === 2 ? 1.15 : lvl === 1 ? 1.0 : 0.82);
+
+      ctx.beginPath();
+      ctx.arc(x, dotY, r, 0, Math.PI * 2);
+      ctx.fillStyle = isActive ? st.color : st.color + '22';
+      ctx.fill();
+      ctx.strokeStyle = st.color;
+      ctx.lineWidth = isActive ? 3 : 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = isActive ? '#ffffff' : 'rgba(150,200,255,0.55)';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(subIdx + 1, x, dotY);
+      ctx.textBaseline = 'alphabetic';
+
+      x += dotGap;
+      subIdx++;
+    }
+    // separador de grupo (línea vertical tenue entre grupos)
+    if (gi < meter.grouping.length - 1) {
+      const sepX = x - dotGap + groupGap / 2;
+      ctx.strokeStyle = 'rgba(100,180,255,0.30)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(sepX, dotY - 32);
+      ctx.lineTo(sepX, dotY + 32);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      x += groupGap;
+    }
+  });
+
+  // Leyenda de niveles
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  let lx = 16;
+  [2, 1, 0].forEach(lvl => {
+    const st = ACCENT_STYLE[lvl];
+    ctx.fillStyle = st.color;
+    ctx.beginPath(); ctx.arc(lx + 5, dotY + 0, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#99ccff';
+    ctx.fillText(st.label, lx + 14, dotY + 4);
+    lx += 14 + ctx.measureText(st.label).width + 16;
+  });
+
+  // --- Círculo de pulso grande ---
+  const circR = Math.min(W * 0.19, 70);
+  const circY = H * 0.50;
+  const curLvl = accents[currentSub % N];
+  const curSt = ACCENT_STYLE[curLvl];
+  const scale = 1 + subPulse * 0.28;
+  const r = circR * scale;
+
+  ctx.beginPath();
+  ctx.arc(cx, circY, r, 0, Math.PI * 2);
+  const rgb = curLvl === 2 ? '255,170,0' : curLvl === 1 ? '255,68,170' : '0,255,255';
+  ctx.fillStyle = `rgba(${rgb},${0.08 + subPulse * 0.22})`;
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${rgb},${0.5 + subPulse * 0.5})`;
+  ctx.lineWidth = 2.5 + subPulse * 2;
+  ctx.stroke();
+
+  ctx.fillStyle = playing ? '#ffffff' : 'rgba(150,200,255,0.4)';
+  ctx.font = `bold ${Math.round(circR * 0.7)}px sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(playing ? (currentSub % N) + 1 : '—', cx, circY);
+  ctx.textBaseline = 'alphabetic';
+
+  ctx.fillStyle = '#99ccff'; ctx.font = '13px sans-serif';
+  ctx.fillText(`${bpm} BPM · ${meterKey}`, cx, circY + circR + 24);
+
+  // --- Péndulo ---
+  const pivotY = H - 24;
+  const pendLen = H * 0.26;
+  const maxAngle = Math.PI / 5;
+  const angle = maxAngle * pendulumAngle;
+  const tipX = cx + Math.sin(angle) * pendLen;
+  const tipY = pivotY - Math.cos(angle) * pendLen;
+
+  ctx.strokeStyle = `rgba(255,204,0,${0.5 + Math.abs(pendulumAngle) * 0.5})`;
+  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx, pivotY); ctx.lineTo(tipX, tipY); ctx.stroke();
+  ctx.lineCap = 'butt';
+  ctx.fillStyle = '#ffcc00';
+  ctx.beginPath(); ctx.arc(tipX, tipY, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(200,220,255,0.8)';
+  ctx.beginPath(); ctx.arc(cx, pivotY, 6, 0, Math.PI * 2); ctx.fill();
+}
+
+let pendulumAngle = 0;
+
+// ── Scheduler de audio ─────────────────────────────────────
+function scheduleAhead() {
+  const actx = getAudioContext();
+  const accents = METERS[meterKey].accents;
+  const N = accents.length;
+  const subDur = 60 / bpm; // cada subdivisión = un pulso del metrónomo
+
+  while (nextSubTime < actx.currentTime + LOOKAHEAD) {
+    const lvl = accents[scheduledSub % N];
+    playClick(nextSubTime, lvl);
+    const delay = Math.max(0, (nextSubTime - actx.currentTime) * 1000);
+    const subSnapshot = scheduledSub;
+    setTimeout(() => {
+      if (!playing) return;
+      currentSub = subSnapshot;
+      lastSubTS = performance.now();
+      subPulse = 1.0;
+    }, delay);
+    scheduledSub++;
+    nextSubTime += subDur;
+  }
+}
+
+function playClick(t, level) {
+  const actx = getAudioContext();
+  const st = ACCENT_STYLE[level];
+  const osc = actx.createOscillator();
+  const g = actx.createGain();
+  osc.frequency.value = st.freq;
+  g.gain.setValueAtTime(st.gain, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t); osc.stop(t + 0.06);
+  _activeNodes.push(osc);
+}
+
+// ── Toggle ─────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  currentSub = 0; scheduledSub = 0; lastSubTS = null; subPulse = 0;
+  const actx = getAudioContext();
+  nextSubTime = actx.currentTime + 0.06;
+  scheduleAhead();
+  schedulerTimer = setInterval(scheduleAhead, 25);
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  animStartTS = null;
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  clearInterval(schedulerTimer);
+  stopAllAudio();
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  subPulse = 0; pendulumAngle = 0;
+  document.getElementById('btnPlay').textContent = '▶ Iniciar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Animación ──────────────────────────────────────────────
+let animStartTS = null;
+function animate(ts) {
+  if (!animStartTS) animStartTS = ts;
+  const elapsed = (ts - animStartTS) / 1000;
+  const N = METERS[meterKey].accents.length;
+  // Péndulo: un ciclo completo cada compás
+  const measureDur = (60 / bpm) * N;
+  pendulumAngle = Math.sin(2 * Math.PI * elapsed / (measureDur));
+
+  if (lastSubTS !== null) {
+    const subDur = 60 / bpm;
+    const since = (ts - lastSubTS) / 1000;
+    subPulse = Math.max(0, 1 - since / (subDur * 0.5));
+  }
+  drawCanvas();
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+// ── Controles ──────────────────────────────────────────────
+function idForMeter(key) { return 'm_' + key.replace('/', '_'); }
+
+function updateLabel() {
+  document.getElementById('tempoLabel').textContent =
+    `${tempoName(bpm)} — ${bpm} BPM — ${METERS[meterKey].desc}`;
+}
+
+document.getElementById('bpmSlider').addEventListener('input', function() {
+  bpm = +this.value;
+  document.getElementById('bpmVal').textContent = bpm;
+  updateLabel();
+  if (!playing) drawCanvas();
+});
+
+function setMeter(key) {
+  meterKey = key;
+  Object.keys(METERS).forEach(k => {
+    const el = document.getElementById(idForMeter(k));
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById(idForMeter(key)).classList.add('active');
+  updateLabel();
+  if (playing) { currentSub = 0; scheduledSub = 0; }
+  if (!playing) drawCanvas();
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { updateLabel(); drawCanvas(); });
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

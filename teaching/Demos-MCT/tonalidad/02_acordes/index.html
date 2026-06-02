@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2. Acordes y Armonía — Tonalidad y Atonalidad</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_escalas/index.html">1. Escalas y Modos</a>
+  <a href="../02_acordes/index.html" class="active">2. Acordes y Armonía</a>
+  <a href="../03_tonica_jerarquia/index.html">3. La Tónica y la Jerarquía</a>
+  <a href="../04_atonalidad/index.html">4. Atonalidad</a>
+  <a href="../05_serie_dodecafonica/index.html">5. La Serie Dodecafónica</a>
+  <a href="../06_transformaciones/index.html">6. Transformaciones</a>
+  <a href="../07_modos_messiaen/index.html">7. Modos de Messiaen</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>2. Acordes y Armonía</h1>
+      <p class="subtitle">Triadas por terceras superpuestas y cadencias con conducción de voces suave</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Construye triadas sobre cada grado</h2>
+    <p class="description">
+      Para acompañar las melodías se construyen <span class="kw">acordes</span> tocando varios sonidos a la vez.
+      Una <span class="kw">triada</span> se forma escogiendo notas alternas de la escala (do-mi-sol, saltándose el re y el fa):
+      se <span class="kw">apilan terceras</span>. Cada grado produce un acorde de distinta calidad —mayor, menor o disminuido—.
+      La cadencia <span class="kw">I–IV–V–I</span> usa <span class="kw">inversiones</span> para que las voces se muevan por grados conjuntos
+      y la dominante resuelva suavemente a la tónica, sin saltos bruscos.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Tónica: <span class="val" id="tonicVal">Do</span></label>
+        <input type="range" id="tonicSlider" min="0" max="11" value="0" step="1">
+      </div>
+      <div class="control-group">
+        <label>Grado: <span class="val" id="degVal">I</span></label>
+        <input type="range" id="degSlider" min="0" max="6" value="0" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn active" id="btnMajor" onclick="setMode('major')">Mayor</button>
+        <button class="btn" id="btnMinor" onclick="setMode('minor')">Menor</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnChord" onclick="playChord()">▶ Acorde</button>
+        <button class="btn" id="btnCad" onclick="toggleCadence()">▶ Cadencia I–IV–V–I</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Do mayor · grado I · acorde Do mayor (Do–Mi–Sol)</div>
+    <canvas id="cvKeys" height="290"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Triadas y acordes de séptima</h2>
+    <p class="description">
+      Toda triada apila <span class="kw">dos terceras</span> sobre su fundamental. Según cada tercera sea mayor (3ªM = 4 semitonos)
+      o menor (3ªm = 3 semitonos) se obtienen las cuatro calidades: <span class="kw">mayor</span> (M+m), <span class="kw">menor</span> (m+M),
+      <span class="kw">disminuida</span> (m+m) y <span class="kw">aumentada</span> (M+M). Si apilas una <span class="kw">tercera más</span> obtienes un
+      <span class="kw">acorde de séptima</span> (cuatro notas): la <span class="kw">séptima mayor</span> (maj7) suena luminosa; la
+      <span class="kw">séptima menor</span> (m7), suave y jazzística. Se construyen sobre la tónica elegida arriba.
+    </p>
+    <div class="controls">
+      <div class="btn-group" id="qualButtons">
+        <button class="btn active" data-q="0" onclick="setQual(0)">Mayor</button>
+        <button class="btn" data-q="1" onclick="setQual(1)">Menor</button>
+        <button class="btn" data-q="2" onclick="setQual(2)">Disminuida</button>
+        <button class="btn" data-q="3" onclick="setQual(3)">Aumentada</button>
+        <button class="btn" data-q="4" onclick="setQual(4)">7ª Mayor</button>
+        <button class="btn" data-q="5" onclick="setQual(5)">7ª menor</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnQual" onclick="playQual()">▶ Escuchar acorde</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="qualLabel">Do mayor (Do–Mi–Sol) · 3ª mayor + 3ª menor</div>
+    <canvas id="cvQual" height="230"></canvas>
+    <div class="info-box" style="margin-top:14px;">
+      La <strong style="color:#00ffff;">disminuida</strong> aparece de forma natural en el vii° (mayor) y el ii° (menor).
+      La <strong style="color:#ffd24a;">aumentada</strong> no es diatónica de las escalas mayor o menor natural: surge, por ejemplo, sobre el III♯ de la menor armónica.
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>De la triada a la cadencia que resuelve</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Apilar terceras</strong><br>
+        Cada acorde se obtiene tomando un grado y subiendo de dos en dos: grado, grado+2, grado+4.
+        Así nacen las triadas <strong>I, ii, iii, IV, V, vi, vii°</strong> de una tonalidad.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#ffd24a;">Inversiones y conducción de voces</strong><br>
+        En la cadencia, los acordes no se tocan en estado fundamental sino <strong>invertidos</strong>:
+        así la <strong>sensible sube un semitono</strong> a la tónica y las demás voces se mueven lo mínimo
+        (notas comunes que se mantienen). El resultado: una resolución <strong>V→I</strong> suave y convincente.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Constantes ─────────────────────────────────────────────
+const NOTE_NAMES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+const WHITE_PC = [0,2,4,5,7,9,11];
+const BLACK_PC = [1,3,6,8,10];
+const SCALE_7 = { major: [0,2,4,5,7,9,11], minor: [0,2,3,5,7,8,10] };
+const ROMAN = ['I','II','III','IV','V','VI','VII'];
+const TONIC_BASE = 60;                 // Do4 = tónica de referencia
+const KB_START = 55, KB_END = 88;      // teclado G3 … E6 (cubre triadas y cadencia)
+
+function noteFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+// ── Estado ─────────────────────────────────────────────────
+let tonicPC = 0, mode = 'major', deg = 0;
+let cadencePlaying = false, timers = [], highlight = [], cadRoman = '';
+
+// ── Escala y triadas ───────────────────────────────────────
+function scaleExt() {
+  const root = TONIC_BASE + tonicPC, st = SCALE_7[mode], out = [];
+  for (let i = 0; i < 14; i++) out.push(root + st[i % 7] + 12 * Math.floor(i / 7));
+  return out;
+}
+function triadFor(d) { const s = scaleExt(); return [s[d], s[d + 2], s[d + 4]]; }
+function chordQuality(notes) {
+  const third = notes[1] - notes[0], fifth = notes[2] - notes[0];
+  if (third === 4 && fifth === 7) return { name: 'mayor', sym: '', upper: true };
+  if (third === 3 && fifth === 7) return { name: 'menor', sym: '', upper: false };
+  if (third === 3 && fifth === 6) return { name: 'disminuido', sym: '°', upper: false };
+  if (third === 4 && fifth === 8) return { name: 'aumentado', sym: '+', upper: true };
+  return { name: '—', sym: '', upper: true };
+}
+function romanFor(d) {
+  const q = chordQuality(triadFor(d));
+  let r = ROMAN[d]; if (!q.upper) r = r.toLowerCase();
+  return r + q.sym;
+}
+
+// ── Cadencia con conducción de voces suave (inversiones) ───
+// Voces (3) cercanas: la sensible sube por semitono a la tónica, notas comunes se mantienen.
+function cadenceChords() {
+  const T = TONIC_BASE + tonicPC;
+  if (mode === 'major') {
+    return [
+      { roman: 'I',  notes: [T,     T + 4, T + 7] }, // Do  Mi  Sol
+      { roman: 'IV', notes: [T,     T + 5, T + 9] }, // Do  Fa  La   (IV 2ª inv.)
+      { roman: 'V',  notes: [T - 1, T + 2, T + 7] }, // Si  Re  Sol  (V 1ª inv.) → sensible Si
+      { roman: 'I',  notes: [T,     T + 4, T + 7] }  // Si→Do, Re→Mi, Sol mantiene
+    ];
+  }
+  return [
+    { roman: 'i',  notes: [T,     T + 3, T + 7] }, // Do  Mi♭ Sol
+    { roman: 'iv', notes: [T,     T + 5, T + 8] }, // Do  Fa  La♭
+    { roman: 'V',  notes: [T - 1, T + 2, T + 7] }, // Si  Re  Sol  (dominante mayor, sensible)
+    { roman: 'i',  notes: [T,     T + 3, T + 7] }  // Si→Do, Re→Mi♭, Sol mantiene
+  ];
+}
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvKeys');
+const ctx = canvas.getContext('2d');
+
+function buildWhites() {
+  const w = [];
+  for (let m = KB_START; m <= KB_END; m++) if (WHITE_PC.includes(m % 12)) w.push(m);
+  return w;
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 14, padR = 14, padT = 56, padB = 22;
+  const bw = W - padL - padR;
+  const keyTop = padT, whiteH = H - padT - padB, blackH = whiteH * 0.62;
+  const whites = buildWhites();
+  const ww = bw / whites.length;
+  const set = highlight.length ? highlight : triadFor(deg);
+  const bass = set.slice().sort((a, b) => a - b)[0];
+
+  function keyX(m) {
+    if (WHITE_PC.includes(m % 12)) return padL + whites.indexOf(m) * ww + ww / 2;
+    return padL + (whites.indexOf(m - 1) + 1) * ww;
+  }
+
+  whites.forEach((m, i) => {
+    const x = padL + i * ww;
+    const inCh = set.includes(m);
+    ctx.fillStyle = inCh ? (m === bass ? '#ffd24a' : 'rgba(0,229,255,0.6)') : '#eef4ff';
+    ctx.fillRect(x, keyTop, ww - 1.5, whiteH);
+    ctx.strokeStyle = 'rgba(10,21,32,0.85)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x, keyTop, ww - 1.5, whiteH);
+    if (inCh) {
+      ctx.fillStyle = '#0a1520'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(NOTE_NAMES[m % 12], x + ww / 2, keyTop + whiteH - 9);
+    }
+  });
+  for (let m = KB_START; m <= KB_END; m++) {
+    if (!BLACK_PC.includes(m % 12)) continue;
+    const cx = keyX(m), bwid = ww * 0.62;
+    const inCh = set.includes(m);
+    ctx.fillStyle = inCh ? (m === bass ? '#ffd24a' : 'rgba(0,229,255,0.9)') : '#0d1a2e';
+    ctx.fillRect(cx - bwid / 2, keyTop, bwid, blackH);
+    ctx.strokeStyle = '#000'; ctx.strokeRect(cx - bwid / 2, keyTop, bwid, blackH);
+  }
+
+  // Llaves de "terceras apiladas" (solo modo triada individual)
+  if (!cadencePlaying) {
+    const t = triadFor(deg), y = padT - 26;
+    ctx.strokeStyle = 'rgba(0,255,255,0.9)'; ctx.lineWidth = 2;
+    for (let i = 0; i < 2; i++) {
+      const x1 = keyX(t[i]), x2 = keyX(t[i + 1]);
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x1, y + 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2, y); ctx.lineTo(x2, y + 6); ctx.stroke();
+      ctx.fillStyle = '#00ffff'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('3ª', (x1 + x2) / 2, y - 4);
+    }
+  }
+
+  // Cifrado romano
+  ctx.fillStyle = 'rgba(150,200,255,0.75)'; ctx.font = 'bold 22px serif'; ctx.textAlign = 'left';
+  ctx.fillText(cadencePlaying ? ('Cadencia  ' + cadRoman) : romanFor(deg), padL, 30);
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function playNotes(midis, t0, dur, gain) {
+  const actx = getAudioContext();
+  midis.forEach(m => {
+    const osc = actx.createOscillator(), g = actx.createGain();
+    osc.type = 'triangle'; osc.frequency.value = noteFreq(m);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(gain, t0 + 0.02);
+    g.gain.setValueAtTime(gain, t0 + dur - 0.06);
+    g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0); osc.stop(t0 + dur);
+    _activeNodes.push(osc);
+  });
+}
+
+function playChord() {
+  if (cadencePlaying) stopCadence();
+  highlight = [];
+  playNotes(triadFor(deg), getAudioContext().currentTime + 0.04, 1.1, 0.16);
+  drawCanvas();
+}
+
+function toggleCadence() {
+  if (cadencePlaying) { stopCadence(); return; }
+  cadencePlaying = true;
+  document.getElementById('btnCad').textContent = '■ Detener';
+  document.getElementById('btnCad').classList.add('active');
+  const actx = getAudioContext();
+  const seq = cadenceChords();
+  const step = 0.9, t0 = actx.currentTime + 0.05;
+  seq.forEach((ch, i) => {
+    const last = (i === seq.length - 1);
+    playNotes(ch.notes, t0 + i * step, last ? step * 1.6 : step * 0.95, 0.15);
+    timers.push(setTimeout(() => { highlight = ch.notes; cadRoman = ch.roman; drawCanvas(); }, i * step * 1000 + 20));
+  });
+  timers.push(setTimeout(() => { if (cadencePlaying) stopCadence(); }, seq.length * step * 1000 + 600));
+}
+
+function stopCadence() {
+  cadencePlaying = false;
+  timers.forEach(clearTimeout); timers = [];
+  stopAllAudio();
+  highlight = []; cadRoman = '';
+  document.getElementById('btnCad').textContent = '▶ Cadencia I–IV–V–I';
+  document.getElementById('btnCad').classList.remove('active');
+  updateStatus(); drawCanvas();
+}
+
+// ── Los cuatro tipos de triada ─────────────────────────────
+const QUALITIES = [
+  { label: 'Mayor',         ints: [0, 4, 7],     sym: '' },
+  { label: 'Menor',         ints: [0, 3, 7],     sym: 'm' },
+  { label: 'Disminuida',    ints: [0, 3, 6],     sym: '°' },
+  { label: 'Aumentada',     ints: [0, 4, 8],     sym: '+' },
+  { label: 'Séptima mayor', ints: [0, 4, 7, 11], sym: 'maj7' },
+  { label: 'Séptima menor', ints: [0, 3, 7, 10], sym: 'm7' }
+];
+let qualIdx = 0;
+const qualCanvas = document.getElementById('cvQual');
+const qctx = qualCanvas.getContext('2d');
+
+function qualTriad() {
+  const root = TONIC_BASE + tonicPC;
+  return QUALITIES[qualIdx].ints.map(i => root + i);
+}
+const thirdName = s => (s === 4 ? 'mayor' : 'menor');
+
+function drawQual() {
+  qualCanvas.width = qualCanvas.offsetWidth || 800;
+  const W = qualCanvas.width, H = qualCanvas.height;
+  qctx.clearRect(0, 0, W, H);
+  const padL = 14, padR = 14, padT = 54, padB = 22;
+  const bw = W - padL - padR, keyTop = padT, whiteH = H - padT - padB, blackH = whiteH * 0.62;
+  const whites = buildWhites(), ww = bw / whites.length;
+  const set = qualTriad();
+  const keyX = m => WHITE_PC.includes(m % 12)
+    ? padL + whites.indexOf(m) * ww + ww / 2
+    : padL + (whites.indexOf(m - 1) + 1) * ww;
+
+  whites.forEach((m, i) => {
+    const x = padL + i * ww, inCh = set.includes(m);
+    qctx.fillStyle = inCh ? (m === set[0] ? '#ffd24a' : 'rgba(0,229,255,0.6)') : '#eef4ff';
+    qctx.fillRect(x, keyTop, ww - 1.5, whiteH);
+    qctx.strokeStyle = 'rgba(10,21,32,0.85)'; qctx.lineWidth = 1; qctx.strokeRect(x, keyTop, ww - 1.5, whiteH);
+    if (inCh) { qctx.fillStyle = '#0a1520'; qctx.font = '10px sans-serif'; qctx.textAlign = 'center'; qctx.fillText(NOTE_NAMES[m % 12], x + ww / 2, keyTop + whiteH - 9); }
+  });
+  for (let m = KB_START; m <= KB_END; m++) {
+    if (!BLACK_PC.includes(m % 12)) continue;
+    const cx = keyX(m), bwid = ww * 0.62, inCh = set.includes(m);
+    qctx.fillStyle = inCh ? (m === set[0] ? '#ffd24a' : 'rgba(0,229,255,0.9)') : '#0d1a2e';
+    qctx.fillRect(cx - bwid / 2, keyTop, bwid, blackH);
+    qctx.strokeStyle = '#000'; qctx.strokeRect(cx - bwid / 2, keyTop, bwid, blackH);
+  }
+
+  // Las terceras apiladas (2 en triadas, 3 en acordes de séptima), M (oro) o m (cyan)
+  const y = padT - 28;
+  for (let i = 0; i < set.length - 1; i++) {
+    const x1 = keyX(set[i]), x2 = keyX(set[i + 1]), isMaj = (set[i + 1] - set[i] === 4);
+    qctx.strokeStyle = isMaj ? 'rgba(255,210,74,0.95)' : 'rgba(0,255,255,0.95)'; qctx.lineWidth = 2.5;
+    qctx.beginPath(); qctx.moveTo(x1, y); qctx.lineTo(x2, y); qctx.stroke();
+    qctx.beginPath(); qctx.moveTo(x1, y); qctx.lineTo(x1, y + 7); qctx.stroke();
+    qctx.beginPath(); qctx.moveTo(x2, y); qctx.lineTo(x2, y + 7); qctx.stroke();
+    qctx.fillStyle = isMaj ? '#ffd24a' : '#00ffff'; qctx.font = 'bold 11px sans-serif'; qctx.textAlign = 'center';
+    qctx.fillText(isMaj ? '3ª M' : '3ª m', (x1 + x2) / 2, y - 5);
+  }
+
+  const q = QUALITIES[qualIdx];
+  qctx.fillStyle = 'rgba(150,200,255,0.75)'; qctx.font = 'bold 18px serif'; qctx.textAlign = 'left';
+  qctx.fillText(`${NOTE_NAMES[(TONIC_BASE + tonicPC) % 12]}${q.sym}  ·  ${q.label}`, padL, 30);
+}
+
+function updateQualLabel() {
+  const q = QUALITIES[qualIdx], t = qualTriad();
+  const names = t.map(m => NOTE_NAMES[m % 12]).join('–');
+  const thirds = [];
+  for (let i = 0; i < q.ints.length - 1; i++) thirds.push('3ª ' + thirdName(q.ints[i + 1] - q.ints[i]));
+  document.getElementById('qualLabel').textContent =
+    `${NOTE_NAMES[(TONIC_BASE + tonicPC) % 12]} ${q.label.toLowerCase()} (${names}) · ${thirds.join(' + ')}`;
+}
+
+function setQual(i) {
+  qualIdx = i;
+  document.querySelectorAll('#qualButtons .btn').forEach(b => b.classList.toggle('active', +b.dataset.q === i));
+  updateQualLabel(); drawQual();
+}
+
+function playQual() {
+  if (cadencePlaying) stopCadence();
+  playNotes(qualTriad(), getAudioContext().currentTime + 0.04, 1.2, 0.16);
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('btnMajor').classList.toggle('active', m === 'major');
+  document.getElementById('btnMinor').classList.toggle('active', m === 'minor');
+  refresh();
+}
+function refresh() { if (cadencePlaying) stopCadence(); highlight = []; updateStatus(); drawCanvas(); updateQualLabel(); drawQual(); }
+function updateStatus() {
+  const t = triadFor(deg), q = chordQuality(t);
+  const names = t.map(m => NOTE_NAMES[m % 12]).join('–');
+  document.getElementById('statusLabel').textContent =
+    `${NOTE_NAMES[tonicPC]} ${mode === 'major' ? 'mayor' : 'menor'} · grado ${romanFor(deg)} · acorde ${NOTE_NAMES[t[0] % 12]} ${q.name} (${names})`;
+}
+
+document.getElementById('tonicSlider').addEventListener('input', function () {
+  tonicPC = +this.value; document.getElementById('tonicVal').textContent = NOTE_NAMES[tonicPC]; refresh();
+});
+document.getElementById('degSlider').addEventListener('input', function () {
+  deg = +this.value; document.getElementById('degVal').textContent = romanFor(deg); refresh();
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  document.getElementById('degVal').textContent = romanFor(deg);
+  updateStatus(); drawCanvas(); updateQualLabel(); drawQual();
+});
+window.addEventListener('resize', () => { if (!cadencePlaying) drawCanvas(); drawQual(); });
+</script>
+</body>
+</html>

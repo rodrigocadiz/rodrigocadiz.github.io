@@ -316,6 +316,24 @@ canvas {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.sec-musica header h1 {
+  background: linear-gradient(90deg, #ffcc00, #ff44aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sec-tonalidad header h1 {
+  background: linear-gradient(90deg, #ffd24a, #4ad2ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sec-musica-tecnologica header h1 {
+  background: linear-gradient(90deg, #00ffcc, #ff55aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Card grid (índices de sección) ── */
 .card-grid {

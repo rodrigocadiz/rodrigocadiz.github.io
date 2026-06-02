@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. Atonalidad — Tonalidad y Atonalidad</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_escalas/index.html">1. Escalas y Modos</a>
+  <a href="../02_acordes/index.html">2. Acordes y Armonía</a>
+  <a href="../03_tonica_jerarquia/index.html">3. La Tónica y la Jerarquía</a>
+  <a href="../04_atonalidad/index.html" class="active">4. Atonalidad</a>
+  <a href="../05_serie_dodecafonica/index.html">5. La Serie Dodecafónica</a>
+  <a href="../06_transformaciones/index.html">6. Transformaciones</a>
+  <a href="../07_modos_messiaen/index.html">7. Modos de Messiaen</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. Atonalidad</h1>
+      <p class="subtitle">Schönberg, 1907: la emancipación de la disonancia y la ausencia de jerarquías</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Con tónica vs. sin tónica</h2>
+    <p class="description">
+      Mientras que el sistema tonal gira en torno a una <span class="kw">tónica</span>, la música
+      <span class="kw">atonal</span> evita conscientemente esas jerarquías: las doce notas cromáticas valen lo mismo.
+      La <span class="kw">disonancia se emancipa</span> —se acepta en sus propios términos, sin necesidad de resolver—
+      y pasa a usarse como un color. Compara el círculo cromático en ambos modos y escucha la diferencia.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn active" id="btnTonal" onclick="setMode('tonal')">Tonal (con tónica)</button>
+        <button class="btn" id="btnAtonal" onclick="setMode('atonal')">Atonal (sin jerarquía)</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Tocar frase</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Modo tonal · Do mayor · 7 notas con la tónica como centro de gravedad</div>
+    <canvas id="cvCircle" height="340"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Romper 300 años de reglas</h2>
+    <div class="two-col">
+      <div class="info-box ok">
+        <strong style="color:#ffd24a;">Tonal</strong><br>
+        Una nota principal organiza a las demás; la disonancia es un estado de tensión que
+        <strong>debe resolver</strong> hacia la consonancia. Predominó durante unos 300 años, de Mozart al pop.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Atonal</strong><br>
+        Sin centro: la disonancia logra su <strong>independencia</strong> y actúa como color pictórico
+        (Messiaen, Ligeti). Al negar la jerarquía, la atonalidad reconoce implícitamente la existencia de la tonalidad.
+        El oyente debe abrir los oídos y dejar de buscar la melodía tradicional.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Constantes ─────────────────────────────────────────────
+const NOTE_NAMES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+const SCALE_PC = [0,2,4,5,7,9,11];                 // Do mayor
+const TONAL_PHRASE = [67,64,65,62,71,72];          // Sol Mi Fa Re Si Do → resuelve
+function noteFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+// ── Estado ─────────────────────────────────────────────────
+let mode = 'tonal';
+let playing = false;
+let timers = [];
+let activePC = -1;
+let atonalSeq = shuffle12();
+
+function shuffle12() {
+  const a = [...Array(12).keys()];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvCircle');
+const ctx = canvas.getContext('2d');
+
+function nodePos(pc, cx, cy, R) {
+  const ang = -Math.PI / 2 + pc * (Math.PI * 2 / 12);
+  return { x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang) };
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2 + 4, R = Math.min(W, H) / 2 - 46;
+
+  // Centro de gravedad (solo tonal)
+  if (mode === 'tonal') {
+    for (let k = 3; k >= 1; k--) {
+      ctx.strokeStyle = `rgba(255,210,74,${0.07 * k})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, R * 0.30 * k / 3 + 6, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(255,210,74,0.9)'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('centro de', cx, cy - 6);
+    ctx.fillText('gravedad', cx, cy + 9);
+  } else {
+    ctx.fillStyle = 'rgba(255,68,255,0.85)'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('sin centro', cx, cy - 4);
+    ctx.fillText('· sin jerarquía ·', cx, cy + 14);
+  }
+
+  // Aro exterior
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+
+  // Flechas de gravedad hacia la tónica (tonal)
+  if (mode === 'tonal') {
+    SCALE_PC.forEach(pc => {
+      if (pc === 0) return;
+      const p = nodePos(pc, cx, cy, R);
+      const dx = cx - p.x, dy = cy - p.y, len = Math.hypot(dx, dy);
+      const ux = dx / len, uy = dy / len;
+      ctx.strokeStyle = 'rgba(255,210,74,0.32)'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x - ux * 22, p.y - uy * 22);
+      ctx.lineTo(p.x - ux * (len * 0.42), p.y - uy * (len * 0.42));
+      ctx.stroke();
+    });
+  }
+
+  // Nodos
+  for (let pc = 0; pc < 12; pc++) {
+    const p = nodePos(pc, cx, cy, R);
+    const inScale = SCALE_PC.includes(pc);
+    const isTonic = (pc === 0);
+    const active = (pc === activePC);
+    let r = 17, fill, stroke = 'rgba(10,21,32,0.9)';
+
+    if (mode === 'tonal') {
+      if (isTonic) { fill = '#ffd24a'; r = 24; }
+      else if (inScale) { fill = 'rgba(0,229,255,0.85)'; r = 18; }
+      else { fill = 'rgba(60,90,130,0.5)'; r = 12; }
+    } else {
+      fill = 'rgba(255,68,255,0.8)'; r = 18;
+    }
+    if (active) { fill = '#ffffff'; r += 4; }
+
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = active ? 3 : 1.5; ctx.strokeStyle = active ? '#ffffff' : stroke; ctx.stroke();
+
+    const dimmed = (mode === 'tonal' && !inScale);
+    ctx.fillStyle = dimmed ? 'rgba(180,200,230,0.6)' : '#0a1520';
+    ctx.font = (isTonic && mode === 'tonal') ? 'bold 12px sans-serif' : '11px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(NOTE_NAMES[pc], p.x, p.y);
+    ctx.textBaseline = 'alphabetic';
+  }
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function playNoteAt(m, t0, dur, gain) {
+  const actx = getAudioContext();
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.type = 'triangle'; osc.frequency.value = noteFreq(m);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.015);
+  g.gain.setValueAtTime(gain, t0 + dur - 0.05);
+  g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0); osc.stop(t0 + dur);
+  _activeNodes.push(osc);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  const actx = getAudioContext();
+
+  let seq, step, lastLong = false;
+  if (mode === 'tonal') {
+    seq = TONAL_PHRASE.slice(); step = 0.45; lastLong = true;
+  } else {
+    atonalSeq = shuffle12();
+    seq = atonalSeq.map(pc => 60 + pc); step = 0.34;
+  }
+  const t0 = actx.currentTime + 0.05;
+  seq.forEach((m, i) => {
+    const dur = (lastLong && i === seq.length - 1) ? step * 2.2 : step * 0.95;
+    playNoteAt(m, t0 + i * step, dur, 0.2);
+    timers.push(setTimeout(() => { activePC = ((m % 12) + 12) % 12; drawCanvas(); }, i * step * 1000 + 20));
+  });
+  // En modo tonal, la frase cierra con el acorde de tónica (cadencia resolutiva)
+  if (mode === 'tonal') {
+    const tLast = t0 + (seq.length - 1) * step;
+    [60, 64, 67].forEach(m => playNoteAt(m, tLast, step * 2.2, 0.14));
+  }
+  const total = seq.length * step * 1000 + (lastLong ? 1100 : 250);
+  timers.push(setTimeout(() => { if (playing) stopPlayback(); }, total));
+}
+
+function stopPlayback() {
+  playing = false;
+  timers.forEach(clearTimeout); timers = [];
+  stopAllAudio();
+  activePC = -1;
+  document.getElementById('btnPlay').textContent = '▶ Tocar frase';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('btnTonal').classList.toggle('active', m === 'tonal');
+  document.getElementById('btnAtonal').classList.toggle('active', m === 'atonal');
+  document.getElementById('statusLabel').textContent = (m === 'tonal')
+    ? 'Modo tonal · Do mayor · 7 notas con la tónica como centro de gravedad'
+    : 'Modo atonal · las 12 notas cromáticas son equivalentes · sin resolución';
+  document.getElementById('btnPlay').textContent = m === 'tonal' ? '▶ Tocar frase' : '▶ Tocar frase atonal';
+  if (playing) stopPlayback(); else drawCanvas();
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', drawCanvas);
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

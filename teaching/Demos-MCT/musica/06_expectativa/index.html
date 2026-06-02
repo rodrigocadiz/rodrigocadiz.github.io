@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Expectativa Musical — La Música y sus Parámetros</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sonido_silencio/index.html">1. El Sonido y el Silencio</a>
+  <a href="../02_tempo/index.html">2. Tempo y Pulso</a>
+  <a href="../03_dinamica/index.html">3. Dinámicas</a>
+  <a href="../04_articulacion/index.html">4. Articulación</a>
+  <a href="../05_consonancia_disonancia/index.html">5. Consonancia y Disonancia</a>
+  <a href="../06_expectativa/index.html" class="active">6. Expectativa Musical</a>
+  <a href="../07_formas_musicales/index.html">7. Formas Musicales</a>
+  <a href="../08_linea_tiempo/index.html">8. Línea de Tiempo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Expectativa Musical</h1>
+      <p class="subtitle">La música juega con la anticipación: cadencias, tensión y resolución</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Cadencia interactiva: ¿cómo termina la frase?</h2>
+    <p class="description">
+      El cerebro <span class="kw">predice</span> constantemente qué sonido vendrá a continuación.
+      Una <span class="kw">cadencia</span> es una fórmula musical que establece tensión (dominante)
+      y resuelve —o no— hacia el reposo (tónica).
+      Escucha la misma frase con tres finales diferentes y observa cómo cambia tu sensación.
+    </p>
+    <div class="controls">
+      <div class="control-group" style="min-width:auto;">
+        <label>Tipo de cadencia</label>
+        <div class="btn-group" style="margin-bottom:0;">
+          <button class="btn active" id="btnAutentica" onclick="setCadence('autentica')">Auténtica (I–V–I)</button>
+          <button class="btn" id="btnRota" onclick="setCadence('rota')">Rota (I–V–vi)</button>
+          <button class="btn" id="btnMediante" onclick="setCadence('mediante')">A la mediante (I–V–iii)</button>
+          <button class="btn" id="btnSupertonica" onclick="setCadence('supertonica')">A la supertónica (I–V–ii)</button>
+          <button class="btn" id="btnSuspension" onclick="setCadence('suspension')">Suspensión (I–V–…)</button>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="cadenceLabel">Cadencia auténtica — resolución esperada</div>
+    <canvas id="cvMain" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Psicología de la expectativa</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ff44;">Cadencia Auténtica (V → I)</strong><br>
+        La resolución más natural. El acorde de <strong>dominante</strong> (tensión máxima)
+        resuelve a la <strong>tónica</strong> (reposo). El oyente siente gratificación
+        al predecir correctamente el final.
+      </div>
+      <div class="info-box" style="border-color:#ffaa00; background:rgba(255,170,0,0.05);">
+        <strong style="color:#ffaa00;">Cadencia Rota (V → vi)</strong><br>
+        El dominante esquiva la tónica y cae en el <strong>VI grado</strong> (relativo menor).
+        La expectativa se rompe deliberadamente: la tensión no desaparece, se desplaza.
+        Es el "engaño" clásico — también llamada <em>cadencia de engaño</em>.
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:14px; border-color:#44aaff; background:rgba(68,170,255,0.05);">
+      <strong style="color:#44aaff;">Resoluciones débiles (V → iii, V → ii)</strong><br>
+      Si la dominante "resuelve" a la <strong>mediante (iii)</strong> o la <strong>supertónica (ii)</strong>,
+      el oído percibe que <em>algo falta</em>: ninguno de esos grados tiene la estabilidad de la tónica.
+      Estas progresiones —raras como final— demuestran por contraste el enorme
+      <strong>poder de atracción dominante → tónica</strong>: la tónica es el único destino que produce reposo real.
+    </div>
+    <div class="info-box" style="margin-top:14px; border-color:#ff4444; background:rgba(255,68,68,0.05);">
+      <strong style="color:#ff4444;">Suspensión (V → silencio)</strong><br>
+      La frase termina en el dominante sin resolución. El oyente queda en tensión máxima,
+      esperando una continuación que nunca llega. El silencio post-dominante es uno de los
+      recursos dramáticos más poderosos en música.
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Note data ─────────────────────────────────────────────
+// Cadencia en Do mayor con CONDUCCIÓN DE VOCES suave (4 voces SATB).
+// Las voces superiores se mueven por grado conjunto o nota común;
+// solo el bajo hace los saltos idiomáticos de fundamental (I–V–I).
+const G2=98.00, A2=110.00, B2=123.47,
+      C3=130.81, D3=146.83, E3=164.81, F3=174.61, G3=196.00, A3=220.00, B3=246.94,
+      C4=261.63, D4=293.66, E4=329.63, F4=349.23, G4=392.00, A4=440.00, B4=493.88,
+      C5=523.25, D5=587.33, E5=659.25;
+
+// Voces [bajo, tenor, alto, soprano]
+const I_CHORD   = [C3, G3, C4, E4];  // I   (Do mayor)
+const V_CHORD   = [G2, G3, B3, F4];  // V7  (Sol7, sin 5ª) — sensible Si3, séptima Fa4
+const I_RES     = [C3, G3, C4, E4];  // I   resolución: Si3→Do4, Fa4→Mi4, nota común Sol3
+const VI_CHORD  = [A2, A3, C4, E4];  // vi  (La menor) — cadencia rota: bajo Sol2→La2
+const III_CHORD = [E3, G3, B3, E4];  // iii (Mi menor) — mediante: notas comunes Sol3/Si3
+const II_CHORD  = [D3, F3, A3, F4];  // ii  (Re menor) — supertónica: nota común Fa4
+const SILENCE   = [];                // suspensión: sin notas
+
+const CADENCES = {
+  autentica:  {
+    label: 'Cadencia auténtica (V→I) — resolución plena y esperada al I grado',
+    color: '#00ff44',
+    phases: [
+      { name: 'I', notes: I_CHORD, beats: 2 },
+      { name: 'V', notes: V_CHORD, beats: 2 },
+      { name: 'I', notes: I_RES, beats: 3 }
+    ]
+  },
+  rota: {
+    label: 'Cadencia rota (V→vi) — la dominante esquiva la tónica y cae en el VI grado',
+    color: '#ffaa00',
+    phases: [
+      { name: 'I', notes: I_CHORD, beats: 2 },
+      { name: 'V', notes: V_CHORD, beats: 2 },
+      { name: 'vi', notes: VI_CHORD, beats: 3 }
+    ]
+  },
+  mediante: {
+    label: 'Resolución a la mediante (V→iii) — funcionalmente débil, deja sensación de incompletitud',
+    color: '#44aaff',
+    phases: [
+      { name: 'I', notes: I_CHORD, beats: 2 },
+      { name: 'V', notes: V_CHORD, beats: 2 },
+      { name: 'iii', notes: III_CHORD, beats: 3 }
+    ]
+  },
+  supertonica: {
+    label: 'Resolución a la supertónica (V→ii) — sin fuerza cadencial: la dominante "quería" ir a la tónica',
+    color: '#00ffff',
+    phases: [
+      { name: 'I', notes: I_CHORD, beats: 2 },
+      { name: 'V', notes: V_CHORD, beats: 2 },
+      { name: 'ii', notes: II_CHORD, beats: 3 }
+    ]
+  },
+  suspension: {
+    label: 'Suspensión (V→…) — frase sin resolver, silencio dramático',
+    color: '#ff4444',
+    phases: [
+      { name: 'I', notes: I_CHORD, beats: 2 },
+      { name: 'V', notes: V_CHORD, beats: 2 },
+      { name: '…', notes: SILENCE, beats: 3 }
+    ]
+  }
+};
+
+// ── Estado ────────────────────────────────────────────────
+const BPM = 72;
+const BEAT_DUR = 60 / BPM;
+let currentCadence = 'autentica';
+let playing = false;
+let animId = null;
+let playStartAudio = null;
+let totalBeats = 0;
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvMain');
+const ctx = canvas.getContext('2d');
+
+function hexToRgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+// Y positions for notes (piano-roll style)
+const NOTE_RANGE = [G2, A2, B2, C3, D3, E3, F3, G3, A3, B3, C4, D4, E4, F4, G4, A4, B4, C5];
+const NOTE_NAMES = ['Sol2','La2','Si2','Do3','Re3','Mi3','Fa3','Sol3','La3','Si3','Do4','Re4','Mi4','Fa4','Sol4','La4','Si4','Do5'];
+
+function noteToY(freq, padT, bh) {
+  const idx = NOTE_RANGE.findIndex(f => Math.abs(f - freq) < 1);
+  if (idx < 0) return padT + bh / 2;
+  return padT + bh - ((idx + 0.5) / NOTE_RANGE.length) * bh;
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const cad = CADENCES[currentCadence];
+  const padL = 56, padR = 16, padT = 16, padB = 32;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+
+  totalBeats = cad.phases.reduce((s, p) => s + p.beats, 0);
+  const noteH = Math.max(8, bh / NOTE_RANGE.length * 0.55);
+
+  // Background grid: horizontal note lines
+  NOTE_RANGE.forEach((f, i) => {
+    const y = padT + bh - ((i + 0.5) / NOTE_RANGE.length) * bh;
+    ctx.strokeStyle = 'rgba(100,180,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + bw, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,200,255,0.50)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(NOTE_NAMES[i], padL - 4, y + 4);
+  });
+
+  // Phase separators and labels
+  let beatOffset = 0;
+  cad.phases.forEach((phase, pi) => {
+    const x0 = padL + (beatOffset / totalBeats) * bw;
+    const pw = (phase.beats / totalBeats) * bw;
+
+    // Phase background (I=cyan, V=dorado, destino=color de la cadencia)
+    const phaseColors = ['rgba(0,255,255,0.05)', 'rgba(255,204,0,0.06)', hexToRgba(cad.color, 0.08)];
+    ctx.fillStyle = phaseColors[pi] || 'rgba(100,180,255,0.03)';
+    ctx.fillRect(x0, padT, pw, bh);
+
+    // Separator
+    if (pi > 0) {
+      ctx.strokeStyle = 'rgba(100,180,255,0.30)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(x0, padT); ctx.lineTo(x0, padT + bh); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Phase chord label at top
+    const chordLabel = phase.name;
+    const labelColor = pi === 2 ? cad.color : (pi === 0 ? '#00ffff' : '#ffcc00');
+    ctx.fillStyle = labelColor;
+    ctx.font = `bold 15px sans-serif`; ctx.textAlign = 'center';
+    ctx.fillText(chordLabel, x0 + pw / 2, padT + 14);
+
+    // Draw notes as bars
+    if (phase.notes.length > 0) {
+      phase.notes.forEach((freq, ni) => {
+        const noteIdx = NOTE_RANGE.findIndex(f => Math.abs(f - freq) < 1);
+        if (noteIdx < 0) return;
+        const ny = padT + bh - ((noteIdx + 0.5) / NOTE_RANGE.length) * bh;
+        const margin = pw * 0.08;
+        const barColor = pi === 0 ? '#00ffff' : pi === 1 ? '#ffcc00' : cad.color;
+
+        ctx.fillStyle = barColor + '33';
+        ctx.fillRect(x0 + margin, ny - noteH / 2, pw - margin * 2, noteH);
+        ctx.strokeStyle = barColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x0 + margin, ny - noteH / 2, pw - margin * 2, noteH);
+      });
+    } else {
+      // Silence: draw "..." in center
+      ctx.fillStyle = 'rgba(255,68,68,0.55)';
+      ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('···', x0 + pw / 2, padT + bh / 2 + 8);
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    beatOffset += phase.beats;
+  });
+
+  // Outer border
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(padL, padT, bw, bh);
+
+  // Playhead
+  if (playing && playStartAudio !== null) {
+    const actx = getAudioContext();
+    const elapsed = actx.currentTime - playStartAudio;
+    const t = Math.min(elapsed / (totalBeats * BEAT_DUR), 1);
+    const x = padL + t * bw;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + bh); ctx.stroke();
+  }
+
+  // Bottom axis
+  ctx.fillStyle = 'rgba(150,200,255,0.50)';
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(`Tiempo — ${BPM} BPM`, padL + bw / 2, H - 4);
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function playCadenceAudio() {
+  const actx = getAudioContext();
+  const cad = CADENCES[currentCadence];
+  let t = actx.currentTime + 0.05;
+  playStartAudio = t;
+
+  cad.phases.forEach(phase => {
+    const phaseDur = phase.beats * BEAT_DUR;
+    if (phase.notes.length > 0) {
+      phase.notes.forEach(freq => {
+        const osc = actx.createOscillator();
+        const g = actx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        const t0 = t + 0.01;
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(0.08, t0 + 0.02);
+        g.gain.setValueAtTime(0.07, t + phaseDur - 0.05);
+        g.gain.linearRampToValueAtTime(0, t + phaseDur);
+        osc.connect(g); g.connect(actx.destination);
+        osc.start(t0); osc.stop(t + phaseDur + 0.02);
+        _activeNodes.push(osc);
+      });
+    }
+    t += phaseDur;
+  });
+
+  const totalDur = totalBeats * BEAT_DUR;
+  setTimeout(() => { if (playing) stopPlayback(); }, (totalDur + 0.5) * 1000);
+}
+
+// ── Toggle ─────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  playCadenceAudio();
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  playStartAudio = null;
+  stopAllAudio();
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Animación ──────────────────────────────────────────────
+function animate() {
+  drawCanvas();
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+// ── Controls ───────────────────────────────────────────────
+function setCadence(name) {
+  if (playing) stopPlayback();
+  currentCadence = name;
+  Object.keys(CADENCES).forEach(k => {
+    const el = document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.classList.remove('active');
+  });
+  const el = document.getElementById('btn' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (el) el.classList.add('active');
+  document.getElementById('cadenceLabel').textContent = CADENCES[name].label;
+  drawCanvas();
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  totalBeats = Object.values(CADENCES)[0].phases.reduce((s, p) => s + p.beats, 0);
+  drawCanvas();
+});
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

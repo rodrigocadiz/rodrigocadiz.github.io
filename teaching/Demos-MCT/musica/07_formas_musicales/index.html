@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Formas Musicales — La Música y sus Parámetros</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sonido_silencio/index.html">1. El Sonido y el Silencio</a>
+  <a href="../02_tempo/index.html">2. Tempo y Pulso</a>
+  <a href="../03_dinamica/index.html">3. Dinámicas</a>
+  <a href="../04_articulacion/index.html">4. Articulación</a>
+  <a href="../05_consonancia_disonancia/index.html">5. Consonancia y Disonancia</a>
+  <a href="../06_expectativa/index.html">6. Expectativa Musical</a>
+  <a href="../07_formas_musicales/index.html" class="active">7. Formas Musicales</a>
+  <a href="../08_linea_tiempo/index.html">8. Línea de Tiempo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Formas Musicales</h1>
+      <p class="subtitle">Texturas a través de la historia: monodía, polifonía, contrapunto y armonía</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Texturas musicales: del canto a una voz a la armonía vertical</h2>
+    <p class="description">
+      La <span class="kw">textura</span> describe cómo se relacionan las voces en el tiempo.
+      Históricamente la música evolucionó desde la <span class="kw">monodía</span> (una sola línea),
+      pasando por la <span class="kw">polifonía</span> y el <span class="kw">contrapunto</span> (varias voces independientes),
+      hasta la <span class="kw">armonía</span> homofónica (melodía con acordes). Escucha cada ejemplo y observa el
+      piano-roll y la notación.
+    </p>
+    <div class="controls">
+      <div class="control-group" style="min-width:auto;">
+        <label>Textura</label>
+        <div class="btn-group" style="margin-bottom:0; flex-wrap:wrap;">
+          <button class="btn active" id="btnMonodia"     onclick="setTexture('monodia')">Monodía</button>
+          <button class="btn"        id="btnPolifonia"   onclick="setTexture('polifonia')">Polifonía</button>
+          <button class="btn"        id="btnContrapunto" onclick="setTexture('contrapunto')">Contrapunto</button>
+          <button class="btn"        id="btnArmonia"     onclick="setTexture('armonia')">Armonía</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Tempo: <span class="val" id="tempoVal">100</span> BPM</label>
+        <input type="range" id="tempoSlider" min="60" max="140" value="100" step="2">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="textureLabel">Monodía — una sola línea melódica</div>
+    <canvas id="cvRoll" height="280"></canvas>
+    <div class="canvas-label" style="margin-top:14px;">Notación musical (esquema en clave de sol)</div>
+    <canvas id="cvNotacion" height="180"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Las cuatro texturas históricas</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">Monodía (monofonía)</strong><br>
+        Una <em>única</em> línea melódica, sin acompañamiento. Es la textura más antigua:
+        el <strong>canto gregoriano</strong> medieval, la música monódica de las primeras culturas.
+        Toda la atención está en la melodía.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Polifonía</strong><br>
+        <em>Varias</em> melodías independientes sonando a la vez, cada una con vida propia.
+        Floreció en el Renacimiento (Palestrina, Lasso). Ninguna voz es claramente principal:
+        todas se entrelazan.
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:14px;">
+      <div class="info-box ok">
+        <strong style="color:#00ff44;">Contrapunto</strong><br>
+        Polifonía gobernada por <em>reglas</em>: las voces se imitan y dialogan.
+        El ejemplo usa el sujeto de la <strong>Invención nº 1 (BWV 772)</strong> de <strong>J. S. Bach</strong>
+        (do-re-mi-fa-re-mi-do): el motivo <strong>pasa de una voz a otra</strong> mientras la acompañante
+        sostiene notas largas. Por eso las voces nunca van en paralelo: cuando una corre, la otra se mantiene.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff44aa;">Armonía (homofonía)</strong><br>
+        Una <em>melodía principal</em> sostenida por <strong>acordes</strong> que se mueven en bloque.
+        Domina desde el Clasicismo (Mozart, Beethoven) hasta el pop actual.
+        El interés se reparte entre la melodía horizontal y la armonía vertical.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Frecuencias y posición diatónica ───────────────────────
+const FREQ = {
+  C3:130.81, D3:146.83, E3:164.81, F3:174.61, G3:196.00, A3:220.00, B3:246.94,
+  C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88,
+  C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:784.00, A5:880.00
+};
+// step diatónico desde Mi4 (línea inferior del pentagrama = 0)
+const DIATONIC = {
+  C3:-9, D3:-8, E3:-7, F3:-6, G3:-5, A3:-4, B3:-3,
+  C4:-2, D4:-1, E4:0, F4:1, G4:2, A4:3, B4:4,
+  C5:5, D5:6, E5:7, F5:8, G5:9, A5:10
+};
+
+// ── Texturas (notas = [pitch, startBeat, durBeats]) ─────────
+const TEXTURES = {
+  monodia: {
+    label: 'Monodía — una sola línea melódica (ej. canto gregoriano)',
+    voices: [
+      { color:'#00ffff', name:'Voz única', notes:[
+        ['C4',0,1],['D4',1,1],['E4',2,1],['G4',3,1],['E4',4,2],['D4',6,1],['C4',7,1],
+        ['F4',8,1],['E4',9,1],['D4',10,1],['E4',11,1],['G4',12,2],['D4',14,1],['C4',15,1]
+      ]}
+    ]
+  },
+  polifonia: {
+    label: 'Polifonía — tres melodías independientes simultáneas',
+    voices: [
+      { color:'#00ffff', name:'Voz superior', notes:[
+        ['E5',0,2],['D5',2,1],['C5',3,1],['D5',4,2],['F5',6,2],['E5',8,1],['D5',9,1],
+        ['C5',10,2],['D5',12,1],['E5',13,1],['C5',14,2]
+      ]},
+      { color:'#00ff44', name:'Voz media', notes:[
+        ['G4',0,3],['A4',3,1],['G4',4,2],['F4',6,1],['E4',7,1],['G4',8,3],['F4',11,1],
+        ['E4',12,2],['G4',14,2]
+      ]},
+      { color:'#ff44aa', name:'Voz inferior', notes:[
+        ['C4',0,4],['F3',4,2],['G3',6,2],['C4',8,4],['G3',12,2],['C4',14,2]
+      ]}
+    ]
+  },
+  contrapunto: {
+    label: 'Contrapunto imitativo sobre el sujeto de la Invención nº 1 (BWV 772) de J. S. Bach',
+    voices: [
+      // El sujeto (do-re-mi-fa-re-mi-do) PASA de una voz a otra. Mientras una lo
+      // expone en corcheas, la otra acompaña con notas largas (movimiento oblicuo,
+      // sin paralelismos). Secciones: A sujeto en V1 · B en V2 · C en V1 · D cadencia.
+      { color:'#00ffff', name:'Voz superior', notes:[
+        // A — sujeto en la tónica
+        ['C5',0,.5],['D5',.5,.5],['E5',1,.5],['F5',1.5,.5],['D5',2,.5],['E5',2.5,.5],['C5',3,.5],['G4',3.5,.5],
+        // B — contracanto sostenido mientras la voz inferior toma el sujeto
+        ['E5',4,2],['D5',6,2],
+        // C — el sujeto reaparece (sobre la dominante) en la voz superior
+        ['G5',8,.5],['A5',8.5,.5],['G5',9,.5],['F5',9.5,.5],['E5',10,.5],['D5',10.5,.5],['E5',11,.5],['C5',11.5,.5],
+        // D — cadencia
+        ['D5',12,1],['C5',13,1],['E5',14,1],['C5',15,1]
+      ]},
+      { color:'#ffaa00', name:'Voz inferior', notes:[
+        // A — acompañamiento sostenido (la voz superior lleva el sujeto)
+        ['C3',0,2],['G3',2,2],
+        // B — el sujeto IMITADO una octava más abajo
+        ['C4',4,.5],['D4',4.5,.5],['E4',5,.5],['F4',5.5,.5],['D4',6,.5],['E4',6.5,.5],['C4',7,.5],['G3',7.5,.5],
+        // C — contracanto sostenido mientras la voz superior retoma el sujeto
+        ['G3',8,2],['C4',10,2],
+        // D — bajo cadencial (V → I)
+        ['G3',12,2],['C4',14,2]
+      ]}
+    ]
+  },
+  armonia: {
+    label: 'Armonía (homofonía) — melodía con acordes en bloque y bajo',
+    voices: [
+      { color:'#00ffff', name:'Melodía', notes:[
+        ['E5',0,2],['F5',2,2],['G5',4,2],['E5',6,2],['C5',8,2],['D5',10,2],['D5',12,2],['C5',14,2]
+      ]},
+      { color:'#00ff44', name:'Acordes', notes:[
+        ['C4',0,2],['E4',0,2],['G4',0,2],
+        ['C4',2,2],['F4',2,2],['A4',2,2],
+        ['B3',4,2],['D4',4,2],['G4',4,2],
+        ['C4',6,2],['E4',6,2],['G4',6,2],
+        ['C4',8,2],['E4',8,2],['A4',8,2],
+        ['C4',10,2],['F4',10,2],['A4',10,2],
+        ['B3',12,2],['D4',12,2],['G4',12,2],
+        ['C4',14,2],['E4',14,2],['G4',14,2]
+      ]},
+      { color:'#ff44aa', name:'Bajo', notes:[
+        ['C3',0,2],['F3',2,2],['G3',4,2],['C3',6,2],['A3',8,2],['F3',10,2],['G3',12,2],['C3',14,2]
+      ]}
+    ]
+  }
+};
+
+let currentTexture = 'monodia';
+let tempo = 100;
+let playing = false;
+let animId = null;
+let playStartAudio = null;
+let stopTimer = null;
+const F_MIN = 120, F_MAX = 920;
+
+function totalBeats() {
+  let max = 0;
+  TEXTURES[currentTexture].voices.forEach(v =>
+    v.notes.forEach(([p, s, d]) => { if (s + d > max) max = s + d; }));
+  return max;
+}
+
+// ════════════════════════════════════════════════════════════
+//  PIANO-ROLL
+// ════════════════════════════════════════════════════════════
+const roll = document.getElementById('cvRoll');
+const rctx = roll.getContext('2d');
+
+function freqToY(f, padT, bh) {
+  const t = (Math.log(f) - Math.log(F_MIN)) / (Math.log(F_MAX) - Math.log(F_MIN));
+  return padT + bh - t * bh;
+}
+
+function drawRoll() {
+  roll.width = roll.offsetWidth || 800;
+  const W = roll.width, H = roll.height;
+  rctx.clearRect(0, 0, W, H);
+
+  const padL = 16, padR = 16, padT = 16, padB = 28;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const tex = TEXTURES[currentTexture];
+  const TB = totalBeats();
+
+  // Grid horizontal: octavas C
+  ['C3','C4','C5'].forEach(n => {
+    const y = freqToY(FREQ[n], padT, bh);
+    rctx.strokeStyle = 'rgba(100,180,255,0.20)'; rctx.lineWidth = 1;
+    rctx.beginPath(); rctx.moveTo(padL, y); rctx.lineTo(padL + bw, y); rctx.stroke();
+    rctx.fillStyle = 'rgba(150,200,255,0.55)'; rctx.font = '10px sans-serif'; rctx.textAlign = 'left';
+    rctx.fillText(n, padL + 2, y - 3);
+  });
+  // Grid vertical: beats
+  rctx.strokeStyle = 'rgba(100,180,255,0.35)'; rctx.lineWidth = 1;
+  for (let b = 0; b <= TB; b++) {
+    const x = padL + (b / TB) * bw;
+    rctx.globalAlpha = (b % 4 === 0) ? 1 : 0.4;
+    rctx.beginPath(); rctx.moveTo(x, padT); rctx.lineTo(x, padT + bh); rctx.stroke();
+  }
+  rctx.globalAlpha = 1;
+
+  const noteH = Math.max(9, bh / 26);
+  const elapsed = (playing && playStartAudio !== null)
+    ? (getAudioContext().currentTime - playStartAudio) : -1;
+  const curBeat = elapsed >= 0 ? elapsed / (60 / tempo) : -1;
+
+  tex.voices.forEach(v => {
+    v.notes.forEach(([p, s, d]) => {
+      const x = padL + (s / TB) * bw;
+      const w = (d / TB) * bw - 2;
+      const y = freqToY(FREQ[p], padT, bh) - noteH / 2;
+      const active = curBeat >= s && curBeat < s + d;
+      rctx.fillStyle = v.color + (active ? 'ff' : '66');
+      rctx.fillRect(x + 1, y, w, noteH);
+      rctx.strokeStyle = v.color; rctx.lineWidth = active ? 2.5 : 1.2;
+      rctx.strokeRect(x + 1, y, w, noteH);
+    });
+  });
+
+  // Playhead
+  if (curBeat >= 0) {
+    const x = padL + Math.min(curBeat / TB, 1) * bw;
+    rctx.strokeStyle = '#ffffff'; rctx.lineWidth = 2;
+    rctx.beginPath(); rctx.moveTo(x, padT); rctx.lineTo(x, padT + bh); rctx.stroke();
+  }
+
+  // Leyenda de voces
+  rctx.font = '11px sans-serif'; rctx.textAlign = 'left'; rctx.textBaseline = 'alphabetic';
+  let lx = padL;
+  tex.voices.forEach(v => {
+    rctx.fillStyle = v.color;
+    rctx.fillRect(lx, H - 16, 12, 9);
+    rctx.fillStyle = '#99ccff';
+    rctx.fillText(v.name, lx + 16, H - 8);
+    lx += 16 + rctx.measureText(v.name).width + 18;
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  NOTACIÓN (esquema)
+// ════════════════════════════════════════════════════════════
+const nCanvas = document.getElementById('cvNotacion');
+const nctx = nCanvas.getContext('2d');
+
+function drawStaff(c, x0, x1, baseY, gap) {
+  c.strokeStyle = 'rgba(150,200,255,0.75)'; c.lineWidth = 1.4;
+  for (let i = 0; i < 5; i++) {
+    const y = baseY - i * gap;
+    c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke();
+  }
+  c.fillStyle = '#ffcc00'; c.font = `${gap * 4}px serif`;
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillText('\u{1D11E}', x0 + 6, baseY + gap * 0.5);
+}
+
+function drawHead(c, x, pitch, baseY, gap, color, stemUp) {
+  const step = DIATONIC[pitch] ?? 0;
+  const y = baseY - step * (gap / 2);
+  const rx = gap * 0.6, ry = gap * 0.43;
+
+  c.strokeStyle = 'rgba(150,200,255,0.7)'; c.lineWidth = 1.3;
+  if (step < 0) for (let s = -2; s >= step; s -= 2) {
+    const ly = baseY - s * (gap / 2);
+    c.beginPath(); c.moveTo(x - rx - 4, ly); c.lineTo(x + rx + 4, ly); c.stroke();
+  }
+  if (step > 8) for (let s = 10; s <= step; s += 2) {
+    const ly = baseY - s * (gap / 2);
+    c.beginPath(); c.moveTo(x - rx - 4, ly); c.lineTo(x + rx + 4, ly); c.stroke();
+  }
+
+  c.save(); c.translate(x, y); c.rotate(-0.32);
+  c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+  c.fillStyle = color; c.fill(); c.restore();
+
+  c.strokeStyle = color; c.lineWidth = 1.8;
+  c.beginPath();
+  if (stemUp) { c.moveTo(x + rx - 1, y); c.lineTo(x + rx - 1, y - gap * 3); }
+  else        { c.moveTo(x - rx + 1, y); c.lineTo(x - rx + 1, y + gap * 3); }
+  c.stroke();
+}
+
+function drawNotation() {
+  nCanvas.width = nCanvas.offsetWidth || 800;
+  const W = nCanvas.width, H = nCanvas.height;
+  nctx.clearRect(0, 0, W, H);
+
+  const gap = 12;
+  const baseY = 108;
+  const x0 = 14, x1 = W - 14;
+  drawStaff(nctx, x0, x1, baseY, gap);
+
+  const tex = TEXTURES[currentTexture];
+  const TB = totalBeats();
+  const noteX0 = x0 + gap * 5;
+  const noteSpan = x1 - noteX0 - 16;
+
+  tex.voices.forEach((v, vi) => {
+    const stemUp = (vi === 0); // voz superior plica arriba, demás abajo
+    v.notes.forEach(([p, s]) => {
+      const x = noteX0 + (s / TB) * noteSpan + gap;
+      drawHead(nctx, x, p, baseY, gap, v.color, stemUp);
+    });
+  });
+
+  // Etiqueta textura
+  nctx.fillStyle = '#99ccff'; nctx.font = 'italic 11px sans-serif';
+  nctx.textAlign = 'right'; nctx.textBaseline = 'alphabetic';
+  nctx.fillText(currentTexture, x1, H - 6);
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function playTexture() {
+  const actx = getAudioContext();
+  const beatDur = 60 / tempo;
+  const t0 = actx.currentTime + 0.06;
+  playStartAudio = t0;
+  const tex = TEXTURES[currentTexture];
+
+  tex.voices.forEach(v => {
+    v.notes.forEach(([p, s, d]) => {
+      const freq = FREQ[p];
+      const start = t0 + s * beatDur;
+      const dur = d * beatDur;
+      const osc = actx.createOscillator();
+      const g = actx.createGain();
+      osc.type = 'triangle'; osc.frequency.value = freq;
+      const peak = 0.12;
+      g.gain.setValueAtTime(0, start);
+      g.gain.linearRampToValueAtTime(peak, start + 0.02);
+      g.gain.setValueAtTime(peak * 0.9, start + dur - 0.04);
+      g.gain.linearRampToValueAtTime(0, start + dur - 0.005);
+      osc.connect(g); g.connect(actx.destination);
+      osc.start(start); osc.stop(start + dur + 0.02);
+      _activeNodes.push(osc);
+    });
+  });
+
+  // Auto-stop al terminar. Se guarda el id y se cancela cualquier timer previo
+  // para que un auto-stop obsoleto (de una reproducción anterior más corta)
+  // no corte esta reproducción.
+  if (stopTimer) clearTimeout(stopTimer);
+  const totalDur = totalBeats() * beatDur;
+  stopTimer = setTimeout(() => { if (playing) stopPlayback(); }, (totalDur + 0.6) * 1000);
+}
+
+// ── Toggle ─────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  playTexture();
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  playStartAudio = null;
+  if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+  stopAllAudio();
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawRoll();
+}
+
+function animate() {
+  drawRoll();
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setTexture(name) {
+  if (playing) stopPlayback();
+  currentTexture = name;
+  ['Monodia','Polifonia','Contrapunto','Armonia'].forEach(k =>
+    document.getElementById('btn' + k).classList.remove('active'));
+  const cap = name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById('btn' + cap).classList.add('active');
+  document.getElementById('textureLabel').textContent = TEXTURES[name].label;
+  drawRoll(); drawNotation();
+}
+
+document.getElementById('tempoSlider').addEventListener('input', function() {
+  tempo = +this.value;
+  document.getElementById('tempoVal').textContent = tempo;
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { drawRoll(); drawNotation(); });
+window.addEventListener('resize', () => { drawRoll(); drawNotation(); });
+</script>
+</body>
+</html>

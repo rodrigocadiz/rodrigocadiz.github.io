@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. Transformaciones de la Serie — Tonalidad y Atonalidad</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_escalas/index.html">1. Escalas y Modos</a>
+  <a href="../02_acordes/index.html">2. Acordes y Armonía</a>
+  <a href="../03_tonica_jerarquia/index.html">3. La Tónica y la Jerarquía</a>
+  <a href="../04_atonalidad/index.html">4. Atonalidad</a>
+  <a href="../05_serie_dodecafonica/index.html">5. La Serie Dodecafónica</a>
+  <a href="../06_transformaciones/index.html" class="active">6. Transformaciones</a>
+  <a href="../07_modos_messiaen/index.html">7. Modos de Messiaen</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>6. Transformaciones de la Serie</h1>
+      <p class="subtitle">Variaciones matemáticas: original, retrógrada, inversión y retrógrada-inversión</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Las cuatro formas de la serie</h2>
+    <p class="description">
+      Una vez creada la serie, el compositor puede manipularla: tocarla de atrás hacia adelante
+      (<span class="kw">retrógrada</span>, R), en forma de espejo (<span class="kw">inversión</span>, I),
+      o ambas a la vez (<span class="kw">retrógrada-inversión</span>, RI). Junto a la original
+      (<span class="kw">prima</span>, P) son las cuatro formas básicas. Compara su contorno contra la serie original
+      —en gris— y escucha cómo cambia.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn active" id="btnP"  onclick="setForm('P')">P · Prima</button>
+        <button class="btn" id="btnR"  onclick="setForm('R')">R · Retrógrada</button>
+        <button class="btn" id="btnI"  onclick="setForm('I')">I · Inversión</button>
+        <button class="btn" id="btnRI" onclick="setForm('RI')">RI · Retr.-Inv.</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn" id="btnGen" onclick="newRow()">🎲 Nueva serie</button>
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Reproducir</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">P · Prima (serie original)</div>
+    <canvas id="cvRow" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Espejos en el tiempo y la altura</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">P y R</strong><br>
+        La <strong>retrógrada</strong> recorre la misma serie de la última nota a la primera:
+        un espejo en el <strong>tiempo</strong>. El contorno se voltea de izquierda a derecha.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">I y RI</strong><br>
+        La <strong>inversión</strong> refleja cada intervalo: lo que subía ahora baja. Es un espejo en la
+        <strong>altura</strong> (Iₖ = 2·P₀ − Pₖ, módulo 12). La <strong>RI</strong> combina ambos espejos.
+        Las notas pueden además agruparse para formar acordes.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Constantes ─────────────────────────────────────────────
+const NOTE_NAMES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+const FORM_NAME = { P: 'Prima (serie original)', R: 'Retrógrada (espejo temporal)', I: 'Inversión (espejo de altura)', RI: 'Retrógrada-Inversión (ambos espejos)' };
+const FORM_COLOR = { P: '#ffaa00', R: '#00ffff', I: '#00ff44', RI: '#ff44ff' };
+function noteFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+function mod12(x) { return ((x % 12) + 12) % 12; }
+
+// ── Estado ─────────────────────────────────────────────────
+let P = [0,11,3,4,8,7,9,5,6,1,2,10];   // serie por defecto
+let form = 'P';
+let playing = false, timers = [], activeIdx = -1;
+
+function transform(name) {
+  if (name === 'P') return P.slice();
+  if (name === 'R') return P.slice().reverse();
+  const I = P.map(pc => mod12(2 * P[0] - pc));
+  if (name === 'I') return I;
+  return I.slice().reverse();        // RI
+}
+
+function newRow() {
+  const a = [...Array(12).keys()];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  P = a;
+  if (playing) stopPlayback();
+  updateStatus(); drawCanvas();
+}
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvRow');
+const ctx = canvas.getContext('2d');
+
+function drawContour(seq, color, lw, alpha, withNodes) {
+  const M = canvas._m;
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color; ctx.lineWidth = lw;
+  ctx.beginPath();
+  seq.forEach((pc, i) => { const x = M.colX(i), y = M.pcY(pc); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke();
+  if (withNodes) {
+    seq.forEach((pc, i) => {
+      const x = M.colX(i), y = M.pcY(pc), active = (i === activeIdx);
+      ctx.beginPath(); ctx.arc(x, y, active ? 13 : 10, 0, Math.PI * 2);
+      ctx.fillStyle = active ? '#ffffff' : color; ctx.fill();
+      ctx.lineWidth = active ? 3 : 1.5; ctx.strokeStyle = active ? '#ffffff' : 'rgba(10,21,32,0.8)'; ctx.stroke();
+      ctx.fillStyle = '#0a1520'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(i + 1, x, y); ctx.textBaseline = 'alphabetic';
+    });
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 44, padR = 18, padT = 18, padB = 30;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const colW = bw / 12, rowH = bh / 12;
+  canvas._m = { colX: i => padL + i * colW + colW / 2, pcY: pc => padT + (11 - pc) * rowH + rowH / 2 };
+  const M = canvas._m;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.18)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 12; i++) { ctx.beginPath(); ctx.moveTo(padL + i * colW, padT); ctx.lineTo(padL + i * colW, padT + bh); ctx.stroke(); }
+  for (let r = 0; r <= 12; r++) { ctx.beginPath(); ctx.moveTo(padL, padT + r * rowH); ctx.lineTo(padL + bw, padT + r * rowH); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let pc = 0; pc < 12; pc++) ctx.fillText(NOTE_NAMES[pc], padL - 5, M.pcY(pc));
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  for (let i = 0; i < 12; i++) ctx.fillText(i + 1, M.colX(i), padT + bh + 18);
+
+  // Referencia P (gris) salvo cuando la forma actual es P
+  if (form !== 'P') drawContour(P, 'rgba(160,180,210,0.5)', 1.5, 0.6, false);
+  // Forma seleccionada
+  drawContour(transform(form), FORM_COLOR[form], 2.5, 1, true);
+
+  // Leyenda
+  ctx.fillStyle = FORM_COLOR[form]; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('■ ' + form, padL + 2, padT + 4);
+  if (form !== 'P') { ctx.fillStyle = 'rgba(160,180,210,0.8)'; ctx.fillText('■ P (referencia)', padL + 44, padT + 4); }
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  const seq = transform(form);
+  const actx = getAudioContext();
+  const step = 0.36, t0 = actx.currentTime + 0.05;
+  seq.forEach((pc, i) => {
+    const m = 60 + pc, ts = t0 + i * step, dur = step * 0.92;
+    const osc = actx.createOscillator(), g = actx.createGain();
+    osc.type = 'triangle'; osc.frequency.value = noteFreq(m);
+    g.gain.setValueAtTime(0, ts);
+    g.gain.linearRampToValueAtTime(0.2, ts + 0.015);
+    g.gain.setValueAtTime(0.2, ts + dur - 0.05);
+    g.gain.linearRampToValueAtTime(0, ts + dur - 0.005);
+    osc.connect(g); g.connect(actx.destination); osc.start(ts); osc.stop(ts + dur);
+    _activeNodes.push(osc);
+    timers.push(setTimeout(() => { activeIdx = i; drawCanvas(); }, i * step * 1000 + 15));
+  });
+  timers.push(setTimeout(() => { if (playing) stopPlayback(); }, seq.length * step * 1000 + 250));
+}
+
+function stopPlayback() {
+  playing = false;
+  timers.forEach(clearTimeout); timers = [];
+  stopAllAudio();
+  activeIdx = -1;
+  document.getElementById('btnPlay').textContent = '▶ Reproducir';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setForm(f) {
+  form = f;
+  ['P', 'R', 'I', 'RI'].forEach(k => document.getElementById('btn' + k).classList.toggle('active', k === f));
+  if (playing) stopPlayback();
+  updateStatus(); drawCanvas();
+}
+function updateStatus() {
+  const seq = transform(form);
+  document.getElementById('statusLabel').textContent =
+    `${form} · ${FORM_NAME[form]} — ${seq.map(pc => NOTE_NAMES[pc]).join(' ')}`;
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { updateStatus(); drawCanvas(); });
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

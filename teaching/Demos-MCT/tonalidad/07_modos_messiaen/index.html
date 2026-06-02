@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. Modos de Messiaen — Tonalidad y Atonalidad</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_escalas/index.html">1. Escalas y Modos</a>
+  <a href="../02_acordes/index.html">2. Acordes y Armonía</a>
+  <a href="../03_tonica_jerarquia/index.html">3. La Tónica y la Jerarquía</a>
+  <a href="../04_atonalidad/index.html">4. Atonalidad</a>
+  <a href="../05_serie_dodecafonica/index.html">5. La Serie Dodecafónica</a>
+  <a href="../06_transformaciones/index.html">6. Transformaciones</a>
+  <a href="../07_modos_messiaen/index.html" class="active">7. Modos de Messiaen</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. Modos de Messiaen</h1>
+      <p class="subtitle">Modos de transposición limitada: escalas que se repiten dentro de la octava</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Escalas simétricas que se agotan al transponer</h2>
+    <p class="description">
+      Olivier Messiaen construyó siete <span class="kw">modos de transposición limitada</span>: escalas cuyo patrón de intervalos
+      se <span class="kw">repite dentro de la octava</span>. Por esa simetría, al transponerlos solo unas pocas veces se vuelve a obtener
+      <span class="kw">exactamente la misma colección de notas</span>. Son un puente entre la tonalidad y la atonalidad: crean
+      <span class="kw">color</span> y ambigüedad en lugar de jerarquía. Elige un modo y desliza la transposición para ver cuándo se repite.
+    </p>
+    <div class="controls">
+      <div class="btn-group" id="modeButtons">
+        <button class="btn active" data-m="0" onclick="setMode(0)">M1 · tonos enteros</button>
+        <button class="btn" data-m="1" onclick="setMode(1)">M2 · octatónica</button>
+        <button class="btn" data-m="2" onclick="setMode(2)">M3</button>
+        <button class="btn" data-m="3" onclick="setMode(3)">M4</button>
+        <button class="btn" data-m="4" onclick="setMode(4)">M5</button>
+        <button class="btn" data-m="5" onclick="setMode(5)">M6</button>
+        <button class="btn" data-m="6" onclick="setMode(6)">M7</button>
+      </div>
+      <div class="control-group">
+        <label>Transposición: <span class="val" id="transVal">0</span> semitonos</label>
+        <input type="range" id="transSlider" min="0" max="11" value="0" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Tocar modo</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Modo 1 · 6 notas · 2 transposiciones distintas</div>
+    <canvas id="cvCircle" height="360"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Transposición limitada y simetría</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">¿Por qué "limitada"?</strong><br>
+        En una escala mayor existen <strong>12 transposiciones</strong> distintas. En un modo de Messiaen el patrón se repite
+        cada pocos semitonos, así que transponerlo por ese intervalo devuelve <strong>la misma colección</strong>:
+        M1 tiene 2 transposiciones, M2 tiene 3, M3 tiene 4, y M4–M7 tienen 6.
+      </div>
+      <div class="info-box ok">
+        <strong style="color:#ffd24a;">Color en vez de jerarquía</strong><br>
+        El <strong>M1</strong> es la escala de tonos enteros (Debussy); el <strong>M2</strong> es la octatónica (tono-semitono).
+        Su simetría disuelve la sensación de tónica: ningún grado "tira" hacia otro, igual que en la atonalidad,
+        pero con colecciones fijas y muy reconocibles.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Constantes ─────────────────────────────────────────────
+const NOTE_NAMES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+// Patrones de intervalos (suman 12) de los 7 modos de Messiaen
+const MESSIAEN = [
+  { name: 'Modo 1 (tonos enteros)', steps: [2,2,2,2,2,2] },
+  { name: 'Modo 2 (octatónica)',    steps: [1,2,1,2,1,2,1,2] },
+  { name: 'Modo 3',                 steps: [2,1,1,2,1,1,2,1,1] },
+  { name: 'Modo 4',                 steps: [1,1,3,1,1,1,3,1] },
+  { name: 'Modo 5',                 steps: [1,4,1,1,4,1] },
+  { name: 'Modo 6',                 steps: [2,2,1,1,2,2,1,1] },
+  { name: 'Modo 7',                 steps: [1,1,1,2,1,1,1,1,2,1] }
+];
+function noteFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+function baseOffsets(idx) {
+  const out = [0]; let acc = 0;
+  const st = MESSIAEN[idx].steps;
+  for (let i = 0; i < st.length - 1; i++) { acc += st[i]; out.push(acc); }
+  return out; // longitud = nº de notas, valores en [0,12)
+}
+function periodOf(offs) {
+  const s = new Set(offs);
+  for (let p = 1; p < 12; p++) {
+    let same = true;
+    for (const o of offs) if (!s.has((o + p) % 12)) { same = false; break; }
+    if (same) return p;
+  }
+  return 12;
+}
+
+// ── Estado ─────────────────────────────────────────────────
+let modeIdx = 0;
+let trans = 0;
+let playing = false, timers = [], activePC = -1;
+
+function currentSet() { return baseOffsets(modeIdx).map(o => (o + trans) % 12); }
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvCircle');
+const ctx = canvas.getContext('2d');
+
+function nodePos(pc, cx, cy, R) {
+  const ang = -Math.PI / 2 + pc * (Math.PI * 2 / 12);
+  return { x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang) };
+}
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2 + 6, R = Math.min(W, H) / 2 - 50;
+
+  const offs = baseOffsets(modeIdx);
+  const period = periodOf(offs);
+  const setArr = currentSet();
+  const setPC = new Set(setArr);
+  const rootPC = trans % 12;
+
+  // Centro: texto de simetría
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,210,74,0.9)'; ctx.font = 'bold 13px sans-serif';
+  ctx.fillText(`${period} transposiciones`, cx, cy - 6);
+  ctx.fillStyle = 'rgba(150,200,255,0.8)'; ctx.font = '11px sans-serif';
+  ctx.fillText(`${offs.length} notas · se repite cada ${period} st`, cx, cy + 12);
+  if (trans >= period) {
+    ctx.fillStyle = '#00ff44'; ctx.font = '11px sans-serif';
+    ctx.fillText(`T${trans} ≡ T${trans % period}`, cx, cy + 30);
+  }
+
+  // Aro exterior
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+
+  // Polígono de la colección (resalta la simetría)
+  if (setArr.length > 1) {
+    ctx.strokeStyle = 'rgba(0,229,255,0.45)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    const sorted = setArr.slice().sort((a, b) => a - b);
+    sorted.forEach((pc, i) => { const p = nodePos(pc, cx, cy, R); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
+    ctx.closePath(); ctx.stroke();
+  }
+
+  // Nodos cromáticos
+  for (let pc = 0; pc < 12; pc++) {
+    const p = nodePos(pc, cx, cy, R);
+    const inSet = setPC.has(pc);
+    const isRoot = (pc === rootPC) && inSet;
+    const active = (pc === activePC);
+    let r, fill;
+    if (active) { r = 22; fill = '#ffffff'; }
+    else if (isRoot) { r = 22; fill = '#ffd24a'; }
+    else if (inSet) { r = 18; fill = 'rgba(0,229,255,0.85)'; }
+    else { r = 12; fill = 'rgba(60,90,130,0.5)'; }
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = active ? 3 : 1.5; ctx.strokeStyle = active ? '#ffffff' : 'rgba(10,21,32,0.9)'; ctx.stroke();
+    ctx.fillStyle = inSet ? '#0a1520' : 'rgba(180,200,230,0.6)';
+    ctx.font = (isRoot ? 'bold ' : '') + '11px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(NOTE_NAMES[pc], p.x, p.y);
+    ctx.textBaseline = 'alphabetic';
+  }
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function playNoteAt(m, t0, dur) {
+  const actx = getAudioContext();
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.type = 'triangle'; osc.frequency.value = noteFreq(m);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.2, t0 + 0.015);
+  g.gain.setValueAtTime(0.2, t0 + dur - 0.04);
+  g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0); osc.stop(t0 + dur);
+  _activeNodes.push(osc);
+}
+
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  const actx = getAudioContext();
+  const offs = baseOffsets(modeIdx);
+  const midis = offs.map(o => 60 + trans + o);
+  midis.push(60 + trans + 12); // octava
+  const step = 0.34, t0 = actx.currentTime + 0.05;
+  midis.forEach((m, i) => {
+    playNoteAt(m, t0 + i * step, step * 0.95);
+    timers.push(setTimeout(() => { activePC = ((m % 12) + 12) % 12; drawCanvas(); }, i * step * 1000 + 20));
+  });
+  timers.push(setTimeout(() => { if (playing) stopPlayback(); }, midis.length * step * 1000 + 200));
+}
+
+function stopPlayback() {
+  playing = false;
+  timers.forEach(clearTimeout); timers = [];
+  stopAllAudio();
+  activePC = -1;
+  document.getElementById('btnPlay').textContent = '▶ Tocar modo';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setMode(i) {
+  modeIdx = i;
+  document.querySelectorAll('#modeButtons .btn').forEach(b => b.classList.toggle('active', +b.dataset.m === i));
+  updateStatus();
+  if (playing) stopPlayback(); else drawCanvas();
+}
+function updateStatus() {
+  const offs = baseOffsets(modeIdx), period = periodOf(offs);
+  document.getElementById('statusLabel').textContent =
+    `${MESSIAEN[modeIdx].name} · ${offs.length} notas · ${period} transposiciones distintas · transposición T${trans}`;
+}
+document.getElementById('transSlider').addEventListener('input', function () {
+  trans = +this.value;
+  document.getElementById('transVal').textContent = trans;
+  updateStatus();
+  if (playing) stopPlayback(); else drawCanvas();
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { updateStatus(); drawCanvas(); });
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

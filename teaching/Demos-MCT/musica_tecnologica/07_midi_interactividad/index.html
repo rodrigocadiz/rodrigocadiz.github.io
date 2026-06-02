@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7. MIDI e Interactividad — Música de Raíz Tecnológica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .midi-log {
+      font-family: 'Consolas', 'Menlo', monospace; font-size: 0.8rem; line-height: 1.5;
+      max-height: 150px; overflow-y: auto; margin-top: 12px;
+    }
+    .midi-log .you { color: #00ffff; }
+    .midi-log .bot { color: #ff55aa; }
+    .midi-log .hex { color: #ffd24a; }
+  </style>
+</head>
+<body class="sec-musica-tecnologica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_linea_tiempo/index.html">1. Línea de Tiempo</a>
+  <a href="../02_liberacion_sonido/index.html">2. Liberación del Sonido</a>
+  <a href="../03_concreta_electronica/index.html">3. Concreta vs. Electrónica</a>
+  <a href="../04_cinta_magnetica/index.html">4. La Cinta Magnética</a>
+  <a href="../05_sintetizador_analogico/index.html">5. Sintetizador Analógico</a>
+  <a href="../06_computer_music/index.html">6. Música por Ordenador</a>
+  <a href="../07_midi_interactividad/index.html" class="active">7. MIDI e Interactividad</a>
+  <a href="../08_laptop_redes/index.html">8. Laptops y Redes</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>7. MIDI e Interactividad</h1>
+      <p class="subtitle">El protocolo que conectó las máquinas y el computador como copiloto musical</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Toca y observa los mensajes MIDI</h2>
+    <p class="description">
+      El protocolo <span class="kw">MIDI</span> (1983) estableció un estándar universal: en vez de audio, las máquinas se envían
+      <span class="kw">mensajes</span> —"nota 60 encendida con velocidad 100"— en pocos bytes. Toca el teclado y mira los mensajes.
+      Activa el <span class="kw">modo interactivo</span> y el computador <span class="kw">responde</span> a lo que tocas, como el
+      "copiloto" de Joel Chadabe: máquina y humano comparten el control.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn" id="btnInter" onclick="toggleInteractive()">⇄ Modo interactivo</button>
+        <button class="btn" id="btnClear" onclick="clearLog()">Limpiar registro</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Haz clic en una tecla (la altura vertical del clic define la velocidad)</div>
+    <canvas id="cvKeys" height="220"></canvas>
+    <div class="info-box midi-log" id="midiLog"><span style="opacity:0.6;">Los mensajes MIDI aparecerán aquí…</span></div>
+  </section>
+
+  <section class="section-card">
+    <h2>Datos, no audio</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffff;">El mensaje MIDI</strong><br>
+        Un <strong>Note On</strong> son tres bytes: estado (<span style="color:#ffd24a;">9n</span>, n = canal), número de
+        <strong>nota</strong> (0–127) y <strong>velocidad</strong> (0–127). MIDI no transmite sonido, sino <strong>instrucciones</strong>:
+        por eso es ligero y universal entre marcas.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff55aa;">Sistemas interactivos</strong><br>
+        Joel Chadabe y otros crearon sistemas donde el ordenador <strong>reacciona</strong> al intérprete y propone material propio.
+        El instrumento deja de ser pasivo: se vuelve un <strong>compañero de improvisación</strong> que comparte decisiones.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const NOTE_NAMES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+const WHITE_PC = [0,2,4,5,7,9,11], BLACK_PC = [1,3,6,8,10];
+const KB_START = 60, KB_END = 83;       // 2 octavas
+const MAJOR = [0,2,4,5,7,9,11];
+let interactive = false;
+let log = [];
+let highlight = new Set();
+
+function noteName(m) { return NOTE_NAMES[m % 12] + (Math.floor(m / 12) - 1); }
+function freqOf(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+// ── Canvas: teclado ────────────────────────────────────────
+const canvas = document.getElementById('cvKeys');
+const ctx = canvas.getContext('2d');
+let WHITES = [], WW = 0, PADL = 12, KEYTOP = 16, WHITEH = 0, BLACKH = 0;
+
+function buildWhites() { const w = []; for (let m = KB_START; m <= KB_END; m++) if (WHITE_PC.includes(m % 12)) w.push(m); return w; }
+function keyX(m) { return WHITE_PC.includes(m % 12) ? PADL + WHITES.indexOf(m) * WW + WW / 2 : PADL + (WHITES.indexOf(m - 1) + 1) * WW; }
+
+function drawKeys() {
+  canvas.width = canvas.offsetWidth || 900;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  PADL = 12; KEYTOP = 16; WHITEH = H - 40; BLACKH = WHITEH * 0.62;
+  WHITES = buildWhites(); WW = (W - 2 * PADL) / WHITES.length;
+
+  WHITES.forEach((m, i) => {
+    const x = PADL + i * WW, on = highlight.has(m);
+    ctx.fillStyle = on ? 'rgba(0,255,255,0.85)' : '#eef4ff';
+    ctx.fillRect(x, KEYTOP, WW - 1.5, WHITEH);
+    ctx.strokeStyle = 'rgba(10,21,32,0.85)'; ctx.lineWidth = 1; ctx.strokeRect(x, KEYTOP, WW - 1.5, WHITEH);
+    ctx.fillStyle = '#0a1520'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(noteName(m), x + WW / 2, KEYTOP + WHITEH - 8);
+  });
+  for (let m = KB_START; m <= KB_END; m++) {
+    if (!BLACK_PC.includes(m % 12)) continue;
+    const cx = keyX(m), bwid = WW * 0.62, on = highlight.has(m);
+    ctx.fillStyle = on ? 'rgba(0,255,255,0.95)' : '#0d1a2e';
+    ctx.fillRect(cx - bwid / 2, KEYTOP, bwid, BLACKH);
+    ctx.strokeStyle = '#000'; ctx.strokeRect(cx - bwid / 2, KEYTOP, bwid, BLACKH);
+  }
+  ctx.fillStyle = 'rgba(150,200,255,0.6)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('↑ suave    ↓ fuerte (velocidad)', PADL, H - 8);
+}
+
+// ── Audio + mensaje MIDI ───────────────────────────────────
+function playMidi(note, vel, source) {
+  const actx = getAudioContext(), t0 = actx.currentTime + 0.01;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = source === 'bot' ? 'square' : 'triangle';
+  o.frequency.value = freqOf(note);
+  const gain = 0.04 + (vel / 127) * 0.22;
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(gain, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.6);
+  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 0.65); _activeNodes.push(o);
+
+  highlight.add(note); drawKeys();
+  setTimeout(() => { highlight.delete(note); drawKeys(); }, 280);
+
+  addLog(note, vel, source);
+}
+
+function addLog(note, vel, source) {
+  const status = (0x90).toString(16);
+  const hex = `${status} ${note.toString(16).padStart(2,'0')} ${vel.toString(16).padStart(2,'0')}`.toUpperCase();
+  const who = source === 'bot' ? '<span class="bot">máquina ←</span>' : '<span class="you">tú →</span>';
+  log.unshift(`${who} NOTE ON · nota ${note} (${noteName(note)}) · vel ${vel} &nbsp; <span class="hex">[${hex}]</span>`);
+  if (log.length > 12) log.pop();
+  document.getElementById('midiLog').innerHTML = log.join('<br>');
+}
+
+function userPlay(note, vel) {
+  playMidi(note, vel, 'you');
+  if (interactive) respond(note, vel);
+}
+
+// El computador responde: una pequeña frase derivada de tu nota (copiloto)
+function respond(note, vel) {
+  const deg = MAJOR[Math.floor(Math.random() * MAJOR.length)];
+  const motif = [note + 12 - 5, note + 4, note + 7, note + 12].map(n => Math.min(95, Math.max(36, n)));
+  motif.forEach((n, i) => {
+    setTimeout(() => playMidi(n, Math.max(40, vel - 15), 'bot'), 320 + i * 200);
+  });
+}
+
+// ── Click en el teclado ────────────────────────────────────
+canvas.addEventListener('click', e => {
+  const r = canvas.getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (canvas.width / r.width);
+  const my = (e.clientY - r.top) * (canvas.height / r.height);
+  // velocidad por posición vertical dentro del teclado
+  const yf = Math.min(1, Math.max(0, (my - KEYTOP) / WHITEH));
+  const vel = Math.round(30 + yf * 95);
+  // ¿tecla negra?
+  for (let m = KB_START; m <= KB_END; m++) {
+    if (!BLACK_PC.includes(m % 12)) continue;
+    const cx = keyX(m), bwid = WW * 0.62;
+    if (mx >= cx - bwid / 2 && mx <= cx + bwid / 2 && my <= KEYTOP + BLACKH) { userPlay(m, vel); return; }
+  }
+  // tecla blanca
+  const i = Math.floor((mx - PADL) / WW);
+  if (i >= 0 && i < WHITES.length) userPlay(WHITES[i], vel);
+});
+
+// ── Controles ──────────────────────────────────────────────
+function toggleInteractive() {
+  interactive = !interactive;
+  document.getElementById('btnInter').classList.toggle('active', interactive);
+  document.getElementById('statusLabel').textContent = interactive
+    ? '⇄ Modo interactivo activo · el computador responde a lo que toques'
+    : 'Haz clic en una tecla (la altura vertical del clic define la velocidad)';
+}
+function clearLog() {
+  log = [];
+  document.getElementById('midiLog').innerHTML = '<span style="opacity:0.6;">Los mensajes MIDI aparecerán aquí…</span>';
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', drawKeys);
+window.addEventListener('resize', drawKeys);
+</script>
+</body>
+</html>

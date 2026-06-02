@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. La Serie Dodecafónica — Tonalidad y Atonalidad</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .palette-hint { font-size:0.8rem; color:var(--text-dim); margin:4px 0 2px; }
+    .palette { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 12px; }
+    .pchip {
+      position:relative; min-width:46px; padding:8px 6px; border-radius:7px; cursor:pointer;
+      border:1px solid var(--border); background:rgba(255,170,0,0.08);
+      color:#ffaa00; font-size:0.82rem; font-weight:600; text-align:center;
+      transition:all .15s;
+    }
+    .pchip:hover { border-color:var(--accent-1); background:rgba(255,170,0,0.18); }
+    /* Nota ya colocada en la serie: se atenúa, muestra su posición y se puede quitar */
+    .pchip.used { background:rgba(0,255,255,0.10); border-color:var(--accent-2); color:var(--accent-2); }
+    .pchip .pos {
+      position:absolute; top:-7px; right:-7px; min-width:17px; height:17px; line-height:17px;
+      padding:0 3px; border-radius:9px; background:var(--accent-2); color:#0a1520;
+      font-size:0.68rem; font-weight:700;
+    }
+  </style>
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_escalas/index.html">1. Escalas y Modos</a>
+  <a href="../02_acordes/index.html">2. Acordes y Armonía</a>
+  <a href="../03_tonica_jerarquia/index.html">3. La Tónica y la Jerarquía</a>
+  <a href="../04_atonalidad/index.html">4. Atonalidad</a>
+  <a href="../05_serie_dodecafonica/index.html" class="active">5. La Serie Dodecafónica</a>
+  <a href="../06_transformaciones/index.html">6. Transformaciones</a>
+  <a href="../07_modos_messiaen/index.html">7. Modos de Messiaen</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. La Serie Dodecafónica</h1>
+      <p class="subtitle">El orden de Schönberg (1921): los doce sonidos reordenados, sin repetir ninguno</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Construye una serie de doce sonidos</h2>
+    <p class="description">
+      Para dar estructura al "vagabundeo libre" atonal, Schönberg inventó en 1921 el <span class="kw">dodecafonismo</span>.
+      Se basa en usar los <span class="kw">doce sonidos</span> de la escala cromática reordenados a gusto del compositor
+      para crear una <span class="kw">serie</span> única. La regla de oro: <span class="kw">no se repite ningún sonido
+      hasta que han sonado los doce</span>. Haz clic en las notas para armar tu serie, o genera una al azar.
+    </p>
+    <div class="palette-hint">🎹 Haz clic en una nota para añadirla a la serie (en orden). Vuelve a hacer clic en una nota ya colocada para quitarla.</div>
+    <div class="palette" id="palette"></div>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn" id="btnGen" onclick="generate()">🎲 Generar serie</button>
+        <button class="btn" id="btnClear" onclick="clearRow()">Limpiar</button>
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Reproducir serie</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">0 / 12 sonidos · elige notas o pulsa Generar</div>
+    <canvas id="cvRow" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Una melodía hecha de fragmentos</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">La regla de oro</strong><br>
+        Ningún sonido puede repetirse hasta que los doce hayan sonado. Esto impide que emerja una tónica:
+        ninguna nota se vuelve más importante que otra, garantizando la <strong>igualdad cromática</strong>.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Melodía repartida</strong><br>
+        A diferencia de las melodías tonales, las dodecafónicas se forman por pequeños <strong>fragmentos encadenados</strong>,
+        a menudo repartidos entre varios instrumentos. El oyente debe conectar mentalmente esos fragmentos.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Constantes ─────────────────────────────────────────────
+const NOTE_NAMES = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+function noteFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+// ── Estado ─────────────────────────────────────────────────
+let row = [];            // pitch classes en orden
+let playing = false;
+let timers = [];
+let activeIdx = -1;
+
+// ── Paleta de notas ────────────────────────────────────────
+const paletteEl = document.getElementById('palette');
+for (let pc = 0; pc < 12; pc++) {
+  const b = document.createElement('div');
+  b.className = 'pchip'; b.dataset.pc = pc;
+  b.innerHTML = NOTE_NAMES[pc] + '<span class="pos"></span>';
+  b.addEventListener('click', () => toggleNote(pc));
+  paletteEl.appendChild(b);
+}
+function refreshPalette() {
+  paletteEl.querySelectorAll('.pchip').forEach(ch => {
+    const idx = row.indexOf(+ch.dataset.pc);
+    ch.classList.toggle('used', idx >= 0);
+    ch.querySelector('.pos').textContent = idx >= 0 ? (idx + 1) : '';
+  });
+}
+
+// Clic en una nota: la añade al final si no está; si ya está, la quita de la serie
+function toggleNote(pc) {
+  const idx = row.indexOf(pc);
+  if (idx >= 0) row.splice(idx, 1);
+  else if (row.length < 12) row.push(pc);
+  else return;
+  if (playing) stopPlayback();
+  refreshPalette(); updateStatus(); drawCanvas();
+}
+function generate() {
+  const a = [...Array(12).keys()];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  row = a;
+  if (playing) stopPlayback();
+  refreshPalette(); updateStatus(); drawCanvas();
+}
+function clearRow() {
+  row = [];
+  if (playing) stopPlayback();
+  refreshPalette(); updateStatus(); drawCanvas();
+}
+
+// ── Canvas: contorno de la serie ───────────────────────────
+const canvas = document.getElementById('cvRow');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 44, padR = 18, padT = 18, padB = 30;
+  const bw = W - padL - padR, bh = H - padT - padB;
+  const colW = bw / 12, rowH = bh / 12;
+  const colX = i => padL + i * colW + colW / 2;
+  const pcY = pc => padT + (11 - pc) * rowH + rowH / 2;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(100,180,255,0.18)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 12; i++) { ctx.beginPath(); ctx.moveTo(padL + i * colW, padT); ctx.lineTo(padL + i * colW, padT + bh); ctx.stroke(); }
+  for (let r = 0; r <= 12; r++) { ctx.beginPath(); ctx.moveTo(padL, padT + r * rowH); ctx.lineTo(padL + bw, padT + r * rowH); ctx.stroke(); }
+
+  // Etiquetas eje Y (notas)
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let pc = 0; pc < 12; pc++) ctx.fillText(NOTE_NAMES[pc], padL - 5, pcY(pc));
+  // Etiquetas eje X (posición)
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  for (let i = 0; i < 12; i++) ctx.fillText(i + 1, colX(i), padT + bh + 18);
+
+  // Línea de contorno
+  if (row.length > 1) {
+    ctx.strokeStyle = 'rgba(255,170,0,0.65)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    row.forEach((pc, i) => { const x = colX(i), y = pcY(pc); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
+  // Nodos
+  row.forEach((pc, i) => {
+    const x = colX(i), y = pcY(pc), active = (i === activeIdx);
+    ctx.beginPath(); ctx.arc(x, y, active ? 13 : 10, 0, Math.PI * 2);
+    ctx.fillStyle = active ? '#ffffff' : '#ffaa00'; ctx.fill();
+    ctx.lineWidth = active ? 3 : 1.5; ctx.strokeStyle = active ? '#ffffff' : 'rgba(10,21,32,0.8)'; ctx.stroke();
+    ctx.fillStyle = '#0a1520'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(i + 1, x, y); ctx.textBaseline = 'alphabetic';
+  });
+
+  if (row.length === 0) {
+    ctx.fillStyle = 'rgba(150,200,255,0.5)'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Serie vacía — añade notas para ver su contorno', padL + bw / 2, padT + bh / 2);
+  }
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  if (row.length < 2) return;
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  const actx = getAudioContext();
+  const step = 0.36, t0 = actx.currentTime + 0.05;
+  row.forEach((pc, i) => {
+    const m = 60 + pc;
+    const osc = actx.createOscillator(), g = actx.createGain();
+    const ts = t0 + i * step, dur = step * 0.92;
+    osc.type = 'triangle'; osc.frequency.value = noteFreq(m);
+    g.gain.setValueAtTime(0, ts);
+    g.gain.linearRampToValueAtTime(0.2, ts + 0.015);
+    g.gain.setValueAtTime(0.2, ts + dur - 0.05);
+    g.gain.linearRampToValueAtTime(0, ts + dur - 0.005);
+    osc.connect(g); g.connect(actx.destination); osc.start(ts); osc.stop(ts + dur);
+    _activeNodes.push(osc);
+    timers.push(setTimeout(() => { activeIdx = i; drawCanvas(); }, i * step * 1000 + 15));
+  });
+  timers.push(setTimeout(() => { if (playing) stopPlayback(); }, row.length * step * 1000 + 250));
+}
+
+function stopPlayback() {
+  playing = false;
+  timers.forEach(clearTimeout); timers = [];
+  stopAllAudio();
+  activeIdx = -1;
+  document.getElementById('btnPlay').textContent = '▶ Reproducir serie';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Estado / status ────────────────────────────────────────
+function updateStatus() {
+  const n = row.length;
+  const names = row.map(pc => NOTE_NAMES[pc]).join(' – ');
+  document.getElementById('statusLabel').textContent =
+    n === 0 ? '0 / 12 sonidos · elige notas o pulsa Generar'
+    : n < 12 ? `${n} / 12 sonidos · ${names}`
+    : `✓ Serie completa (12/12): ${names}`;
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { refreshPalette(); updateStatus(); drawCanvas(); });
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

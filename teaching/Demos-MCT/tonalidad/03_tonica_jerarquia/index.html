@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. La Tónica y la Jerarquía — Tonalidad y Atonalidad</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_escalas/index.html">1. Escalas y Modos</a>
+  <a href="../02_acordes/index.html">2. Acordes y Armonía</a>
+  <a href="../03_tonica_jerarquia/index.html" class="active">3. La Tónica y la Jerarquía</a>
+  <a href="../04_atonalidad/index.html">4. Atonalidad</a>
+  <a href="../05_serie_dodecafonica/index.html">5. La Serie Dodecafónica</a>
+  <a href="../06_transformaciones/index.html">6. Transformaciones</a>
+  <a href="../07_modos_messiaen/index.html">7. Modos de Messiaen</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. La Tónica y la Jerarquía</h1>
+      <p class="subtitle">La tónica es el centro de gravedad: toda nota es atraída hacia ella</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>La gravedad de la tónica</h2>
+    <p class="description">
+      En el sistema tonal, la <span class="kw">tónica</span> es el punto de reposo: el "hogar" al que todas las notas quieren volver.
+      Como la tónica se repite en cada octava, hay un hogar <span class="kw">abajo</span> (Do grave) y otro <span class="kw">arriba</span> (Do agudo):
+      por eso cada nota se desliza hacia la tónica <span class="kw">más cercana</span>. La fuerza de esa atracción es la <span class="kw">tensión</span>:
+      la <span class="kw">sensible</span> (Si), a un semitono de la tónica, es la que tira con más fuerza. Elige una nota y escucha cómo cae a casa.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Nota: <span class="val" id="degVal">Si — sensible (VII)</span></label>
+        <input type="range" id="degSlider" min="0" max="6" value="6" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn active" id="btnDiscreto" onclick="setResMode('discrete')">● Discreto</button>
+        <button class="btn" id="btnGliss" onclick="setResMode('gliss')">〜 Glissando</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="playResolve()">▶ Soltar hacia la tónica</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Si (sensible) · sube un semitono a la tónica · ¡la atracción más fuerte!</div>
+    <canvas id="cvGrav" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Por qué la tónica es el centro</h2>
+    <div class="two-col">
+      <div class="info-box ok">
+        <strong style="color:#ffd24a;">El hogar (la tónica)</strong><br>
+        Es la nota de reposo absoluto. Una melodía que termina en la tónica suena <strong>resuelta, completa</strong>.
+        Las demás notas se oyen "en el aire" hasta que vuelven a ella. La tónica reaparece cada octava: por eso unas notas suben y otras bajan,
+        cada una busca la tónica <strong>más cercana</strong>.
+      </div>
+      <div class="info-box warn">
+        <strong style="color:#ff4444;">La fuerza de atracción = tensión</strong><br>
+        No todas tiran con la misma fuerza. La <strong>sensible</strong> (Si), a solo un semitono, es la más tensa y la que más "pide" resolver.
+        Las notas del acorde de tónica (Mi, Sol) son más estables: igual van a casa, pero su atracción es <strong>suave</strong>.
+        Negar esta gravedad es el camino hacia la <strong>atonalidad</strong>.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Datos ──────────────────────────────────────────────────
+// 8 peldaños: Do Re Mi Fa Sol La Si Do(8). Los extremos (0 y 7) son la TÓNICA.
+const LADDER = [
+  { name: 'Do',  midi: 60, roman: 'I',   nick: 'tónica' },
+  { name: 'Re',  midi: 62, roman: 'II',  nick: 'supertónica' },
+  { name: 'Mi',  midi: 64, roman: 'III', nick: 'mediante' },
+  { name: 'Fa',  midi: 65, roman: 'IV',  nick: 'subdominante' },
+  { name: 'Sol', midi: 67, roman: 'V',   nick: 'dominante' },
+  { name: 'La',  midi: 69, roman: 'VI',  nick: 'superdominante' },
+  { name: 'Si',  midi: 71, roman: 'VII', nick: 'sensible' },
+  { name: 'Do',  midi: 72, roman: 'I',   nick: 'tónica' }
+];
+// Tensión (fuerza de atracción) de cada uno de los 7 grados seleccionables
+const TENSION = [0.0, 0.60, 0.30, 0.70, 0.35, 0.55, 0.95];
+
+function noteFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+// Tónica más cercana: grados 0–3 → Do grave (peldaño 0); grados 4–6 → Do agudo (peldaño 7)
+function targetIndex(deg) { return deg <= 3 ? 0 : 7; }
+
+// ── Estado ─────────────────────────────────────────────────
+let deg = 6;
+let resMode = 'discrete';   // 'discrete' (salto directo) | 'gliss' (portamento)
+let animId = null, animStart = null, ballFrac = null, phase = 'idle', landT = null;
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvGrav');
+const ctx = canvas.getContext('2d');
+
+function tensionColor(t) {
+  const r = Math.round(0 + t * 255), g = Math.round(255 - t * 200), b = Math.round(80 - t * 36);
+  return `rgb(${r},${g},${b})`;
+}
+
+let GEO = null;
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 40, padR = 40, padT = 40, padB = 64;
+  const bw = W - padL - padR;
+  const slot = bw / 8;
+  const yLine = H - padB;                 // línea de la escalera (alturas)
+  const maxBar = (H - padT - padB) - 30;  // altura máxima de la barra de tensión
+  const xOf = i => padL + i * slot + slot / 2;
+  GEO = { xOf, yLine };
+
+  const tgt = targetIndex(deg);
+
+  // Bandas de "hogar" bajo los dos Do
+  [0, 7].forEach(i => {
+    const x = xOf(i);
+    const grd = ctx.createLinearGradient(0, yLine - 60, 0, yLine + 30);
+    grd.addColorStop(0, 'rgba(255,210,74,0.0)');
+    grd.addColorStop(1, 'rgba(255,210,74,0.22)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(x - slot / 2, yLine - 60, slot, 90);
+  });
+
+  // Línea base de la escalera
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, yLine); ctx.lineTo(W - padR, yLine); ctx.stroke();
+
+  // Flecha de atracción del grado seleccionado hacia la tónica (grosor = tensión)
+  if (deg !== 0) {
+    const x1 = xOf(deg), x2 = xOf(tgt), yArc = padT + 6;
+    const lw = 2 + TENSION[deg] * 6;
+    ctx.strokeStyle = phase === 'resolved' ? 'rgba(0,255,68,0.95)' : 'rgba(255,68,68,0.9)';
+    ctx.lineWidth = lw;
+    ctx.beginPath();
+    ctx.moveTo(x1, yLine - 30);
+    ctx.bezierCurveTo(x1, yArc, x2, yArc, x2, yLine - 30);
+    ctx.stroke();
+    // Punta sobre la tónica
+    const dir = Math.sign(x1 - x2) || 1;
+    ctx.fillStyle = phase === 'resolved' ? 'rgba(0,255,68,0.95)' : 'rgba(255,68,68,0.95)';
+    ctx.beginPath();
+    ctx.moveTo(x2, yLine - 30); ctx.lineTo(x2 + dir * (5 + lw), yLine - 30 - 9);
+    ctx.lineTo(x2 + dir * (5 + lw), yLine - 30 + 5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = phase === 'resolved' ? '#00ff44' : '#ff6666';
+    ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(phase === 'resolved' ? '✓ en casa' : (tgt > deg ? 'sube a la tónica ↑' : 'baja a la tónica ↓'),
+                 (x1 + x2) / 2, yArc - 6);
+  }
+
+  // Peldaños
+  LADDER.forEach((nd, i) => {
+    const x = xOf(i), isTonic = (i === 0 || i === 7);
+    const selectable = (i <= 6);
+    const tns = selectable ? TENSION[i] : 0;
+    const sel = (i === deg);
+
+    // Barra de tensión (hacia arriba) para notas que no son tónica
+    if (!isTonic) {
+      const h = tns * maxBar;
+      ctx.fillStyle = tensionColor(tns);
+      ctx.globalAlpha = sel ? 1 : 0.55;
+      ctx.fillRect(x - 7, yLine - 30 - h, 14, h);
+      ctx.globalAlpha = 1;
+    }
+
+    // Nodo
+    const r = isTonic ? 22 : 16;
+    if (isTonic) {
+      ctx.beginPath(); ctx.arc(x, yLine, r + 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,210,74,0.18)'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x, yLine, r, 0, Math.PI * 2);
+    ctx.fillStyle = isTonic ? '#ffd24a' : tensionColor(tns);
+    ctx.globalAlpha = (!isTonic && !sel) ? 0.85 : 1;
+    ctx.fill(); ctx.globalAlpha = 1;
+    if (sel) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke(); }
+
+    ctx.fillStyle = '#0a1520'; ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(nd.name, x, yLine);
+    ctx.textBaseline = 'alphabetic';
+
+    // Etiqueta debajo
+    ctx.fillStyle = isTonic ? '#ffd24a' : 'rgba(150,200,255,0.75)';
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(isTonic ? 'TÓNICA' : nd.roman, x, yLine + 30);
+    if (isTonic) { ctx.fillStyle = 'rgba(255,210,74,0.8)'; ctx.fillText('🏠 casa', x, yLine + 44); }
+  });
+
+  // Pulso al aterrizar en la tónica (énfasis de "llegó a casa")
+  if (landT !== null && deg !== 0) {
+    const rr = 22 + Math.min(landT, 0.5) * 55;
+    const a = Math.max(0, 0.75 - landT * 1.4);
+    ctx.strokeStyle = `rgba(0,255,68,${a})`; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(xOf(tgt), yLine, rr, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // Bola: se desliza (glissando) o salta directa (discreto) durante la reproducción
+  if (ballFrac !== null) {
+    const bx = xOf(deg) + (xOf(tgt) - xOf(deg)) * ballFrac;
+    ctx.beginPath(); ctx.arc(bx, yLine, 12, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.strokeStyle = phase === 'resolved' ? '#00ff44' : '#ff6666'; ctx.lineWidth = 3; ctx.stroke();
+  }
+
+  // Leyenda
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('Altura de la barra y grosor de la flecha = fuerza de atracción (tensión).  🟢 estable  🔴 tensa', padL, H - 16);
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function playToneAt(m, t0, dur, gain) {
+  const actx = getAudioContext();
+  const osc = actx.createOscillator(), g = actx.createGain();
+  osc.type = 'triangle'; osc.frequency.value = noteFreq(m);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.02);
+  g.gain.setValueAtTime(gain, t0 + dur - 0.05);
+  g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0); osc.stop(t0 + dur);
+  _activeNodes.push(osc);
+}
+
+// Tiempos según modalidad: retención de la nota + deslizamiento (0 si es discreto)
+function resTimes() {
+  return resMode === 'gliss' ? { H: 0.35, G: 0.40 } : { H: 0.45, G: 0.0 };
+}
+
+function playResolve() {
+  stopResolve();
+  const actx = getAudioContext();
+  const tgt = targetIndex(deg);
+  const srcMidi = LADDER[deg].midi, tgtMidi = LADDER[tgt].midi;
+  const t0 = actx.currentTime + 0.05;
+  const { H, G } = resTimes();
+  const tArrive = t0 + H + G;
+
+  if (resMode === 'gliss') {
+    // Voz que se desliza (portamento) de la nota a la tónica
+    const osc = actx.createOscillator(), g = actx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(noteFreq(srcMidi), t0);
+    if (deg !== 0) {
+      osc.frequency.setValueAtTime(noteFreq(srcMidi), t0 + H);
+      osc.frequency.exponentialRampToValueAtTime(noteFreq(tgtMidi), tArrive);
+    }
+    const tEnd = tArrive + 0.9;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.2, t0 + 0.02);
+    g.gain.setValueAtTime(0.2, tEnd - 0.15);
+    g.gain.linearRampToValueAtTime(0, tEnd - 0.005);
+    osc.connect(g); g.connect(actx.destination);
+    osc.start(t0); osc.stop(tEnd);
+    _activeNodes.push(osc);
+  } else {
+    // Discreto: suena la nota y luego, directa y separada, la tónica (sin deslizamiento)
+    playToneAt(srcMidi, t0, H - 0.02, 0.2);
+    if (deg !== 0) playToneAt(tgtMidi, tArrive, 0.95, 0.2);
+  }
+
+  // Acorde de tónica al llegar a casa
+  [60, 64, 67].forEach(m => playToneAt(m, tArrive, 0.95, 0.12));
+
+  // Animación de la bola
+  phase = 'tension'; animStart = null; landT = null;
+  animId = requestAnimationFrame(animate);
+}
+
+function animate(ts) {
+  if (animStart === null) animStart = ts;
+  const e = (ts - animStart) / 1000;
+  const { H, G } = resTimes();
+  if (deg === 0) { ballFrac = 0; phase = 'resolved'; landT = e; }
+  else if (e < H) { ballFrac = 0; phase = 'tension'; landT = null; }
+  else if (G > 0 && e < H + G) { ballFrac = (e - H) / G; phase = 'pulling'; landT = null; }
+  else { ballFrac = 1; phase = 'resolved'; landT = e - (H + G); }   // discreto: salta aquí
+  drawCanvas();
+  if (e < H + G + 1.0) animId = requestAnimationFrame(animate);
+  else { ballFrac = null; phase = 'idle'; landT = null; animId = null; drawCanvas(); }
+}
+
+function stopResolve() {
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  stopAllAudio();
+  ballFrac = null; phase = 'idle'; landT = null;
+}
+
+function setResMode(m) {
+  resMode = m;
+  document.getElementById('btnDiscreto').classList.toggle('active', m === 'discrete');
+  document.getElementById('btnGliss').classList.toggle('active', m === 'gliss');
+  stopResolve(); drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────
+function updateStatus() {
+  document.getElementById('degVal').textContent = `${LADDER[deg].name} — ${LADDER[deg].nick} (${LADDER[deg].roman})`;
+  let txt;
+  if (deg === 0) {
+    txt = 'Do (tónica) · ya está en casa: reposo, no necesita resolver';
+  } else {
+    const tgt = targetIndex(deg);
+    const dir = tgt > deg ? 'sube' : 'baja';
+    const fuerza = TENSION[deg] >= 0.7 ? '¡la atracción más fuerte!' : TENSION[deg] >= 0.45 ? 'atracción fuerte' : 'atracción suave (nota estable)';
+    const extra = deg === 6 ? ' (un semitono)' : '';
+    txt = `${LADDER[deg].name} (${LADDER[deg].nick}) · ${dir} a la tónica más cercana${extra} · ${fuerza}`;
+  }
+  document.getElementById('statusLabel').textContent = txt;
+}
+
+document.getElementById('degSlider').addEventListener('input', function () {
+  deg = +this.value; stopResolve(); updateStatus(); drawCanvas();
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { updateStatus(); drawCanvas(); });
+window.addEventListener('resize', () => { if (!animId) drawCanvas(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8. Línea de Tiempo — La Música y sus Parámetros</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sonido_silencio/index.html">1. El Sonido y el Silencio</a>
+  <a href="../02_tempo/index.html">2. Tempo y Pulso</a>
+  <a href="../03_dinamica/index.html">3. Dinámicas</a>
+  <a href="../04_articulacion/index.html">4. Articulación</a>
+  <a href="../05_consonancia_disonancia/index.html">5. Consonancia y Disonancia</a>
+  <a href="../06_expectativa/index.html">6. Expectativa Musical</a>
+  <a href="../07_formas_musicales/index.html">7. Formas Musicales</a>
+  <a href="../08_linea_tiempo/index.html" class="active">8. Línea de Tiempo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>8. Línea de Tiempo</h1>
+      <p class="subtitle">De la Edad Media al siglo XXI: la historia se ramifica en lo popular, lo docto y lo tecnológico</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>La historia de la música, ramificada</h2>
+    <p class="description">
+      Tras siglos de tradición —<span class="kw">medieval, renacimiento, barroco, clasicismo, romanticismo</span>—, el siglo XX
+      hace estallar el lenguaje y la historia <span class="kw">se ramifica en tres caminos</span> que conviven: la
+      <span class="kw">música popular</span> (jazz, rock, electrónica de baile), la <span class="kw">música docta de concierto</span>
+      —vanguardia acústica, no tecnológica— (serialismo, indeterminación, minimalismo, espectralismo) y el <span class="kw">linaje tecnológico</span>
+      (concreta, electrónica, electroacústica, mixta, laptops y redes). Haz clic en cada hito para escucharlo, o recorre toda la historia.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Recorrer la historia</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Haz clic en un hito de la línea de tiempo para escucharlo</div>
+    <canvas id="cvTime" height="460"></canvas>
+    <div class="info-box" id="eraInfo" style="margin-top:14px;">
+      <strong style="color:#ffd24a;">Selecciona un hito</strong><br>
+      Cada punto reproduce un gesto sonoro característico de su época o corriente.
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>Tres caminos desde el siglo XX</h2>
+    <div class="info-box">
+      <strong style="color:#ff55aa;">La rama popular</strong><br>
+      El abaratamiento de la tecnología llevó la electrónica al gran público: del <strong>jazz</strong> y el <strong>rock</strong>
+      a la música electrónica de baile, el <strong>techno</strong> y el <strong>hip-hop</strong> basado en el muestreo.
+    </div>
+    <div class="info-box" style="border-left-color:#c79bff; background:rgba(199,155,255,0.06);">
+      <strong style="color:#c79bff;">La rama docta (de concierto)</strong><br>
+      La vanguardia <strong>acústica</strong>, que no depende de la tecnología: el <strong>serialismo</strong> de la Escuela de Viena,
+      la <strong>indeterminación</strong> de Cage, el <strong>minimalismo</strong> de Reich y Glass, el <strong>espectralismo</strong>
+      de Grisey y la nueva complejidad. Música instrumental y vocal, todavía muy viva hoy.
+    </div>
+    <div class="info-box">
+      <strong style="color:#00ffcc;">La rama tecnológica</strong><br>
+      Nace <strong>dividida en dos escuelas opuestas</strong>: la <strong>música concreta</strong> (París, 1948, sonidos grabados)
+      y la <strong>música electrónica</strong> (Colonia, 1950s, sinusoides puras). Hacia 1960 ambas <strong>convergen</strong> en la
+      <strong>música electroacústica y mixta</strong>; de ahí siguen la música por ordenador y, hoy, los laptops, el live coding
+      y las redes.
+    </div>
+    <p class="description" style="margin-top:12px; font-size:0.8rem; opacity:0.7;">
+      Esquema basado en la historiografía estándar de la música electroacústica —la escisión París/Colonia y su posterior convergencia—
+      (cf. P. Manning, <em>Electronic and Computer Music</em>; T. Holmes, <em>Electronic and Experimental Music</em>; J. Chadabe,
+      <em>Electric Sound</em>; Wikipedia, «Electroacoustic music»).
+    </p>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Utilidades de audio ────────────────────────────────────
+const FR = m => 440 * Math.pow(2, (m - 69) / 12);
+function note(freq, t0, dur, type = 'triangle', gain = 0.16) {
+  const actx = getAudioContext();
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.015);
+  g.gain.setValueAtTime(gain, t0 + dur - 0.05);
+  g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur);
+  _activeNodes.push(o);
+}
+function noise(t0, dur, cutoff = 2000, gain = 0.14) {
+  const actx = getAudioContext();
+  const len = Math.floor(actx.sampleRate * dur), buf = actx.createBuffer(1, len, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = actx.createBufferSource(); src.buffer = buf;
+  const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = cutoff;
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+  g.gain.setValueAtTime(gain, t0 + dur - 0.05); g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  src.connect(f); f.connect(g); g.connect(actx.destination);
+  src.start(t0); src.stop(t0 + dur); _activeNodes.push(src);
+}
+function kick(t0) {
+  const actx = getAudioContext(), o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(140, t0); o.frequency.exponentialRampToValueAtTime(45, t0 + 0.12);
+  g.gain.setValueAtTime(0.5, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 0.2); _activeNodes.push(o);
+}
+
+// Reproduce una melodía: notas = [[midi, inicio(pulsos), duración(pulsos)], …]
+function playMelody(notes, t0, beat, type = 'triangle', gain = 0.16) {
+  notes.forEach(([m, s, d]) => note(FR(m), t0 + s * beat, Math.max(0.06, d * beat * 0.95), type, gain));
+}
+
+// ── Gestos sonoros por época: melodías reales ──────────────
+function sMedieval(t0) { // Canto gregoriano: secuencia "Dies irae" (modal), con bordón
+  const b = 0.42;
+  note(FR(50), t0, 9.4 * b, 'sine', 0.06); note(FR(57), t0, 9.4 * b, 'sine', 0.05); // bordón Re–La
+  playMelody([[65,0,1],[65,1,1],[64,2,1],[65,3,1],[62,4,1],[64,5,1],[60,6,1],[62,7,1],[62,8,1.4]], t0, b, 'triangle', 0.15);
+}
+function sRenaissance(t0) { // Polifonía sacra al estilo de Palestrina: entradas por imitación + suspensión
+  const b = 0.48;
+  // Tres voces que entran sucesivamente (cantus, altus, bassus), en consonancia, con cadencia 4–3
+  const cantus = [[67,0,3],[69,3,2],[71,5,1],[72,6,1.4],[71,7.4,0.6],[72,8,2]]; // Sol La Si Do(susp→)Si Do
+  const altus  = [[64,1,2],[65,3,2],[67,5,1],[64,6,1],[67,7,1],[64,8,2]];
+  const bassus = [[48,2,2],[50,4,1],[43,5,1],[48,6,1],[43,7,1],[48,8,2]];
+  playMelody(cantus, t0, b, 'sine', 0.13);
+  playMelody(altus,  t0, b, 'sine', 0.10);
+  playMelody(bassus, t0, b, 'sine', 0.10);
+}
+function sBaroque(t0) { // J. S. Bach (atrib. Petzold): Minueto en Sol, BWV Anh. 114
+  const b = 0.34;
+  playMelody([
+    [74,0,1],[67,1,0.5],[69,1.5,0.5],[71,2,0.5],[72,2.5,0.5],
+    [74,3,1],[67,4,1],[67,5,1],
+    [76,6,1],[72,7,0.5],[74,7.5,0.5],[76,8,0.5],[78,8.5,0.5],
+    [79,9,1],[67,10,1],[67,11,1]
+  ], t0, b, 'sawtooth', 0.12);
+  [[55,0],[50,3],[55,6],[50,9]].forEach(([m, s]) => note(FR(m), t0 + s * b, 3 * b * 0.9, 'triangle', 0.08)); // continuo
+}
+function sClassical(t0) { // W. A. Mozart: "Eine kleine Nachtmusik" K.525, comienzo
+  const b = 0.26;
+  playMelody([
+    [67,0,0.5],[62,0.5,0.5],[67,1,0.5],[62,1.5,0.5],[67,2,0.5],[71,2.5,0.5],[74,3,0.5],[79,3.5,1],
+    [74,5,0.5],[69,5.5,0.5],[74,6,0.5],[69,6.5,0.5],[74,7,0.5],[78,7.5,0.5],[81,8,0.5],[86,8.5,1]
+  ], t0, b, 'triangle', 0.15);
+  [[55,0],[55,2],[50,5],[50,7]].forEach(([m, s]) => note(FR(m), t0 + s * b, 2 * b * 0.9, 'sine', 0.09)); // bajo Sol/Re
+}
+function sRomantic(t0) { // L. v. Beethoven: "Für Elise" WoO 59, comienzo (la menor)
+  const b = 0.26;
+  playMelody([
+    [76,0,0.5],[75,0.5,0.5],[76,1,0.5],[75,1.5,0.5],[76,2,0.5],[71,2.5,0.5],[74,3,0.5],[72,3.5,0.5],[69,4,1],
+    [60,5.5,0.5],[64,6,0.5],[69,6.5,0.5],[71,7,1],
+    [64,8.5,0.5],[68,9,0.5],[71,9.5,0.5],[72,10,1]
+  ], t0, b, 'triangle', 0.15);
+  [[45,0],[40,5],[45,8.5]].forEach(([m, s]) => note(FR(m), t0 + s * b, 2.5 * b, 'sine', 0.08)); // bajo La menor
+}
+function sContemporary(t0) { // La ruptura: atonalidad libre (Schoenberg, ~1908)
+  [60,61,66,67,72,73].forEach(m => note(FR(m), t0, 1.8, 'sawtooth', 0.05)); // cluster
+  [79,68,74,61,83,66,77].forEach((m, i) => note(FR(m), t0 + 0.2 + i * 0.22, 0.18, 'square', 0.10)); // gesto atonal angular
+}
+
+// ── Rama popular ───────────────────────────────────────────
+function sJazz(t0) { // "When the Saints Go Marching In" (jazz/dixieland) + walking bass
+  const b = 0.27;
+  playMelody([
+    [60,0,1],[64,1,1],[65,2,1],[67,3,2],
+    [60,5,1],[64,6,1],[65,7,1],[67,8,2],
+    [60,10,1],[64,11,1],[65,12,1],[67,13,1.5],[64,14.5,0.5],[60,15,1],[62,16,2]
+  ], t0, b, 'sawtooth', 0.12);
+  const bass = [36,40,43,40]; for (let i = 0; i < 18; i++) note(FR(bass[i % 4]), t0 + i * b, b * 0.9, 'triangle', 0.10);
+  for (let i = 0; i < 18; i++) noise(t0 + i * b, 0.04, 6000, 0.04); // platillo
+}
+function sRock(t0) { // backbeat + power chord
+  for (let i = 0; i < 8; i++) { if (i % 2 === 0) kick(t0 + i * 0.22); else noise(t0 + i * 0.22, 0.12, 4000, 0.16); }
+  [40,47,52].forEach(m => { for (let i = 0; i < 4; i++) note(FR(m), t0 + i * 0.44, 0.4, 'sawtooth', 0.07); });
+}
+function sEDM(t0) { // four-on-the-floor + bleeps
+  for (let i = 0; i < 8; i++) kick(t0 + i * 0.22);
+  for (let i = 0; i < 8; i++) if (i % 2) noise(t0 + i * 0.22, 0.04, 9000, 0.05);
+  const seq = [72,72,75,79]; for (let i = 0; i < 8; i++) note(FR(seq[i % 4]), t0 + i * 0.22, 0.18, 'square', 0.08);
+}
+
+// ── Rama docta (de concierto, acústica) ────────────────────
+function sSerialismo(t0) { // puntillismo dodecafónico (Webern): notas aisladas, intervalos amplios, dinámicas variadas
+  const row = [60,63,67,72,64,55,70,76,61,58,66,69];
+  row.forEach((m, i) => note(FR(m), t0 + i * 0.2, 0.14, i % 2 ? 'sine' : 'triangle', 0.05 + (i % 3) * 0.05));
+}
+function sAleatoria(t0) { // indeterminación/aleatoria: sonidos impredecibles + silencios (cada vez distinto)
+  const slots = [0, 0.45, 0.7, 1.35, 1.7, 2.15, 2.45];
+  const pitches = [48, 55, 67, 73, 84, 60];
+  slots.forEach((dt, i) => {
+    if (Math.random() < 0.5) noise(t0 + dt, 0.08, 3500, 0.12);
+    else note(FR(pitches[i % pitches.length]), t0 + dt, 0.22, 'square', 0.08);
+  });
+}
+function sMinimalismo(t0) { // célula breve repetida con pulso constante (Reich/Glass)
+  const cell = [64,67,71,72,71,67];
+  for (let r = 0; r < 3; r++) cell.forEach((m, i) => note(FR(m), t0 + (r * cell.length + i) * 0.14, 0.13, 'triangle', 0.12));
+}
+function sEspectral(t0) { // espectralismo: acorde construido desde la serie armónica de un fundamental grave
+  const f0 = 55, parts = [1,2,3,4,5,6,7,9,11];
+  parts.forEach((h, i) => note(f0 * h, t0 + i * 0.12, 2.3 - i * 0.1, 'sine', 0.11 / Math.sqrt(h)));
+}
+
+// ── Rama tecnológica ───────────────────────────────────────
+function sConcreta(t0) { // sonido grabado manipulado: ruido + barrido descendente
+  noise(t0, 0.8, 1500, 0.13);
+  const actx = getAudioContext(), o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(400, t0 + 0.4); o.frequency.exponentialRampToValueAtTime(110, t0 + 1.4);
+  g.gain.setValueAtTime(0, t0 + 0.4); g.gain.linearRampToValueAtTime(0.10, t0 + 0.5); g.gain.linearRampToValueAtTime(0, t0 + 1.4);
+  o.connect(g); g.connect(actx.destination); o.start(t0 + 0.4); o.stop(t0 + 1.4); _activeNodes.push(o);
+  noise(t0 + 1.2, 0.6, 800, 0.11);
+}
+function sElectronica(t0) { // sinusoides puras, gesto serial
+  [80,72,84,67,76,88].forEach((m, i) => note(FR(m), t0 + i * 0.28, 0.24, 'sine', 0.16));
+}
+function sElectroac(t0) { // sintético + ruido procesado
+  note(FR(60), t0, 2.0, 'sine', 0.10); note(FR(67), t0, 2.0, 'sine', 0.08);
+  noise(t0 + 0.3, 1.4, 1200, 0.09);
+  [72,75,79,74].forEach((m, i) => note(FR(m), t0 + 0.4 + i * 0.4, 0.35, 'triangle', 0.10));
+}
+function sComputer(t0) { // arpegio calculado (FM/square)
+  [60,64,67,71,74,71,67,64].forEach((m, i) => note(FR(m), t0 + i * 0.18, 0.16, 'square', 0.10));
+}
+function sLaptop(t0) { // glitch generativo
+  for (let i = 0; i < 14; i++) note(FR(60 + Math.floor(Math.random() * 24)), t0 + i * 0.08, 0.06, 'square', 0.08);
+  for (let i = 0; i < 6; i++) kick(t0 + i * 0.2);
+}
+
+// ── Nodos de la línea de tiempo ────────────────────────────
+// branch: 'main' | 'pop' | 'docta' | 'tech'.  xf, yf: posición (fracción de ancho/alto)
+const NODES = [
+  { cap:'Medieval',      name:'Música Medieval',        years:'476–1400',  branch:'main',  xf:0.05, yf:0.48, capAbove:false, dur:4.0, fn:sMedieval,    color:'#ffd24a', desc:'Canto llano monódico (aquí la secuencia «Dies irae»), modal y al servicio del rito; a veces doblado en quintas paralelas (organum).' },
+  { cap:'Renacimiento',  name:'Renacimiento',           years:'1400–1600', branch:'main',  xf:0.13, yf:0.48, capAbove:false, dur:5.0, fn:sRenaissance, color:'#ffd24a', desc:'Polifonía vocal sacra al estilo de Palestrina (como en el motete «Sicut cervus»): voces que entran por imitación, plena consonancia y cadencias con suspensión. Aún sin armonía tonal funcional.' },
+  { cap:'Barroco',       name:'Barroco',                years:'1600–1750', branch:'main',  xf:0.21, yf:0.48, capAbove:false, dur:4.3, fn:sBaroque,     color:'#ffd24a', desc:'Nace la tonalidad funcional (aquí el Minueto en Sol de J. S. Bach): bajo continuo, cadencias con sensible, el clave y la ópera.' },
+  { cap:'Clásico',       name:'Clasicismo',             years:'1750–1820', branch:'main',  xf:0.29, yf:0.48, capAbove:false, dur:2.7, fn:sClassical,   color:'#ffd24a', desc:'Equilibrio y claridad (aquí «Eine kleine Nachtmusik» de Mozart): melodía con acompañamiento, frases periódicas, la sonata.' },
+  { cap:'Romántico',     name:'Romanticismo',           years:'1820–1900', branch:'main',  xf:0.37, yf:0.48, capAbove:false, dur:3.1, fn:sRomantic,    color:'#ffd24a', desc:'Expresión y cromatismo (aquí «Für Elise» de Beethoven): armonías ricas y rubato; la tonalidad se expande hacia su límite.' },
+  { cap:'Ruptura',       name:'El siglo XX: la ruptura',years:'~1908',     branch:'main',  xf:0.45, yf:0.48, capAbove:false, dur:2.1, fn:sContemporary,color:'#ffaa00', desc:'Atonalidad libre (Schoenberg, ~1908): se rompe la jerarquía tonal. Desde aquí la historia se ramifica en tres caminos que conviven.' },
+
+  { cap:'Jazz',          name:'Jazz y Blues',           years:'~1917',     branch:'pop',   xf:0.55, yf:0.13, capAbove:true,  dur:4.3, fn:sJazz,        color:'#ff55aa', desc:'Jazz y blues (aquí «When the Saints Go Marching In»): improvisación, swing y armonía de séptimas. La raíz de lo popular del s.XX.' },
+  { cap:'Rock/Pop',      name:'Rock y Pop',             years:'~1955',     branch:'pop',   xf:0.74, yf:0.13, capAbove:true,  dur:2.0, fn:sRock,        color:'#ff55aa', desc:'Amplificación eléctrica, backbeat y boogie de 12 compases. La canción como formato dominante.' },
+  { cap:'EDM/Hip-Hop',   name:'Electrónica de Baile · Hip-Hop', years:'1980s–', branch:'pop', xf:0.92, yf:0.13, capAbove:true, dur:2.0, fn:sEDM, color:'#ff55aa', desc:'Kraftwerk, el techno de Detroit y el muestreo del hip-hop: la electrónica domina lo popular.' },
+
+  { cap:'Serialismo',    name:'Serialismo y Dodecafonía',years:'1921–',    branch:'docta', xf:0.55, yf:0.40, capAbove:false, dur:2.6, fn:sSerialismo,  color:'#c79bff', desc:'Schoenberg (1921), Webern y luego Boulez/Babbitt: los 12 sonidos organizados en series. Anterior a la música concreta y electrónica.' },
+  { cap:'Aleatoria',     name:'Indeterminación / Aleatoria', years:'1950s–', branch:'docta', xf:0.69, yf:0.40, capAbove:false, dur:2.7, fn:sAleatoria, color:'#c79bff', desc:'Corriente del azar y la indeterminación (Cage, Feldman, Brown, Wolff; también Lutosławski): la obra deja de estar fijada y cada ejecución difiere.' },
+  { cap:'Minimalismo',   name:'Minimalismo',            years:'1960s–',    branch:'docta', xf:0.79, yf:0.40, capAbove:false, dur:2.7, fn:sMinimalismo, color:'#c79bff', desc:'Riley, Reich y Glass: patrones breves repetidos con desfases graduales (phasing). Pulso constante y transformación lenta.' },
+  { cap:'Espectral',     name:'Espectralismo y Complejidad', years:'1970s–', branch:'docta', xf:0.90, yf:0.40, capAbove:false, dur:2.5, fn:sEspectral, color:'#c79bff', desc:'Grisey y Murail parten del espectro armónico del sonido como base de la armonía; la nueva complejidad explora densidades extremas.' },
+
+  { cap:'Concreta',      name:'Música Concreta',        years:'1948',      branch:'tech',  xf:0.63, yf:0.60, capAbove:true,  dur:2.1, fn:sConcreta,    color:'#00ffcc', desc:'Schaeffer (París, 1948): grabar sonidos del mundo real (objet sonoré) y manipularlos en el estudio. Una de las dos escuelas fundadoras.' },
+  { cap:'Electrónica',   name:'Música Electrónica',     years:'1951',      branch:'tech',  xf:0.63, yf:0.84, capAbove:false, dur:1.9, fn:sElectronica, color:'#00ffcc', desc:'Stockhausen (Colonia, 1951): solo sonidos sintéticos puros, control matemático de cada armónico. La escuela opuesta a la concreta.' },
+  { cap:'Electroac.',    name:'Electroacústica y Mixta',years:'~1960',     branch:'tech',  xf:0.74, yf:0.72, capAbove:false, dur:2.3, fn:sElectroac,   color:'#00ffcc', desc:'Hacia 1960 las dos escuelas CONVERGEN: lo grabado y lo sintético se fusionan. La música mixta combina instrumentos en vivo con electrónica.' },
+  { cap:'Computer/MIDI', name:'Música por Ordenador · MIDI', years:'1957/1983', branch:'tech', xf:0.85, yf:0.72, capAbove:false, dur:1.7, fn:sComputer, color:'#00ffcc', desc:'Mathews calcula el sonido desde código (MUSIC-N); el protocolo MIDI conecta a las máquinas.' },
+  { cap:'Laptops/Redes', name:'Laptops y Redes',years:'2000s–',    branch:'tech',  xf:0.95, yf:0.72, capAbove:false, dur:1.6, fn:sLaptop,      color:'#00ffcc', desc:'DAWs, orquestas de laptops, live coding, glitch, música en red: la música se vuelve código.' }
+];
+const ORDER = [0,1,2,3,4,5, 6,7,8, 9,10,11,12, 13,14,15,16,17];
+
+// ── Estado ─────────────────────────────────────────────────
+let selected = -1, touring = false, tourTimers = [];
+let NODEPOS = [];
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvTime');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 920;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 22, padR = 22;
+  const xOf = xf => padL + xf * (W - padL - padR);
+
+  NODEPOS = NODES.map(n => ({ x: xOf(n.xf), y: H * n.yf }));
+  const bif = NODEPOS[5];
+  const line = (a, b) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
+
+  // Conectores
+  ctx.lineWidth = 3;
+  // tronco 0→5
+  ctx.strokeStyle = 'rgba(255,210,74,0.65)';
+  ctx.beginPath(); ctx.moveTo(NODEPOS[0].x, NODEPOS[0].y); for (let i = 1; i <= 5; i++) ctx.lineTo(NODEPOS[i].x, NODEPOS[i].y); ctx.stroke();
+  // rama popular
+  ctx.strokeStyle = 'rgba(255,85,170,0.7)';
+  ctx.beginPath(); ctx.moveTo(bif.x, bif.y); for (let i = 6; i <= 8; i++) ctx.lineTo(NODEPOS[i].x, NODEPOS[i].y); ctx.stroke();
+  // rama docta
+  ctx.strokeStyle = 'rgba(199,155,255,0.75)';
+  ctx.beginPath(); ctx.moveTo(bif.x, bif.y); for (let i = 9; i <= 12; i++) ctx.lineTo(NODEPOS[i].x, NODEPOS[i].y); ctx.stroke();
+  // rama tecnológica: diamante (concreta + electrónica → electroacústica) y luego lineal
+  ctx.strokeStyle = 'rgba(0,255,204,0.7)';
+  line(bif, NODEPOS[13]);              // → concreta (París)
+  line(bif, NODEPOS[14]);              // → electrónica (Colonia)
+  line(NODEPOS[13], NODEPOS[15]);      // concreta → electroacústica (convergen)
+  line(NODEPOS[14], NODEPOS[15]);      // electrónica → electroacústica
+  line(NODEPOS[15], NODEPOS[16]); line(NODEPOS[16], NODEPOS[17]); // electroac → computer → laptops
+
+  // Etiquetas de rama
+  ctx.font = 'italic 12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(255,85,170,0.9)';   ctx.fillText('▲ música popular', NODEPOS[6].x - 6, NODEPOS[6].y - 30);
+  ctx.fillStyle = 'rgba(199,155,255,0.95)'; ctx.fillText('● música docta (de concierto)', NODEPOS[9].x - 6, NODEPOS[9].y - 30);
+  ctx.fillStyle = 'rgba(0,255,204,0.9)';    ctx.fillText('▼ música tecnológica', NODEPOS[14].x - 6, NODEPOS[14].y + 46);
+  // sub-etiquetas de la escisión París/Colonia
+  ctx.font = '9px sans-serif'; ctx.fillStyle = 'rgba(0,255,204,0.7)';
+  ctx.fillText('París', NODEPOS[13].x + 12, NODEPOS[13].y - 2);
+  ctx.fillText('Colonia', NODEPOS[14].x + 12, NODEPOS[14].y + 4);
+
+  // Nodos
+  NODES.forEach((n, i) => {
+    const p = NODEPOS[i], sel = (i === selected);
+    ctx.beginPath(); ctx.arc(p.x, p.y, sel ? 13 : 8, 0, Math.PI * 2);
+    ctx.fillStyle = sel ? '#ffffff' : n.color; ctx.fill();
+    ctx.lineWidth = sel ? 3 : 1.5; ctx.strokeStyle = sel ? '#ffffff' : 'rgba(10,21,32,0.85)'; ctx.stroke();
+    if (sel) { ctx.strokeStyle = n.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI * 2); ctx.stroke(); }
+    const above = !!n.capAbove;
+    ctx.fillStyle = sel ? '#ffffff' : n.color;
+    ctx.font = (sel ? 'bold ' : '') + '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(n.cap, p.x, above ? p.y - 20 : p.y + 26);
+    ctx.fillStyle = 'rgba(150,200,255,0.65)'; ctx.font = '9px sans-serif';
+    ctx.fillText(n.years, p.x, above ? p.y - 8 : p.y + 38);
+  });
+}
+
+// ── Reproducción ───────────────────────────────────────────
+function updateInfo(i) {
+  const n = NODES[i];
+  document.getElementById('statusLabel').textContent = `${n.name} · ${n.years}`;
+  document.getElementById('eraInfo').innerHTML = `<strong style="color:${n.color};">${n.name} (${n.years})</strong><br>${n.desc}`;
+}
+function selectNode(i, when) {
+  selected = i; updateInfo(i); drawCanvas();
+  const actx = getAudioContext();
+  NODES[i].fn(when !== undefined ? when : actx.currentTime + 0.05);
+}
+function togglePlay() {
+  if (touring) { stopTour(); return; }
+  touring = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  let accMs = 0;
+  ORDER.forEach(idx => {
+    tourTimers.push(setTimeout(() => { selectNode(idx, getAudioContext().currentTime + 0.03); }, accMs));
+    accMs += NODES[idx].dur * 1000 + 320;
+  });
+  tourTimers.push(setTimeout(() => { if (touring) stopTour(); }, accMs + 200));
+}
+function stopTour() {
+  touring = false;
+  tourTimers.forEach(clearTimeout); tourTimers = [];
+  stopAllAudio();
+  document.getElementById('btnPlay').textContent = '▶ Recorrer la historia';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+// ── Click en nodos ─────────────────────────────────────────
+canvas.addEventListener('click', e => {
+  const r = canvas.getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (canvas.width / r.width);
+  const my = (e.clientY - r.top) * (canvas.height / r.height);
+  let best = -1, bd = 1e9;
+  NODEPOS.forEach((p, i) => { const d = Math.hypot(p.x - mx, p.y - my); if (d < bd) { bd = d; best = i; } });
+  if (best >= 0 && bd < 34) { if (touring) stopTour(); stopAllAudio(); selectNode(best); }
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', drawCanvas);
+window.addEventListener('resize', drawCanvas);
+</script>
+</body>
+</html>

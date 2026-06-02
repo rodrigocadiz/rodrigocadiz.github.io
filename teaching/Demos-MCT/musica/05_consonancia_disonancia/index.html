@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Consonancia y Disonancia — La Música y sus Parámetros</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sonido_silencio/index.html">1. El Sonido y el Silencio</a>
+  <a href="../02_tempo/index.html">2. Tempo y Pulso</a>
+  <a href="../03_dinamica/index.html">3. Dinámicas</a>
+  <a href="../04_articulacion/index.html">4. Articulación</a>
+  <a href="../05_consonancia_disonancia/index.html" class="active">5. Consonancia y Disonancia</a>
+  <a href="../06_expectativa/index.html">6. Expectativa Musical</a>
+  <a href="../07_formas_musicales/index.html">7. Formas Musicales</a>
+  <a href="../08_linea_tiempo/index.html">8. Línea de Tiempo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>5. Consonancia y Disonancia</h1>
+      <p class="subtitle">Estabilidad y tensión en la combinación simultánea de sonidos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Dos tonos: onda resultante e intervalos musicales</h2>
+    <p class="description">
+      La <span class="kw">consonancia</span> ocurre cuando los armónicos de dos sonidos coinciden,
+      generando estabilidad y reposo. La <span class="kw">disonancia</span> es el choque entre sonidos cuyas
+      frecuencias no se alinean bien, produciendo <span class="kw">batimientos</span> y tensión.
+      Ajusta el intervalo para explorar el espectro entre consonancia perfecta y disonancia máxima.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia base: <span class="val" id="baseFreqVal">261</span> Hz (Do4)</label>
+        <input type="range" id="baseFreqSlider" min="110" max="440" value="261" step="1">
+      </div>
+      <div class="control-group">
+        <label>Intervalo: <span class="val" id="intervalVal">0</span> semitonos — <span id="intervalName">Unísono</span></label>
+        <input type="range" id="intervalSlider" min="0" max="12" value="0" step="1">
+      </div>
+      <div class="control-group">
+        <label>Velocidad del gráfico: <span class="val" id="speedVal">0.15×</span></label>
+        <input type="range" id="speedSlider" min="3" max="100" value="15" step="1">
+      </div>
+      <div class="control-group" style="min-width:auto;">
+        <label>Modo de sonido</label>
+        <div class="btn-group" style="margin-bottom:0;">
+          <button class="btn active" id="btnContinuo" onclick="setMode('continuo')">Continuo</button>
+          <button class="btn" id="btnPulsos" onclick="setMode('pulsos')">Pulsos</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Ritmo de pulsos: <span class="val" id="pulseVal">120</span> BPM</label>
+        <input type="range" id="pulseSlider" min="40" max="360" value="120" step="5">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;" id="intervalButtons">
+      <button class="btn" data-st="0"  onclick="setIntervalo(0)">Unísono</button>
+      <button class="btn" data-st="1"  onclick="setIntervalo(1)">2ª menor</button>
+      <button class="btn" data-st="2"  onclick="setIntervalo(2)">2ª mayor</button>
+      <button class="btn" data-st="3"  onclick="setIntervalo(3)">3ª menor</button>
+      <button class="btn" data-st="4"  onclick="setIntervalo(4)">3ª mayor</button>
+      <button class="btn" data-st="5"  onclick="setIntervalo(5)">4ª justa</button>
+      <button class="btn" data-st="6"  onclick="setIntervalo(6)">Tritono</button>
+      <button class="btn" data-st="7"  onclick="setIntervalo(7)">5ª justa</button>
+      <button class="btn" data-st="8"  onclick="setIntervalo(8)">6ª menor</button>
+      <button class="btn" data-st="9"  onclick="setIntervalo(9)">6ª mayor</button>
+      <button class="btn" data-st="10" onclick="setIntervalo(10)">7ª menor</button>
+      <button class="btn" data-st="11" onclick="setIntervalo(11)">7ª mayor</button>
+      <button class="btn" data-st="12" onclick="setIntervalo(12)">Octava</button>
+    </div>
+    <div class="canvas-label" id="statusLabel">Onda resultante — batimientos: 0.0 Hz</div>
+    <canvas id="cvMain" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Consonancia, disonancia y armónicos</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ff44;">Consonancia</strong><br>
+        Cuando la razón de frecuencias es simple (2:1, 3:2, 4:3…), los armónicos coinciden.
+        El resultado se percibe como <strong>estable</strong> y <strong>en reposo</strong>.
+        Intervalos consonantes: octava, quinta, cuarta, terceras.
+      </div>
+      <div class="info-box">
+        <strong style="color:#ff4444;">Disonancia</strong><br>
+        Razones de frecuencias complejas producen <strong>batimientos</strong> (fluctuaciones de amplitud)
+        y tensión auditiva. La disonancia es un <em>motor dramático</em>: energía que busca resolverse
+        en consonancia. Ejemplo: el tritono (6 semitonos).
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Interval names ─────────────────────────────────────────
+const INTERVAL_NAMES = [
+  'Unísono', '2ª menor', '2ª mayor', '3ª menor', '3ª mayor',
+  '4ª justa', 'Tritono', '5ª justa', '6ª menor', '6ª mayor',
+  '7ª menor', '7ª mayor', 'Octava'
+];
+const CONSONANCE = [1, 0, 0.3, 0.7, 0.8, 0.85, 0, 0.95, 0.7, 0.8, 0.4, 0.5, 1];
+// 0=strongly dissonant, 1=strongly consonant
+
+// ── Estado ────────────────────────────────────────────────
+let baseFreq = 261;
+let semitones = 0;
+let speedFactor = 0.15;   // cámara lenta del gráfico (1 = tiempo real)
+let soundMode = 'continuo'; // 'continuo' | 'pulsos'
+let pulseBpm = 120;
+let pulseTimer = null;
+let nextPulseTime = 0;
+let playing = false;
+let animId = null;
+let startTS = null;
+let osc1 = null, osc2 = null, gainNode = null;
+
+function getFreq2() { return baseFreq * Math.pow(2, semitones / 12); }
+function getBeatFreq() { return Math.abs(getFreq2() - baseFreq); }
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas(elapsed) {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 16, padR = 16, padT = 20, padB = 20;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+
+  const f1 = baseFreq;
+  const f2 = getFreq2();
+  const beatF = getBeatFreq();
+
+  // Divide canvas into 3 horizontal bands
+  const band = bh / 3;
+
+  // Band labels
+  ctx.fillStyle = 'rgba(150,200,255,0.55)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Tono 1: ${f1.toFixed(1)} Hz`, padL + 4, padT + 14);
+  ctx.fillText(`Tono 2: ${f2.toFixed(1)} Hz`, padL + 4, padT + band + 14);
+  ctx.fillText('Suma (onda resultante)', padL + 4, padT + band * 2 + 14);
+
+  // Avance de fase en cámara lenta (speedFactor < 1 ralentiza el gráfico)
+  const tOffset = (elapsed || 0) * speedFactor;
+  const cons = CONSONANCE[semitones];
+
+  // --- Bandas individuales (tonos puros): ventana corta para ver la forma de onda ---
+  const indWindow = 14 / Math.max(f1, 2);
+  [
+    { f: f1, color: '#00ffff', bandIdx: 0 },
+    { f: f2, color: '#ffaa00', bandIdx: 1 }
+  ].forEach(({ f, color, bandIdx }) => {
+    const cy = padT + bandIdx * band + band / 2;
+    const amp = band * 0.38;
+
+    ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(padL + bw, cy); ctx.stroke();
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    for (let i = 0; i <= bw; i++) {
+      const t = tOffset + (i / bw) * indWindow;
+      const v = Math.sin(2 * Math.PI * f * t);
+      const x = padL + i;
+      const y = cy - v * amp;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+
+  // --- Banda de suma: ventana larga que abarca ~2.5 periodos de batimiento ---
+  const cy3 = padT + 2 * band + band / 2;
+  const amp3 = band * 0.38;
+  // Si beatF es muy pequeño (casi unísono) la envolvente es lentísima → usar una ventana amplia con tope
+  const sumWindow = beatF < 1 ? indWindow * 6
+                              : Math.min(Math.max(2.5 / beatF, indWindow * 2), 0.9);
+
+  ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, cy3); ctx.lineTo(padL + bw, cy3); ctx.stroke();
+
+  // Envolvente de batimiento |cos(π·Δf·t)| como guía tenue
+  if (beatF >= 1) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+    ctx.lineWidth = 1.5;
+    for (const sign of [1, -1]) {
+      ctx.beginPath();
+      for (let i = 0; i <= bw; i++) {
+        const t = tOffset + (i / bw) * sumWindow;
+        const env = Math.abs(Math.cos(Math.PI * (f2 - f1) * t));
+        const x = padL + i;
+        const y = cy3 - sign * env * amp3;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  // Onda resultante (color interpolado consonante↔disonante)
+  const r = Math.round(255 * (1 - cons));
+  const g = Math.round(255 * cons);
+  ctx.strokeStyle = `rgb(${r},${g},68)`;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i <= bw; i++) {
+    const t = tOffset + (i / bw) * sumWindow;
+    const v = (Math.sin(2 * Math.PI * f1 * t) + Math.sin(2 * Math.PI * f2 * t)) * 0.5;
+    const x = padL + i;
+    const y = cy3 - v * amp3;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Dividers between bands
+  ctx.strokeStyle = 'rgba(100,180,255,0.25)';
+  ctx.lineWidth = 1;
+  [1, 2].forEach(i => {
+    ctx.beginPath();
+    ctx.moveTo(padL, padT + i * band);
+    ctx.lineTo(padL + bw, padT + i * band);
+    ctx.stroke();
+  });
+
+  // Consonance indicator
+  const indW = bw * 0.3;
+  const indX = W - padR - indW;
+  const indY = H - padB - 18;
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(indX, indY, indW, 14);
+  ctx.fillStyle = `rgb(${Math.round(255*(1-cons))},${Math.round(255*cons)},68)`;
+  ctx.fillRect(indX, indY, indW * cons, 14);
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(indX, indY, indW, 14);
+  ctx.fillStyle = '#99ccff'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('consonancia', indX - 4, indY + 11);
+}
+
+// ── Audio ──────────────────────────────────────────────────
+function startAudio() {
+  if (soundMode === 'continuo') {
+    startContinuo();
+  } else {
+    const actx = getAudioContext();
+    nextPulseTime = actx.currentTime + 0.06;
+    schedulePulses();
+    pulseTimer = window.setInterval(schedulePulses, 25);
+  }
+}
+
+// Tono continuo: dos osciladores sostenidos
+function startContinuo() {
+  const actx = getAudioContext();
+  const t0 = actx.currentTime + 0.01;
+  osc1 = actx.createOscillator();
+  osc2 = actx.createOscillator();
+  gainNode = actx.createGain();
+  osc1.type = 'sine'; osc1.frequency.value = baseFreq;
+  osc2.type = 'sine'; osc2.frequency.value = getFreq2();
+  gainNode.gain.setValueAtTime(0, t0);
+  gainNode.gain.linearRampToValueAtTime(0.15, t0 + 0.015);
+  osc1.connect(gainNode); osc2.connect(gainNode);
+  gainNode.connect(actx.destination);
+  osc1.start(t0); osc2.start(t0);
+  _activeNodes.push(osc1, osc2);
+}
+
+// Pulsos: pares de tonos cortos repetidos al ritmo elegido
+function schedulePulses() {
+  const actx = getAudioContext();
+  const interval = 60 / pulseBpm;
+  const dur = Math.min(interval * 0.55, 0.35);
+  while (nextPulseTime < actx.currentTime + 0.1) {
+    playPulse(nextPulseTime, dur);
+    nextPulseTime += interval;
+  }
+}
+
+function playPulse(t, dur) {
+  const actx = getAudioContext();
+  const g = actx.createGain();
+  const o1 = actx.createOscillator();
+  const o2 = actx.createOscillator();
+  o1.type = 'sine'; o1.frequency.value = baseFreq;
+  o2.type = 'sine'; o2.frequency.value = getFreq2();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.15, t + 0.012);          // ataque anti-click
+  g.gain.setValueAtTime(0.15, t + dur - 0.03);
+  g.gain.linearRampToValueAtTime(0, t + dur);               // decaimiento
+  o1.connect(g); o2.connect(g); g.connect(actx.destination);
+  o1.start(t); o2.start(t);
+  o1.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
+  _activeNodes.push(o1, o2);
+}
+
+// ── Toggle ─────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startAudio();
+  startTS = null;
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  if (pulseTimer) { clearInterval(pulseTimer); pulseTimer = null; }
+  stopAllAudio();
+  osc1 = osc2 = null;
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas(0);
+}
+
+// ── Animación ──────────────────────────────────────────────
+function animate(ts) {
+  if (!startTS) startTS = ts;
+  const elapsed = (ts - startTS) / 1000;
+  drawCanvas(elapsed);
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+// ── Sliders ────────────────────────────────────────────────
+function updateIntervalUI() {
+  document.getElementById('intervalVal').textContent = semitones;
+  document.getElementById('intervalName').textContent = INTERVAL_NAMES[semitones];
+  const beatF = getBeatFreq();
+  document.getElementById('statusLabel').textContent =
+    `Onda resultante — batimientos: ${beatF.toFixed(1)} Hz`;
+  // Resaltar el botón del intervalo activo
+  document.querySelectorAll('#intervalButtons .btn').forEach(b => {
+    b.classList.toggle('active', +b.dataset.st === semitones);
+  });
+  if (osc2) osc2.frequency.value = getFreq2();
+  if (!playing) drawCanvas(0);
+}
+
+function setIntervalo(s) {
+  semitones = s;
+  document.getElementById('intervalSlider').value = s;
+  updateIntervalUI();
+}
+
+document.getElementById('intervalSlider').addEventListener('input', function() {
+  semitones = +this.value;
+  updateIntervalUI();
+});
+document.getElementById('baseFreqSlider').addEventListener('input', function() {
+  baseFreq = +this.value;
+  document.getElementById('baseFreqVal').textContent = Math.round(baseFreq);
+  if (osc1) osc1.frequency.value = baseFreq;
+  if (osc2) osc2.frequency.value = getFreq2();
+  updateIntervalUI();
+});
+document.getElementById('speedSlider').addEventListener('input', function() {
+  speedFactor = +this.value / 100;
+  document.getElementById('speedVal').textContent = speedFactor.toFixed(2) + '×';
+  if (!playing) drawCanvas(0);
+});
+document.getElementById('pulseSlider').addEventListener('input', function() {
+  pulseBpm = +this.value;
+  document.getElementById('pulseVal').textContent = pulseBpm;
+});
+
+function setMode(m) {
+  soundMode = m;
+  document.getElementById('btnContinuo').classList.toggle('active', m === 'continuo');
+  document.getElementById('btnPulsos').classList.toggle('active', m === 'pulsos');
+  // Si está sonando, reiniciar el audio en el nuevo modo
+  if (playing) {
+    if (pulseTimer) { clearInterval(pulseTimer); pulseTimer = null; }
+    stopAllAudio();
+    osc1 = osc2 = null;
+    startAudio();
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  updateIntervalUI();
+  drawCanvas(0);
+});
+window.addEventListener('resize', () => { if (!playing) drawCanvas(0); });
+</script>
+</body>
+</html>

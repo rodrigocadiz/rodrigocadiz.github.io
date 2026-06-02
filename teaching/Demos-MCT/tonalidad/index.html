@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tonalidad y Atonalidad — Demos MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-tonalidad">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="index.html" class="active">Tonalidad y Atonalidad</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Tonalidad y Atonalidad</h1>
+      <p class="subtitle">Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      Del orden del <span class="kw">sistema tonal</span> al <span class="kw">vagabundeo libre</span> de la atonalidad.
+      Explora las escalas y modos, la construcción de acordes, la gravedad de la tónica, la emancipación de la disonancia,
+      el sistema dodecafónico de Schönberg con sus transformaciones de la serie, y los modos de transposición limitada de Messiaen.
+    </p>
+    <div class="card-grid">
+
+      <a class="vineta-card" href="01_escalas/index.html">
+        <div class="num" style="color:#ffd24a;">1 𝄞</div>
+        <h3 style="color:#ffd24a;">Escalas y Modos</h3>
+        <p>El "abecedario" de la música tonal. Construye escalas mayores y menores desde cualquier tónica y descubre que el patrón de tonos y semitonos se conserva al transponer.</p>
+      </a>
+
+      <a class="vineta-card" href="02_acordes/index.html">
+        <div class="num" style="color:#00ffff;">2 ♪♪♪</div>
+        <h3 style="color:#00ffff;">Acordes y Armonía</h3>
+        <p>Las triadas se forman apilando terceras: notas alternas de la escala. Recorre los grados I–VII, escucha su calidad mayor, menor o disminuida y la cadencia I–IV–V–I.</p>
+      </a>
+
+      <a class="vineta-card" href="03_tonica_jerarquia/index.html">
+        <div class="num" style="color:#00ff44;">3 ⊙</div>
+        <h3 style="color:#00ff44;">La Tónica y la Jerarquía</h3>
+        <p>En el sistema tonal todo gira en torno a una nota principal. Mide la tensión de cada grado y escucha cómo la sensible "quiere" resolver hacia la tónica.</p>
+      </a>
+
+      <a class="vineta-card" href="04_atonalidad/index.html">
+        <div class="num" style="color:#ff44ff;">4 ⊗</div>
+        <h3 style="color:#ff44ff;">Atonalidad</h3>
+        <p>Schönberg, 1907: la disonancia se emancipa. Compara el círculo cromático tonal —con su centro de gravedad— frente al atonal, donde las doce notas son iguales.</p>
+      </a>
+
+      <a class="vineta-card" href="05_serie_dodecafonica/index.html">
+        <div class="num" style="color:#ffaa00;">5 ⦂</div>
+        <h3 style="color:#ffaa00;">La Serie Dodecafónica</h3>
+        <p>El orden de 1921 para el caos atonal. Genera una serie con los doce sonidos cromáticos bajo una regla de oro: ninguno se repite hasta que han sonado todos.</p>
+      </a>
+
+      <a class="vineta-card" href="06_transformaciones/index.html">
+        <div class="num" style="color:#ff4444;">6 ⇄</div>
+        <h3 style="color:#ff4444;">Transformaciones de la Serie</h3>
+        <p>Una serie genera variaciones matemáticas: original (P), retrógrada (R), inversión (I) y retrógrada-inversión (RI). Visualízalas como altura contra posición y escúchalas.</p>
+      </a>
+
+      <a class="vineta-card" href="07_modos_messiaen/index.html">
+        <div class="num" style="color:#00ffff;">7 ✦</div>
+        <h3 style="color:#00ffff;">Modos de Messiaen</h3>
+        <p>Modos de transposición limitada: escalas simétricas que se repiten dentro de la octava. Descubre por qué M1 solo tiene 2 transposiciones y M2 (octatónica) tiene 3.</p>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+</body>
+</html>

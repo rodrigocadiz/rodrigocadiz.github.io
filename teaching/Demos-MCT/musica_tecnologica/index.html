@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Música de Raíz Tecnológica — Demos MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-musica-tecnologica">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="index.html" class="active">Música de Raíz Tecnológica</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>Música de Raíz Tecnológica</h1>
+      <p class="subtitle">Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      De la música medieval a las orquestas de laptops. Recorre la <span class="kw">línea de tiempo</span> que se bifurca
+      en la música popular y el linaje tecnológico, y explora la <span class="kw">liberación del sonido</span>, la escisión entre
+      música concreta y electrónica, la cinta magnética, el sintetizador analógico, la música por ordenador, MIDI e
+      interactividad, y la era de los laptops y las redes.
+    </p>
+    <div class="card-grid">
+
+      <a class="vineta-card" href="01_linea_tiempo/index.html">
+        <div class="num" style="color:#ffd24a;">1 ⏳</div>
+        <h3 style="color:#ffd24a;">Línea de Tiempo</h3>
+        <p>De la Edad Media a la música contemporánea, donde la historia se bifurca: la música popular por un lado y el linaje tecnológico por el otro. Nodos que suenan.</p>
+      </a>
+
+      <a class="vineta-card" href="02_liberacion_sonido/index.html">
+        <div class="num" style="color:#ff55aa;">2 🔓</div>
+        <h3 style="color:#ff55aa;">La Liberación del Sonido</h3>
+        <p>Busoni y Varèse soñaron con máquinas productoras de sonido, libres de la escala temperada. Del paso discreto al continuo: microtonos, glissandos y ruido.</p>
+      </a>
+
+      <a class="vineta-card" href="03_concreta_electronica/index.html">
+        <div class="num" style="color:#00ffcc;">3 ✂️</div>
+        <h3 style="color:#00ffcc;">Concreta vs. Electrónica</h3>
+        <p>La gran escisión de los años 50: París graba sonidos del mundo (objet sonoré); Colonia sintetiza sinusoides puras. Dos filosofías opuestas del sonido.</p>
+      </a>
+
+      <a class="vineta-card" href="04_cinta_magnetica/index.html">
+        <div class="num" style="color:#00ffff;">4 📼</div>
+        <h3 style="color:#00ffff;">La Cinta Magnética</h3>
+        <p>El estudio de la cinta: cambiar la velocidad (altura y duración), invertir el sonido, hacer bucles y empalmes. La materia prima editable de la música concreta.</p>
+      </a>
+
+      <a class="vineta-card" href="05_sintetizador_analogico/index.html">
+        <div class="num" style="color:#00ff44;">5 🎛</div>
+        <h3 style="color:#00ff44;">Sintetizador Analógico</h3>
+        <p>Moog y Buchla: el control por voltaje. Un secuenciador y voltajes de control que modulan la altura y el filtro en tiempo real, llevando la electrónica al escenario.</p>
+      </a>
+
+      <a class="vineta-card" href="06_computer_music/index.html">
+        <div class="num" style="color:#ffaa00;">6 💻</div>
+        <h3 style="color:#ffaa00;">Música por Ordenador</h3>
+        <p>Max Mathews y los programas MUSIC: por primera vez el sonido no se graba, se calcula desde cero. Escribe una partitura y deja que el computador la renderice.</p>
+      </a>
+
+      <a class="vineta-card" href="07_midi_interactividad/index.html">
+        <div class="num" style="color:#44aaff;">7 🔌</div>
+        <h3 style="color:#44aaff;">MIDI e Interactividad</h3>
+        <p>El protocolo MIDI (1983) hizo que las máquinas se comunicaran. Toca y observa los mensajes; activa el modo interactivo y el computador responde como un copiloto.</p>
+      </a>
+
+      <a class="vineta-card" href="08_laptop_redes/index.html">
+        <div class="num" style="color:#ff44ff;">8 🌐</div>
+        <h3 style="color:#ff44ff;">Laptops y Redes</h3>
+        <p>El cambio de siglo: DAWs, orquestas de laptops, live coding, estética del glitch y música en red entre ciudades. La música se vuelve código.</p>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+</body>
+</html>

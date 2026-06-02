@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8. Laptops y Redes — Música de Raíz Tecnológica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+  <style>
+    .lc-code {
+      width: 100%; box-sizing: border-box;
+      font-family: 'Consolas', 'Menlo', monospace; font-size: 1.05rem;
+      background: #0d1a2e; color: #00ffcc; border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; resize: vertical; line-height: 1.5;
+      transition: border-color .18s;
+    }
+    .lc-code:focus { outline: none; border-color: var(--accent-2); }
+  </style>
+</head>
+<body class="sec-musica-tecnologica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_linea_tiempo/index.html">1. Línea de Tiempo</a>
+  <a href="../02_liberacion_sonido/index.html">2. Liberación del Sonido</a>
+  <a href="../03_concreta_electronica/index.html">3. Concreta vs. Electrónica</a>
+  <a href="../04_cinta_magnetica/index.html">4. La Cinta Magnética</a>
+  <a href="../05_sintetizador_analogico/index.html">5. Sintetizador Analógico</a>
+  <a href="../06_computer_music/index.html">6. Música por Ordenador</a>
+  <a href="../07_midi_interactividad/index.html">7. MIDI e Interactividad</a>
+  <a href="../08_laptop_redes/index.html" class="active">8. Laptops y Redes</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>8. Laptops y Redes</h1>
+      <p class="subtitle">Orquestas de portátiles, live coding, estética glitch y música en red</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Una orquesta de laptops en red</h2>
+    <p class="description">
+      En el cambio de siglo el laptop se volvió instrumento. Surgieron las <span class="kw">orquestas de portátiles</span>,
+      el <span class="kw">live coding</span> (programar música en vivo), la estética del <span class="kw">glitch</span> (el "fallo digital"
+      como recurso) y la <span class="kw">música en red</span> entre músicos de distintas ciudades. Cada nodo es un laptop que genera
+      su patrón algorítmico y se comunica con los demás. Ajusta los parámetros mientras suena.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Tempo: <span class="val" id="bpmVal">120</span> BPM</label>
+        <input type="range" id="bpmSlider" min="60" max="220" value="120" step="1">
+      </div>
+      <div class="control-group">
+        <label>Densidad: <span class="val" id="densVal">50</span>%</label>
+        <input type="range" id="densSlider" min="0" max="100" value="50" step="1">
+      </div>
+      <div class="control-group">
+        <label>Glitch: <span class="val" id="glitchVal">20</span>%</label>
+        <input type="range" id="glitchSlider" min="0" max="100" value="20" step="1">
+      </div>
+      <div class="control-group">
+        <label>Laptops (nodos): <span class="val" id="nodesVal">4</span></label>
+        <input type="range" id="nodesSlider" min="2" max="6" value="4" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Iniciar red</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Red detenida · pulsa ▶ para iniciar la orquesta de laptops</div>
+    <canvas id="cvNet" height="320"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Live coding: edita el código mientras suena</h2>
+    <p class="description">
+      En el <span class="kw">live coding</span>, el músico escribe y modifica el código que genera la música <span class="kw">en tiempo real</span>.
+      Cada número es un <span class="kw">grado de la escala</span> y <span class="kw">~</span> es un silencio. Edita el patrón y pulsa
+      <span class="kw">Ejecutar</span> (o Ctrl/Cmd+Enter): el cambio entra <span class="kw">sin detener</span> el sonido.
+    </p>
+    <textarea id="lcCode" class="lc-code" rows="2" spellcheck="false">0 2 4 ~ 7 4 2 ~</textarea>
+    <div class="controls" style="margin-top:12px;">
+      <div class="btn-group">
+        <button class="btn" id="lcEval" onclick="lcEvaluate()">⏎ Ejecutar (Ctrl+Enter)</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="lcPlay" onclick="lcToggle()">▶ Iniciar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="lcStatus">patrón: 0 2 4 ~ 7 4 2 ~ · 8 pasos</div>
+    <canvas id="cvLC" height="90"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>La música se vuelve código</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff44ff;">Live coding y glitch</strong><br>
+        El intérprete <strong>programa en vivo</strong> los patrones que generan la música, modificándolos en tiempo real.
+        El <strong>glitch</strong> abraza el error digital —cortes, stutters, saturación— como material estético.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffcc;">Música en red</strong><br>
+        Por <strong>internet</strong>, músicos situados en distintas ciudades improvisan y colaboran en un mismo
+        <strong>espacio acústico virtual</strong>, transmitiendo audio estructurado en tiempo real.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+const PENTA = [0, 2, 4, 7, 9];
+let playing = false, clock = null, stepN = 0, animId = null;
+let bpm = 120, density = 0.5, glitch = 0.2, nodes = 4;
+let flashes = {}, pulses = [];
+
+// ── Síntesis ───────────────────────────────────────────────
+function voice(m, t, i) {
+  const actx = getAudioContext(), o = actx.createOscillator(), g = actx.createGain();
+  o.type = (i % 2 === 0) ? 'triangle' : 'sine'; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+  o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.3); _activeNodes.push(o);
+}
+function glitchBurst(t) {
+  const actx = getAudioContext(), n = 4 + Math.floor(Math.random() * 4);
+  for (let k = 0; k < n; k++) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square'; o.frequency.value = 200 + Math.random() * 2000;
+    const ts = t + k * 0.028;
+    g.gain.setValueAtTime(0.10, ts); g.gain.exponentialRampToValueAtTime(0.001, ts + 0.025);
+    o.connect(g); g.connect(actx.destination); o.start(ts); o.stop(ts + 0.03); _activeNodes.push(o);
+  }
+}
+
+// ── Motor generativo ───────────────────────────────────────
+function stepEngine() {
+  if (!playing) return;
+  const actx = getAudioContext(), t = actx.currentTime + 0.02;
+  for (let i = 0; i < nodes; i++) {
+    if (Math.random() < density) {
+      const base = 48 + i * 4;
+      const m = base + PENTA[Math.floor(Math.random() * 5)] + (Math.random() < 0.3 ? 12 : 0);
+      voice(m, t, i);
+      flashes[i] = performance.now() + 280;
+      const j = (i + 1 + Math.floor(Math.random() * Math.max(1, nodes - 1))) % nodes;
+      pulses.push({ from: i, to: j, born: performance.now() });
+    }
+  }
+  if (Math.random() < glitch) glitchBurst(t);
+  stepN++;
+  clock = setTimeout(stepEngine, 60000 / bpm / 2);
+}
+
+// ── Canvas: red de nodos ───────────────────────────────────
+const canvas = document.getElementById('cvNet');
+const ctx = canvas.getContext('2d');
+
+function nodePositions(W, H) {
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 54, pos = [];
+  for (let i = 0; i < nodes; i++) {
+    const a = -Math.PI / 2 + i * (Math.PI * 2 / nodes);
+    pos.push({ x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) });
+  }
+  return pos;
+}
+
+function draw() {
+  canvas.width = canvas.offsetWidth || 900;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const pos = nodePositions(W, H), now = performance.now();
+
+  // Aristas (red todos-con-todos)
+  ctx.strokeStyle = 'rgba(0,255,204,0.18)'; ctx.lineWidth = 1;
+  for (let i = 0; i < nodes; i++) for (let j = i + 1; j < nodes; j++) {
+    ctx.beginPath(); ctx.moveTo(pos[i].x, pos[i].y); ctx.lineTo(pos[j].x, pos[j].y); ctx.stroke();
+  }
+
+  // Pulsos viajando por las aristas
+  pulses = pulses.filter(p => now - p.born < 460 && p.from < nodes && p.to < nodes);
+  pulses.forEach(p => {
+    const f = (now - p.born) / 460;
+    const x = pos[p.from].x + (pos[p.to].x - pos[p.from].x) * f;
+    const y = pos[p.from].y + (pos[p.to].y - pos[p.from].y) * f;
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,85,170,${1 - f})`; ctx.fill();
+  });
+
+  // Nodos (laptops)
+  for (let i = 0; i < nodes; i++) {
+    const on = (flashes[i] || 0) > now;
+    ctx.beginPath(); ctx.arc(pos[i].x, pos[i].y, on ? 26 : 20, 0, Math.PI * 2);
+    ctx.fillStyle = on ? '#ffffff' : 'rgba(0,255,204,0.85)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = on ? '#ff55aa' : 'rgba(10,21,32,0.85)'; ctx.stroke();
+    ctx.fillStyle = '#0a1520'; ctx.font = '18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💻', pos[i].x, pos[i].y);
+    ctx.fillStyle = 'rgba(150,200,255,0.8)'; ctx.font = '10px sans-serif'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('laptop ' + (i + 1), pos[i].x, pos[i].y + 36);
+  }
+
+  if (playing) animId = requestAnimationFrame(draw);
+}
+
+// ── Reproducción ───────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  if (lcPlaying) lcStop();   // la red y el live coding no suenan a la vez
+  playing = true; stepN = 0; pulses = []; flashes = {};
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  document.getElementById('statusLabel').textContent = `Red activa · ${nodes} laptops generando patrones`;
+  stepEngine();
+  if (animId) cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(draw);
+}
+function stopPlayback() {
+  playing = false;
+  if (clock) { clearTimeout(clock); clock = null; }
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  stopAllAudio();
+  document.getElementById('btnPlay').textContent = '▶ Iniciar red';
+  document.getElementById('btnPlay').classList.remove('active');
+  document.getElementById('statusLabel').textContent = 'Red detenida · pulsa ▶ para iniciar la orquesta de laptops';
+  draw();
+}
+
+// ── Controles ──────────────────────────────────────────────
+document.getElementById('bpmSlider').addEventListener('input', function () { bpm = +this.value; document.getElementById('bpmVal').textContent = bpm; });
+document.getElementById('densSlider').addEventListener('input', function () { density = this.value / 100; document.getElementById('densVal').textContent = this.value; });
+document.getElementById('glitchSlider').addEventListener('input', function () { glitch = this.value / 100; document.getElementById('glitchVal').textContent = this.value; });
+document.getElementById('nodesSlider').addEventListener('input', function () {
+  nodes = +this.value; document.getElementById('nodesVal').textContent = nodes;
+  if (playing) document.getElementById('statusLabel').textContent = `Red activa · ${nodes} laptops generando patrones`;
+  draw();
+});
+
+// ── Live coding ────────────────────────────────────────────
+const LC_SCALE = [0, 2, 4, 5, 7, 9, 11, 12]; // grados de Do mayor (+ octava)
+let lcPattern = [0, 2, 4, null, 7, 4, 2, null];
+let lcPlaying = false, lcTimer = null, lcStep = 0, lcCurrent = -1;
+const lcBpm = 112;
+const lcCanvas = document.getElementById('cvLC'), lctx = lcCanvas.getContext('2d');
+
+function lcMidi(d) { const n = LC_SCALE.length; return 60 + LC_SCALE[((d % n) + n) % n] + 12 * Math.floor(d / n); }
+function lcParse(text) {
+  return text.trim().split(/\s+/).filter(Boolean).map(t => {
+    if (t === '~' || t === '.') return null;
+    const v = parseInt(t, 10); return Number.isFinite(v) ? v : null;
+  });
+}
+function lcVoice(midi, t) {
+  const actx = getAudioContext(), o = actx.createOscillator(), f = actx.createBiquadFilter(), g = actx.createGain();
+  o.type = 'sawtooth'; o.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
+  f.type = 'lowpass'; f.frequency.value = 2200; f.Q.value = 6;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.18, t + 0.008); g.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+  o.connect(f); f.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.28); _activeNodes.push(o);
+}
+// Evaluar = re-leer el editor y reemplazar el patrón EN VIVO (hot-swap, sin parar)
+function lcEvaluate() {
+  const p = lcParse(document.getElementById('lcCode').value);
+  if (p.length) lcPattern = p;
+  const ta = document.getElementById('lcCode'); ta.style.borderColor = '#00ff44';
+  setTimeout(() => { ta.style.borderColor = ''; }, 180); // destello "evaluado"
+  lcUpdateStatus(); lcDraw();
+}
+function lcTick() {
+  if (!lcPlaying) return;
+  const len = lcPattern.length || 1;
+  lcCurrent = lcStep % len;
+  const d = lcPattern[lcCurrent];
+  if (d !== null && d !== undefined) lcVoice(lcMidi(d), getAudioContext().currentTime + 0.02);
+  lcDraw();
+  lcStep++;
+  lcTimer = setTimeout(lcTick, 60000 / lcBpm / 2);
+}
+function lcToggle() {
+  if (lcPlaying) { lcStop(); return; }
+  if (playing) stopPlayback();   // exclusión mutua con la red
+  lcEvaluate();                  // toma el patrón actual del editor
+  lcPlaying = true; lcStep = 0;
+  document.getElementById('lcPlay').textContent = '■ Detener';
+  document.getElementById('lcPlay').classList.add('active');
+  lcTick();
+}
+function lcStop() {
+  lcPlaying = false; lcCurrent = -1;
+  if (lcTimer) { clearTimeout(lcTimer); lcTimer = null; }
+  stopAllAudio();
+  document.getElementById('lcPlay').textContent = '▶ Iniciar';
+  document.getElementById('lcPlay').classList.remove('active');
+  lcDraw();
+}
+function lcUpdateStatus() {
+  document.getElementById('lcStatus').textContent =
+    `patrón: ${lcPattern.map(d => d === null ? '~' : d).join(' ')} · ${lcPattern.length} pasos`;
+}
+function lcDraw() {
+  lcCanvas.width = lcCanvas.offsetWidth || 900;
+  const W = lcCanvas.width, H = lcCanvas.height; lctx.clearRect(0, 0, W, H);
+  const n = lcPattern.length, pad = 10, cw = (W - 2 * pad) / Math.max(1, n);
+  for (let i = 0; i < n; i++) {
+    const x = pad + i * cw, cur = (lcPlaying && i === lcCurrent), d = lcPattern[i], rest = (d === null);
+    lctx.fillStyle = cur ? 'rgba(0,255,68,0.20)' : 'rgba(255,255,255,0.04)';
+    lctx.fillRect(x + 2, 12, cw - 4, H - 30);
+    lctx.strokeStyle = cur ? '#00ff44' : 'rgba(100,180,255,0.3)'; lctx.lineWidth = cur ? 2 : 1;
+    lctx.strokeRect(x + 2, 12, cw - 4, H - 30);
+    lctx.fillStyle = rest ? 'rgba(150,200,255,0.5)' : (cur ? '#ffffff' : '#00ffcc');
+    lctx.font = 'bold 16px monospace'; lctx.textAlign = 'center'; lctx.textBaseline = 'middle';
+    lctx.fillText(rest ? '~' : String(d), x + cw / 2, 12 + (H - 30) / 2);
+    lctx.fillStyle = 'rgba(150,200,255,0.5)'; lctx.font = '9px sans-serif'; lctx.textBaseline = 'alphabetic';
+    lctx.fillText(i + 1, x + cw / 2, H - 6);
+  }
+}
+document.getElementById('lcCode').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); lcEvaluate(); }
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { draw(); lcUpdateStatus(); lcDraw(); });
+window.addEventListener('resize', () => { draw(); lcDraw(); });
+</script>
+</body>
+</html>

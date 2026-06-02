@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. El Sonido y el Silencio — La Música y sus Parámetros</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_sonido_silencio/index.html" class="active">1. El Sonido y el Silencio</a>
+  <a href="../02_tempo/index.html">2. Tempo y Pulso</a>
+  <a href="../03_dinamica/index.html">3. Dinámicas</a>
+  <a href="../04_articulacion/index.html">4. Articulación</a>
+  <a href="../05_consonancia_disonancia/index.html">5. Consonancia y Disonancia</a>
+  <a href="../06_expectativa/index.html">6. Expectativa Musical</a>
+  <a href="../07_formas_musicales/index.html">7. Formas Musicales</a>
+  <a href="../08_linea_tiempo/index.html">8. Línea de Tiempo</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. El Sonido y el Silencio</h1>
+      <p class="subtitle">La materia prima de la música: contraste entre energía sonora y su ausencia</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Alternancia de sonido y silencio</h2>
+    <p class="description">
+      La música se construye sobre el contraste entre el <span class="kw">sonido</span> y el <span class="kw">silencio</span>.
+      El silencio no es simplemente "nada": es un recurso expresivo que articula frases, genera suspenso y da significado al sonido que lo rodea.
+      Ajusta la duración de cada fase y escucha cómo cambia la expresividad del patrón.
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Frecuencia: <span class="val" id="freqVal">440</span> Hz</label>
+        <input type="range" id="freqSlider" min="110" max="880" value="440" step="10">
+      </div>
+      <div class="control-group">
+        <label>Duración sonido: <span class="val" id="soundDurVal">1.0</span> s</label>
+        <input type="range" id="soundDurSlider" min="0.2" max="3.0" value="1.0" step="0.1">
+      </div>
+      <div class="control-group">
+        <label>Duración silencio: <span class="val" id="silDurVal">0.5</span> s</label>
+        <input type="range" id="silDurSlider" min="0.1" max="2.0" value="0.5" step="0.1">
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Escuchar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Listo — pulse ▶ para comenzar</div>
+    <canvas id="cvMain" height="250"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>El silencio como recurso expresivo</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ff44;">El Sonido</strong><br>
+        Producido por la vibración de un cuerpo, viaja en forma de ondas de presión.
+        Un sonido puro (sinusoidal) tiene <strong>frecuencia</strong>, <strong>amplitud</strong> y <strong>fase</strong>.
+        Un sonido real contiene además armónicos que determinan su timbre.
+      </div>
+      <div class="info-box">
+        <strong style="color:#99ccff;">El Silencio</strong><br>
+        Ausencia de energía sonora. En música, el silencio no es vacío: es una herramienta psicológica que genera
+        <strong>suspenso</strong>, <strong>articulación</strong> y <strong>expectativa</strong>.
+        Como la puntuación en el lenguaje, organiza las ideas musicales.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────
+let playing = false;
+let animId = null;
+let soundDuration = 1.0;
+let silenceDuration = 0.5;
+let freq = 440;
+let audioPhase = 'silence';
+let phaseStartWall = null;
+let phaseTimeout = null;
+
+// Waveform ring buffer
+const HISTORY = 5.0;
+const SAMPLES_PER_SEC = 180;
+const MAX_SAMPLES = Math.ceil(HISTORY * SAMPLES_PER_SEC);
+let waveBuffer = [];
+let lastSampleWall = -1;
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvMain');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 800;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 50, padR = 20, padT = 24, padB = 52;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+  const cy = padT + bh / 2;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(padL + bw, cy); ctx.stroke();
+  [-1, -0.5, 0.5, 1].forEach(v => {
+    ctx.strokeStyle = 'rgba(100,180,255,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(padL, cy - v * bh * 0.45);
+    ctx.lineTo(padL + bw, cy - v * bh * 0.45);
+    ctx.stroke();
+  });
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(150,200,255,0.70)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('+1', padL - 4, padT + bh * 0.055 + 4);
+  ctx.fillText('0',  padL - 4, cy + 4);
+  ctx.fillText('−1', padL - 4, padT + bh * 0.945 + 4);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(150,200,255,0.50)';
+  ctx.fillText('← tiempo', padL + bw * 0.12, H - padB + 16);
+
+  if (waveBuffer.length < 2) {
+    ctx.strokeStyle = 'rgba(100,180,255,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(padL + bw, cy); ctx.stroke();
+  } else {
+    const tNow = waveBuffer[waveBuffer.length - 1].t;
+    const tStart = tNow - HISTORY;
+
+    // Group segments by silence/sound and draw each as a path
+    let segStart = 0;
+    while (segStart < waveBuffer.length) {
+      const isSilence = waveBuffer[segStart].isSilence;
+      let segEnd = segStart + 1;
+      while (segEnd < waveBuffer.length && waveBuffer[segEnd].isSilence === isSilence) segEnd++;
+
+      ctx.beginPath();
+      ctx.strokeStyle = isSilence ? 'rgba(120,160,220,0.5)' : '#00ff44';
+      ctx.lineWidth = isSilence ? 1.5 : 2;
+      let first = true;
+      for (let i = segStart; i < segEnd; i++) {
+        const { t, v } = waveBuffer[i];
+        if (t < tStart) { first = true; continue; }
+        const x = padL + ((t - tStart) / HISTORY) * bw;
+        const y = cy - v * bh * 0.45;
+        if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      segStart = segEnd;
+    }
+  }
+
+  // Phase bar at bottom
+  const barY = padT + bh + 12;
+  const barH = 16;
+  const cycleTotal = soundDuration + silenceDuration;
+  const soundRatio = soundDuration / cycleTotal;
+
+  ctx.fillStyle = 'rgba(0,255,68,0.25)';
+  ctx.fillRect(padL, barY, bw * soundRatio, barH);
+  ctx.fillStyle = 'rgba(30,40,80,0.6)';
+  ctx.fillRect(padL + bw * soundRatio, barY, bw * (1 - soundRatio), barH);
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(padL, barY, bw, barH);
+
+  // Cursor in phase bar
+  if (playing && phaseStartWall !== null) {
+    const now = performance.now() / 1000;
+    let phaseElapsed = now - phaseStartWall;
+    let cyclePos;
+    if (audioPhase === 'sound') {
+      cyclePos = Math.min(phaseElapsed / cycleTotal, soundRatio);
+    } else {
+      cyclePos = soundRatio + Math.min(phaseElapsed / cycleTotal, 1 - soundRatio);
+    }
+    const cursorX = padL + cyclePos * bw;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cursorX - 1, barY, 2, barH);
+  }
+
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#00ff44'; ctx.textAlign = 'left';
+  ctx.fillText('SONIDO', padL + 4, barY + barH - 3);
+  ctx.fillStyle = '#99ccff'; ctx.textAlign = 'right';
+  ctx.fillText('SILENCIO', padL + bw - 4, barY + barH - 3);
+}
+
+// ── Audio scheduling ───────────────────────────────────────
+function startSoundPhase() {
+  audioPhase = 'sound';
+  phaseStartWall = performance.now() / 1000;
+  document.getElementById('statusLabel').textContent = '♪ Sonando…';
+
+  const actx = getAudioContext();
+  const osc = actx.createOscillator();
+  const g = actx.createGain();
+  const t0 = actx.currentTime + 0.01;
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.18, t0 + 0.015);
+  const tFade = t0 + soundDuration - 0.02;
+  g.gain.setValueAtTime(0.18, tFade);
+  g.gain.linearRampToValueAtTime(0, tFade + 0.015);
+  osc.connect(g); g.connect(actx.destination);
+  osc.start(t0); osc.stop(tFade + 0.03);
+  _activeNodes.push(osc);
+
+  phaseTimeout = setTimeout(() => {
+    if (playing) startSilencePhase();
+  }, soundDuration * 1000);
+}
+
+function startSilencePhase() {
+  audioPhase = 'silence';
+  phaseStartWall = performance.now() / 1000;
+  document.getElementById('statusLabel').textContent = '— Silencio…';
+  phaseTimeout = setTimeout(() => {
+    if (playing) startSoundPhase();
+  }, silenceDuration * 1000);
+}
+
+// ── Toggle ─────────────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  waveBuffer = []; lastSampleWall = -1;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  startSoundPhase();
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlayback() {
+  playing = false;
+  audioPhase = 'silence';
+  clearTimeout(phaseTimeout);
+  stopAllAudio();
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Escuchar';
+  document.getElementById('btnPlay').classList.remove('active');
+  document.getElementById('statusLabel').textContent = 'Listo — pulse ▶ para comenzar';
+  drawCanvas();
+}
+
+// ── Animación ──────────────────────────────────────────────
+function animate(ts) {
+  const wallNow = performance.now() / 1000;
+
+  if (wallNow - lastSampleWall >= 1 / SAMPLES_PER_SEC) {
+    const isSilence = (audioPhase === 'silence');
+    let v = 0;
+    if (!isSilence && phaseStartWall !== null) {
+      v = Math.sin(2 * Math.PI * freq * (wallNow - phaseStartWall));
+    }
+    waveBuffer.push({ t: wallNow, v, isSilence });
+    if (waveBuffer.length > MAX_SAMPLES) waveBuffer.shift();
+    lastSampleWall = wallNow;
+  }
+
+  drawCanvas();
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+// ── Sliders ────────────────────────────────────────────────
+document.getElementById('freqSlider').addEventListener('input', function() {
+  freq = +this.value;
+  document.getElementById('freqVal').textContent = freq;
+});
+document.getElementById('soundDurSlider').addEventListener('input', function() {
+  soundDuration = +this.value;
+  document.getElementById('soundDurVal').textContent = soundDuration.toFixed(1);
+});
+document.getElementById('silDurSlider').addEventListener('input', function() {
+  silenceDuration = +this.value;
+  document.getElementById('silDurVal').textContent = silenceDuration.toFixed(1);
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', drawCanvas);
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

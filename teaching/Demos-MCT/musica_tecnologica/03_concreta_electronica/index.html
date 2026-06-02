@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. Concreta vs. Electrónica — Música de Raíz Tecnológica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica-tecnologica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_linea_tiempo/index.html">1. Línea de Tiempo</a>
+  <a href="../02_liberacion_sonido/index.html">2. Liberación del Sonido</a>
+  <a href="../03_concreta_electronica/index.html" class="active">3. Concreta vs. Electrónica</a>
+  <a href="../04_cinta_magnetica/index.html">4. La Cinta Magnética</a>
+  <a href="../05_sintetizador_analogico/index.html">5. Sintetizador Analógico</a>
+  <a href="../06_computer_music/index.html">6. Música por Ordenador</a>
+  <a href="../07_midi_interactividad/index.html">7. MIDI e Interactividad</a>
+  <a href="../08_laptop_redes/index.html">8. Laptops y Redes</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>3. Concreta vs. Electrónica</h1>
+      <p class="subtitle">La gran escisión de los años 50: París graba el mundo, Colonia sintetiza sinusoides</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Dos filosofías del material sonoro</h2>
+    <p class="description">
+      La <span class="kw">música concreta</span> (Schaeffer, París) parte de <span class="kw">sonidos del mundo real</span> grabados
+      —trenes, agua, voces— como materia prima (el <span class="kw">objet sonoré</span>). La <span class="kw">música electrónica</span>
+      (Stockhausen, Colonia) rechaza lo natural y construye todo con <span class="kw">sinusoides puras</span>, controlando matemáticamente
+      cada armónico. Compara el espectro de ambas: la concreta es densa y ruidosa; la electrónica, líneas limpias y ordenadas.
+      Stockhausen propuso no solo componer <em>con</em> sonidos, sino <span class="kw">componer el sonido</span>: diseñar su propia
+      <span class="kw">estructura de parciales</span> —incluso espectros que no existen en la naturaleza, distintos a la serie armónica de Fourier—. Cámbiala en vivo.
+    </p>
+    <div class="controls">
+      <div class="btn-group" id="modeButtons">
+        <button class="btn active" data-mode="concreta" onclick="setMode('concreta')">Concreta (París)</button>
+        <button class="btn" data-mode="electronica" onclick="setMode('electronica')">Electrónica (Colonia)</button>
+      </div>
+      <div class="control-group" id="partialsCtl" style="display:none;">
+        <label>Parciales: <span class="val" id="partVal">6</span> sinusoides</label>
+        <input type="range" id="partSlider" min="1" max="16" value="6" step="1">
+      </div>
+      <div class="btn-group" id="structButtons" style="display:none;">
+        <button class="btn active" data-st="armonica" onclick="setStructure('armonica')">Armónica (Fourier)</button>
+        <button class="btn" data-st="impares" onclick="setStructure('impares')">Solo impares</button>
+        <button class="btn" data-st="inarmonica" onclick="setStructure('inarmonica')">Inarmónica</button>
+        <button class="btn" data-st="estirada" onclick="setStructure('estirada')">Estirada</button>
+      </div>
+      <div class="btn-group" id="typeButtons">
+        <button class="btn active" data-type="tren" onclick="setType('tren')">Tren</button>
+        <button class="btn" data-type="agua" onclick="setType('agua')">Agua</button>
+        <button class="btn" data-type="voz" onclick="setType('voz')">Voz</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Sonar</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Música concreta · objeto sonoro: tren</div>
+    <canvas id="cvSpec" height="260"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>París y Colonia</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ff55aa;">Musique Concrète — París</strong><br>
+        Pierre Schaeffer. La materia es el <strong>sonido grabado</strong> del mundo, editado en el estudio. El espectro es
+        <strong>complejo e inarmónico</strong>: refleja la riqueza del sonido real.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Elektronische Musik — Colonia</strong><br>
+        Eimert, Meyer-Eppler, Stockhausen. Solo <strong>sinusoides sintéticas</strong> sumadas (síntesis aditiva). El espectro es
+        <strong>discreto y armónico</strong>: cada parcial está bajo control matemático, extensión del serialismo.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+let playing = false, mode = 'concreta', concretaType = 'tren', partials = 6, structure = 'armonica';
+let voices = [], animId = null, analyser = null, masterGain = null, freqData = null;
+const F0 = 165;
+
+function ensureBus() {
+  const actx = getAudioContext();
+  if (!masterGain) {
+    masterGain = actx.createGain(); masterGain.gain.value = 0.9;
+    analyser = actx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.78;
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    masterGain.connect(analyser); analyser.connect(actx.destination);
+  }
+  return masterGain;
+}
+
+// ── Electrónica: síntesis aditiva VIVA — "componer el sonido" ──
+// La estructura de parciales puede ser la natural (Fourier) u otras "no naturales" (Stockhausen)
+function partialRatio(i) {
+  switch (structure) {
+    case 'impares':    return 2 * i - 1;                 // 1,3,5,7… (hueco)
+    case 'inarmonica': return Math.pow(i, 1.4);          // parciales no enteros (metálico)
+    case 'estirada':   return i * Math.pow(1.06, i - 1); // armónicos estirados (campana)
+    default:           return i;                         // armónica natural (Fourier)
+  }
+}
+function partialFreq(i) { return F0 * partialRatio(i); }
+
+function addVoice(i) {
+  const actx = getAudioContext(), bus = ensureBus(), t = actx.currentTime;
+  const o = actx.createOscillator(); o.type = 'sine'; o.frequency.value = partialFreq(i);
+  const trem = actx.createGain(), env = actx.createGain(), amp = 0.22 / i;
+  trem.gain.value = amp / 2;
+  const lfo = actx.createOscillator(), lg = actx.createGain();
+  lfo.type = 'sine'; lfo.frequency.value = 0.1 + i * 0.05; lg.gain.value = amp / 2;
+  lfo.connect(lg); lg.connect(trem.gain);
+  env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(1, t + 0.08); // fundido de entrada (sin click)
+  o.connect(trem); trem.connect(env); env.connect(bus);
+  o.start(t); lfo.start(t);
+  _activeNodes.push(o); _activeNodes.push(lfo);
+  voices.push({ o, lfo, env, i });
+}
+function removeVoice(v) {
+  const actx = getAudioContext(), t = actx.currentTime;
+  v.env.gain.cancelScheduledValues(t);
+  v.env.gain.setValueAtTime(v.env.gain.value, t);
+  v.env.gain.linearRampToValueAtTime(0, t + 0.1);  // fundido de salida (sin click)
+  try { v.o.stop(t + 0.12); v.lfo.stop(t + 0.12); } catch (e) {}
+}
+function startElectronica() {
+  voices = [];
+  for (let i = 1; i <= partials; i++) addVoice(i);
+}
+// Cambiar el nº de parciales EN VIVO: añade/quita voces con fundido (sin reiniciar, sin clicks)
+function setPartials(n) {
+  partials = n;
+  document.getElementById('partVal').textContent = n;
+  if (playing && mode === 'electronica') {
+    const cur = voices.length;
+    if (n > cur) for (let i = cur + 1; i <= n; i++) addVoice(i);
+    else if (n < cur) voices.splice(n).forEach(removeVoice);
+  }
+  updateStatus();
+}
+// Cambiar la estructura espectral EN VIVO: las frecuencias se deslizan (sin clicks)
+function setStructure(s) {
+  structure = s;
+  document.querySelectorAll('#structButtons .btn').forEach(b => b.classList.toggle('active', b.dataset.st === s));
+  if (playing && mode === 'electronica') {
+    const actx = getAudioContext();
+    voices.forEach(v => v.o.frequency.setTargetAtTime(partialFreq(v.i), actx.currentTime, 0.03));
+  }
+  updateStatus();
+}
+
+// ── Concreta: textura de ruido filtrado (objeto sonoro) ────
+function startConcreta() {
+  const actx = getAudioContext(), bus = ensureBus(), t0 = actx.currentTime + 0.02;
+  const g = actx.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.5, t0 + 0.06); g.connect(bus);
+
+  if (concretaType === 'voz') {
+    // Voz: fuente glótica (sawtooth) + 3 formantes vocálicos + vibrato + un poco de aliento
+    const src = actx.createOscillator(); src.type = 'sawtooth'; src.frequency.value = 132;
+    const vib = actx.createOscillator(), vibg = actx.createGain();
+    vib.type = 'sine'; vib.frequency.value = 5; vibg.gain.value = 4.5;
+    vib.connect(vibg); vibg.connect(src.frequency); vib.start(t0); _activeNodes.push(vib);
+    const formants = [[700, 11, 0.6], [1100, 12, 0.32], [2600, 13, 0.16]]; // vocal "a"
+    let bp1 = null;
+    formants.forEach(([fc, q, amp], k) => {
+      const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = fc; bp.Q.value = q;
+      const fg = actx.createGain(); fg.gain.value = amp;
+      src.connect(bp); bp.connect(fg); fg.connect(g);
+      if (k === 0) bp1 = bp;
+    });
+    // morphing lento de la vocal (a → o → a) moviendo el primer formante
+    const fl = actx.createOscillator(), flg = actx.createGain();
+    fl.type = 'sine'; fl.frequency.value = 0.35; flg.gain.value = 200;
+    fl.connect(flg); flg.connect(bp1.frequency); fl.start(t0); _activeNodes.push(fl);
+    // aliento (ruido suave)
+    const blen = actx.sampleRate * 2, bbuf = actx.createBuffer(1, blen, actx.sampleRate), bd = bbuf.getChannelData(0);
+    for (let i = 0; i < blen; i++) bd[i] = Math.random() * 2 - 1;
+    const nz = actx.createBufferSource(); nz.buffer = bbuf; nz.loop = true;
+    const nf = actx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 2200; nf.Q.value = 0.6;
+    const ng = actx.createGain(); ng.gain.value = 0.05;
+    nz.connect(nf); nf.connect(ng); ng.connect(g); nz.start(t0); _activeNodes.push(nz);
+    src.start(t0); _activeNodes.push(src);
+    return;
+  }
+
+  // tren / agua: ruido filtrado
+  const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = actx.createBufferSource(); src.buffer = buf; src.loop = true;
+  const f = actx.createBiquadFilter();
+  if (concretaType === 'tren') {
+    f.type = 'lowpass'; f.frequency.value = 240; f.Q.value = 1;
+    const lfo = actx.createOscillator(), lg = actx.createGain();
+    lfo.type = 'square'; lfo.frequency.value = 5.5; lg.gain.value = 0.28;
+    lfo.connect(lg); lg.connect(g.gain); lfo.start(t0); _activeNodes.push(lfo);
+  } else { // agua
+    f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 3;
+    const lfo = actx.createOscillator(), lg = actx.createGain();
+    lfo.type = 'sine'; lfo.frequency.value = 3.3; lg.gain.value = 1000;
+    lfo.connect(lg); lg.connect(f.frequency); lfo.start(t0); _activeNodes.push(lfo);
+  }
+  src.connect(f); f.connect(g); src.start(t0); _activeNodes.push(src);
+}
+
+// ── Canvas: espectro en vivo ───────────────────────────────
+const canvas = document.getElementById('cvSpec');
+const ctx = canvas.getContext('2d');
+
+function drawSpectrum() {
+  canvas.width = canvas.offsetWidth || 900;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 16, padR = 16, padT = 14, padB = 28;
+  const bw = W - padL - padR, bh = H - padT - padB, base = padT + bh;
+
+  ctx.strokeStyle = 'rgba(100,180,255,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, base); ctx.lineTo(padL + bw, base); ctx.stroke();
+  ctx.fillStyle = 'rgba(150,200,255,0.70)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('← frecuencia →', padL, H - 8);
+
+  if (playing && analyser) {
+    analyser.getByteFrequencyData(freqData);
+    const bins = 160; // primeros bins (graves-medios)
+    const col = mode === 'electronica' ? '#00ffff' : '#ff55aa';
+    const wbar = bw / bins;
+    for (let i = 0; i < bins; i++) {
+      const v = freqData[i] / 255, h = v * bh;
+      ctx.fillStyle = col;
+      ctx.fillRect(padL + i * wbar, base - h, Math.max(1, wbar - 1), h);
+    }
+    animId = requestAnimationFrame(drawSpectrum);
+  } else {
+    ctx.fillStyle = 'rgba(150,200,255,0.5)'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Pulsa ▶ Sonar para ver el espectro', padL + bw / 2, padT + bh / 2);
+  }
+}
+
+// ── Reproducción ───────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  if (mode === 'electronica') startElectronica(); else startConcreta();
+  if (animId) cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(drawSpectrum);
+}
+function stopPlayback() {
+  playing = false;
+  stopAllAudio(); voices = [];
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Sonar';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawSpectrum();
+}
+
+// ── Controles ──────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('#modeButtons .btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  document.getElementById('partialsCtl').style.display = (m === 'electronica') ? 'flex' : 'none';
+  document.getElementById('structButtons').style.display = (m === 'electronica') ? 'flex' : 'none';
+  document.getElementById('typeButtons').style.display = (m === 'concreta') ? 'flex' : 'none';
+  if (playing) { stopPlayback(); togglePlay(); }
+  updateStatus();
+}
+function setType(t) {
+  concretaType = t;
+  document.querySelectorAll('#typeButtons .btn').forEach(b => b.classList.toggle('active', b.dataset.type === t));
+  if (playing && mode === 'concreta') { stopPlayback(); togglePlay(); }
+  updateStatus();
+}
+function updateStatus() {
+  if (mode === 'electronica') {
+    const names = { armonica: 'armónica (Fourier)', impares: 'solo impares', inarmonica: 'inarmónica', estirada: 'estirada' };
+    document.getElementById('statusLabel').textContent =
+      `Música electrónica · ${partials} parciales sinusoidales · estructura ${names[structure]}`;
+  } else {
+    document.getElementById('statusLabel').textContent = `Música concreta · objeto sonoro: ${concretaType}`;
+  }
+}
+document.getElementById('partSlider').addEventListener('input', function () { setPartials(+this.value); });
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { updateStatus(); drawSpectrum(); });
+window.addEventListener('resize', () => { if (!playing) drawSpectrum(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1. Línea de Tiempo — Música de Raíz Tecnológica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica-tecnologica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_linea_tiempo/index.html" class="active">1. Línea de Tiempo</a>
+  <a href="../02_liberacion_sonido/index.html">2. Liberación del Sonido</a>
+  <a href="../03_concreta_electronica/index.html">3. Concreta vs. Electrónica</a>
+  <a href="../04_cinta_magnetica/index.html">4. La Cinta Magnética</a>
+  <a href="../05_sintetizador_analogico/index.html">5. Sintetizador Analógico</a>
+  <a href="../06_computer_music/index.html">6. Música por Ordenador</a>
+  <a href="../07_midi_interactividad/index.html">7. MIDI e Interactividad</a>
+  <a href="../08_laptop_redes/index.html">8. Laptops y Redes</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>1. Línea de Tiempo</h1>
+      <p class="subtitle">El linaje tecnológico: de la liberación del sonido a las orquestas de laptops</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>La historia de la música de raíz tecnológica</h2>
+    <p class="description">
+      La música de raíz tecnológica tiene su <span class="kw">propia historia</span>. De los antecedentes —Varèse, Busoni, el
+      Telharmonium— a la <span class="kw">escisión de los estudios</span> de los años 50: la música <span class="kw">concreta</span>
+      (París) frente a la <span class="kw">electrónica</span> (Colonia), que hacia 1960 <span class="kw">convergen</span> en la
+      electroacústica. Luego llegan el sintetizador, el ordenador, MIDI y, hoy, los laptops y las redes. Haz clic en cada hito para escucharlo.
+    </p>
+    <div class="controls">
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Recorrer la historia</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Haz clic en un hito de la línea de tiempo para escucharlo</div>
+    <canvas id="cvTime" height="300"></canvas>
+    <div class="info-box" id="eraInfo" style="margin-top:14px;">
+      <strong style="color:#00ffcc;">Selecciona un hito</strong><br>
+      Cada punto reproduce un gesto sonoro característico de esa etapa.
+    </div>
+  </section>
+
+  <section class="section-card">
+    <h2>De los estudios a los laptops</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#00ffcc;">La escisión de los años 50</strong><br>
+        Nace dividida en dos escuelas opuestas: la <strong>música concreta</strong> (París, 1948, sonidos grabados) y la
+        <strong>música electrónica</strong> (Colonia, 1951, sinusoides puras). Hacia 1960 ambas <strong>convergen</strong>
+        en la <strong>electroacústica y la música mixta</strong>.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffcc;">El instrumento se digitaliza</strong><br>
+        El <strong>sintetizador analógico</strong> (Moog, Buchla) lleva la electrónica al escenario; la <strong>música por ordenador</strong>
+        la calcula desde código; <strong>MIDI</strong> conecta las máquinas; y hoy los <strong>laptops</strong>, el live coding y las
+        <strong>redes</strong> hacen de la música, código.
+      </div>
+    </div>
+    <p class="description" style="margin-top:12px; font-size:0.8rem; opacity:0.7;">
+      Esquema basado en la historiografía estándar de la música electroacústica —la escisión París/Colonia y su posterior convergencia—
+      (cf. P. Manning, <em>Electronic and Computer Music</em>; T. Holmes, <em>Electronic and Experimental Music</em>; J. Chadabe, <em>Electric Sound</em>).
+    </p>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+// ── Utilidades de audio ────────────────────────────────────
+const FR = m => 440 * Math.pow(2, (m - 69) / 12);
+function note(freq, t0, dur, type = 'triangle', gain = 0.16) {
+  const actx = getAudioContext();
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.015);
+  g.gain.setValueAtTime(gain, t0 + dur - 0.05);
+  g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur);
+  _activeNodes.push(o);
+}
+function noise(t0, dur, cutoff = 2000, gain = 0.14) {
+  const actx = getAudioContext();
+  const len = Math.floor(actx.sampleRate * dur), buf = actx.createBuffer(1, len, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = actx.createBufferSource(); src.buffer = buf;
+  const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = cutoff;
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+  g.gain.setValueAtTime(gain, t0 + dur - 0.05); g.gain.linearRampToValueAtTime(0, t0 + dur - 0.005);
+  src.connect(f); f.connect(g); g.connect(actx.destination);
+  src.start(t0); src.stop(t0 + dur); _activeNodes.push(src);
+}
+function kick(t0) {
+  const actx = getAudioContext(), o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(140, t0); o.frequency.exponentialRampToValueAtTime(45, t0 + 0.12);
+  g.gain.setValueAtTime(0.5, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 0.2); _activeNodes.push(o);
+}
+
+// ── Gestos sonoros del linaje tecnológico ───────────────
+function sLiberacion(t0) { // Varèse: "liberación del sonido" — sirena (glissando continuo) + acorde Telharmonium
+  const actx = getAudioContext(), o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(220, t0); o.frequency.linearRampToValueAtTime(660, t0 + 0.9); o.frequency.linearRampToValueAtTime(180, t0 + 2.0);
+  g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.12, t0 + 0.05); g.gain.setValueAtTime(0.12, t0 + 1.8); g.gain.linearRampToValueAtTime(0, t0 + 2.0);
+  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 2.05); _activeNodes.push(o);
+  [55, 62, 67].forEach(m => note(FR(m), t0, 2.0, 'sine', 0.06)); // sinusoides (Telharmonium)
+}
+function sConcreta(t0) { // sonido grabado manipulado: ruido + barrido descendente
+  noise(t0, 0.8, 1500, 0.13);
+  const actx = getAudioContext(), o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(400, t0 + 0.4); o.frequency.exponentialRampToValueAtTime(110, t0 + 1.4);
+  g.gain.setValueAtTime(0, t0 + 0.4); g.gain.linearRampToValueAtTime(0.10, t0 + 0.5); g.gain.linearRampToValueAtTime(0, t0 + 1.4);
+  o.connect(g); g.connect(actx.destination); o.start(t0 + 0.4); o.stop(t0 + 1.4); _activeNodes.push(o);
+  noise(t0 + 1.2, 0.6, 800, 0.11);
+}
+function sElectronica(t0) { // sinusoides puras, gesto serial
+  [80,72,84,67,76,88].forEach((m, i) => note(FR(m), t0 + i * 0.28, 0.24, 'sine', 0.16));
+}
+function sElectroac(t0) { // sintético + ruido procesado
+  note(FR(60), t0, 2.0, 'sine', 0.10); note(FR(67), t0, 2.0, 'sine', 0.08);
+  noise(t0 + 0.3, 1.4, 1200, 0.09);
+  [72,75,79,74].forEach((m, i) => note(FR(m), t0 + 0.4 + i * 0.4, 0.35, 'triangle', 0.10));
+}
+function sSynth(t0) { // sintetizador analógico: secuencia de sierra con filtro barrido (squelch ácido)
+  const seq = [40,40,52,43,40,47,52,55], step = 0.16;
+  seq.forEach((m, i) => {
+    const actx = getAudioContext(), o = actx.createOscillator(), f = actx.createBiquadFilter(), g = actx.createGain();
+    const t = t0 + i * step;
+    o.type = 'sawtooth'; o.frequency.value = FR(m);
+    f.type = 'lowpass'; f.Q.value = 12;
+    f.frequency.setValueAtTime(3500, t); f.frequency.exponentialRampToValueAtTime(420, t + step * 0.9);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + 0.008); g.gain.exponentialRampToValueAtTime(0.001, t + step * 0.95);
+    o.connect(f); f.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + step); _activeNodes.push(o);
+  });
+}
+function sComputer(t0) { // arpegio calculado (FM/square)
+  [60,64,67,71,74,71,67,64].forEach((m, i) => note(FR(m), t0 + i * 0.18, 0.16, 'square', 0.10));
+}
+function sLaptop(t0) { // glitch generativo
+  for (let i = 0; i < 14; i++) note(FR(60 + Math.floor(Math.random() * 24)), t0 + i * 0.08, 0.06, 'square', 0.08);
+  for (let i = 0; i < 6; i++) kick(t0 + i * 0.2);
+}
+
+// ── Nodos: solo el linaje tecnológico (diamante París/Colonia → convergencia → lineal) ──
+const NODES = [
+  { cap:'Liberación',    name:'La liberación del sonido',     years:'~1910', xf:0.05, yf:0.50, capAbove:false, dur:2.2, fn:sLiberacion,  color:'#ffd24a', desc:'Varèse y Busoni piden «máquinas productoras de sonido» libres de la escala; Cahill construye el Telharmonium. El antecedente de toda la música tecnológica.' },
+  { cap:'Concreta',      name:'Música Concreta',              years:'1948',  xf:0.26, yf:0.32, capAbove:true,  dur:2.1, fn:sConcreta,    color:'#00ffcc', desc:'Schaeffer (París, 1948): grabar sonidos del mundo real (objet sonoré) y manipularlos en el estudio. Una de las dos escuelas fundadoras.' },
+  { cap:'Electrónica',   name:'Música Electrónica',           years:'1951',  xf:0.26, yf:0.68, capAbove:false, dur:1.9, fn:sElectronica, color:'#00ffcc', desc:'Stockhausen (Colonia, 1951): solo sonidos sintéticos puros, control matemático de cada armónico. La escuela opuesta a la concreta.' },
+  { cap:'Electroac.',    name:'Electroacústica y Mixta',      years:'~1960', xf:0.45, yf:0.50, capAbove:false, dur:2.3, fn:sElectroac,   color:'#00ffcc', desc:'Hacia 1960 las dos escuelas CONVERGEN: lo grabado y lo sintético se fusionan. La música mixta combina instrumentos en vivo con electrónica.' },
+  { cap:'Sintetizador',  name:'Sintetizador Analógico',       years:'1964',  xf:0.62, yf:0.50, capAbove:false, dur:1.6, fn:sSynth,       color:'#00ffcc', desc:'Moog y Buchla: el control por voltaje saca la electrónica del estudio y la lleva al escenario, con secuenciadores y filtros en vivo.' },
+  { cap:'Computer/MIDI', name:'Música por Ordenador · MIDI',  years:'1957/1983', xf:0.79, yf:0.50, capAbove:false, dur:1.7, fn:sComputer, color:'#00ffcc', desc:'Mathews calcula el sonido desde código (MUSIC-N, 1957); el protocolo MIDI (1983) conecta a las máquinas entre sí.' },
+  { cap:'Laptops/Redes', name:'Laptops y Redes',              years:'2000s–', xf:0.95, yf:0.50, capAbove:false, dur:1.6, fn:sLaptop,     color:'#00ffcc', desc:'DAWs, orquestas de laptops, live coding, glitch y música en red entre ciudades: la música se vuelve código.' }
+];
+const ORDER = [0,1,2,3,4,5,6];
+
+// ── Estado ─────────────────────────────────────────────────
+let selected = -1, touring = false, tourTimers = [];
+let NODEPOS = [];
+
+// ── Canvas ─────────────────────────────────────────────────
+const canvas = document.getElementById('cvTime');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 920;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 22, padR = 22;
+  const xOf = xf => padL + xf * (W - padL - padR);
+  NODEPOS = NODES.map(n => ({ x: xOf(n.xf), y: H * n.yf }));
+  const line = (a, b) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
+
+  // Conectores: liberación → diamante (concreta/electrónica) → electroacústica → lineal
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,255,204,0.7)';
+  line(NODEPOS[0], NODEPOS[1]);   // liberación → concreta (París)
+  line(NODEPOS[0], NODEPOS[2]);   // liberación → electrónica (Colonia)
+  line(NODEPOS[1], NODEPOS[3]);   // concreta → electroacústica (convergen)
+  line(NODEPOS[2], NODEPOS[3]);   // electrónica → electroacústica
+  line(NODEPOS[3], NODEPOS[4]); line(NODEPOS[4], NODEPOS[5]); line(NODEPOS[5], NODEPOS[6]);
+
+  // Sub-etiquetas de la escisión París/Colonia y la convergencia
+  ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(0,255,204,0.75)';
+  ctx.fillText('París', NODEPOS[1].x + 12, NODEPOS[1].y - 2);
+  ctx.fillText('Colonia', NODEPOS[2].x + 12, NODEPOS[2].y + 4);
+  ctx.fillStyle = 'rgba(0,255,204,0.6)';
+  ctx.textAlign = 'center';
+  ctx.fillText('convergen', (NODEPOS[1].x + NODEPOS[3].x) / 2, NODEPOS[3].y - 14);
+
+  // Nodos
+  NODES.forEach((n, i) => {
+    const p = NODEPOS[i], sel = (i === selected);
+    ctx.beginPath(); ctx.arc(p.x, p.y, sel ? 13 : 8, 0, Math.PI * 2);
+    ctx.fillStyle = sel ? '#ffffff' : n.color; ctx.fill();
+    ctx.lineWidth = sel ? 3 : 1.5; ctx.strokeStyle = sel ? '#ffffff' : 'rgba(10,21,32,0.85)'; ctx.stroke();
+    if (sel) { ctx.strokeStyle = n.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI * 2); ctx.stroke(); }
+    const above = !!n.capAbove;
+    ctx.fillStyle = sel ? '#ffffff' : n.color;
+    ctx.font = (sel ? 'bold ' : '') + '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(n.cap, p.x, above ? p.y - 20 : p.y + 26);
+    ctx.fillStyle = 'rgba(150,200,255,0.65)'; ctx.font = '9px sans-serif';
+    ctx.fillText(n.years, p.x, above ? p.y - 8 : p.y + 38);
+  });
+}
+
+// ── Reproducción ───────────────────────────────────────────
+function updateInfo(i) {
+  const n = NODES[i];
+  document.getElementById('statusLabel').textContent = `${n.name} · ${n.years}`;
+  document.getElementById('eraInfo').innerHTML = `<strong style="color:${n.color};">${n.name} (${n.years})</strong><br>${n.desc}`;
+}
+function selectNode(i, when) {
+  selected = i; updateInfo(i); drawCanvas();
+  const actx = getAudioContext();
+  NODES[i].fn(when !== undefined ? when : actx.currentTime + 0.05);
+}
+function togglePlay() {
+  if (touring) { stopTour(); return; }
+  touring = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  let accMs = 0;
+  ORDER.forEach(idx => {
+    tourTimers.push(setTimeout(() => { selectNode(idx, getAudioContext().currentTime + 0.03); }, accMs));
+    accMs += NODES[idx].dur * 1000 + 320;
+  });
+  tourTimers.push(setTimeout(() => { if (touring) stopTour(); }, accMs + 200));
+}
+function stopTour() {
+  touring = false;
+  tourTimers.forEach(clearTimeout); tourTimers = [];
+  stopAllAudio();
+  document.getElementById('btnPlay').textContent = '▶ Recorrer la historia';
+  document.getElementById('btnPlay').classList.remove('active');
+}
+
+// ── Click en nodos ─────────────────────────────────────────
+canvas.addEventListener('click', e => {
+  const r = canvas.getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (canvas.width / r.width);
+  const my = (e.clientY - r.top) * (canvas.height / r.height);
+  let best = -1, bd = 1e9;
+  NODEPOS.forEach((p, i) => { const d = Math.hypot(p.x - mx, p.y - my); if (d < bd) { bd = d; best = i; } });
+  if (best >= 0 && bd < 34) { if (touring) stopTour(); stopAllAudio(); selectNode(best); }
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', drawCanvas);
+window.addEventListener('resize', drawCanvas);
+</script>
+</body>
+</html>

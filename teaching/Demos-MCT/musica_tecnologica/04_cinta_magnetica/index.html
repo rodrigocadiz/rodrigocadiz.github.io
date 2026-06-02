@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. La Cinta Magnética — Música de Raíz Tecnológica</title>
+  <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body class="sec-musica-tecnologica">
+
+<nav class="top-nav">
+  <a href="../../index.html" class="home">← Inicio</a>
+  <a href="../index.html">← Sección</a>
+  <a href="../01_linea_tiempo/index.html">1. Línea de Tiempo</a>
+  <a href="../02_liberacion_sonido/index.html">2. Liberación del Sonido</a>
+  <a href="../03_concreta_electronica/index.html">3. Concreta vs. Electrónica</a>
+  <a href="../04_cinta_magnetica/index.html" class="active">4. La Cinta Magnética</a>
+  <a href="../05_sintetizador_analogico/index.html">5. Sintetizador Analógico</a>
+  <a href="../06_computer_music/index.html">6. Música por Ordenador</a>
+  <a href="../07_midi_interactividad/index.html">7. MIDI e Interactividad</a>
+  <a href="../08_laptop_redes/index.html">8. Laptops y Redes</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>4. La Cinta Magnética</h1>
+      <p class="subtitle">El estudio de la cinta: velocidad, reversa, bucles y empalmes</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Manipular el sonido grabado</h2>
+    <p class="description">
+      La cinta magnética convirtió el sonido en algo <span class="kw">físico y editable</span>. Al cambiar la
+      <span class="kw">velocidad</span> de reproducción, la altura y la duración cambian juntas (varispeed); se puede
+      <span class="kw">invertir</span> la cinta, hacer <span class="kw">bucles</span> y empalmar fragmentos. Sobre esta técnica
+      Pierre Schaeffer construyó la música concreta. Manipula este "sonido grabado":
+    </p>
+    <div class="controls">
+      <div class="control-group">
+        <label>Velocidad: <span class="val" id="speedVal">1.00</span>×</label>
+        <input type="range" id="speedSlider" min="25" max="200" value="100" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn" id="btnRev" onclick="toggleReverse()">◀ Reversa</button>
+        <button class="btn" id="btnLoop" onclick="toggleLoop()">↻ Bucle</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn play" id="btnPlay" onclick="togglePlay()">▶ Reproducir cinta</button>
+      </div>
+    </div>
+    <div class="canvas-label" id="statusLabel">Velocidad 1.00× · altura original · duración original</div>
+    <canvas id="cvTape" height="280"></canvas>
+  </section>
+
+  <section class="section-card">
+    <h2>Técnicas de cinta</h2>
+    <div class="two-col">
+      <div class="info-box">
+        <strong style="color:#ffaa00;">Varispeed</strong><br>
+        Reproducir más rápido sube la <strong>altura</strong> y acorta la <strong>duración</strong> en la misma proporción:
+        al doble de velocidad, una octava más agudo y la mitad de largo. Era el principal recurso de transformación.
+      </div>
+      <div class="info-box">
+        <strong style="color:#00ffff;">Reversa, bucle y empalme</strong><br>
+        Invertir la cinta crea sonidos <strong>al revés</strong> (ataques que se vuelven desvanecimientos); el <strong>bucle</strong>
+        repite un fragmento sin fin; el <strong>empalme</strong> (splice) pega trozos para montar un discurso musical.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp; Pontificia Universidad Católica de Chile</div>
+  <div style="margin-top:4px; opacity:0.55;">Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a></div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+<script src="../../shared/audio.js"></script>
+<script>
+let clip = null, clipRev = null, clipWave = null, srcNode = null;
+let playing = false, animId = null, startT = 0, clipDur = 1.6;
+let speed = 1.0, reversed = false, looping = false;
+
+// ── Sonido "grabado" (se sintetiza una vez a un buffer) ────
+function makeClip() {
+  const actx = getAudioContext(), sr = actx.sampleRate, dur = 1.6, len = Math.floor(dur * sr);
+  const buf = actx.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  const notes = [60, 64, 67, 72, 71, 67], nd = dur / notes.length;
+  notes.forEach((m, i) => {
+    const f = 440 * Math.pow(2, (m - 69) / 12);
+    const s0 = Math.floor(i * nd * sr), s1 = Math.floor((i + 1) * nd * sr);
+    for (let s = s0; s < s1; s++) {
+      const t = (s - s0) / sr;
+      const env = Math.min(1, t * 50) * Math.max(0, 1 - t / nd);
+      const vib = 1 + 0.005 * Math.sin(2 * Math.PI * 5 * t);
+      d[s] += 0.5 * env * Math.sin(2 * Math.PI * f * vib * (s / sr));
+    }
+  });
+  return buf;
+}
+function reverseBuf(buf) {
+  const actx = getAudioContext(), r = actx.createBuffer(1, buf.length, buf.sampleRate);
+  const src = buf.getChannelData(0), dst = r.getChannelData(0);
+  for (let i = 0; i < buf.length; i++) dst[i] = src[buf.length - 1 - i];
+  return r;
+}
+function buildWave(buf, n) {
+  const d = buf.getChannelData(0), step = Math.floor(d.length / n), out = [];
+  for (let i = 0; i < n; i++) {
+    let peak = 0; for (let j = 0; j < step; j++) peak = Math.max(peak, Math.abs(d[i * step + j] || 0));
+    out.push(peak);
+  }
+  return out;
+}
+function ensureClip() {
+  if (!clip) { clip = makeClip(); clipRev = reverseBuf(clip); clipDur = clip.duration; clipWave = buildWave(clip, 220); }
+}
+
+// ── Canvas: cinta entre dos bobinas ────────────────────────
+const canvas = document.getElementById('cvTape');
+const ctx = canvas.getContext('2d');
+
+function drawCanvas() {
+  canvas.width = canvas.offsetWidth || 900;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const reelR = 56, cyReel = 78;
+  const padL = reelR + 24, padR = reelR + 24, padT = 150, padB = 30;
+  const bw = W - padL - padR, bh = H - padT - padB, cy = padT + bh / 2;
+
+  // Posición del cabezal (fracción 0..1 sobre el buffer reproducido)
+  let frac = 0;
+  if (playing) {
+    const actx = getAudioContext();
+    let p = ((actx.currentTime - startT) * speed) / clipDur;
+    frac = looping ? (p % 1) : Math.min(p, 1);
+  }
+  const angle = (playing ? (getAudioContext().currentTime - startT) * speed * 4 : 0);
+
+  // Bobinas
+  [[padL - 12, 'L'], [W - padR + 12, 'R']].forEach(([cx]) => {
+    ctx.strokeStyle = 'rgba(100,180,255,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cyReel, reelR, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cyReel, reelR * 0.32, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,255,204,0.25)'; ctx.fill(); ctx.stroke();
+    for (let k = 0; k < 6; k++) {
+      const a = angle + k * Math.PI / 3;
+      ctx.strokeStyle = 'rgba(0,255,204,0.7)';
+      ctx.beginPath(); ctx.moveTo(cx, cyReel); ctx.lineTo(cx + Math.cos(a) * reelR * 0.9, cyReel + Math.sin(a) * reelR * 0.9); ctx.stroke();
+    }
+  });
+  // Cinta entre bobinas
+  ctx.strokeStyle = 'rgba(255,170,0,0.5)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(padL - 12, cyReel + reelR); ctx.lineTo(padL, padT - 14);
+  ctx.moveTo(W - padR + 12, cyReel + reelR); ctx.lineTo(W - padR, padT - 14); ctx.stroke();
+
+  // Forma de onda sobre la cinta (la que realmente suena)
+  const wave = reversed && clip ? buildWave(clipRev, 220) : clipWave;
+  ctx.fillStyle = 'rgba(10,21,32,0.6)'; ctx.fillRect(padL, padT - 14, bw, bh + 28);
+  ctx.strokeStyle = 'rgba(100,180,255,0.3)'; ctx.strokeRect(padL, padT - 14, bw, bh + 28);
+  if (wave) {
+    ctx.fillStyle = '#ffaa00';
+    const n = wave.length, wbar = bw / n;
+    for (let i = 0; i < n; i++) { const h = wave[i] * bh; ctx.fillRect(padL + i * wbar, cy - h / 2, Math.max(1, wbar - 0.5), h); }
+  }
+  // Cabezal de lectura
+  const hx = padL + frac * bw;
+  ctx.strokeStyle = '#00ff44'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(hx, padT - 18); ctx.lineTo(hx, padT + bh + 14); ctx.stroke();
+  ctx.fillStyle = '#00ff44'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('▼ cabezal', hx, padT - 22);
+
+  // Etiquetas de bobinas
+  ctx.fillStyle = 'rgba(150,200,255,0.7)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(reversed ? 'fin' : 'inicio', padL - 12, cyReel + reelR + 18);
+  ctx.fillText(reversed ? 'inicio' : 'fin', W - padR + 12, cyReel + reelR + 18);
+
+  if (playing) animId = requestAnimationFrame(drawCanvas);
+}
+
+// ── Reproducción ───────────────────────────────────────────
+function togglePlay() {
+  if (playing) { stopPlayback(); return; }
+  ensureClip();
+  playing = true;
+  document.getElementById('btnPlay').textContent = '■ Detener';
+  document.getElementById('btnPlay').classList.add('active');
+  const actx = getAudioContext(), t0 = actx.currentTime + 0.03;
+  srcNode = actx.createBufferSource();
+  srcNode.buffer = reversed ? clipRev : clip;
+  srcNode.playbackRate.value = speed;
+  srcNode.loop = looping;
+  const g = actx.createGain(); g.gain.value = 0.9;
+  srcNode.connect(g); g.connect(actx.destination);
+  srcNode.start(t0); _activeNodes.push(srcNode); startT = t0;
+  srcNode.onended = () => { if (playing && !looping) stopPlayback(); };
+  if (animId) cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(drawCanvas);
+}
+function stopPlayback() {
+  playing = false;
+  stopAllAudio(); srcNode = null;
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('btnPlay').textContent = '▶ Reproducir cinta';
+  document.getElementById('btnPlay').classList.remove('active');
+  drawCanvas();
+}
+
+// ── Controles ──────────────────────────────────────────────
+function toggleReverse() {
+  reversed = !reversed;
+  document.getElementById('btnRev').classList.toggle('active', reversed);
+  if (playing) { stopPlayback(); togglePlay(); } else drawCanvas();
+  updateStatus();
+}
+function toggleLoop() {
+  looping = !looping;
+  document.getElementById('btnLoop').classList.toggle('active', looping);
+  if (playing) { stopPlayback(); togglePlay(); }
+}
+function updateStatus() {
+  const semis = Math.round(12 * Math.log2(speed));
+  const dirP = semis === 0 ? 'altura original' : (semis > 0 ? `+${semis} semitonos` : `${semis} semitonos`);
+  const durF = (1 / speed).toFixed(2);
+  document.getElementById('statusLabel').textContent =
+    `Velocidad ${speed.toFixed(2)}× · ${dirP} · duración ×${durF}${reversed ? ' · ◀ invertida' : ''}`;
+}
+document.getElementById('speedSlider').addEventListener('input', function () {
+  speed = this.value / 100;
+  document.getElementById('speedVal').textContent = speed.toFixed(2);
+  if (playing && srcNode) srcNode.playbackRate.setTargetAtTime(speed, getAudioContext().currentTime, 0.02);
+  updateStatus();
+});
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => { ensureClip(); updateStatus(); drawCanvas(); });
+window.addEventListener('resize', () => { if (!playing) drawCanvas(); });
+</script>
+</body>
+</html>

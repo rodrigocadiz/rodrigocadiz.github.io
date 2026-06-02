@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La Música y sus Parámetros — Demos MCT</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="sec-musica">
+
+<nav class="top-nav">
+  <a href="../index.html" class="home">← Inicio</a>
+  <a href="index.html" class="active">La Música y sus Parámetros</a>
+</nav>
+
+<header>
+  <div class="header-left">
+    <img src="../shared/logo-uc.png" alt="Pontificia Universidad Católica de Chile" class="logo-uc">
+    <div>
+      <h1>La Música y sus Parámetros</h1>
+      <p class="subtitle">Música, Ciencia y Tecnología &nbsp;·&nbsp; Rodrigo F. Cádiz</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h2>Módulos interactivos</h2>
+    <p class="description">
+      Explora los parámetros fundamentales de la música: el sonido y el silencio, el tempo, las dinámicas,
+      la articulación, la relación entre consonancia y disonancia, la psicología de la expectativa musical
+      y las texturas históricas (monodía, polifonía, contrapunto y armonía).
+    </p>
+    <div class="card-grid">
+
+      <a class="vineta-card" href="01_sonido_silencio/index.html">
+        <div class="num" style="color:#ffcc00;">1 ♩</div>
+        <h3 style="color:#ffcc00;">El Sonido y el Silencio</h3>
+        <p>La materia prima de la música. El silencio no es vacío: es un recurso expresivo que articula frases, genera suspenso y da significado al sonido que lo rodea.</p>
+      </a>
+
+      <a class="vineta-card" href="02_tempo/index.html">
+        <div class="num" style="color:#ff44aa;">2 ⏱</div>
+        <h3 style="color:#ff44aa;">Tempo y Pulso</h3>
+        <p>El tempo define la velocidad de la música. Metrónomo con jerarquía de acentos en compases simples, compuestos (6/8, 9/8) e irregulares (5/8, 7/8).</p>
+      </a>
+
+      <a class="vineta-card" href="03_dinamica/index.html">
+        <div class="num" style="color:#00ffff;">3 ≤≥</div>
+        <h3 style="color:#00ffff;">Dinámicas</h3>
+        <p>Las variaciones de intensidad sonora. Desde pianissimo (pp) hasta fortissimo (ff), con crescendo y decrescendo como herramientas expresivas fundamentales.</p>
+      </a>
+
+      <a class="vineta-card" href="04_articulacion/index.html">
+        <div class="num" style="color:#ffaa00;">4 〜</div>
+        <h3 style="color:#ffaa00;">Articulación</h3>
+        <p>Cómo se conectan o separan los sonidos entre sí. Comparación interactiva de legato, staccato, tenuto y marcato mediante envolventes de amplitud.</p>
+      </a>
+
+      <a class="vineta-card" href="05_consonancia_disonancia/index.html">
+        <div class="num" style="color:#ff4444;">5 ≈</div>
+        <h3 style="color:#ff4444;">Consonancia y Disonancia</h3>
+        <p>Estabilidad y tensión en la combinación de sonidos. Visualización de batimientos, armónicos compartidos y espectro resultante según el intervalo elegido.</p>
+      </a>
+
+      <a class="vineta-card" href="06_expectativa/index.html">
+        <div class="num" style="color:#44aaff;">6 ↯</div>
+        <h3 style="color:#44aaff;">Expectativa Musical</h3>
+        <p>La música juega con la anticipación del oyente. Explora cómo una cadencia puede resolverse de forma esperada, engañosa o quedar sin resolver.</p>
+      </a>
+
+      <a class="vineta-card" href="07_formas_musicales/index.html">
+        <div class="num" style="color:#00ff44;">7 ♬</div>
+        <h3 style="color:#00ff44;">Formas Musicales</h3>
+        <p>Las texturas a través de la historia: monodía, polifonía, contrapunto y armonía, con ejemplos sonoros y en notación musical.</p>
+      </a>
+
+      <a class="vineta-card" href="08_linea_tiempo/index.html">
+        <div class="num" style="color:#ffcc00;">8 ⏳</div>
+        <h3 style="color:#ffcc00;">Línea de Tiempo</h3>
+        <p>De la Edad Media al siglo XXI con melodías reales (Bach, Mozart, Beethoven…). El siglo XX se ramifica en lo popular, lo docto y lo tecnológico.</p>
+      </a>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© <span class="footer-year"></span> Rodrigo F. Cádiz &nbsp;·&nbsp; Música, Ciencia y Tecnología</div>
+  <div style="margin-top:3px; opacity:0.75;">
+    Instituto de Música &amp; Departamento de Ingeniería Eléctrica &nbsp;·&nbsp;
+    Pontificia Universidad Católica de Chile
+  </div>
+  <div style="margin-top:4px; opacity:0.55;">
+    Programado con asistencia de <a href="https://claude.ai" target="_blank">Claude (Anthropic)</a>
+  </div>
+</footer>
+<script>document.querySelectorAll('.footer-year').forEach(el => el.textContent = new Date().getFullYear());</script>
+</body>
+</html>
