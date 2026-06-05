@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Modelos Multimodales · Aprendizaje de Máquina y Modelos Generativos</title>
+<title>Modelos multimodales · Aprendizaje de Máquina y Modelos Generativos</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -11,224 +11,112 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-:root {
-  --pluto-blue: #4e79a7;
-  --ink: #1a1a1a;
-  --ink-soft: #4a4a4a;
-  --ink-faint: #888;
-  --paper: #ffffff;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pluto-blue: #8ab4d4;
-    --ink: #dcdcdc;
-    --ink-soft: #aaaaaa;
-    --ink-faint: #666;
-    --paper: #2a2928;
-  }
-  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
-}
-
-.reveal, .reveal .slides section {
-  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: var(--ink);
-  text-align: left;
-  background: var(--paper);
-}
-.reveal .slide-background { background: var(--paper); }
-
-.reveal .slides section {
-  padding: 2% 5% 2% 5%;
-  box-sizing: border-box;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
-
-.section-label {
-  font-size: 0.75em;
-  color: var(--ink-faint);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 500;
-  margin-bottom: 0.3em;
-  flex-shrink: 0;
-}
-
-.reveal h1 {
-  font-size: 2.6em; font-weight: 700; color: var(--ink);
-  margin: 0 0 0.4em 0; line-height: 1.15;
-  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
-}
-.reveal h2 {
-  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
-  margin: 0 0 0.3em 0; line-height: 1.2;
-  text-transform: none; border: none; flex-shrink: 0;
-}
-
-.reveal p, .reveal li {
-  font-size: 1.75em;
-  line-height: 1.5;
-  color: var(--ink);
-}
-.reveal ul {
-  padding-left: 1.3em;
-  margin: 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  min-height: 0;
-}
-.reveal li {
-  margin: 0;
-  min-width: 0;
-  max-width: 100%;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
-  -webkit-hyphens: auto;
-}
-.reveal strong { font-weight: 700; color: var(--ink); }
-.reveal em { font-style: italic; }
-.reveal a { color: var(--pluto-blue); text-decoration: none; }
-
-/* Equations: direct display math, no card borders */
-.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
-
-p.note {
-  font-size: 0.85em;
-  color: var(--ink-soft);
-  margin-top: 0.4em;
-  font-style: italic;
-  flex-shrink: 0;
-}
-
-/* SVG fills remaining vertical space without overflowing */
-.svg-holder {
-  display: flex; align-items: stretch;
-  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
-  margin-top: 0.3em; overflow: hidden;
-}
-.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
-
-.title-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
-.title-slide .course-id {
-  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
-  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
-}
-.title-slide h1 { font-size: 2.6em; }
-.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
-
-.close-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
-.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
-
-.slide-num {
-  position: absolute; bottom: 2%; right: 3%;
-  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.1em;
-}
-.reveal .controls { color: var(--ink-faint); }
-.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+:root { --pluto-blue:#4e79a7; --ink:#1a1a1a; --ink-soft:#4a4a4a; --ink-faint:#888; --paper:#ffffff; }
+@media (prefers-color-scheme: dark){:root{--pluto-blue:#8ab4d4;--ink:#dcdcdc;--ink-soft:#aaaaaa;--ink-faint:#666;--paper:#2a2928;}.svg-holder svg{background:#faf7eb;border-radius:6px;padding:4px;}}
+.reveal, .reveal .slides section{font-family:"Alegreya Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);text-align:left;background:var(--paper);}
+.reveal .slide-background{background:var(--paper);}
+.reveal .slides section{padding:2% 5% 2% 5%;box-sizing:border-box;height:100%;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.section-label{font-size:0.75em;color:var(--ink-faint);letter-spacing:0.12em;text-transform:uppercase;font-weight:500;margin-bottom:0.3em;flex-shrink:0;}
+.reveal h1{font-size:2.6em;font-weight:700;color:var(--ink);margin:0 0 0.4em 0;line-height:1.15;text-transform:none;letter-spacing:-0.01em;flex-shrink:0;}
+.reveal h2{font-size:2.1em;font-weight:700;color:var(--pluto-blue);margin:0 0 0.3em 0;line-height:1.2;text-transform:none;border:none;flex-shrink:0;}
+.reveal p, .reveal li{font-size:1.85em;line-height:1.5;color:var(--ink);}
+.reveal ul{padding-left:1.1em;margin:0;width:100%;max-width:100%;box-sizing:border-box;min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+.reveal li{margin:0.35em 0;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-word;hyphens:auto;-webkit-hyphens:auto;}
+.reveal strong{font-weight:700;color:var(--ink);} .reveal em{font-style:italic;} .reveal a{color:var(--pluto-blue);text-decoration:none;}
+.reveal .katex-display{margin:0.5em 0;font-size:1.5em;}
+p.note{font-size:0.92em;color:var(--ink-soft);margin-top:0.4em;font-style:italic;flex-shrink:0;}
+.svg-holder{display:flex;align-items:stretch;width:100%;flex:1 1 0;min-height:0;min-width:0;margin-top:0.3em;overflow:hidden;}
+.svg-holder svg{flex:1 1 0;min-width:0;min-height:0;display:block;}
+.title-slide{display:flex;flex-direction:column;justify-content:center;height:100%;}
+.title-slide .course-id{font-size:0.8em;color:var(--ink-faint);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:1.8em;font-weight:500;}
+.title-slide h1{font-size:2.6em;} .title-slide .byline{font-size:1em;color:var(--ink-soft);margin-top:1em;}
+.close-slide{display:flex;flex-direction:column;justify-content:center;height:100%;}
+.close-slide h1{font-size:2em;max-width:22em;line-height:1.3;color:var(--pluto-blue);}
+.slide-num{position:absolute;bottom:2%;right:3%;font-size:0.55em;color:var(--ink-faint);letter-spacing:0.1em;}
+.reveal .controls{color:var(--ink-faint);} .reveal .progress{background:transparent;color:var(--pluto-blue);height:2px;}
 </style>
 </head>
 <body>
-<div class="reveal">
-<div class="slides">
+<div class="reveal"><div class="slides">
 
-<!-- PORTADA -->
 <section>
 <div class="title-slide">
   <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
-  <h1>Modelos Multimodales</h1>
+  <h1>Modelos multimodales</h1>
   <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
   <div class="byline">Pontificia Universidad Católica de Chile</div>
 </div>
 </section>
 
-<!-- § 1 · Modalidades y codificadores -->
-
 <section>
 <div class="section-label">§ 1 · Modalidades y codificadores</div>
-<h2>El problema: integrar señales de naturaleza distinta en un sistema común</h2>
-<ul>
-  <li>Históricamente, la IA operaba en silos: un modelo para texto, otro para imágenes, otro para audio.</li>
-  <li>La cognición humana es <strong>multimodal</strong>: el ladrido, la foto y la palabra "perro" convergen en un mismo concepto.</li>
-  <li>Ventajas de integrar: modalidades <strong>complementarias</strong> (cada una capta lo que la otra no) y <strong>redundantes</strong> (resuelven ambigüedad ante ruido).</li>
-</ul>
+<h2>La meta: que un modelo trate juntas señales de distinta naturaleza</h2>
+<ul><li>La cognición humana funde el ladrido, la foto y la palabra «perro» en un solo concepto; los modelos multimodales replican esa integración.</li></ul>
 <div class="slide-num">2</div>
 </section>
 
 <section>
 <div class="section-label">§ 1 · Modalidades y codificadores</div>
-<h2>Una modalidad es una señal con estructura propia; un codificador la lleva a $\mathbb{R}^d$</h2>
-<ul>
-  <li><strong>Modalidad</strong>: tipo de señal con su propia estructura — imagen (matriz de píxeles), texto (secuencia discreta de símbolos), audio (onda continua en el tiempo).</li>
-  <li><strong>Codificador</strong>: red especializada en esa estructura que extrae características y produce un vector, el <em>embedding</em> $\mathbf{u} \in \mathbb{R}^d$.</li>
-  <li>CNN o <em>Vision Transformer</em> para imágenes; Transformer para texto; CNN sobre espectrogramas para audio.</li>
-</ul>
+<h2>Una modalidad es una señal con estructura propia</h2>
+<ul><li>Una imagen es una matriz de píxeles con vecindad espacial; un texto, una secuencia discreta de símbolos; un audio, una onda continua en el tiempo.</li></ul>
 <div class="slide-num">3</div>
 </section>
 
 <section>
 <div class="section-label">§ 1 · Modalidades y codificadores</div>
-<h2>La clave: todos los codificadores producen vectores de la misma dimensión</h2>
-<ul>
-  <li>Aunque las arquitecturas difieran, todos los codificadores emiten vectores en $\mathbb{R}^d$ con la <strong>misma dimensión $d$</strong>.</li>
-  <li>Esto permite compararlos y combinarlos dentro de un mismo espacio.</li>
-  <li>El objetivo de muchos sistemas es un <strong>espacio de representación compartido</strong> (<em>shared embedding space</em>): un mismo concepto queda cercano sin importar su modalidad de origen.</li>
-</ul>
+<h2>Cada una tiene su codificador, pero todos producen vectores de la misma dimensión</h2>
+<ul><li>CNN o <em>Vision Transformer</em> para imágenes, Transformer para texto; lo esencial es que todos emiten un <em>embedding</em> en $\mathbb{R}^d$, comparable con los demás.</li></ul>
 <div class="slide-num">4</div>
 </section>
 
 <section>
 <div class="section-label">§ 1 · Modalidades y codificadores</div>
-<h2>La similitud coseno mide la proximidad semántica entre embeddings</h2>
-<ul>
-  <li>Compara solo la <strong>dirección</strong> de dos <em>embeddings</em> $\mathbf{u}, \mathbf{v}$, ignorando su magnitud:</li>
-</ul>
-$$s(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|\,\|\mathbf{v}\|} \in [-1, 1] \tag{1}$$
-<p class="note">$\approx 1$: conceptos alineados; $\approx 0$: no relacionados; $\approx -1$: opuestos. Con embeddings normalizados ($\|\mathbf{u}\|=1$) se reduce al producto punto.</p>
+<h2>La proximidad semántica se mide con la similitud coseno</h2>
+$$ s(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|\,\|\mathbf{v}\|} \in [-1, 1] \tag{1} $$
+<p class="note">$\mathbf{u}$ y $\mathbf{v}$ son dos embeddings; el coseno compara solo su dirección. Con embeddings normalizados, se reduce al producto punto.</p>
 <div class="slide-num">5</div>
 </section>
 
 <section>
 <div class="section-label">§ 1 · Modalidades y codificadores</div>
-<h2>El espacio de representación compartido</h2>
-<ul><li>Tres modalidades del mismo concepto, procesadas por codificadores separados, se proyectan a un único espacio $\mathbb{R}^d$ donde quedan cercanas.</li></ul>
-<div class="svg-holder"><svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+<h2>La meta concreta: un espacio de representación compartido</h2>
+<ul><li>Tres modalidades del mismo concepto, codificadas por separado, se proyectan a un único espacio donde quedan cercanas.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 680 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
   <defs>
-    <marker id="arrm" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <marker id="m1arrm" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
       <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
     </marker>
   </defs>
+
+  <!-- Inputs -->
   <rect x="20" y="30" width="120" height="38" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
   <text x="80" y="54" text-anchor="middle" fill="#1a3a5c">Texto: "perro"</text>
+
   <rect x="20" y="121" width="120" height="38" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
   <text x="80" y="145" text-anchor="middle" fill="#1a3a5c">Imagen (foto)</text>
+
   <rect x="20" y="212" width="120" height="38" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
   <text x="80" y="236" text-anchor="middle" fill="#1a3a5c">Audio: ladrido</text>
+
+  <!-- Encoders -->
   <rect x="200" y="26" width="130" height="46" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
   <text x="265" y="46" text-anchor="middle" fill="#663300" font-weight="bold">Codificador</text>
   <text x="265" y="62" text-anchor="middle" fill="#885500" font-size="11">de texto</text>
+
   <rect x="200" y="117" width="130" height="46" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
   <text x="265" y="137" text-anchor="middle" fill="#663300" font-weight="bold">Codificador</text>
   <text x="265" y="153" text-anchor="middle" fill="#885500" font-size="11">de imagen</text>
+
   <rect x="200" y="208" width="130" height="46" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
   <text x="265" y="228" text-anchor="middle" fill="#663300" font-weight="bold">Codificador</text>
   <text x="265" y="244" text-anchor="middle" fill="#885500" font-size="11">de audio</text>
-  <line x1="140" y1="49" x2="200" y2="49" stroke="#555" stroke-width="1.5" marker-end="url(#arrm)"/>
-  <line x1="140" y1="140" x2="200" y2="140" stroke="#555" stroke-width="1.5" marker-end="url(#arrm)"/>
-  <line x1="140" y1="231" x2="200" y2="231" stroke="#555" stroke-width="1.5" marker-end="url(#arrm)"/>
+
+  <!-- Arrows in -->
+  <line x1="140" y1="49" x2="200" y2="49" stroke="#555" stroke-width="1.5" marker-end="url(#m1arrm)"/>
+  <line x1="140" y1="140" x2="200" y2="140" stroke="#555" stroke-width="1.5" marker-end="url(#m1arrm)"/>
+  <line x1="140" y1="231" x2="200" y2="231" stroke="#555" stroke-width="1.5" marker-end="url(#m1arrm)"/>
+
+  <!-- Shared space -->
   <rect x="430" y="60" width="220" height="160" rx="10" fill="#eef7ee" stroke="#339933" stroke-width="1.8"/>
   <text x="540" y="82" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Espacio compartido</text>
   <text x="540" y="98" text-anchor="middle" fill="#2d6b2d" font-size="11">ℝᵈ</text>
@@ -236,40 +124,39 @@ $$s(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|\
   <circle cx="552" cy="158" r="5" fill="#cc4444"/>
   <circle cx="544" cy="168" r="5" fill="#cc7700"/>
   <text x="540" y="200" text-anchor="middle" fill="#2d6b2d" font-size="11" font-style="italic">concepto "perro"</text>
-  <line x1="330" y1="49" x2="430" y2="120" stroke="#555" stroke-width="1.5" marker-end="url(#arrm)"/>
-  <line x1="330" y1="140" x2="430" y2="145" stroke="#555" stroke-width="1.5" marker-end="url(#arrm)"/>
-  <line x1="330" y1="231" x2="430" y2="170" stroke="#555" stroke-width="1.5" marker-end="url(#arrm)"/>
+
+  <!-- Arrows to space -->
+  <line x1="330" y1="49" x2="430" y2="120" stroke="#555" stroke-width="1.5" marker-end="url(#m1arrm)"/>
+  <line x1="330" y1="140" x2="430" y2="145" stroke="#555" stroke-width="1.5" marker-end="url(#m1arrm)"/>
+  <line x1="330" y1="231" x2="430" y2="170" stroke="#555" stroke-width="1.5" marker-end="url(#m1arrm)"/>
 </svg></div>
 <div class="slide-num">6</div>
 </section>
 
-<!-- § 2 · Estrategias de fusión -->
-
 <section>
 <div class="section-label">§ 2 · Estrategias de fusión</div>
-<h2>El problema central: cómo y cuándo combinar las modalidades</h2>
-<ul>
-  <li>Con codificadores que producen <em>embeddings</em>, queda decidir el <strong>punto de fusión</strong>.</li>
-  <li>Ese punto determina qué interacciones entre modalidades puede capturar el modelo.</li>
-  <li>Y determina cuánta flexibilidad (modularidad) conserva cada rama.</li>
-  <li>Tres estrategias principales, cada una con un compromiso distinto.</li>
-</ul>
+<h2>Con vectores comparables, ¿en qué punto los combinamos?</h2>
+<ul><li>El punto de fusión decide qué interacciones entre modalidades captura el modelo y cuánta modularidad conserva cada rama.</li></ul>
 <div class="slide-num">7</div>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Estrategias de fusión</div>
 <h2>Tres puntos de fusión</h2>
-<ul><li>Las estrategias difieren en el punto del pipeline donde se combinan las ramas de cada modalidad.</li></ul>
-<div class="svg-holder"><svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+<ul><li>Temprana (concatenar antes de codificar), tardía (un codificador por modalidad y combinar al final), conjunta (atención cruzada en el medio).</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 700 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
   <defs>
-    <marker id="arrg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <marker id="m2arrg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
       <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
     </marker>
   </defs>
+
+  <!-- Titles -->
   <text x="115" y="16" text-anchor="middle" fill="#333" font-weight="bold">Fusión temprana</text>
   <text x="350" y="16" text-anchor="middle" fill="#333" font-weight="bold">Fusión tardía</text>
   <text x="585" y="16" text-anchor="middle" fill="#333" font-weight="bold">Fusión conjunta</text>
+
+  <!-- ===== Early fusion ===== -->
   <rect x="45" y="32" width="55" height="26" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
   <text x="72" y="49" text-anchor="middle" fill="#1a3a5c">A</text>
   <rect x="130" y="32" width="55" height="26" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
@@ -280,10 +167,12 @@ $$s(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|\
   <text x="115" y="150" text-anchor="middle" fill="#663300">encoder único</text>
   <rect x="85" y="186" width="60" height="26" rx="5" fill="#eef7ee" stroke="#339933"/>
   <text x="115" y="203" text-anchor="middle" fill="#1a4d1a">salida</text>
-  <line x1="72" y1="58" x2="100" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="157" y1="58" x2="130" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="115" y1="108" x2="115" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="115" y1="160" x2="115" y2="186" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+  <line x1="72" y1="58" x2="100" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="157" y1="58" x2="130" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="115" y1="108" x2="115" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="115" y1="160" x2="115" y2="186" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+
+  <!-- ===== Late fusion ===== -->
   <rect x="280" y="32" width="55" height="26" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
   <text x="307" y="49" text-anchor="middle" fill="#1a3a5c">A</text>
   <rect x="365" y="32" width="55" height="26" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
@@ -296,11 +185,13 @@ $$s(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|\
   <text x="350" y="150" text-anchor="middle" fill="#3a2a5c">combinar</text>
   <rect x="320" y="186" width="60" height="26" rx="5" fill="#eef7ee" stroke="#339933"/>
   <text x="350" y="203" text-anchor="middle" fill="#1a4d1a">salida</text>
-  <line x1="307" y1="58" x2="307" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="392" y1="58" x2="392" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="307" y1="108" x2="335" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="392" y1="108" x2="365" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="350" y1="160" x2="350" y2="186" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+  <line x1="307" y1="58" x2="307" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="392" y1="58" x2="392" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="307" y1="108" x2="335" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="392" y1="108" x2="365" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="350" y1="160" x2="350" y2="186" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+
+  <!-- ===== Joint fusion ===== -->
   <rect x="515" y="32" width="55" height="26" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
   <text x="542" y="49" text-anchor="middle" fill="#1a3a5c">A</text>
   <rect x="600" y="32" width="55" height="26" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
@@ -313,293 +204,196 @@ $$s(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|\
   <text x="585" y="150" text-anchor="middle" fill="#5c1a5c">atención cruzada</text>
   <rect x="555" y="186" width="60" height="26" rx="5" fill="#eef7ee" stroke="#339933"/>
   <text x="585" y="203" text-anchor="middle" fill="#1a4d1a">salida</text>
-  <line x1="542" y1="58" x2="542" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="627" y1="58" x2="627" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="542" y1="108" x2="560" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="627" y1="108" x2="610" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
-  <line x1="585" y1="160" x2="585" y2="186" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+  <line x1="542" y1="58" x2="542" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="627" y1="58" x2="627" y2="82" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="542" y1="108" x2="560" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="627" y1="108" x2="610" y2="132" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
+  <line x1="585" y1="160" x2="585" y2="186" stroke="#555" stroke-width="1.3" marker-end="url(#m2arrg)"/>
 </svg></div>
 <div class="slide-num">8</div>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Estrategias de fusión</div>
-<h2>Fusión temprana: concatenar antes de codificar</h2>
-<ul>
-  <li>Las señales crudas o sus características de bajo nivel se <strong>concatenan</strong> antes de procesarlas con un único codificador.</li>
-  <li>Captura interacciones finas entre modalidades desde el comienzo.</li>
-  <li>Exige que todas las modalidades estén presentes y sincronizadas.</li>
-</ul>
+<h2>Temprana contra tardía: interacciones finas contra robustez</h2>
+<ul><li>La temprana capta interacciones de bajo nivel pero exige todas las modalidades presentes; la tardía es modular y tolerante a que falte una, pero no modela esas interacciones.</li></ul>
 <div class="slide-num">9</div>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Estrategias de fusión</div>
-<h2>Fusión tardía: un codificador por modalidad, combinar al final</h2>
-<ul>
-  <li>Cada modalidad se procesa con su propio codificador hasta una decisión o un <em>embedding</em>.</li>
-  <li>Solo al final se combinan los resultados, por ejemplo promediando probabilidades.</li>
-  <li>Robusta, modular y tolerante a la ausencia de una modalidad; no modela interacciones de bajo nivel.</li>
-</ul>
+<h2>La conjunta domina: atención cruzada en capas intermedias</h2>
+<ul><li>Cada modalidad consulta a la otra mediante atención; es el mejor balance entre expresividad y flexibilidad, y la receta de los modelos actuales.</li></ul>
 <div class="slide-num">10</div>
 </section>
 
 <section>
-<div class="section-label">§ 2 · Estrategias de fusión</div>
-<h2>Fusión conjunta: atención cruzada en capas intermedias</h2>
-<ul>
-  <li>Las representaciones por modalidad interactúan en capas intermedias mediante <strong>atención cruzada</strong>.</li>
-  <li>Atención cruzada (<em>cross-attention</em>): una modalidad consulta a la otra.</li>
-  <li>Es la estrategia <strong>dominante</strong> hoy, por su balance entre expresividad y flexibilidad.</li>
-</ul>
-<p class="note">Para que el espacio compartido tenga sentido, las modalidades deben estar alineadas → § 3.</p>
+<div class="section-label">§ 3 · Alineación entre modalidades</div>
+<h2>Para que el espacio tenga sentido, hay que alinear las modalidades</h2>
+<ul><li>Que el embedding de una imagen de un perro quede cerca del embedding del texto «perro»; eso es la alineación.</li></ul>
 <div class="slide-num">11</div>
 </section>
 
-<!-- § 3 · Alineación entre modalidades -->
-
 <section>
 <div class="section-label">§ 3 · Alineación entre modalidades</div>
-<h2>Un espacio compartido útil exige alinear las modalidades</h2>
-<ul>
-  <li><strong>Alineación</strong>: que el <em>embedding</em> de una imagen de un perro quede cerca del <em>embedding</em> del texto "perro".</li>
-  <li>Esta alineación no surge sola: debe <strong>inducirse durante el entrenamiento</strong>.</li>
-</ul>
+<h2>La alineación no surge sola: se induce durante el entrenamiento</h2>
+<ul><li>La vía dominante es el <strong>aprendizaje contrastivo</strong> (CLIP), que se desarrolla en detalle en el notebook de §H.4.</li></ul>
 <div class="slide-num">12</div>
 </section>
 
 <section>
 <div class="section-label">§ 3 · Alineación entre modalidades</div>
-<h2>El aprendizaje contrastivo induce la alineación</h2>
-<ul>
-  <li>Entrena dos codificadores para <strong>acercar</strong> las parejas correctas (una imagen y su descripción) y <strong>alejar</strong> las incorrectas dentro de un lote.</li>
-  <li><strong>CLIP</strong> popularizó la receta entrenando con 400 millones de pares imagen-texto de internet.</li>
-  <li>Habilita la inferencia <em>zero-shot</em>: clasificar en categorías nunca vistas durante el entrenamiento.</li>
-  <li>Su mecanismo, pérdida y zero-shot se desarrollan en el notebook <strong>Aprendizaje contrastivo</strong> (§ H.4).</li>
-</ul>
+<h2>Pero no es la única vía</h2>
+<ul><li>También se alinea por reconstrucción cruzada, por predicción de correspondencia, o proyectando una modalidad al espacio de un modelo de lenguaje ya existente.</li></ul>
 <div class="slide-num">13</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Alineación entre modalidades</div>
-<h2>El contrastivo no es la única vía de alineación</h2>
-<ul>
-  <li><strong>Reconstrucción cruzada</strong>: una modalidad debe reconstruirse a partir de otra.</li>
-  <li><strong>Predicción de correspondencia</strong>: clasificar si un par imagen-texto coincide.</li>
-  <li><strong>Proyección supervisada</strong>: entrenar un proyector que traduce los <em>embeddings</em> de una modalidad al espacio de un modelo de lenguaje ya existente.</li>
-</ul>
+<div class="section-label">§ 4 · La agnosticidad del Transformer</div>
+<h2>¿Por qué la multimodalidad se generaliza a tantas modalidades?</h2>
+<ul><li>La razón es arquitectónica: el Transformer es <strong>agnóstico al tipo de dato</strong> de entrada.</li></ul>
 <div class="slide-num">14</div>
 </section>
 
-<!-- § 4 · La agnosticidad del Transformer -->
-
 <section>
 <div class="section-label">§ 4 · La agnosticidad del Transformer</div>
-<h2>¿Por qué la multimodalidad se generaliza a tantas modalidades?</h2>
-<ul>
-  <li>La razón arquitectónica es una propiedad del Transformer: es <strong>agnóstico al tipo de dato de entrada</strong>.</li>
-  <li>A un bloque de auto-atención no le importa si los vectores son palabras, parches de píxeles o tramas de audio.</li>
-  <li>Su única exigencia: recibir una <strong>secuencia de vectores</strong> (<em>embeddings</em>).</li>
-</ul>
+<h2>A la auto-atención solo le importa recibir una secuencia de vectores</h2>
+<ul><li>No distingue si esos vectores representan palabras, parches de píxeles o tramas de audio.</li></ul>
 <div class="slide-num">15</div>
 </section>
 
 <section>
 <div class="section-label">§ 4 · La agnosticidad del Transformer</div>
 <h2>El patrón unificador: codificar, concatenar, atender</h2>
-<ul>
-  <li>Extraer los <em>embeddings</em> de cada modalidad con codificadores especializados.</li>
-  <li>Concatenarlos en una <strong>sola secuencia</strong> de vectores.</li>
-  <li>La auto-atención captura el contexto global entre todos para emitir una predicción.</li>
-  <li>La fusión conjunta (§ 2) es, en la práctica, este patrón implementado con atención.</li>
-</ul>
+<ul><li>Una imagen entra como <strong>tokens visuales</strong>: el codificador la vuelve vectores que, proyectados, se insertan en la secuencia como si fueran palabras.</li></ul>
 <div class="slide-num">16</div>
 </section>
 
 <section>
-<div class="section-label">§ 4 · La agnosticidad del Transformer</div>
-<h2>Tokens visuales: una imagen entra como si fueran palabras</h2>
-<ul>
-  <li>El codificador visual produce vectores que, tras una <strong>proyección</strong> al espacio del LLM, se insertan en la secuencia de entrada como tokens.</li>
-  <li>El Transformer procesa texto e imagen en un mismo flujo de atención, sin distinguir su origen.</li>
-</ul>
-<p class="note">Este mecanismo es la base de los modelos de lenguaje multimodales → § 5.</p>
+<div class="section-label">§ 5 · Arquitectura modular de un MMLLM</div>
+<h2>Esto es la base de los modelos de lenguaje multimodales</h2>
+<ul><li>GPT-4 con visión, Flamingo o NExT-GPT no se entrenan desde cero: ensamblan piezas ya preentrenadas.</li></ul>
 <div class="slide-num">17</div>
 </section>
 
-<!-- § 5 · Arquitectura modular de un MMLLM -->
-
 <section>
 <div class="section-label">§ 5 · Arquitectura modular de un MMLLM</div>
-<h2>Los MMLLM ensamblan piezas preentrenadas, no se entrenan desde cero</h2>
-<ul>
-  <li><strong>MMLLM</strong>: modelos de lenguaje multimodales de gran escala (GPT-4 con visión, Flamingo, NExT-GPT).</li>
-  <li>No son un bloque monolítico entrenado desde cero: <strong>ensamblan piezas preentrenadas</strong>.</li>
-  <li>La comunidad convergió en un marco modular de <strong>cinco bloques</strong> que conecta percepción, razonamiento y generación.</li>
-</ul>
+<h2>Cinco bloques, de la señal cruda a la respuesta</h2>
+<ul><li>Codificador → proyector de entrada → Core LLM → proyector de salida → generador.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 700 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+  <defs>
+    <marker id="m3arrf" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect x="15" y="70" width="118" height="60" rx="7" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="74" y="92" text-anchor="middle" fill="#1a3a5c" font-weight="bold">1. Codificador</text>
+  <text x="74" y="108" text-anchor="middle" fill="#1a3a5c" font-size="11">de modalidad</text>
+  <text x="74" y="123" text-anchor="middle" fill="#3a6a8c" font-size="10">píxeles · audio</text>
+
+  <rect x="155" y="70" width="118" height="60" rx="7" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="214" y="92" text-anchor="middle" fill="#663300" font-weight="bold">2. Proyector</text>
+  <text x="214" y="108" text-anchor="middle" fill="#663300" font-size="11">de entrada</text>
+  <text x="214" y="123" text-anchor="middle" fill="#885500" font-size="10">tokens visuales</text>
+
+  <rect x="295" y="60" width="118" height="80" rx="7" fill="#eef7ee" stroke="#339933" stroke-width="1.8"/>
+  <text x="354" y="92" text-anchor="middle" fill="#1a4d1a" font-weight="bold">3. Core LLM</text>
+  <text x="354" y="108" text-anchor="middle" fill="#1a4d1a" font-size="11">razonamiento</text>
+  <text x="354" y="123" text-anchor="middle" fill="#2d6b2d" font-size="10">LLaMA · GPT</text>
+
+  <rect x="435" y="70" width="118" height="60" rx="7" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="494" y="92" text-anchor="middle" fill="#663300" font-weight="bold">4. Proyector</text>
+  <text x="494" y="108" text-anchor="middle" fill="#663300" font-size="11">de salida</text>
+  <text x="494" y="123" text-anchor="middle" fill="#885500" font-size="10">tokens señal</text>
+
+  <rect x="575" y="70" width="118" height="60" rx="7" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.5"/>
+  <text x="634" y="92" text-anchor="middle" fill="#5c1a5c" font-weight="bold">5. Generador</text>
+  <text x="634" y="108" text-anchor="middle" fill="#5c1a5c" font-size="11">de modalidad</text>
+  <text x="634" y="123" text-anchor="middle" fill="#7a2d7a" font-size="10">difusión latente</text>
+
+  <line x1="133" y1="100" x2="155" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#m3arrf)"/>
+  <line x1="273" y1="100" x2="295" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#m3arrf)"/>
+  <line x1="413" y1="100" x2="435" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#m3arrf)"/>
+  <line x1="553" y1="100" x2="575" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#m3arrf)"/>
+
+  <text x="354" y="30" text-anchor="middle" fill="#444" font-size="11">entrada multimodal  →  razonamiento  →  salida multimodal</text>
+  <text x="74" y="160" text-anchor="middle" fill="#888" font-size="10">percepción</text>
+  <text x="634" y="160" text-anchor="middle" fill="#888" font-size="10">síntesis</text>
+</svg></div>
 <div class="slide-num">18</div>
 </section>
 
 <section>
 <div class="section-label">§ 5 · Arquitectura modular de un MMLLM</div>
-<h2>Los cinco bloques de un MMLLM</h2>
-<ul><li>De percepción a síntesis: codificador → proyector de entrada → Core LLM → proyector de salida → generador.</li></ul>
-<div class="svg-holder"><svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-  <defs>
-    <marker id="arrf" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
-      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
-    </marker>
-  </defs>
-  <rect x="15" y="70" width="118" height="60" rx="7" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
-  <text x="74" y="92" text-anchor="middle" fill="#1a3a5c" font-weight="bold">1. Codificador</text>
-  <text x="74" y="108" text-anchor="middle" fill="#1a3a5c" font-size="11">de modalidad</text>
-  <text x="74" y="123" text-anchor="middle" fill="#3a6a8c" font-size="10">píxeles · audio</text>
-  <rect x="155" y="70" width="118" height="60" rx="7" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
-  <text x="214" y="92" text-anchor="middle" fill="#663300" font-weight="bold">2. Proyector</text>
-  <text x="214" y="108" text-anchor="middle" fill="#663300" font-size="11">de entrada</text>
-  <text x="214" y="123" text-anchor="middle" fill="#885500" font-size="10">tokens visuales</text>
-  <rect x="295" y="60" width="118" height="80" rx="7" fill="#eef7ee" stroke="#339933" stroke-width="1.8"/>
-  <text x="354" y="92" text-anchor="middle" fill="#1a4d1a" font-weight="bold">3. Core LLM</text>
-  <text x="354" y="108" text-anchor="middle" fill="#1a4d1a" font-size="11">razonamiento</text>
-  <text x="354" y="123" text-anchor="middle" fill="#2d6b2d" font-size="10">LLaMA · GPT</text>
-  <rect x="435" y="70" width="118" height="60" rx="7" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
-  <text x="494" y="92" text-anchor="middle" fill="#663300" font-weight="bold">4. Proyector</text>
-  <text x="494" y="108" text-anchor="middle" fill="#663300" font-size="11">de salida</text>
-  <text x="494" y="123" text-anchor="middle" fill="#885500" font-size="10">tokens señal</text>
-  <rect x="575" y="70" width="118" height="60" rx="7" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.5"/>
-  <text x="634" y="92" text-anchor="middle" fill="#5c1a5c" font-weight="bold">5. Generador</text>
-  <text x="634" y="108" text-anchor="middle" fill="#5c1a5c" font-size="11">de modalidad</text>
-  <text x="634" y="123" text-anchor="middle" fill="#7a2d7a" font-size="10">difusión latente</text>
-  <line x1="133" y1="100" x2="155" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arrf)"/>
-  <line x1="273" y1="100" x2="295" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arrf)"/>
-  <line x1="413" y1="100" x2="435" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arrf)"/>
-  <line x1="553" y1="100" x2="575" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arrf)"/>
-  <text x="354" y="30" text-anchor="middle" fill="#444" font-size="11">entrada multimodal  →  razonamiento  →  salida multimodal</text>
-  <text x="74" y="160" text-anchor="middle" fill="#888" font-size="10">percepción</text>
-  <text x="634" y="160" text-anchor="middle" fill="#888" font-size="10">síntesis</text>
-</svg></div>
+<h2>Bloques 1 a 3: del píxel al razonamiento</h2>
+<ul><li>El <strong>codificador</strong> (suele reutilizar el de CLIP) extrae características; el <strong>proyector de entrada</strong> las vuelve tokens que el LLM lee como palabras; el <strong>Core LLM</strong> razona sobre la secuencia.</li></ul>
 <div class="slide-num">19</div>
 </section>
 
 <section>
 <div class="section-label">§ 5 · Arquitectura modular de un MMLLM</div>
-<h2>Bloques 1–3: del píxel al razonamiento</h2>
-<ul>
-  <li><strong>Codificador de modalidad</strong>: procesa señales crudas (píxeles, espectrograma); suele reutilizarse el codificador visual de CLIP.</li>
-  <li><strong>Proyector de entrada</strong>: traduce los vectores al espacio dimensional exacto que espera el LLM, convirtiendo la imagen en tokens que lee como palabras.</li>
-  <li><strong>Core LLM</strong>: el componente cognitivo (LLaMA, PaLM, GPT) que razona sobre la secuencia unificada y emite la respuesta.</li>
-</ul>
+<h2>Bloques 4 y 5: de la respuesta a la síntesis</h2>
+<ul><li>El <strong>proyector de salida</strong> traduce los tokens de señalización del LLM al espacio del sintetizador; el <strong>generador</strong> (difusión latente) produce los píxeles o el audio.</li></ul>
 <div class="slide-num">20</div>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Arquitectura modular de un MMLLM</div>
-<h2>Bloques 4–5: de la respuesta a la síntesis</h2>
-<ul>
-  <li><strong>Proyector de salida</strong>: al pedir generar imagen o audio, el LLM emite tokens de señalización que este bloque traduce al espacio latente del sintetizador.</li>
-  <li><strong>Generador de modalidad</strong>: típicamente un modelo de <strong>difusión latente</strong> que ejecuta la generación final de píxeles o audio.</li>
-</ul>
-<p class="note">¿Cómo se entrena este ensamblaje de piezas preentrenadas? → § 6.</p>
+<div class="section-label">§ 6 · Fases de alineamiento y ajuste</div>
+<h2>¿Cómo se entrenan piezas ya inteligentes para trabajar juntas?</h2>
+<ul><li>No reentrenando todo desde cero, sino alineándolas en etapas sucesivas.</li></ul>
 <div class="slide-num">21</div>
 </section>
 
-<!-- § 6 · Fases de alineamiento y ajuste -->
-
 <section>
 <div class="section-label">§ 6 · Fases de alineamiento y ajuste</div>
-<h2>Las capacidades surgen de un ensamblaje por etapas</h2>
-<ul>
-  <li>No se entrena el sistema completo desde cero.</li>
-  <li>Se alinean piezas ya inteligentes en <strong>etapas sucesivas</strong>.</li>
-  <li>Tres fases: pre-entrenamiento de alineación → <em>instruction tuning</em> → RLHF multimodal.</li>
-</ul>
+<h2>Fase 1: pre-entrenamiento de alineación</h2>
+<ul><li>Se congelan el Core LLM y los codificadores; solo se entrena el proyector de entrada, con conjuntos masivos de pares texto-modalidad, para que el LLM aprenda a «ver».</li></ul>
 <div class="slide-num">22</div>
 </section>
 
 <section>
 <div class="section-label">§ 6 · Fases de alineamiento y ajuste</div>
-<h2>Pre-entrenamiento de alineación: congelar y conectar</h2>
-<ul>
-  <li>Se <strong>congelan</strong> los pesos del Core LLM y de los codificadores.</li>
-  <li>Solo se entrena el <strong>proyector de entrada</strong>, con conjuntos masivos de pares texto-modalidad.</li>
-  <li>Objetivo: que el LLM aprenda a "ver" o "escuchar" vía los tokens proyectados, sin alterar su capacidad lingüística previa.</li>
-</ul>
+<h2>Fase 2: instruction tuning</h2>
+<ul><li>Se entrena al modelo a seguir instrucciones humanas; se evalúa razonamiento con pocos ejemplos (<em>few-shot</em>) o sin ellos (<em>zero-shot</em>), con cadenas de pensamiento.</li></ul>
 <div class="slide-num">23</div>
 </section>
 
 <section>
 <div class="section-label">§ 6 · Fases de alineamiento y ajuste</div>
-<h2>Instruction tuning: aprender a seguir instrucciones</h2>
-<ul>
-  <li>El modelo se entrena con instrucciones humanas específicas para seguir tareas.</li>
-  <li>Se evalúan habilidades de razonamiento con pocos ejemplos (<em>few-shot</em>) o sin ejemplos (<em>zero-shot</em>).</li>
-  <li>Se adaptan cadenas de pensamiento para que explique paso a paso lo que percibe en una imagen.</li>
-</ul>
+<h2>Fase 3: RLHF reduce las alucinaciones</h2>
+<ul><li>El ajuste con preferencias humanas penaliza que el modelo describa objetos que no están en la imagen, mejorando la fidelidad a la evidencia perceptual.</li></ul>
 <div class="slide-num">24</div>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Fases de alineamiento y ajuste</div>
-<h2>RLHF multimodal reduce las alucinaciones</h2>
-<ul>
-  <li>El aprendizaje por refuerzo desde retroalimentación humana (RLHF) corrige sesgos.</li>
-  <li><strong>Alucinación</strong>: el modelo describe objetos que no están presentes en la imagen.</li>
-  <li>El ajuste con preferencias humanas penaliza descripciones plausibles pero falsas y mejora la fidelidad a la evidencia perceptual.</li>
-</ul>
-<div class="slide-num">25</div>
-</section>
-
-<!-- § 7 · Aplicaciones transversales -->
-
-<section>
 <div class="section-label">§ 7 · Aplicaciones transversales</div>
-<h2>La fusión de espacios latentes habilita correlaciones cruzadas</h2>
-<ul>
-  <li>Un espacio compartido permite explotar correlaciones entre modalidades difíciles de aprovechar con modelos aislados.</li>
-  <li>Tres dominios ilustrativos: medicina, análisis conductual y sistemas omnimodales.</li>
-</ul>
-<div class="slide-num">26</div>
+<h2>¿Qué permite un espacio compartido que los modelos aislados no?</h2>
+<ul><li>Explotar correlaciones cruzadas entre modalidades, difíciles de aprovechar por separado.</li></ul>
+<div class="slide-num">25</div>
 </section>
 
 <section>
 <div class="section-label">§ 7 · Aplicaciones transversales</div>
 <h2>Recuperación e inferencia cruzada en la práctica</h2>
-<ul>
-  <li><strong>Medicina</strong>: con pares de histopatología e informes clínicos, el modelo razona sobre un tumor de una variante no vista y asiste el diagnóstico vía recuperación <em>zero-shot</em>.</li>
-  <li><strong>Análisis conductual</strong>: perfilar por patrones de compra (datos tabulares) permite sugerir productos visuales relacionados, apalancando correlaciones latentes.</li>
-  <li><strong>Sistemas omnimodales</strong>: NExT-GPT procesa secuencias intercaladas de texto, audio, imagen y video, y genera cualquier combinación.</li>
-</ul>
-<div class="slide-num">27</div>
+<ul><li>Medicina (histopatología + informes clínicos, diagnóstico <em>zero-shot</em>); análisis conductual (datos tabulares → productos visuales); sistemas omnimodales como NExT-GPT, que generan cualquier combinación de modalidades.</li></ul>
+<div class="slide-num">26</div>
 </section>
 
-<!-- CIERRE -->
 <section>
 <div class="close-slide">
-  <h1>La multimodalidad no es un modelo, sino un principio de diseño: codificar cada señal a un espacio común, alinearlo, y dejar que la atención integre percepción, razonamiento y síntesis.</h1>
+  <h1>La multimodalidad no es una arquitectura, sino un principio de diseño: codificar cada señal a un espacio común, alinearlo, y dejar que la atención integre percepción, razonamiento y síntesis.</h1>
   <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
 </div>
 </section>
 
-</div>
-</div>
+</div></div>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
 <script>
-Reveal.initialize({
-  hash: true, controls: true, progress: true, slideNumber: false,
-  transition: 'none', backgroundTransition: 'none',
-  width: 1280, height: 720, margin: 0.03,
-  minScale: 0.3, maxScale: 2.5,
-  katex: {
-    version: 'latest',
-    delimiters: [
-      {left: '$$', right: '$$', display: true},
-      {left: '$',  right: '$',  display: false}
-    ],
-    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
-  },
-  plugins: [ RevealMath.KaTeX ]
-});
+Reveal.initialize({ hash:true, controls:true, progress:true, slideNumber:false,
+  transition:'none', backgroundTransition:'none', width:1280, height:720, margin:0.03, minScale:0.3, maxScale:2.5,
+  katex:{ version:'latest', delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], ignoredTags:['script','noscript','style','textarea','pre'] },
+  plugins:[ RevealMath.KaTeX ] });
 </script>
-</body>
-</html>
+</body></html>

@@ -1,751 +1,563 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Modelos Basados en Puntaje</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Modelos basados en puntaje · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-
 <style>
-:root {
-  --pluto-blue: #4e79a7;
-  --ink: #1a1a1a;
-  --ink-soft: #4a4a4a;
-  --ink-faint: #888;
-  --paper: #ffffff;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pluto-blue: #8ab4d4;
-    --ink: #dcdcdc;
-    --ink-soft: #aaaaaa;
-    --ink-faint: #666;
-    --paper: #2a2928;
-  }
-  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
-}
-
-.reveal, .reveal .slides section {
-  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: var(--ink);
-  text-align: left;
-  background: var(--paper);
-}
-.reveal .slide-background { background: var(--paper); }
-
-.reveal .slides section {
-  padding: 2% 5% 2% 5%;
-  box-sizing: border-box;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
-
-.section-label {
-  font-size: 0.75em;
-  color: var(--ink-faint);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 500;
-  margin-bottom: 0.3em;
-  flex-shrink: 0;
-}
-
-.reveal h1 {
-  font-size: 2.6em; font-weight: 700; color: var(--ink);
-  margin: 0 0 0.4em 0; line-height: 1.15;
-  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
-}
-.reveal h2 {
-  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
-  margin: 0 0 0.3em 0; line-height: 1.2;
-  text-transform: none; border: none; flex-shrink: 0;
-}
-
-.reveal p, .reveal li {
-  font-size: 1.75em;
-  line-height: 1.5;
-  color: var(--ink);
-}
-.reveal ul {
-  padding-left: 1.3em;
-  margin: 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  min-height: 0;
-}
-.reveal li {
-  margin: 0;
-  min-width: 0;
-  max-width: 100%;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
-  -webkit-hyphens: auto;
-}
-.reveal strong { font-weight: 700; color: var(--ink); }
-.reveal em { font-style: italic; }
-.reveal a { color: var(--pluto-blue); text-decoration: none; }
-
-/* Equations: direct display math, no card borders */
-.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
-
-p.note {
-  font-size: 0.85em;
-  color: var(--ink-soft);
-  margin-top: 0.4em;
-  font-style: italic;
-  flex-shrink: 0;
-}
-
-/* SVG fills remaining vertical space without overflowing */
-.svg-holder {
-  display: flex; align-items: stretch;
-  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
-  margin-top: 0.3em; overflow: hidden;
-}
-.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
-
-.title-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
-.title-slide .course-id {
-  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
-  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
-}
-.title-slide h1 { font-size: 2.6em; }
-.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
-
-.close-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
-.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
-
-.slide-num {
-  position: absolute; bottom: 2%; right: 3%;
-  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.1em;
-}
-.reveal .controls { color: var(--ink-faint); }
-.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+:root { --pluto-blue:#4e79a7; --ink:#1a1a1a; --ink-soft:#4a4a4a; --ink-faint:#888; --paper:#ffffff; }
+@media (prefers-color-scheme: dark){:root{--pluto-blue:#8ab4d4;--ink:#dcdcdc;--ink-soft:#aaaaaa;--ink-faint:#666;--paper:#2a2928;}.svg-holder svg{background:#faf7eb;border-radius:6px;padding:4px;}}
+.reveal, .reveal .slides section{font-family:"Alegreya Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);text-align:left;background:var(--paper);}
+.reveal .slide-background{background:var(--paper);}
+.reveal .slides section{padding:2% 5% 2% 5%;box-sizing:border-box;height:100%;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.section-label{font-size:0.75em;color:var(--ink-faint);letter-spacing:0.12em;text-transform:uppercase;font-weight:500;margin-bottom:0.3em;flex-shrink:0;}
+.reveal h1{font-size:2.6em;font-weight:700;color:var(--ink);margin:0 0 0.4em 0;line-height:1.15;text-transform:none;letter-spacing:-0.01em;flex-shrink:0;}
+.reveal h2{font-size:2.1em;font-weight:700;color:var(--pluto-blue);margin:0 0 0.3em 0;line-height:1.2;text-transform:none;border:none;flex-shrink:0;}
+.reveal p, .reveal li{font-size:1.85em;line-height:1.5;color:var(--ink);}
+.reveal ul{padding-left:1.1em;margin:0;width:100%;max-width:100%;box-sizing:border-box;min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+.reveal li{margin:0.35em 0;min-width:0;max-width:100%;overflow-wrap:break-word;word-break:break-word;hyphens:auto;-webkit-hyphens:auto;}
+.reveal strong{font-weight:700;color:var(--ink);} .reveal em{font-style:italic;} .reveal a{color:var(--pluto-blue);text-decoration:none;}
+.reveal .katex-display{margin:0.5em 0;font-size:1.5em;}
+p.note{font-size:0.92em;color:var(--ink-soft);margin-top:0.4em;font-style:italic;flex-shrink:0;}
+.svg-holder{display:flex;align-items:stretch;width:100%;flex:1 1 0;min-height:0;min-width:0;margin-top:0.3em;overflow:hidden;}
+.svg-holder svg{flex:1 1 0;min-width:0;min-height:0;display:block;}
+.title-slide{display:flex;flex-direction:column;justify-content:center;height:100%;}
+.title-slide .course-id{font-size:0.8em;color:var(--ink-faint);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:1.8em;font-weight:500;}
+.title-slide h1{font-size:2.6em;} .title-slide .byline{font-size:1em;color:var(--ink-soft);margin-top:1em;}
+.close-slide{display:flex;flex-direction:column;justify-content:center;height:100%;}
+.close-slide h1{font-size:2em;max-width:22em;line-height:1.3;color:var(--pluto-blue);}
+.slide-num{position:absolute;bottom:2%;right:3%;font-size:0.55em;color:var(--ink-faint);letter-spacing:0.1em;}
+.reveal .controls{color:var(--ink-faint);} .reveal .progress{background:transparent;color:var(--pluto-blue);height:2px;}
 </style>
 </head>
 <body>
 <div class="reveal">
 <div class="slides">
 
-<!-- PORTADA -->
 <section>
 <div class="title-slide">
   <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
-  <h1>Modelos Basados en Puntaje</h1>
+  <h1>Modelos basados en puntaje</h1>
   <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
   <div class="byline">Pontificia Universidad Católica de Chile</div>
 </div>
 </section>
 
-<!-- ============ §1 La función de score ============ -->
 <section>
 <div class="section-label">§ 1 · La función de score</div>
-<h2>El problema: modelar $p(\mathbf{x})$ exige normalizar</h2>
-<ul>
-  <li>Los modelos basados en verosimilitud escriben $p_\theta(\mathbf{x}) = e^{-E_\theta(\mathbf{x})}/Z_\theta$, con $Z_\theta = \int e^{-E_\theta(\mathbf{x})}\,d\mathbf{x}$ la constante de partición.</li>
-  <li>Calcular $Z_\theta$ exige integrar sobre todo el espacio de alta dimensión: es intratable.</li>
-  <li><strong>Idea central:</strong> en vez de la densidad escalar, aprender el campo de sus gradientes.</li>
-</ul>
-<div class="slide-num">1</div>
-</section>
-
-<section>
-<div class="section-label">§ 1 · La función de score</div>
-<h2>El score es el gradiente del log-densidad</h2>
-<ul>
-  <li>Se define la <strong>función de score</strong> de una densidad $p(\mathbf{x})$ como el gradiente del logaritmo respecto a la entrada $\mathbf{x}$.</li>
-  <li>Es un <strong>campo vectorial</strong>: en cada punto apunta en la dirección de mayor crecimiento de la densidad, hacia donde se concentran los datos.</li>
-</ul>
-$$\mathbf{s}(\mathbf{x}) = \nabla_\mathbf{x} \log p(\mathbf{x}) \tag{1}$$
+<h2>La meta: generar datos sin modelar la densidad</h2>
+<ul><li>Para crear datos nuevos lo natural es aprender la densidad $p(\mathbf{x})$ — y justo ahí está el problema.</li></ul>
 <div class="slide-num">2</div>
 </section>
 
 <section>
 <div class="section-label">§ 1 · La función de score</div>
-<h2>El gradiente del log elimina la constante $Z_\theta$</h2>
-<ul>
-  <li>Al derivar el logaritmo, el término constante $\log Z_\theta$ desaparece porque su gradiente es cero.</li>
-  <li>El score depende solo de la energía $E_\theta$, nunca de su normalización.</li>
-</ul>
-$$\nabla_\mathbf{x} \log p_\theta(\mathbf{x}) = -\nabla_\mathbf{x} E_\theta(\mathbf{x}) - \underbrace{\nabla_\mathbf{x} \log Z_\theta}_{=\,0}$$
-<p class="note">Permite parametrizar $\mathbf{s}_\theta(\mathbf{x})$ con una red arbitraria, sin invertibilidad ni normalización.</p>
+<h2>El obstáculo: la constante de normalización es intratable</h2>
+<ul><li>Si $p(\mathbf{x}) = e^{-E(\mathbf{x})}/Z$, calcular $Z$ exige integrar sobre todo el espacio de alta dimensión: imposible.</li></ul>
 <div class="slide-num">3</div>
 </section>
 
 <section>
 <div class="section-label">§ 1 · La función de score</div>
-<h2>El score apunta hacia los modos</h2>
-<ul><li>Cada flecha es $\mathbf{s}(\mathbf{x}) = \nabla_\mathbf{x}\log p(\mathbf{x})$ y apunta al modo de mayor densidad más cercano; la separatriz divide las cuencas.</li></ul>
-<div class="svg-holder">
-<svg viewBox="0 0 700 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
-  <defs>
-    <marker id="sarr" markerWidth="7" markerHeight="7" refX="5.5" refY="2.5" orient="auto">
-      <path d="M0,0 L0,5 L6,2.5 z" fill="#e8821a"/>
-    </marker>
-  </defs>
-  <ellipse cx="175" cy="100" rx="54" ry="50" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
-  <circle cx="175" cy="100" r="40" fill="#fdecea" stroke="#c0392b" stroke-width="1.1" opacity="0.55"/>
-  <circle cx="175" cy="100" r="26" fill="#f3a89b" stroke="none" opacity="0.75"/>
-  <circle cx="175" cy="100" r="13" fill="#e74c3c" stroke="none" opacity="0.95"/>
-  <ellipse cx="300" cy="180" rx="38" ry="34" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="4,3" opacity="0.3"/>
-  <circle cx="300" cy="180" r="26" fill="#fdecea" stroke="#c0392b" stroke-width="1" opacity="0.4"/>
-  <circle cx="300" cy="180" r="15" fill="#f8c4ba" stroke="none" opacity="0.6"/>
-  <circle cx="300" cy="180" r="7" fill="#ee8b7d" stroke="none" opacity="0.8"/>
-  <line x1="52" y1="46" x2="65.7" y2="52.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="52" y1="74" x2="66.7" y2="77.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="52" y1="102" x2="67.0" y2="101.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="52" y1="130" x2="66.6" y2="126.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="52" y1="158" x2="65.6" y2="151.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="52" y1="186" x2="64.3" y2="177.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="52" y1="214" x2="63.0" y2="203.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="82" y1="46" x2="95.0" y2="53.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="82" y1="74" x2="96.4" y2="78.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="82" y1="102" x2="97.0" y2="101.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="82" y1="130" x2="96.3" y2="125.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="82" y1="158" x2="94.8" y2="150.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="82" y1="186" x2="93.1" y2="175.9" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="82" y1="214" x2="91.6" y2="202.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="112" y1="46" x2="123.4" y2="55.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="112" y1="74" x2="125.9" y2="79.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="112" y1="102" x2="127.0" y2="101.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="112" y1="130" x2="125.6" y2="123.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="112" y1="158" x2="123.2" y2="148.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="112" y1="186" x2="121.1" y2="174.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="112" y1="214" x2="119.7" y2="201.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="142" y1="46" x2="149.8" y2="58.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="142" y1="74" x2="153.8" y2="83.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="142" y1="102" x2="157.0" y2="101.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="142" y1="130" x2="153.5" y2="120.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="142" y1="158" x2="150.2" y2="145.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="142" y1="186" x2="148.5" y2="172.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="142" y1="214" x2="147.8" y2="200.2" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="172" y1="46" x2="173.0" y2="61.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="172" y1="74" x2="174.4" y2="88.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="172" y1="130" x2="176.3" y2="115.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="172" y1="158" x2="175.5" y2="143.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="172" y1="186" x2="175.9" y2="171.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="172" y1="214" x2="176.9" y2="199.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="202" y1="46" x2="195.9" y2="59.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="202" y1="74" x2="192.6" y2="85.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="202" y1="102" x2="187.2" y2="104.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="202" y1="130" x2="194.2" y2="117.2" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="202" y1="158" x2="201.3" y2="143.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="202" y1="186" x2="205.4" y2="171.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="202" y1="214" x2="208.2" y2="200.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="232" y1="46" x2="222.1" y2="57.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="232" y1="74" x2="220.0" y2="82.9" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="232" y1="102" x2="217.7" y2="106.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="232" y1="130" x2="217.8" y2="125.2" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="232" y1="158" x2="230.2" y2="143.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="232" y1="186" x2="238.4" y2="172.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="232" y1="214" x2="240.3" y2="201.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="262" y1="46" x2="251.1" y2="56.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="262" y1="74" x2="250.3" y2="83.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="262" y1="102" x2="249.9" y2="110.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="262" y1="130" x2="249.9" y2="138.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="262" y1="158" x2="266.0" y2="143.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="262" y1="186" x2="271.1" y2="174.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="262" y1="214" x2="269.7" y2="201.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="292" y1="46" x2="281.7" y2="56.9" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="292" y1="74" x2="282.3" y2="85.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="292" y1="102" x2="283.4" y2="114.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="292" y1="130" x2="284.5" y2="143.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="292" y1="158" x2="284.2" y2="170.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="292" y1="214" x2="293.4" y2="199.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="322" y1="46" x2="313.4" y2="58.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="322" y1="74" x2="314.0" y2="86.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="322" y1="102" x2="314.2" y2="114.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="322" y1="130" x2="313.1" y2="142.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="322" y1="158" x2="309.5" y2="166.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="322" y1="186" x2="307.7" y2="181.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="322" y1="214" x2="313.6" y2="201.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="352" y1="46" x2="344.1" y2="58.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="352" y1="74" x2="343.8" y2="86.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="352" y1="102" x2="342.6" y2="113.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="352" y1="130" x2="340.6" y2="139.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="352" y1="158" x2="338.0" y2="163.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="352" y1="186" x2="337.1" y2="184.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <line x1="352" y1="214" x2="339.4" y2="205.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#sarr)"/>
-  <text x="175" y="34" text-anchor="middle" font-size="11" fill="#a02b1d" font-weight="bold">modo A</text>
-  <text x="175" y="47" text-anchor="middle" font-size="9" fill="#c0392b">mayor densidad</text>
-  <text x="345" y="184" text-anchor="middle" font-size="11" fill="#a02b1d" font-weight="bold">modo B</text>
-  <text x="345" y="197" text-anchor="middle" font-size="9" fill="#c0392b">menor densidad</text>
-  <text x="200" y="258" text-anchor="middle" font-size="11" fill="#777">cada flecha apunta hacia el modo más cercano (mayor densidad)</text>
-  <line x1="400" y1="25" x2="400" y2="245" stroke="#ddd" stroke-width="1.5"/>
-  <text x="552" y="105" text-anchor="middle" font-size="22" font-style="italic" fill="#2a6fa8" font-weight="bold">s(x) = &#x2207;&#x2093; log p(x)</text>
-  <text x="552" y="145" text-anchor="middle" font-size="12" fill="#777">campo vectorial de gradientes</text>
-  <text x="552" y="172" text-anchor="middle" font-size="12" fill="#777">independiente de la constante Z</text>
-  <text x="552" y="199" text-anchor="middle" font-size="11" fill="#aaa">no requiere normalizar la densidad</text>
-</svg>
-</div>
+<h2>La idea: modelar el gradiente, no la densidad</h2>
+$$ \mathbf{s}(\mathbf{x}) = \nabla_\mathbf{x} \log p(\mathbf{x}) \tag{1} $$
+<p class="note">El <strong>score</strong> $\mathbf{s}(\mathbf{x})$ es un campo vectorial que, en cada punto, apunta hacia donde la densidad crece.</p>
 <div class="slide-num">4</div>
 </section>
 
-<!-- ============ §2 Score Matching y la traza del Jacobiano ============ -->
 <section>
-<div class="section-label">§ 2 · Score Matching y la traza del Jacobiano</div>
-<h2>El objetivo natural es circular</h2>
-<ul>
-  <li>Aprender $\mathbf{s}_\theta$ minimizando la distancia esperada al score real de los datos $p_{\text{data}}$.</li>
-  <li>Problema: el blanco $\nabla_\mathbf{x}\log p_{\text{data}}(\mathbf{x})$ es justo lo que no se conoce.</li>
-</ul>
-$$\mathcal{L}(\theta) = \frac{1}{2}\, \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}\!\left[\left\| \mathbf{s}_\theta(\mathbf{x}) - \nabla_\mathbf{x} \log p_{\text{data}}(\mathbf{x}) \right\|^2\right] \tag{2}$$
+<div class="section-label">§ 1 · La función de score</div>
+<h2>Al derivar el logaritmo, la constante desaparece</h2>
+<ul><li>$\nabla_\mathbf{x}\log p = -\nabla_\mathbf{x} E - \nabla_\mathbf{x}\log Z$, y $\nabla_\mathbf{x}\log Z = 0$: el score <strong>no depende de $Z$</strong>.</li></ul>
 <div class="slide-num">5</div>
 </section>
 
 <section>
-<div class="section-label">§ 2 · Score Matching y la traza del Jacobiano</div>
-<h2>Hyvärinen elimina el score real por partes</h2>
-<ul>
-  <li>Integración por partes (Hyvärinen, 2005) reescribe el objetivo sin el score desconocido.</li>
-  <li>$\operatorname{tr}(\nabla_\mathbf{x}\mathbf{s}_\theta)$ es la <strong>traza del Jacobiano</strong>: suma de las derivadas $\partial s_i/\partial x_i$ de cada salida respecto a su entrada.</li>
-</ul>
-$$\mathcal{L}_{\text{SM}}(\theta) = \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}\!\left[\operatorname{tr}\!\left(\nabla_\mathbf{x} \mathbf{s}_\theta(\mathbf{x})\right) + \frac{1}{2}\left\| \mathbf{s}_\theta(\mathbf{x}) \right\|^2\right] \tag{3}$$
+<div class="section-label">§ 1 · La función de score</div>
+<h2>El score: un campo que apunta a los modos</h2>
+<ul><li>Cada flecha apunta al modo más cercano; ascender por el score conduce a las zonas densas.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 700 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+  <defs>
+    <marker id="s1sarr" markerWidth="7" markerHeight="7" refX="5.5" refY="2.5" orient="auto">
+      <path d="M0,0 L0,5 L6,2.5 z" fill="#e8821a"/>
+    </marker>
+  </defs>
+
+  <!-- modo A (mayor densidad), centro (175,100) -->
+  <ellipse cx="175" cy="100" rx="54" ry="50" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+  <circle cx="175" cy="100" r="40" fill="#fdecea" stroke="#c0392b" stroke-width="1.1" opacity="0.55"/>
+  <circle cx="175" cy="100" r="26" fill="#f3a89b" stroke="none" opacity="0.75"/>
+  <circle cx="175" cy="100" r="13" fill="#e74c3c" stroke="none" opacity="0.95"/>
+
+  <!-- modo B (menor densidad), centro (300,180) -->
+  <ellipse cx="300" cy="180" rx="38" ry="34" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="4,3" opacity="0.3"/>
+  <circle cx="300" cy="180" r="26" fill="#fdecea" stroke="#c0392b" stroke-width="1" opacity="0.4"/>
+  <circle cx="300" cy="180" r="15" fill="#f8c4ba" stroke="none" opacity="0.6"/>
+  <circle cx="300" cy="180" r="7" fill="#ee8b7d" stroke="none" opacity="0.8"/>
+
+  <!-- campo de score: cada flecha apunta hacia el modo más cercano -->
+  <line x1="52" y1="46" x2="65.7" y2="52.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="52" y1="74" x2="66.7" y2="77.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="52" y1="102" x2="67.0" y2="101.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="52" y1="130" x2="66.6" y2="126.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="52" y1="158" x2="65.6" y2="151.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="52" y1="186" x2="64.3" y2="177.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="52" y1="214" x2="63.0" y2="203.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="82" y1="46" x2="95.0" y2="53.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="82" y1="74" x2="96.4" y2="78.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="82" y1="102" x2="97.0" y2="101.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="82" y1="130" x2="96.3" y2="125.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="82" y1="158" x2="94.8" y2="150.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="82" y1="186" x2="93.1" y2="175.9" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="82" y1="214" x2="91.6" y2="202.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="112" y1="46" x2="123.4" y2="55.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="112" y1="74" x2="125.9" y2="79.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="112" y1="102" x2="127.0" y2="101.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="112" y1="130" x2="125.6" y2="123.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="112" y1="158" x2="123.2" y2="148.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="112" y1="186" x2="121.1" y2="174.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="112" y1="214" x2="119.7" y2="201.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="142" y1="46" x2="149.8" y2="58.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="142" y1="74" x2="153.8" y2="83.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="142" y1="102" x2="157.0" y2="101.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="142" y1="130" x2="153.5" y2="120.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="142" y1="158" x2="150.2" y2="145.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="142" y1="186" x2="148.5" y2="172.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="142" y1="214" x2="147.8" y2="200.2" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="172" y1="46" x2="173.0" y2="61.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="172" y1="74" x2="174.4" y2="88.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="172" y1="130" x2="176.3" y2="115.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="172" y1="158" x2="175.5" y2="143.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="172" y1="186" x2="175.9" y2="171.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="172" y1="214" x2="176.9" y2="199.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="202" y1="46" x2="195.9" y2="59.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="202" y1="74" x2="192.6" y2="85.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="202" y1="102" x2="187.2" y2="104.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="202" y1="130" x2="194.2" y2="117.2" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="202" y1="158" x2="201.3" y2="143.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="202" y1="186" x2="205.4" y2="171.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="202" y1="214" x2="208.2" y2="200.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="232" y1="46" x2="222.1" y2="57.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="232" y1="74" x2="220.0" y2="82.9" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="232" y1="102" x2="217.7" y2="106.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="232" y1="130" x2="217.8" y2="125.2" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="232" y1="158" x2="230.2" y2="143.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="232" y1="186" x2="238.4" y2="172.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="232" y1="214" x2="240.3" y2="201.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="262" y1="46" x2="251.1" y2="56.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="262" y1="74" x2="250.3" y2="83.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="262" y1="102" x2="249.9" y2="110.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="262" y1="130" x2="249.9" y2="138.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="262" y1="158" x2="266.0" y2="143.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="262" y1="186" x2="271.1" y2="174.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="262" y1="214" x2="269.7" y2="201.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="292" y1="46" x2="281.7" y2="56.9" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="292" y1="74" x2="282.3" y2="85.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="292" y1="102" x2="283.4" y2="114.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="292" y1="130" x2="284.5" y2="143.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="292" y1="158" x2="284.2" y2="170.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="292" y1="214" x2="293.4" y2="199.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="322" y1="46" x2="313.4" y2="58.3" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="322" y1="74" x2="314.0" y2="86.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="322" y1="102" x2="314.2" y2="114.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="322" y1="130" x2="313.1" y2="142.0" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="322" y1="158" x2="309.5" y2="166.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="322" y1="186" x2="307.7" y2="181.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="322" y1="214" x2="313.6" y2="201.6" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="352" y1="46" x2="344.1" y2="58.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="352" y1="74" x2="343.8" y2="86.5" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="352" y1="102" x2="342.6" y2="113.7" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="352" y1="130" x2="340.6" y2="139.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="352" y1="158" x2="338.0" y2="163.4" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="352" y1="186" x2="337.1" y2="184.1" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+  <line x1="352" y1="214" x2="339.4" y2="205.8" stroke="#e8821a" stroke-width="1.3" opacity="0.85" marker-end="url(#s1sarr)"/>
+
+  <!-- etiquetas de modos -->
+  <text x="175" y="34" text-anchor="middle" font-size="11" fill="#a02b1d" font-weight="bold">modo A</text>
+  <text x="175" y="47" text-anchor="middle" font-size="9" fill="#c0392b">mayor densidad</text>
+  <text x="345" y="184" text-anchor="middle" font-size="11" fill="#a02b1d" font-weight="bold">modo B</text>
+  <text x="345" y="197" text-anchor="middle" font-size="9" fill="#c0392b">menor densidad</text>
+
+  <text x="200" y="258" text-anchor="middle" font-size="11" fill="#777">cada flecha apunta hacia el modo más cercano (mayor densidad)</text>
+
+  <!-- separador -->
+  <line x1="400" y1="25" x2="400" y2="245" stroke="#ddd" stroke-width="1.5"/>
+
+  <!-- derecha: fórmula -->
+  <text x="552" y="105" text-anchor="middle" font-size="22" font-style="italic" fill="#2a6fa8" font-weight="bold">s(x) = &#x2207;&#x2093; log p(x)</text>
+  <text x="552" y="145" text-anchor="middle" font-size="12" fill="#777">campo vectorial de gradientes</text>
+  <text x="552" y="172" text-anchor="middle" font-size="12" fill="#777">independiente de la constante Z</text>
+  <text x="552" y="199" text-anchor="middle" font-size="11" fill="#aaa">no requiere normalizar la densidad</text>
+</svg></div>
 <div class="slide-num">6</div>
 </section>
 
 <section>
-<div class="section-label">§ 2 · Score Matching y la traza del Jacobiano</div>
-<h2>La traza cuesta $\mathcal{O}(D^2)$ y no escala</h2>
-<ul>
-  <li>Obtener la diagonal del Jacobiano de un dato de dimensión $D$ requiere $D$ pases hacia atrás independientes: complejidad $\mathcal{O}(D^2)$, inasumible en imágenes.</li>
-  <li><strong>Sliced Score Matching</strong> (Song et al., 2019) estima la traza con proyecciones aleatorias (Hutchinson): $\operatorname{tr}(\nabla_\mathbf{x}\mathbf{s}_\theta) \approx \mathbb{E}_\mathbf{v}[\mathbf{v}^\top \nabla_\mathbf{x}\mathbf{s}_\theta\,\mathbf{v}]$, pero añade varianza.</li>
-  <li>La solución dominante fue otra y más simple: <strong>perturbar los datos con ruido</strong> → §3.</li>
-</ul>
+<div class="section-label">§ 1 · La función de score</div>
+<h2>Score-based no es un rival de difusión y flujos: es su marco común</h2>
+<ul><li>Todos aprenden, de un modo u otro, la función de score; las SDEs los unifican. Es el paraguas, no una familia más.</li></ul>
 <div class="slide-num">7</div>
 </section>
 
-<!-- ============ §3 Denoising Score Matching ============ -->
 <section>
-<div class="section-label">§ 3 · Denoising Score Matching</div>
-<h2>Perturbar el dato para eludir el Jacobiano</h2>
-<ul>
-  <li>Vincent (2011): añadir ruido gaussiano a cada dato limpio $\mathbf{x}$ produce un dato ruidoso $\tilde{\mathbf{x}}$.</li>
-  <li>El <strong>kernel de perturbación</strong> es una gaussiana centrada en el dato, con varianza $\sigma^2$.</li>
-</ul>
-$$q_\sigma(\tilde{\mathbf{x}} \mid \mathbf{x}) = \mathcal{N}\!\left(\tilde{\mathbf{x}};\, \mathbf{x},\, \sigma^2 \mathbf{I}\right) \tag{4}$$
+<div class="section-label">§ 2 · Score matching y la traza del Jacobiano</div>
+<h2>Pero no conocemos el score real. ¿Cómo lo aprendemos?</h2>
+$$ \mathcal{L}(\theta) = \tfrac{1}{2}\, \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}\!\left[\left\| \mathbf{s}_\theta(\mathbf{x}) - \nabla_\mathbf{x} \log p_{\text{data}}(\mathbf{x}) \right\|^2\right] \tag{2} $$
+<p class="note">El objetivo natural compara $\mathbf{s}_\theta$ con $\nabla\log p_{\text{data}}$, que es justo lo que no sabemos.</p>
 <div class="slide-num">8</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Denoising Score Matching</div>
-<h2>El score del kernel se conoce de forma exacta</h2>
-<ul>
-  <li>Por ser gaussiano, el score del kernel es analítico: apunta desde $\tilde{\mathbf{x}}$ de regreso hacia el dato limpio $\mathbf{x}$, escalado por $\sigma^2$.</li>
-</ul>
-$$\nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} \mid \mathbf{x}) = -\frac{\tilde{\mathbf{x}} - \mathbf{x}}{\sigma^2} \tag{5}$$
-<p class="note">Es exactamente el ruido $\boldsymbol{\epsilon}$ inyectado, cambiado de signo y dividido por $\sigma^2$.</p>
+<div class="section-label">§ 2 · Score matching y la traza del Jacobiano</div>
+<h2>Integración por partes elimina el score desconocido</h2>
+$$ \mathcal{L}_{\text{SM}}(\theta) = \mathbb{E}_{\mathbf{x}}\!\left[\operatorname{tr}\!\left(\nabla_\mathbf{x} \mathbf{s}_\theta(\mathbf{x})\right) + \tfrac{1}{2}\left\| \mathbf{s}_\theta(\mathbf{x}) \right\|^2\right] \tag{3} $$
+<p class="note">Hyvärinen (2005): el objetivo queda en términos solo de $\mathbf{s}_\theta$ y los datos.</p>
 <div class="slide-num">9</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Denoising Score Matching</div>
-<h2>El objetivo DSM es una regresión sin Jacobiano</h2>
-<ul>
-  <li>Se entrena $\mathbf{s}_\theta(\tilde{\mathbf{x}})$ para igualar el score analítico del kernel: mínimos cuadrados, sin traza.</li>
-  <li>Vincent probó que minimizar esto equivale al score matching sobre la distribución perturbada $q_\sigma(\tilde{\mathbf{x}}) = \int q_\sigma(\tilde{\mathbf{x}}\mid\mathbf{x})\,p_{\text{data}}(\mathbf{x})\,d\mathbf{x}$.</li>
-</ul>
-$$\mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}_{\mathbf{x} \sim p_{\text{data}},\; \tilde{\mathbf{x}} \sim q_\sigma}\!\left[\frac{1}{2}\left\| \mathbf{s}_\theta(\tilde{\mathbf{x}}) - \nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} \mid \mathbf{x}) \right\|^2\right] \tag{6}$$
+<div class="section-label">§ 2 · Score matching y la traza del Jacobiano</div>
+<h2>Pero aparece la traza del Jacobiano: costo cuadrático</h2>
+<ul><li>Calcular $\operatorname{tr}(\nabla_\mathbf{x}\mathbf{s}_\theta)$ exige $D$ pases hacia atrás, uno por dimensión. Para una imagen, $\mathcal{O}(D^2)$ es inasumible.</li></ul>
 <div class="slide-num">10</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Denoising Score Matching</div>
-<h2>El score del kernel devuelve $\tilde{\mathbf{x}}$ a $\mathbf{x}$</h2>
-<ul><li>Gris: perturbación $+\boldsymbol{\epsilon}$ con $\boldsymbol{\epsilon}\sim\mathcal{N}(0,\sigma^2 I)$; azul: score $-(\tilde{\mathbf{x}}-\mathbf{x})/\sigma^2$ que regresa al dato limpio.</li></ul>
-<div class="svg-holder">
-<svg viewBox="0 0 700 210" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
-  <defs>
-    <marker id="dpert" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#888"/>
-    </marker>
-    <marker id="dscore" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#2a7abf"/>
-    </marker>
-  </defs>
-  <path d="M 60 150 Q 200 90 340 150" fill="none" stroke="#28a745" stroke-width="2" opacity="0.5"/>
-  <text x="95" y="180" font-size="10" fill="#1a5c2a">variedad de datos p(x)</text>
-  <circle cx="200" cy="108" r="6" fill="#28a745"/>
-  <text x="200" y="98" text-anchor="middle" font-size="13" fill="#1a5c2a" font-weight="bold">x</text>
-  <circle cx="330" cy="55" r="6" fill="#e8821a"/>
-  <text x="345" y="50" text-anchor="middle" font-size="13" fill="#9a5510" font-weight="bold">x&#x0303;</text>
-  <line x1="206" y1="103" x2="324" y2="60" stroke="#888" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#dpert)"/>
-  <text x="248" y="70" text-anchor="middle" font-size="10" fill="#888">+ &#x03b5;,  &#x03b5; ~ N(0, &#x03c3;&#xB2;I)</text>
-  <line x1="326" y1="62" x2="208" y2="105" stroke="#2a7abf" stroke-width="2.2" marker-end="url(#dscore)"/>
-  <text x="300" y="108" text-anchor="middle" font-size="10" fill="#2a7abf">score = &#x2212;(x&#x0303; &#x2212; x)/&#x03c3;&#xB2;</text>
-  <line x1="430" y1="20" x2="430" y2="190" stroke="#ddd" stroke-width="1.5"/>
-  <text x="565" y="80" text-anchor="middle" font-size="13" fill="#333" font-weight="bold">objetivo DSM</text>
-  <text x="565" y="112" text-anchor="middle" font-size="12" fill="#2a6fa8">min &#x2225; s&#x03b8;(x&#x0303;) &#x2212; (&#x2212;(x&#x0303;&#x2212;x)/&#x03c3;&#xB2;) &#x2225;&#xB2;</text>
-  <text x="565" y="140" text-anchor="middle" font-size="11" fill="#777">regresión, sin Jacobiano</text>
-</svg>
-</div>
+<div class="section-label">§ 3 · Denoising score matching</div>
+<h2>El truco: ensuciar el dato con ruido gaussiano</h2>
+$$ q_\sigma(\tilde{\mathbf{x}} \mid \mathbf{x}) = \mathcal{N}\!\left(\tilde{\mathbf{x}};\, \mathbf{x},\, \sigma^2 \mathbf{I}\right) \tag{4} $$
+<p class="note">Se perturba el dato limpio $\mathbf{x}$ con ruido de escala $\sigma$ para obtener un dato ruidoso $\tilde{\mathbf{x}}$.</p>
 <div class="slide-num">11</div>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Denoising Score Matching</div>
-<h2>El ruido introduce un compromiso sesgo-cobertura</h2>
-<ul>
-  <li>DSM no estima el score de $p_{\text{data}}$, sino el de la perturbada $q_\sigma$: con $\sigma$ grande crece el sesgo.</li>
-  <li>Con $\sigma$ pequeño el sesgo baja, pero $(\tilde{\mathbf{x}}-\mathbf{x})/\sigma^2$ explota en varianza y deja huecos sin poblar.</li>
-  <li>Este conflicto motiva usar <strong>múltiples escalas de ruido</strong> a la vez → §4 y §5.</li>
-</ul>
-<p class="note">Un DDPM es exactamente un modelo de score sobre muchos niveles de ruido (su red $\boldsymbol{\epsilon}_\theta$ predice el ruido).</p>
+<div class="section-label">§ 3 · Denoising score matching</div>
+<h2>El score del ruido gaussiano se conoce exacto</h2>
+$$ \nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} \mid \mathbf{x}) = -\frac{\tilde{\mathbf{x}} - \mathbf{x}}{\sigma^2} \tag{5} $$
+<p class="note">Apunta desde el dato ruidoso $\tilde{\mathbf{x}}$ de regreso hacia el limpio $\mathbf{x}$, escalado por $\sigma^2$.</p>
 <div class="slide-num">12</div>
 </section>
 
-<!-- ============ §4 La hipótesis de la variedad ============ -->
 <section>
-<div class="section-label">§ 4 · La hipótesis de la variedad</div>
-<h2>Un solo $\sigma$ falla: la culpa es la topología</h2>
-<ul>
-  <li>Entrenar con un único nivel de ruido y muestrear con Langevin falla de forma sistemática.</li>
-  <li>La causa está en cómo se distribuyen los datos reales en espacios de alta dimensión.</li>
-</ul>
+<div class="section-label">§ 3 · Denoising score matching</div>
+<h2>Entrenar el score se vuelve una simple regresión</h2>
+$$ \mathcal{L}_{\text{DSM}}(\theta) = \mathbb{E}_{\mathbf{x},\, \tilde{\mathbf{x}}}\!\left[\tfrac{1}{2}\left\| \mathbf{s}_\theta(\tilde{\mathbf{x}}) - \nabla_{\tilde{\mathbf{x}}} \log q_\sigma(\tilde{\mathbf{x}} \mid \mathbf{x}) \right\|^2\right] \tag{6} $$
+<p class="note">Equivale al score matching pero <strong>sin Jacobiano</strong>: predecir el score es quitar el ruido (<em>denoising</em>).</p>
 <div class="slide-num">13</div>
 </section>
 
 <section>
-<div class="section-label">§ 4 · La hipótesis de la variedad</div>
-<h2>Los datos viven en una subvariedad de baja dimensión</h2>
-<ul>
-  <li><strong>Hipótesis de la variedad:</strong> imágenes, audio y texto residen en una superficie curva (manifold) de dimensión mucho menor que su espacio ambiente.</li>
-  <li>Fuera de esa superficie la densidad es $\approx 0$, y allí el score $\nabla_\mathbf{x}\log p(\mathbf{x})$ no está definido o diverge.</li>
-  <li>La red nunca observa el espacio circundante: su estimación del score allí es arbitraria.</li>
-</ul>
+<div class="section-label">§ 3 · Denoising score matching</div>
+<h2>Denoising: el score apunta del dato ruidoso al limpio</h2>
+<ul><li>La red aprende a reproducir ese vector de retorno para cualquier dato ruidoso.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 700 210" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+  <defs>
+    <marker id="s2dpert" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#888"/>
+    </marker>
+    <marker id="s2dscore" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2a7abf"/>
+    </marker>
+  </defs>
+
+  <!-- variedad de datos (curva) -->
+  <path d="M 60 150 Q 200 90 340 150" fill="none" stroke="#28a745" stroke-width="2" opacity="0.5"/>
+  <text x="95" y="180" font-size="10" fill="#1a5c2a">variedad de datos p(x)</text>
+
+  <!-- dato limpio x -->
+  <circle cx="200" cy="108" r="6" fill="#28a745"/>
+  <text x="200" y="98" text-anchor="middle" font-size="13" fill="#1a5c2a" font-weight="bold">x</text>
+
+  <!-- dato ruidoso x̃ -->
+  <circle cx="330" cy="55" r="6" fill="#e8821a"/>
+  <text x="345" y="50" text-anchor="middle" font-size="13" fill="#9a5510" font-weight="bold">x&#x0303;</text>
+
+  <!-- flecha perturbación x → x̃ -->
+  <line x1="206" y1="103" x2="324" y2="60" stroke="#888" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#s2dpert)"/>
+  <text x="248" y="70" text-anchor="middle" font-size="10" fill="#888">+ &#x03b5;,  &#x03b5; ~ N(0, &#x03c3;&#xB2;I)</text>
+
+  <!-- flecha score x̃ → x -->
+  <line x1="326" y1="62" x2="208" y2="105" stroke="#2a7abf" stroke-width="2.2" marker-end="url(#s2dscore)"/>
+  <text x="300" y="108" text-anchor="middle" font-size="10" fill="#2a7abf">score = &#x2212;(x&#x0303; &#x2212; x)/&#x03c3;&#xB2;</text>
+
+  <!-- separador -->
+  <line x1="430" y1="20" x2="430" y2="190" stroke="#ddd" stroke-width="1.5"/>
+
+  <!-- objetivo -->
+  <text x="565" y="80" text-anchor="middle" font-size="13" fill="#333" font-weight="bold">objetivo DSM</text>
+  <text x="565" y="112" text-anchor="middle" font-size="12" fill="#2a6fa8">min &#x2225; s&#x03b8;(x&#x0303;) &#x2212; (&#x2212;(x&#x0303;&#x2212;x)/&#x03c3;&#xB2;) &#x2225;&#xB2;</text>
+  <text x="565" y="140" text-anchor="middle" font-size="11" fill="#777">regresión, sin Jacobiano</text>
+</svg></div>
 <div class="slide-num">14</div>
 </section>
 
 <section>
 <div class="section-label">§ 4 · La hipótesis de la variedad</div>
-<h2>Los modos aislados atrapan a Langevin</h2>
-<ul>
-  <li>Distintas categorías forman clústeres separados por regiones de probabilidad casi nula.</li>
-  <li>El muestreo queda atrapado en el modo más cercano: sin gradiente en los valles vacíos, no puede transitar a otros modos.</li>
-  <li>Las proporciones entre modos las fija la inicialización, no los pesos reales de la distribución.</li>
-</ul>
+<h2>¿Por qué un solo nivel de ruido produce muestras malas?</h2>
+<ul><li>La respuesta no está en el algoritmo, sino en la <strong>geometría</strong> de los datos.</li></ul>
 <div class="slide-num">15</div>
 </section>
 
 <section>
 <div class="section-label">§ 4 · La hipótesis de la variedad</div>
-<h2>Datos en una variedad con modos aislados</h2>
-<ul><li>Densidad $\approx 0$ fuera de la banda verde; el istmo de densidad nula separa los modos y bloquea el cruce de Langevin.</li></ul>
-<div class="svg-holder">
-<svg viewBox="0 0 720 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+<h2>Los datos viven en una variedad de baja dimensión</h2>
+<ul><li>Fuera de la variedad la densidad $\approx 0$ y el score es poco confiable; entre modos hay zonas vacías donde el muestreo se atasca.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 720 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
   <defs>
-    <marker id="mtoward" markerWidth="7" markerHeight="7" refX="5.5" refY="2.5" orient="auto">
+    <marker id="s3mtoward" markerWidth="7" markerHeight="7" refX="5.5" refY="2.5" orient="auto">
       <path d="M0,0 L0,5 L6,2.5 z" fill="#e8821a"/>
     </marker>
-    <marker id="gapL" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto">
+    <marker id="s3gapL" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto">
       <path d="M8,0 L8,6 L0,3 z" fill="#c0392b"/>
     </marker>
-    <marker id="gapR" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <marker id="s3gapR" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#c0392b"/>
     </marker>
   </defs>
+
+  <!-- espacio ambiente -->
   <rect x="28" y="22" width="664" height="240" rx="8" fill="none" stroke="#ccc" stroke-width="1.2"/>
   <text x="46" y="44" font-size="11" fill="#aaa">espacio ambiente (alta dimensión)</text>
+
+  <!-- nota: densidad casi nula en todo el espacio salvo sobre la variedad -->
   <text x="370" y="62" text-anchor="middle" font-size="11" font-style="italic" fill="#bbb">la densidad es &#x2248; 0 en casi todo el espacio: solo es alta sobre la variedad</text>
-  <path d="M 80 150 Q 185 95 290 150 Q 360 190 430 150 Q 535 95 640 150" fill="none" stroke="#bfe6c9" stroke-width="22" stroke-linecap="round" opacity="0.55"/>
-  <path d="M 80 150 Q 185 95 290 150 Q 360 190 430 150 Q 535 95 640 150" fill="none" stroke="#2e8b4f" stroke-width="2.5"/>
+
+  <!-- la variedad de datos: banda verde delgada (alta densidad alrededor de la superficie) -->
+  <path d="M 80 150 Q 185 95 290 150 Q 360 190 430 150 Q 535 95 640 150"
+        fill="none" stroke="#bfe6c9" stroke-width="22" stroke-linecap="round" opacity="0.55"/>
+  <path d="M 80 150 Q 185 95 290 150 Q 360 190 430 150 Q 535 95 640 150"
+        fill="none" stroke="#2e8b4f" stroke-width="2.5"/>
+
+  <!-- datos densos en el lóbulo A -->
   <circle cx="132" cy="129" r="3.2" fill="#1a5c2a"/>
   <circle cx="164" cy="124" r="3.2" fill="#1a5c2a"/>
   <circle cx="185" cy="122" r="3.2" fill="#1a5c2a"/>
   <circle cx="206" cy="124" r="3.2" fill="#1a5c2a"/>
   <circle cx="237" cy="129" r="3.2" fill="#1a5c2a"/>
+  <!-- datos densos en el lóbulo B -->
   <circle cx="482" cy="129" r="3.2" fill="#1a5c2a"/>
   <circle cx="514" cy="124" r="3.2" fill="#1a5c2a"/>
   <circle cx="535" cy="122" r="3.2" fill="#1a5c2a"/>
   <circle cx="556" cy="124" r="3.2" fill="#1a5c2a"/>
   <circle cx="587" cy="129" r="3.2" fill="#1a5c2a"/>
+  <!-- istmo casi sin datos entre los modos -->
   <circle cx="360" cy="170" r="2.4" fill="#1a5c2a" opacity="0.35"/>
-  <line x1="150" y1="98" x2="171" y2="116" stroke="#e8821a" stroke-width="1.4" marker-end="url(#mtoward)"/>
-  <line x1="570" y1="98" x2="549" y2="116" stroke="#e8821a" stroke-width="1.4" marker-end="url(#mtoward)"/>
+
+  <!-- flechas del score: incluso fuera de la superficie apuntan hacia ella -->
+  <line x1="150" y1="98" x2="171" y2="116" stroke="#e8821a" stroke-width="1.4" marker-end="url(#s3mtoward)"/>
+  <line x1="570" y1="98" x2="549" y2="116" stroke="#e8821a" stroke-width="1.4" marker-end="url(#s3mtoward)"/>
   <text x="370" y="100" text-anchor="middle" font-size="10" fill="#b5651d">el score apunta hacia la variedad (la superficie de datos)</text>
-  <line x1="244" y1="200" x2="476" y2="200" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5,3" marker-start="url(#gapL)" marker-end="url(#gapR)"/>
+
+  <!-- separación entre modos aislados: doble flecha sin caja -->
+  <line x1="244" y1="200" x2="476" y2="200" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5,3" marker-start="url(#s3gapL)" marker-end="url(#s3gapR)"/>
   <text x="360" y="218" text-anchor="middle" font-size="11" fill="#c0392b">modos aislados: densidad &#x2248; 0 en el istmo</text>
+
+  <!-- etiquetas de los lóbulos -->
   <line x1="185" y1="134" x2="185" y2="230" stroke="#bbb" stroke-width="1" stroke-dasharray="3,2"/>
   <text x="185" y="244" text-anchor="middle" font-size="11" fill="#1a5c2a">modo A &#xB7; alta densidad</text>
   <line x1="535" y1="134" x2="535" y2="230" stroke="#bbb" stroke-width="1" stroke-dasharray="3,2"/>
   <text x="535" y="244" text-anchor="middle" font-size="11" fill="#1a5c2a">modo B &#xB7; alta densidad</text>
+
   <text x="360" y="282" text-anchor="middle" font-size="10" fill="#999">la dinámica de Langevin queda atrapada en el modo más cercano y no cruza el istmo</text>
-</svg>
-</div>
+</svg></div>
 <div class="slide-num">16</div>
 </section>
 
-<!-- ============ §5 NCSN ============ -->
 <section>
-<div class="section-label">§ 5 · Redes condicionadas por ruido (NCSN)</div>
-<h2>Perturbar a múltiples escalas de ruido</h2>
-<ul>
-  <li>Song y Ermon (2019): una escala geométrica de niveles de ruido decrecientes.</li>
-  <li>$\sigma_1$ destruye la estructura fina pero conecta los modos; $\sigma_L$ preserva detalle pero deja huecos.</li>
-</ul>
-$$\sigma_1 &gt; \sigma_2 &gt; \cdots &gt; \sigma_L \approx 0 \tag{7}$$
+<div class="section-label">§ 4 · La hipótesis de la variedad</div>
+<h2>La red estima bien el score donde hay datos, mal donde no</h2>
+<ul><li>Y son justamente las zonas vacías las que una cadena de muestreo debe cruzar para conectar modos lejanos.</li></ul>
 <div class="slide-num">17</div>
 </section>
 
 <section>
 <div class="section-label">§ 5 · Redes condicionadas por ruido (NCSN)</div>
-<h2>Una sola red recibe el nivel de ruido</h2>
-<ul>
-  <li>La <strong>Noise Conditional Score Network</strong> (NCSN) aprende el score de todas las escalas a la vez, tomando $\sigma$ como entrada.</li>
-</ul>
-$$\mathbf{s}_\theta(\mathbf{x}, \sigma) \approx \nabla_\mathbf{x} \log q_\sigma(\mathbf{x}) \tag{8}$$
-<p class="note">Un único conjunto de pesos parametriza el campo de score a cualquier nivel de ruido.</p>
+<h2>La solución: perturbar a muchas escalas de ruido a la vez</h2>
+$$ \sigma_1 &gt; \sigma_2 &gt; \cdots &gt; \sigma_L \approx 0 \tag{7} $$
+<p class="note">El ruido grande conecta los modos y llena el espacio; el pequeño preserva el detalle fino.</p>
 <div class="slide-num">18</div>
 </section>
 
 <section>
 <div class="section-label">§ 5 · Redes condicionadas por ruido (NCSN)</div>
-<h2>El objetivo suma DSM sobre todas las escalas</h2>
-<ul>
-  <li>Promedio ponderado de denoising score matching sobre los $L$ niveles, con peso $\lambda(\sigma_i) = \sigma_i^2$ para equilibrar las magnitudes entre escalas.</li>
-</ul>
-$$\mathcal{L}(\theta) = \frac{1}{L} \sum_{i=1}^{L} \lambda(\sigma_i)\, \mathbb{E}_{\mathbf{x},\, \tilde{\mathbf{x}}}\!\left[\left\| \mathbf{s}_\theta(\tilde{\mathbf{x}}, \sigma_i) + \frac{\tilde{\mathbf{x}} - \mathbf{x}}{\sigma_i^2} \right\|^2\right] \tag{9}$$
+<h2>Una sola red, condicionada al nivel de ruido</h2>
+$$ \mathbf{s}_\theta(\mathbf{x}, \sigma) \approx \nabla_\mathbf{x} \log q_\sigma(\mathbf{x}) \tag{8} $$
+<p class="note">Esta red (la NCSN) aprende el score de <strong>todas</strong> las escalas perturbadas a la vez.</p>
 <div class="slide-num">19</div>
 </section>
 
 <section>
 <div class="section-label">§ 5 · Redes condicionadas por ruido (NCSN)</div>
-<h2>El recocido recorre ruidos decrecientes</h2>
-<ul><li>$\sigma_1$ conecta los modos en una campana ancha; al bajar a $\sigma_3\approx 0$ reaparecen los dos peaks nítidos.</li></ul>
-<div class="svg-holder">
-<svg viewBox="0 0 720 230" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+<h2>De ruido grande a pequeño: Langevin recocido</h2>
+<ul><li>Se empieza en $\sigma_1$ (modos conectados) y se baja gradualmente hasta $\sigma_L\approx 0$ (peaks nítidos).</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 720 230" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
   <defs>
-    <marker id="nanneal" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <marker id="s4nanneal" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
       <path d="M0,0 L0,6 L9,3 z" fill="#2a7abf"/>
     </marker>
   </defs>
+
+  <!-- panel 1: sigma grande, unimodal ancho -->
   <line x1="30" y1="170" x2="230" y2="170" stroke="#888" stroke-width="1.2"/>
-  <path d="M 40 168 C 90 168 100 70 130 70 C 160 70 170 168 220 168" fill="#dbeafe" stroke="#2a6fa8" stroke-width="2" fill-opacity="0.6"/>
+  <path d="M 40 168 C 90 168 100 70 130 70 C 160 70 170 168 220 168"
+        fill="#dbeafe" stroke="#2a6fa8" stroke-width="2" fill-opacity="0.6"/>
   <text x="130" y="195" text-anchor="middle" font-size="12" fill="#333">&#x03c3;&#x2081; grande</text>
   <text x="130" y="212" text-anchor="middle" font-size="10" fill="#777">modos conectados</text>
+
+  <!-- panel 2: sigma medio, bimodal emergente -->
   <line x1="260" y1="170" x2="460" y2="170" stroke="#888" stroke-width="1.2"/>
-  <path d="M 270 168 C 300 168 305 95 330 95 C 348 95 352 135 360 135 C 368 135 372 95 390 95 C 415 95 420 168 450 168" fill="#dbeafe" stroke="#2a6fa8" stroke-width="2" fill-opacity="0.6"/>
+  <path d="M 270 168 C 300 168 305 95 330 95 C 348 95 352 135 360 135 C 368 135 372 95 390 95 C 415 95 420 168 450 168"
+        fill="#dbeafe" stroke="#2a6fa8" stroke-width="2" fill-opacity="0.6"/>
   <text x="360" y="195" text-anchor="middle" font-size="12" fill="#333">&#x03c3;&#x2082; intermedio</text>
   <text x="360" y="212" text-anchor="middle" font-size="10" fill="#777">separación parcial</text>
+
+  <!-- panel 3: sigma pequeño, bimodal nítido -->
   <line x1="490" y1="170" x2="690" y2="170" stroke="#888" stroke-width="1.2"/>
-  <path d="M 500 168 C 520 168 522 55 540 55 C 558 55 560 168 575 168 C 590 168 592 55 610 55 C 628 55 630 168 650 168" fill="#dbeafe" stroke="#2a6fa8" stroke-width="2" fill-opacity="0.6"/>
+  <path d="M 500 168 C 520 168 522 55 540 55 C 558 55 560 168 575 168 C 590 168 592 55 610 55 C 628 55 630 168 650 168"
+        fill="#dbeafe" stroke="#2a6fa8" stroke-width="2" fill-opacity="0.6"/>
   <text x="590" y="195" text-anchor="middle" font-size="12" fill="#333">&#x03c3;&#x2083; &#x2248; 0</text>
   <text x="590" y="212" text-anchor="middle" font-size="10" fill="#777">peaks nítidos</text>
-  <line x1="130" y1="34" x2="585" y2="34" stroke="#2a7abf" stroke-width="1.8" marker-end="url(#nanneal)"/>
+
+  <!-- flecha de recocido -->
+  <line x1="130" y1="34" x2="585" y2="34" stroke="#2a7abf" stroke-width="1.8" marker-end="url(#s4nanneal)"/>
   <text x="360" y="26" text-anchor="middle" font-size="11" fill="#2a7abf">annealed Langevin: ruido decreciente</text>
-</svg>
-</div>
+</svg></div>
 <div class="slide-num">20</div>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Redes condicionadas por ruido (NCSN)</div>
-<h2>Annealed Langevin fija primero las proporciones</h2>
-<ul>
-  <li>El muestreo recocido (annealed) parte en $\sigma_1$, donde la perturbada es casi una gaussiana ancha sin barreras: las partículas se reparten entre modos según los pesos reales.</li>
-  <li>Al bajar gradualmente el ruido, cada partícula desciende a su modo sin cruzar valles vacíos.</li>
-  <li>Esto resuelve el problema de los modos aislados que arruina el muestreo de un solo nivel.</li>
-</ul>
+<div class="section-label">§ 6 · Dinámica de Langevin</div>
+<h2>¿Cómo generar siguiendo solo el score?</h2>
+<ul><li>Con la <strong>dinámica de Langevin</strong>: caminar cuesta arriba por el score, con un poco de ruido en cada paso.</li></ul>
 <div class="slide-num">21</div>
 </section>
 
-<!-- ============ §6 Dinámica de Langevin ============ -->
 <section>
 <div class="section-label">§ 6 · Dinámica de Langevin</div>
-<h2>¿Cómo muestrear con solo el score?</h2>
-<ul>
-  <li>Aprendido el score, no se necesita la densidad para generar: basta seguir el campo de gradientes.</li>
-  <li>La <strong>dinámica de Langevin</strong> es un método de Monte Carlo que produce muestras de $p(\mathbf{x})$ usando únicamente $\nabla_\mathbf{x}\log p(\mathbf{x})$.</li>
-</ul>
+<h2>Langevin: gradiente del score más ruido</h2>
+$$ \mathbf{x}_{k+1} = \mathbf{x}_k + \frac{\epsilon}{2}\, \nabla_\mathbf{x} \log p(\mathbf{x}_k) + \sqrt{\epsilon}\, \mathbf{z}_k, \quad \mathbf{z}_k \sim \mathcal{N}(\mathbf{0}, \mathbf{I}) \tag{10} $$
+<p class="note">No aparecen $p(\mathbf{x})$ ni $Z$: <strong>solo el score</strong>. Cuando $\epsilon\to 0$ y $K\to\infty$, las muestras convergen a $p$.</p>
 <div class="slide-num">22</div>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Dinámica de Langevin</div>
-<h2>Ascenso por el score más ruido inyectado</h2>
-<ul>
-  <li>El término de score empuja la muestra cuesta arriba hacia los modos; el término $\sqrt{\epsilon}\,\mathbf{z}_k$ inyecta ruido que evita el colapso y permite explorar toda la distribución.</li>
-  <li>Cuando $\epsilon \to 0$ y los pasos $K \to \infty$, $\mathbf{x}_K$ converge a $p(\mathbf{x})$ sin importar el punto inicial.</li>
-</ul>
-$$\mathbf{x}_{k+1} = \mathbf{x}_k + \frac{\epsilon}{2}\, \nabla_\mathbf{x} \log p(\mathbf{x}_k) + \sqrt{\epsilon}\, \mathbf{z}_k, \qquad \mathbf{z}_k \sim \mathcal{N}(\mathbf{0}, \mathbf{I}) \tag{10}$$
+<div class="section-label">§ 7 · El límite continuo: SDEs</div>
+<h2>¿Y si llevamos los infinitos niveles de ruido al continuo?</h2>
+<ul><li>En el límite $L\to\infty$, la escala de perturbaciones se vuelve una <strong>ecuación diferencial estocástica</strong>.</li></ul>
 <div class="slide-num">23</div>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Dinámica de Langevin</div>
-<h2>El paso $\epsilon$ equilibra sesgo y costo</h2>
-<ul>
-  <li>$\epsilon$ grande converge rápido pero introduce sesgo de discretización: la cadena ya no muestrea $p$ exacta.</li>
-  <li>$\epsilon$ pequeño reduce el sesgo pero exige muchísimas iteraciones; se corrige con Metropolis-Hastings.</li>
-  <li>El recocido de la NCSN escala el paso con $\sigma^2$ en cada nivel y evita que la cadena se atasque.</li>
-</ul>
+<div class="section-label">§ 7 · El límite continuo: SDEs</div>
+<h2>El proceso directo: una SDE que destruye la información</h2>
+$$ d\mathbf{x} = \mathbf{f}(\mathbf{x}, t)\, dt + g(t)\, d\mathbf{w} \tag{11} $$
+<p class="note">$\mathbf{f}$ es la deriva, $g(t)$ el coeficiente de difusión y $d\mathbf{w}$ el movimiento browniano.</p>
 <div class="slide-num">24</div>
 </section>
 
-<!-- ============ §7 SDEs ============ -->
 <section>
-<div class="section-label">§ 7 · El límite continuo: ecuaciones diferenciales estocásticas</div>
-<h2>Con $L\to\infty$ las escalas se vuelven una SDE</h2>
-<ul>
-  <li>Song et al. (2021): la escala discreta de ruidos se vuelve un proceso continuo en $t \in [0,1]$.</li>
-  <li>El <strong>forward SDE</strong> destruye la información: $\mathbf{f}(\mathbf{x},t)$ es la <strong>deriva</strong> determinista, $g(t)$ el coeficiente de difusión, $d\mathbf{w}$ el movimiento browniano infinitesimal.</li>
-</ul>
-$$d\mathbf{x} = \mathbf{f}(\mathbf{x}, t)\, dt + g(t)\, d\mathbf{w} \tag{11}$$
+<div class="section-label">§ 7 · El límite continuo: SDEs</div>
+<h2>El proceso inverso: el único término desconocido es el score</h2>
+$$ d\mathbf{x} = \left[\mathbf{f}(\mathbf{x}, t) - g(t)^2\, \nabla_\mathbf{x} \log p_t(\mathbf{x})\right] dt + g(t)\, d\bar{\mathbf{w}} \tag{12} $$
+<p class="note">Anderson: toda SDE directa tiene su inversa; aproximar $\nabla\log p_t$ con $\mathbf{s}_\theta$ basta para generar.</p>
 <div class="slide-num">25</div>
 </section>
 
 <section>
-<div class="section-label">§ 7 · El límite continuo: ecuaciones diferenciales estocásticas</div>
-<h2>Anderson: toda SDE tiene una inversa en el tiempo</h2>
-<ul>
-  <li>Anderson (1982): existe una SDE inversa que viaja del ruido a los datos limpios.</li>
-  <li>Su <strong>único término desconocido</strong> es el score marginal $\nabla_\mathbf{x}\log p_t(\mathbf{x})$; al aproximarlo con $\mathbf{s}_\theta$ se simula con un solver (Euler-Maruyama).</li>
-</ul>
-$$d\mathbf{x} = \left[\mathbf{f}(\mathbf{x}, t) - g(t)^2\, \nabla_\mathbf{x} \log p_t(\mathbf{x})\right] dt + g(t)\, d\bar{\mathbf{w}} \tag{12}$$
+<div class="section-label">§ 7 · El límite continuo: SDEs</div>
+<h2>Forward destruye, reverse reconstruye con el score</h2>
+<ul><li>Datos $\to$ ruido (forward); ruido $\to$ datos (reverse, gobernado por el score).</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 220" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+  <defs>
+    <marker id="s5sfwd" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="s5srev" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2a7abf"/>
+    </marker>
+  </defs>
+
+  <!-- datos x0 -->
+  <circle cx="110" cy="110" r="42" fill="#e8f5e9" stroke="#28a745" stroke-width="2"/>
+  <text x="110" y="116" text-anchor="middle" font-size="18" font-weight="bold" fill="#1a5c2a">x&#x2080;</text>
+  <text x="110" y="172" text-anchor="middle" font-size="10" fill="#1a5c2a">datos  p&#x2080; = p_data</text>
+
+  <!-- ruido x1 -->
+  <circle cx="650" cy="110" r="42" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="650" y="116" text-anchor="middle" font-size="18" font-weight="bold" fill="#c0392b">x&#x2081;</text>
+  <text x="650" y="172" text-anchor="middle" font-size="10" fill="#c0392b">ruido  p&#x2081; &#x2248; N(0, I)</text>
+
+  <!-- proceso directo (arriba) -->
+  <path d="M 156 86 Q 380 30 604 86" fill="none" stroke="#555" stroke-width="2" marker-end="url(#s5sfwd)"/>
+  <text x="380" y="42" text-anchor="middle" font-size="12" fill="#555">forward SDE:  dx = f(x,t) dt + g(t) dw</text>
+
+  <!-- proceso inverso (abajo) -->
+  <path d="M 604 134 Q 380 190 156 134" fill="none" stroke="#2a7abf" stroke-width="2.2" marker-end="url(#s5srev)"/>
+  <text x="380" y="180" text-anchor="middle" font-size="12" fill="#2a7abf">reverse SDE:  dx = [f &#x2212; g&#xB2; &#x2207; log p&#x209C;(x)] dt + g d&#x0175;</text>
+  <text x="380" y="115" text-anchor="middle" font-size="11" fill="#999">el único término aprendido es el score</text>
+</svg></div>
 <div class="slide-num">26</div>
 </section>
 
 <section>
-<div class="section-label">§ 7 · El límite continuo: ecuaciones diferenciales estocásticas</div>
-<h2>Forward y reverse SDE comparten el score</h2>
-<ul><li>Forward (gris) lleva $\mathbf{x}_0$ a ruido; reverse (azul) regresa, y su único término aprendido es $\nabla_\mathbf{x}\log p_t(\mathbf{x})$.</li></ul>
-<div class="svg-holder">
-<svg viewBox="0 0 760 220" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
-  <defs>
-    <marker id="sfwd" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
-    </marker>
-    <marker id="srev" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#2a7abf"/>
-    </marker>
-  </defs>
-  <circle cx="110" cy="110" r="42" fill="#e8f5e9" stroke="#28a745" stroke-width="2"/>
-  <text x="110" y="116" text-anchor="middle" font-size="18" font-weight="bold" fill="#1a5c2a">x&#x2080;</text>
-  <text x="110" y="172" text-anchor="middle" font-size="10" fill="#1a5c2a">datos  p&#x2080; = p_data</text>
-  <circle cx="650" cy="110" r="42" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
-  <text x="650" y="116" text-anchor="middle" font-size="18" font-weight="bold" fill="#c0392b">x&#x2081;</text>
-  <text x="650" y="172" text-anchor="middle" font-size="10" fill="#c0392b">ruido  p&#x2081; &#x2248; N(0, I)</text>
-  <path d="M 156 86 Q 380 30 604 86" fill="none" stroke="#555" stroke-width="2" marker-end="url(#sfwd)"/>
-  <text x="380" y="42" text-anchor="middle" font-size="12" fill="#555">forward SDE:  dx = f(x,t) dt + g(t) dw</text>
-  <path d="M 604 134 Q 380 190 156 134" fill="none" stroke="#2a7abf" stroke-width="2.2" marker-end="url(#srev)"/>
-  <text x="380" y="180" text-anchor="middle" font-size="12" fill="#2a7abf">reverse SDE:  dx = [f &#x2212; g&#xB2; &#x2207; log p&#x209C;(x)] dt + g d&#x0175;</text>
-  <text x="380" y="115" text-anchor="middle" font-size="11" fill="#999">el único término aprendido es el score</text>
-</svg>
-</div>
+<div class="section-label">§ 7 · El límite continuo: SDEs</div>
+<h2>DDPM y NCSN son la misma SDE con distinto ruido</h2>
+<ul><li>La VP-SDE es la difusión (DDPM); la VE-SDE es la NCSN. <strong>Difusión y score-based son el mismo objeto.</strong></li></ul>
 <div class="slide-num">27</div>
 </section>
 
 <section>
-<div class="section-label">§ 7 · El límite continuo: ecuaciones diferenciales estocásticas</div>
-<h2>VE-SDE y VP-SDE son dos elecciones de $\mathbf{f}$ y $g$</h2>
-<ul>
-  <li><strong>Variance Exploding (VE-SDE):</strong> deriva nula y varianza creciente sin acotar; es el límite continuo de la NCSN de Song y Ermon.</li>
-  <li><strong>Variance Preserving (VP-SDE):</strong> varianza acotada en torno a uno; es el límite continuo del DDPM de Ho et al.</li>
-  <li>Comparten la misma ecuación inversa (12), gobernada por el score; difieren solo en el programa de ruido.</li>
-</ul>
+<div class="section-label">§ 8 · El flujo de probabilidad: PF-ODE</div>
+<h2>¿Y si quitamos la aleatoriedad del muestreo?</h2>
+<ul><li>Para cada SDE existe una ODE <strong>determinista</strong> con exactamente las mismas marginales en todo instante.</li></ul>
 <div class="slide-num">28</div>
 </section>
 
-<!-- ============ §8 PF-ODE ============ -->
 <section>
 <div class="section-label">§ 8 · El flujo de probabilidad: PF-ODE</div>
-<h2>Una ODE determinista con las mismas marginales</h2>
-<ul>
-  <li>Para cualquier SDE de difusión existe una <strong>ODE determinista</strong> que produce idénticas marginales $p_t(\mathbf{x})$ en todo $t$: la <strong>Probability Flow ODE</strong>.</li>
-  <li>Sin término browniano $d\mathbf{w}$: una trayectoria suave e invertible entre ruido y datos, de nuevo gobernada por el score.</li>
-</ul>
-$$d\mathbf{x} = \left[\mathbf{f}(\mathbf{x}, t) - \frac{1}{2} g(t)^2\, \nabla_\mathbf{x} \log p_t(\mathbf{x})\right] dt \tag{13}$$
+<h2>La PF-ODE: un flujo normalizado continuo</h2>
+$$ d\mathbf{x} = \left[\mathbf{f}(\mathbf{x}, t) - \tfrac{1}{2} g(t)^2\, \nabla_\mathbf{x} \log p_t(\mathbf{x})\right] dt \tag{13} $$
+<p class="note">Sin término browniano, gobernada otra vez por el score: es un flujo normalizado en tiempo continuo.</p>
 <div class="slide-num">29</div>
 </section>
 
 <section>
 <div class="section-label">§ 8 · El flujo de probabilidad: PF-ODE</div>
-<h2>Al quitar el ruido aparece un flujo continuo (CNF)</h2>
-<ul>
-  <li><strong>Verosimilitud exacta:</strong> con la fórmula continua de cambio de variable (traza de Hutchinson) se calcula $\log p(\mathbf{x})$ de cualquier dato.</li>
-  <li><strong>Muestreo acelerado:</strong> solvers de ODE (Runge-Kutta, adaptativos) generan en pocas iteraciones.</li>
-  <li><strong>Latentes interpretables:</strong> correspondencia determinista uno a uno entre ruido y dato, apta para interpolación y edición.</li>
-</ul>
-<p class="note">Continuous Normalizing Flow: el modelo de score, sin estocasticidad, es un flujo normalizado continuo.</p>
+<h2>Esto conecta el score con los flujos</h2>
+<ul><li>La PF-ODE da verosimilitud exacta, muestreo acelerado y latentes interpretables: difusión, score y flujos son <strong>tres vistas del mismo objeto</strong>.</li></ul>
 <div class="slide-num">30</div>
 </section>
 
 <section>
-<div class="section-label">§ 8 · El flujo de probabilidad: PF-ODE</div>
-<h2>Difusión, score y flujos: un mismo objeto</h2>
-<ul>
-  <li>DDPM, NCSN y flujos normalizados continuos son tres vistas del mismo objeto matemático.</li>
-  <li>Lo que la red aprende es siempre el score $\nabla_\mathbf{x}\log p_t(\mathbf{x})$.</li>
-  <li>Lo que cambia es cómo se usa para generar: muestreo estocástico (SDE inversa) o determinista (PF-ODE).</li>
-</ul>
+<div class="section-label">§ 9 · Generación condicionada</div>
+<h2>Hasta aquí, generación libre. ¿Cómo condicionar por texto o clase?</h2>
+<ul><li>Basta con aprender el score <strong>condicional</strong> en lugar del incondicional.</li></ul>
 <div class="slide-num">31</div>
 </section>
 
-<!-- ============ §9 Generación condicionada ============ -->
 <section>
 <div class="section-label">§ 9 · Generación condicionada</div>
-<h2>Condicionar es aprender el score condicional</h2>
-<ul>
-  <li>Para generar según una condición externa $\mathbf{y}$ (texto, clase, imagen de referencia), se entrena la red para aproximar el score de la densidad <strong>condicional</strong> $p_t(\mathbf{x}\mid\mathbf{y})$.</li>
-</ul>
-$$\mathbf{s}_\theta(\mathbf{x}, t, \mathbf{y}) \approx \nabla_\mathbf{x} \log p_t(\mathbf{x} \mid \mathbf{y}) \tag{14}$$
+<h2>Score condicional: el gradiente de la densidad condicionada</h2>
+$$ \mathbf{s}_\theta(\mathbf{x}, t, \mathbf{y}) \approx \nabla_\mathbf{x} \log p_t(\mathbf{x} \mid \mathbf{y}) \tag{14} $$
+<p class="note">El denoiser (U-Net o Diffusion Transformer) recibe $\mathbf{x}$, $t$ e $\mathbf{y}$ vía atención cruzada; <em>classifier-free guidance</em> amplifica la condición.</p>
 <div class="slide-num">32</div>
 </section>
 
 <section>
-<div class="section-label">§ 9 · Generación condicionada</div>
-<h2>El denoiser inyecta el tiempo y la condición</h2>
-<ul>
-  <li>El denoiser es una <strong>U-Net</strong> (encoder-decoder con skip connections) o un <strong>Diffusion Transformer</strong>.</li>
-  <li>Recibe el dato ruidoso $\mathbf{x}_t$ y el instante $t$ codificado con un <strong>embedding sinusoidal</strong>.</li>
-  <li>Incorpora la representación de $\mathbf{y}$ (p. ej. un embedding de texto) mediante <strong>atención cruzada</strong> (cross-attention).</li>
-</ul>
-<div class="slide-num">33</div>
-</section>
-
-<section>
-<div class="section-label">§ 9 · Generación condicionada</div>
-<h2>Classifier-free guidance amplifica la condición</h2>
-<ul>
-  <li>Se combina el score condicional con el incondicional para reforzar la influencia de $\mathbf{y}$, con $w &gt; 0$ la fuerza de la guía.</li>
-  <li>Un mismo modelo aprende ambos scores entrenando con la condición a veces enmascarada.</li>
-</ul>
-$$\tilde{\mathbf{s}}_\theta = (1 + w)\, \mathbf{s}_\theta(\mathbf{x}, t, \mathbf{y}) - w\, \mathbf{s}_\theta(\mathbf{x}, t)$$
-<p class="note">Es el corazón de los sistemas modernos de generación de imágenes desde texto.</p>
-<div class="slide-num">34</div>
-</section>
-
-<!-- CIERRE -->
-<section>
 <div class="close-slide">
-  <h1>Lo que la red aprende es siempre el score $\nabla_\mathbf{x}\log p_t(\mathbf{x})$; difusión, NCSN y flujos continuos solo difieren en cómo lo usan para generar.</h1>
-  <div class="byline" style="margin-top:1.5em; font-size:0.9em; color:var(--ink-soft);">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Aprender el gradiente del log-densidad —el score— esquiva la constante imposible y, seguido con ruido, genera muestras. Bajo las ecuaciones diferenciales estocásticas, difusión, score y flujos son el mismo objeto visto de tres formas.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
 </div>
 </section>
 
 </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
 <script>
@@ -754,14 +566,9 @@ Reveal.initialize({
   transition: 'none', backgroundTransition: 'none',
   width: 1280, height: 720, margin: 0.03,
   minScale: 0.3, maxScale: 2.5,
-  katex: {
-    version: 'latest',
-    delimiters: [
-      {left: '$$', right: '$$', display: true},
-      {left: '$',  right: '$',  display: false}
-    ],
-    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
-  },
+  katex: { version: 'latest',
+    delimiters: [ {left:'$$',right:'$$',display:true}, {left:'$',right:'$',display:false} ],
+    ignoredTags: ['script','noscript','style','textarea','pre'] },
   plugins: [ RevealMath.KaTeX ]
 });
 </script>

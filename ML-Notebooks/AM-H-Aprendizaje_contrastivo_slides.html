@@ -69,12 +69,12 @@
 }
 
 .reveal p, .reveal li {
-  font-size: 1.75em;
+  font-size: 1.85em;
   line-height: 1.5;
   color: var(--ink);
 }
 .reveal ul {
-  padding-left: 1.3em;
+  padding-left: 1.1em;
   margin: 0;
   width: 100%;
   max-width: 100%;
@@ -83,11 +83,11 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: center;
   min-height: 0;
 }
 .reveal li {
-  margin: 0;
+  margin: 0.35em 0;
   min-width: 0;
   max-width: 100%;
   overflow-wrap: break-word;
@@ -100,10 +100,10 @@
 .reveal a { color: var(--pluto-blue); text-decoration: none; }
 
 /* Equations: direct display math, no card borders */
-.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+.reveal .katex-display { margin: 0.5em 0; font-size: 1.5em; }
 
 p.note {
-  font-size: 0.85em;
+  font-size: 0.92em;
   color: var(--ink-soft);
   margin-top: 0.4em;
   font-style: italic;
@@ -146,96 +146,64 @@ p.note {
 <div class="slides">
 
 <!-- PORTADA -->
-<section class="title-slide">
+<section>
+<div class="title-slide">
   <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
   <h1>Aprendizaje contrastivo</h1>
-  <div class="byline">
-    Rodrigo F. Cádiz<br>
-    Departamento de Ingeniería Eléctrica · Pontificia Universidad Católica de Chile
-  </div>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
 </section>
 
-<!-- ============ § 1 ============ -->
+<!-- § 1 · Aprendizaje contrastivo -->
+
 <section>
-  <div class="section-label">§ 1 · Aprendizaje contrastivo</div>
-  <h2>El problema: el conjunto cerrado de categorías</h2>
-  <ul>
-    <li>La clasificación tradicional predice entre un conjunto <strong>fijo</strong> de clases predefinidas — por ejemplo las 1000 categorías de ImageNet.</li>
-    <li>Límite estructural: el modelo solo reconoce lo que se fijó de antemano.</li>
-    <li>Agregar una categoría nueva exige recolectar ejemplos etiquetados y <strong>reentrenar</strong>.</li>
-  </ul>
-  <p class="note">¿Cómo aprender representaciones que reconozcan categorías nunca vistas, sin etiquetas curadas?</p>
-  <div class="slide-num">1</div>
+<div class="section-label">§ 1 · Aprendizaje contrastivo</div>
+<h2>La meta: conectar lo que la máquina ve con lo que lee</h2>
+<ul><li>Una foto de un perro y la palabra «perro» significan lo mismo. El aprendizaje contrastivo busca un espacio <strong>multimodal</strong> donde las dos caigan en el mismo punto.</li></ul>
+<div class="slide-num">2</div>
 </section>
 
 <section>
-  <div class="section-label">§ 1 · Aprendizaje contrastivo</div>
-  <h2>La reformulación: alineamiento entre modalidades</h2>
-  <ul>
-    <li>En vez de aprender un mapeo imagen → etiqueta, se aprende a <strong>emparejar</strong> cada imagen con la frase que la describe.</li>
-    <li>La supervisión es el lenguaje natural que acompaña a las imágenes en internet: masiva y barata, sin anotación manual.</li>
-    <li><strong>CLIP</strong> (<em>Contrastive Language-Image Pre-training</em>, Radford et al., 2021) se entrenó con 400 millones de pares imagen-texto.</li>
-  </ul>
-  <div class="slide-num">2</div>
+<div class="section-label">§ 1 · Aprendizaje contrastivo</div>
+<h2>Pero un clasificador normal solo conoce las clases con que lo entrenaste</h2>
+<ul><li>Para reconocer una categoría nueva hay que juntar ejemplos etiquetados y volver a entrenar: caro y rígido.</li></ul>
+<div class="slide-num">3</div>
 </section>
 
 <section>
-  <div class="section-label">§ 1 · Aprendizaje contrastivo</div>
-  <h2>Dos codificadores entrenados de forma conjunta</h2>
-  <ul>
-    <li><strong>Codificador de texto</strong>: un Transformer con tokenización <em>Byte-Pair Encoding</em> (BPE), que descompone el texto en sub-palabras.</li>
-    <li><strong>Codificador de imagen</strong>: una <em>Residual Network</em> (ResNet) o un <em>Vision Transformer</em> (ViT).</li>
-    <li>Ambos proyectan su modalidad a un <strong>mismo espacio</strong> donde la cercanía geométrica codifica cercanía semántica.</li>
-  </ul>
-  <div class="slide-num">3</div>
+<div class="section-label">§ 1 · Aprendizaje contrastivo</div>
+<h2>La apuesta: dejar que el lenguaje sea la supervisión</h2>
+<ul><li>En vez de aprender imagen → etiqueta, el modelo aprende a emparejar cada imagen con la frase que la describe, usando pares (imagen, texto) sacados de internet, sin anotar.</li></ul>
+<div class="slide-num">4</div>
 </section>
 
 <section>
-  <div class="section-label">§ 1 · Aprendizaje contrastivo</div>
-  <h2>La matriz de similitud de un lote de $N$ pares</h2>
-  <ul>
-    <li>Para cada lote de $N$ pares se calcula la similitud entre todos los <em>embeddings</em> de imagen y de texto: una matriz $N \times N$.</li>
-    <li>La <strong>diagonal</strong> son las parejas correctas (positivos); el resto, parejas incorrectas (negativos).</li>
-    <li>Se optimiza para que la diagonal tenga similitud alta y todo lo demás, baja.</li>
-  </ul>
-  <div class="slide-num">4</div>
-</section>
-
-<section>
-  <div class="section-label">§ 1 · Aprendizaje contrastivo</div>
-  <h2>Arquitectura de CLIP: codificadores duales</h2>
-  <ul><li>Cada rama produce <em>embeddings</em> ($u_i$ texto, $v_j$ imagen); su producto forma la matriz cuya diagonal el objetivo contrastivo empuja hacia arriba.</li></ul>
-  <div class="svg-holder">
-<svg viewBox="0 0 700 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+<div class="section-label">§ 1 · Aprendizaje contrastivo</div>
+<h2>Dos codificadores que desembocan en un mismo espacio</h2>
+<ul><li>Cada imagen y cada texto se vuelven un vector; luego los comparamos todos contra todos.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 700 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
   <defs>
     <marker id="arrc" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
       <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
     </marker>
   </defs>
-
-  <!-- Text branch -->
   <rect x="20" y="30" width="120" height="38" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
   <text x="80" y="54" text-anchor="middle" fill="#1a3a5c">Textos (Tₖ)</text>
   <rect x="20" y="100" width="120" height="44" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
   <text x="80" y="120" text-anchor="middle" fill="#663300" font-weight="bold">Encoder</text>
   <text x="80" y="136" text-anchor="middle" fill="#885500" font-size="11">de texto</text>
   <line x1="80" y1="68" x2="80" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arrc)"/>
-
-  <!-- Image branch -->
   <rect x="20" y="158" width="120" height="44" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
   <text x="80" y="178" text-anchor="middle" fill="#663300" font-weight="bold">Encoder</text>
   <text x="80" y="194" text-anchor="middle" fill="#885500" font-size="11">de imagen</text>
   <rect x="20" y="236" width="120" height="38" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
   <text x="80" y="260" text-anchor="middle" fill="#1a3a5c">Imágenes (Iₖ)</text>
   <line x1="80" y1="236" x2="80" y2="202" stroke="#555" stroke-width="1.5" marker-end="url(#arrc)"/>
-
-  <!-- Embeddings to matrix -->
   <line x1="140" y1="122" x2="236" y2="122" stroke="#555" stroke-width="1.5" marker-end="url(#arrc)"/>
   <line x1="140" y1="180" x2="236" y2="180" stroke="#555" stroke-width="1.5" marker-end="url(#arrc)"/>
   <text x="188" y="116" text-anchor="middle" fill="#444" font-size="10">u₁..uₙ</text>
   <text x="188" y="196" text-anchor="middle" fill="#444" font-size="10">v₁..vₙ</text>
-
-  <!-- Similarity matrix -->
   <g>
     <rect x="255" y="80" width="160" height="160" fill="#ffffff" stroke="#888" stroke-width="1.2"/>
     <line x1="295" y1="80" x2="295" y2="240" stroke="#ccc"/>
@@ -251,230 +219,309 @@ p.note {
     <text x="335" y="68" text-anchor="middle" fill="#333" font-size="11">Textos →</text>
   </g>
   <text x="247" y="160" text-anchor="middle" fill="#333" font-size="11" transform="rotate(-90 247 160)">Imágenes →</text>
-
-  <!-- Objective -->
   <line x1="415" y1="160" x2="500" y2="160" stroke="#555" stroke-width="1.5" marker-end="url(#arrc)"/>
   <rect x="500" y="120" width="180" height="80" rx="8" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.5"/>
   <text x="590" y="148" text-anchor="middle" fill="#5c1a5c" font-weight="bold">Objetivo contrastivo</text>
   <text x="590" y="168" text-anchor="middle" fill="#7a2d7a" font-size="11">↑ diagonal (pares ✓)</text>
   <text x="590" y="186" text-anchor="middle" fill="#7a2d7a" font-size="11">↓ fuera de diagonal (✗)</text>
-</svg>
-  </div>
-  <div class="slide-num">5</div>
-</section>
-
-<!-- ============ § 2 ============ -->
-<section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>¿Cómo medir la proximidad entre dos <em>embeddings</em>?</h2>
-  <ul>
-    <li>El objetivo contrastivo necesita una medida de proximidad semántica entre un <em>embedding</em> de imagen y uno de texto.</li>
-    <li>Se usa la <strong>similitud coseno</strong>: ignora la magnitud y compara solo la dirección de los vectores.</li>
-    <li>Sean $\mathbf{u}_i$ el <em>embedding</em> de la imagen $i$ y $\mathbf{v}_j$ el del texto $j$.</li>
-  </ul>
-  <div class="slide-num">6</div>
+</svg></div>
+<div class="slide-num">5</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>La similitud coseno vive en $[-1, 1]$</h2>
-  $$s_{ij} = \frac{\mathbf{u}_i \cdot \mathbf{v}_j}{\|\mathbf{u}_i\|\,\|\mathbf{v}_j\|} \in [-1, 1]$$
-  <ul>
-    <li>$s_{ij}$ es el coseno del ángulo entre los dos vectores: $1$ si apuntan igual, $-1$ si son opuestos.</li>
-    <li>Con <em>embeddings</em> normalizados ($\|\mathbf{u}_i\| = 1$), la similitud coseno se reduce al <strong>producto punto</strong>.</li>
-  </ul>
-  <div class="slide-num">7</div>
+<div class="section-label">§ 1 · Aprendizaje contrastivo</div>
+<h2>Esta receta tiene nombre: CLIP</h2>
+<ul><li><strong>CLIP</strong> —<em>Contrastive Language-Image Pre-training</em>, Radford et al. 2021— la popularizó, entrenado con 400 millones de pares imagen-texto sacados de internet.</li></ul>
+<div class="slide-num">6</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>La temperatura $\tau$ escala las similitudes a logits</h2>
-  $$\ell_{ij} = \frac{s_{ij}}{\tau}$$
-  <ul>
-    <li>$\ell_{ij}$ es el <em>logit</em>: la similitud reescalada que alimenta al softmax.</li>
-    <li>$\tau &gt; 0$ es la <strong>temperatura</strong>, que controla la nitidez de la distribución resultante.</li>
-    <li>En CLIP, $\tau$ es un parámetro <strong>aprendido</strong> durante el entrenamiento.</li>
-  </ul>
-  <div class="slide-num">8</div>
+<div class="section-label">§ 1 · Aprendizaje contrastivo</div>
+<h2>CLIP no lee palabra por palabra</h2>
+<ul><li>Resume la frase entera en un vector y la imagen entera en otro, y compara esos dos vectores globales.</li></ul>
+<div class="slide-num">7</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>La pérdida InfoNCE es una entropía cruzada simétrica</h2>
-  $$\mathcal{L} = -\frac{1}{2N}\sum_{i=1}^{N}\left[ \log\frac{e^{\ell_{ii}}}{\sum_{j} e^{\ell_{ij}}} + \log\frac{e^{\ell_{ii}}}{\sum_{j} e^{\ell_{ji}}} \right]$$
-  <ul>
-    <li><em>InfoNCE</em> (<em>Information Noise-Contrastive Estimation</em>) trata cada fila y cada columna como una clasificación cuya respuesta correcta es la diagonal.</li>
-  </ul>
-  <div class="slide-num">9</div>
+<div class="section-label">§ 1 · Aprendizaje contrastivo</div>
+<h2>Que «perro» y «can» queden cerca no está garantizado</h2>
+<ul><li>Solo emerge si esos sinónimos aparecieron en contextos parecidos al entrenar; por eso la escala es decisiva.</li></ul>
+<div class="slide-num">8</div>
+</section>
+
+<!-- § 2 · La función de pérdida contrastiva -->
+
+<section>
+<div class="section-label">§ 2 · La función de pérdida contrastiva</div>
+<h2>Comparar todo contra todo da una matriz de similitudes</h2>
+<ul><li>La diagonal son las parejas correctas; todo lo demás, las incorrectas.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 680 330" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+  <text x="210" y="36" text-anchor="middle" font-size="12" fill="#cc4444" font-weight="bold">Textos →</text>
+  <text x="62" y="170" text-anchor="middle" font-size="12" fill="#2c6aa0" font-weight="bold" transform="rotate(-90 62 170)">Imágenes ↓</text>
+  <text x="135" y="62" text-anchor="middle" fill="#cc4444" font-size="12">T₁</text>
+  <text x="185" y="62" text-anchor="middle" fill="#cc4444" font-size="12">T₂</text>
+  <text x="235" y="62" text-anchor="middle" fill="#cc4444" font-size="12">T₃</text>
+  <text x="285" y="62" text-anchor="middle" fill="#cc4444" font-size="12">T₄</text>
+  <text x="92" y="104" text-anchor="middle" fill="#2c6aa0" font-size="12">I₁</text>
+  <text x="92" y="154" text-anchor="middle" fill="#2c6aa0" font-size="12">I₂</text>
+  <text x="92" y="204" text-anchor="middle" fill="#2c6aa0" font-size="12">I₃</text>
+  <text x="92" y="254" text-anchor="middle" fill="#2c6aa0" font-size="12">I₄</text>
+  <rect x="110" y="75" width="50" height="50" fill="#d6efd6" stroke="#3a9a3a" stroke-width="1.5"/>
+  <text x="135" y="106" text-anchor="middle" font-size="17" fill="#1a7a1a" font-weight="bold">&#8593;</text>
+  <rect x="160" y="75" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="185" y="105" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="210" y="75" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="235" y="105" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="260" y="75" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="285" y="105" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="110" y="125" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="135" y="155" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="160" y="125" width="50" height="50" fill="#d6efd6" stroke="#3a9a3a" stroke-width="1.5"/>
+  <text x="185" y="156" text-anchor="middle" font-size="17" fill="#1a7a1a" font-weight="bold">&#8593;</text>
+  <rect x="210" y="125" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="235" y="155" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="260" y="125" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="285" y="155" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="110" y="175" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="135" y="205" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="160" y="175" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="185" y="205" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="210" y="175" width="50" height="50" fill="#d6efd6" stroke="#3a9a3a" stroke-width="1.5"/>
+  <text x="235" y="206" text-anchor="middle" font-size="17" fill="#1a7a1a" font-weight="bold">&#8593;</text>
+  <rect x="260" y="175" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="285" y="205" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="110" y="225" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="135" y="255" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="160" y="225" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="185" y="255" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="210" y="225" width="50" height="50" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+  <text x="235" y="255" text-anchor="middle" font-size="13" fill="#d2bcbc">&#8595;</text>
+  <rect x="260" y="225" width="50" height="50" fill="#d6efd6" stroke="#3a9a3a" stroke-width="1.5"/>
+  <text x="285" y="256" text-anchor="middle" font-size="17" fill="#1a7a1a" font-weight="bold">&#8593;</text>
+  <rect x="400" y="110" width="22" height="22" fill="#d6efd6" stroke="#3a9a3a" stroke-width="1.5"/>
+  <text x="412" y="127" text-anchor="middle" font-size="14" fill="#1a7a1a" font-weight="bold">&#8593;</text>
+  <text x="435" y="120" fill="#1a7a1a" font-size="13" font-weight="bold">diagonal: pares correctos</text>
+  <text x="435" y="138" fill="#1a7a1a" font-size="12">la similitud debe subir</text>
+  <rect x="400" y="175" width="22" height="22" fill="#f6f6f6" stroke="#dcdcdc"/>
+  <text x="412" y="191" text-anchor="middle" font-size="12" fill="#c9b0b0">&#8595;</text>
+  <text x="435" y="185" fill="#777" font-size="13" font-weight="bold">resto: negativos</text>
+  <text x="435" y="203" fill="#777" font-size="12">la similitud debe bajar</text>
+</svg></div>
+<div class="slide-num">9</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>Los dos términos hacen el alineamiento bidireccional</h2>
-  <ul>
-    <li><strong>Primer término</strong> ($\sum_j e^{\ell_{ij}}$ en la fila): para cada <strong>imagen</strong>, clasifica cuál de los $N$ textos le corresponde.</li>
-    <li><strong>Segundo término</strong> ($\sum_j e^{\ell_{ji}}$ en la columna): lo simétrico — para cada <strong>texto</strong>, sobre las $N$ imágenes.</li>
-    <li>Promediar ambos ($\tfrac{1}{2N}$) garantiza que imagen→texto y texto→imagen se alineen por igual.</li>
-  </ul>
-  <div class="slide-num">10</div>
+<div class="section-label">§ 2 · La función de pérdida contrastiva</div>
+<h2>Cada celda mide el parecido con el coseno</h2>
+$$s_{ij} = \frac{\mathbf{u}_i \cdot \mathbf{v}_j}{\|\mathbf{u}_i\|\,\|\mathbf{v}_j\|} \in [-1, 1] \tag{1}$$
+<p class="note">$\mathbf{u}_i$ es el embedding de la imagen $i$ y $\mathbf{v}_j$ el del texto $j$. Con embeddings normalizados ($\|\mathbf{u}_i\|=1$), el coseno se reduce al producto punto.</p>
+<div class="slide-num">10</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>Cada lote aporta $N$ positivos y $N^2 - N$ negativos</h2>
-  <ul>
-    <li>La diagonal son los $N$ ejemplos <strong>positivos</strong>; el resto de la matriz, los $N^2 - N$ <strong>negativos</strong>.</li>
-    <li>Cuanto mayor es el lote, más rico es el contraste: CLIP usó lotes de <strong>32768</strong> pares.</li>
-    <li>Los dos codificadores se entrenan de extremo a extremo: el gradiente fluye a ambas ramas y alinea los dos espacios simultáneamente.</li>
-  </ul>
-  <div class="slide-num">11</div>
+<div class="section-label">§ 2 · La función de pérdida contrastiva</div>
+<h2>Lo convertimos en logits dividiendo por una temperatura</h2>
+$$\ell_{ij} = \frac{s_{ij}}{\tau} \tag{2}$$
+<p class="note">$\ell_{ij}$ son los logits sobre los que se decidirá; $\tau$ es la temperatura. $\tau$ pequeño endurece la decisión, $\tau$ grande la suaviza; en CLIP, $\tau$ se aprende sola.</p>
+<div class="slide-num">11</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>La temperatura interpola entre nitidez e incertidumbre</h2>
-  <ul>
-    <li>$\tau$ <strong>pequeña</strong>: el softmax se concentra: penaliza con fuerza las parejas incorrectas (decisión nítida).</li>
-    <li>$\tau$ <strong>grande</strong>: la distribución se aplana: suaviza la decisión y reparte la probabilidad.</li>
-    <li>Por eso $\tau$ es central tanto en el entrenamiento contrastivo como en la inferencia.</li>
-  </ul>
-  <div class="slide-num">12</div>
+<div class="section-label">§ 2 · La función de pérdida contrastiva</div>
+<h2>Lo que queremos: que en cada fila gane la diagonal</h2>
+<ul><li>Que la similitud del par correcto supere a la de todos los textos equivocados de esa fila.</li></ul>
+<div class="slide-num">12</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · La función de pérdida contrastiva</div>
-  <h2>InfoNCE viene del aprendizaje auto-supervisado</h2>
-  <ul>
-    <li>En auto-supervisión, InfoNCE acerca dos <strong>vistas</strong> (aumentaciones) de un mismo dato y aleja datos distintos.</li>
-    <li>CLIP traslada la idea al caso multimodal: las dos vistas son una <strong>imagen y su descripción textual</strong>.</li>
-    <li><strong>Puente §3</strong>: una vez alineados los dos espacios, clasificar es comparar similitudes — incluso para clases nunca vistas.</li>
-  </ul>
-  <div class="slide-num">13</div>
-</section>
-
-<!-- ============ § 3 ============ -->
-<section>
-  <div class="section-label">§ 3 · Inferencia zero-shot</div>
-  <h2>El problema: clasificar sin reentrenar</h2>
-  <ul>
-    <li>Una vez entrenado, CLIP clasifica imágenes en categorías que <strong>nunca vio explícitamente</strong>, sin ajustar pesos.</li>
-    <li>Esta capacidad se llama inferencia <em>zero-shot</em>.</li>
-    <li>La clave: la clasificación se convierte en una <strong>comparación de similitud</strong> en el espacio compartido.</li>
-  </ul>
-  <div class="slide-num">14</div>
+<div class="section-label">§ 2 · La función de pérdida contrastiva</div>
+<h2>Pero «elegir la correcta entre varias» es, exactamente, una clasificación</h2>
+<ul><li>Cada fila de la matriz es un problema de opción múltiple cuya respuesta correcta es la diagonal.</li></ul>
+<div class="slide-num">13</div>
 </section>
 
 <section>
-  <div class="section-label">§ 3 · Inferencia zero-shot</div>
-  <h2>El procedimiento zero-shot en cuatro pasos</h2>
-  <ul>
-    <li>Construir una frase descriptiva por etiqueta: <em>"una foto de un perro"</em>, <em>"una foto de un auto"</em>.</li>
-    <li>Codificar la imagen con el codificador visual y cada frase con el de texto.</li>
-    <li>Calcular la similitud coseno entre el <em>embedding</em> de la imagen y cada <em>embedding</em> de texto.</li>
-    <li>Aplicar softmax sobre las similitudes y elegir la etiqueta de mayor probabilidad.</li>
-  </ul>
-  <div class="slide-num">15</div>
+<div class="section-label">§ 2 · La función de pérdida contrastiva</div>
+<h2>Y una clasificación se entrena con entropía cruzada</h2>
+$$\mathcal{L} = -\frac{1}{2N}\sum_{i=1}^{N}\left[ \log\frac{e^{\ell_{ii}}}{\sum_{j} e^{\ell_{ij}}} + \log\frac{e^{\ell_{ii}}}{\sum_{j} e^{\ell_{ji}}} \right] \tag{3}$$
+<p class="note">El numerador premia la diagonal $\ell_{ii}$; el denominador suma toda la fila. Se hace en las dos direcciones —imagen→texto y texto→imagen—: por eso InfoNCE es simétrica.</p>
+<div class="slide-num">14</div>
 </section>
 
 <section>
-  <div class="section-label">§ 3 · Inferencia zero-shot</div>
-  <h2>El softmax convierte similitudes en probabilidades</h2>
-  $$p(y = k \mid \text{imagen}) = \frac{e^{s_k / \tau}}{\sum_{m} e^{s_m / \tau}}$$
-  <ul>
-    <li>$s_k$ es la similitud coseno entre la imagen y la frase de la clase $k$; $\tau$ reescala como en el entrenamiento.</li>
-    <li>La predicción $\hat{y} = \arg\max_k p(y=k \mid \text{imagen})$, sin haber sido entrenado para esa tarea específica.</li>
-  </ul>
-  <div class="slide-num">16</div>
+<div class="section-label">§ 2 · La función de pérdida contrastiva</div>
+<h2>El combustible del contraste: muchos negativos a la vez</h2>
+<ul><li>Cada lote aporta $N$ positivos en la diagonal y $N^2 - N$ negativos; CLIP usó lotes de 32768. Mientras más negativos, más nítida la señal.</li></ul>
+<div class="slide-num">15</div>
+</section>
+
+<!-- § 3 · Inferencia zero-shot -->
+
+<section>
+<div class="section-label">§ 3 · Inferencia zero-shot</div>
+<h2>Con el espacio ya alineado, aparece un superpoder</h2>
+<ul><li>CLIP clasifica en categorías que nunca vio, sin reentrenar ni tocar un solo peso.</li></ul>
+<div class="slide-num">16</div>
 </section>
 
 <section>
-  <div class="section-label">§ 3 · Inferencia zero-shot</div>
-  <h2>La ingeniería de <em>prompts</em> mueve la exactitud</h2>
-  <ul>
-    <li>Usar solo la palabra (<em>"perro"</em>) rinde peor que una plantilla (<em>"una foto de un perro"</em>): el entrenamiento usó oraciones completas.</li>
-    <li><strong>Prompt ensembling</strong>: promediar los <em>embeddings</em> de varias plantillas de una clase mejora aún más la exactitud.</li>
-    <li>Esta sensibilidad a la formulación textual es una propiedad práctica central de CLIP.</li>
-  </ul>
-  <div class="slide-num">17</div>
-</section>
-
-<!-- ============ § 4 ============ -->
-<section>
-  <div class="section-label">§ 4 · La brecha de modalidad</div>
-  <h2>Un fenómeno contraintuitivo: dos nubes separadas</h2>
-  <ul>
-    <li>Cabría esperar que imagen y texto de un concepto coincidan en el espacio compartido.</li>
-    <li>En realidad, los <em>embeddings</em> de imagen y de texto ocupan <strong>regiones separadas</strong>.</li>
-    <li>Esta separación sistemática se conoce como <strong>brecha de modalidad</strong> (<em>modality gap</em>).</li>
-  </ul>
-  <div class="slide-num">18</div>
+<div class="section-label">§ 3 · Inferencia zero-shot</div>
+<h2>El truco: convertir cada clase en una frase</h2>
+<ul><li>«una foto de un perro», «una foto de un auto»… y preguntar cuál se parece más a la imagen.</li></ul>
+<div class="slide-num">17</div>
 </section>
 
 <section>
-  <div class="section-label">§ 4 · La brecha de modalidad</div>
-  <h2>El alineamiento no es identidad de espacios</h2>
-  <ul>
-    <li>El objetivo solo exige que, dentro de un lote, la pareja correcta sea más similar que las incorrectas.</li>
-    <li>No exige que imagen y texto de un mismo concepto coincidan punto a punto.</li>
-    <li>Resultado: las imágenes forman un <strong>cono</strong> y los textos otro distinto, separados desde la inicialización.</li>
-  </ul>
-  <div class="slide-num">19</div>
+<div class="section-label">§ 3 · Inferencia zero-shot</div>
+<h2>Clasificar se vuelve comparar la imagen con los textos candidatos</h2>
+<ul><li>Se codifica la imagen y cada frase; el softmax sobre las similitudes elige la clase ganadora.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+  <defs>
+    <marker id="z" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#666"/></marker>
+  </defs>
+  <rect x="20" y="34" width="120" height="46" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="80" y="62" text-anchor="middle" fill="#1a3a5c">imagen nueva</text>
+  <rect x="170" y="34" width="120" height="46" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="230" y="56" text-anchor="middle" fill="#663300" font-weight="bold">codif. imagen</text>
+  <line x1="140" y1="57" x2="170" y2="57" stroke="#666" stroke-width="1.4" marker-end="url(#z)"/>
+  <circle cx="330" cy="57" r="7" fill="#2c6aa0"/>
+  <text x="330" y="38" text-anchor="middle" fill="#2c6aa0" font-style="italic">u</text>
+  <line x1="290" y1="57" x2="320" y2="57" stroke="#666" stroke-width="1.4" marker-end="url(#z)"/>
+  <rect x="20" y="150" width="120" height="28" rx="5" fill="#fde8e8" stroke="#cc6666"/>
+  <text x="80" y="169" text-anchor="middle" fill="#7a2222" font-size="11">"...un perro"</text>
+  <rect x="20" y="186" width="120" height="28" rx="5" fill="#fde8e8" stroke="#cc6666"/>
+  <text x="80" y="205" text-anchor="middle" fill="#7a2222" font-size="11">"...un gato"</text>
+  <rect x="20" y="222" width="120" height="28" rx="5" fill="#fde8e8" stroke="#cc6666"/>
+  <text x="80" y="241" text-anchor="middle" fill="#7a2222" font-size="11">"...un auto"</text>
+  <rect x="170" y="178" width="120" height="44" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="230" y="204" text-anchor="middle" fill="#663300" font-weight="bold">codif. texto</text>
+  <line x1="140" y1="164" x2="170" y2="190" stroke="#666" stroke-width="1.2" marker-end="url(#z)"/>
+  <line x1="140" y1="200" x2="170" y2="200" stroke="#666" stroke-width="1.2" marker-end="url(#z)"/>
+  <line x1="140" y1="236" x2="170" y2="210" stroke="#666" stroke-width="1.2" marker-end="url(#z)"/>
+  <circle cx="330" cy="180" r="6" fill="#cc4444"/>
+  <circle cx="330" cy="200" r="6" fill="#cc4444"/>
+  <circle cx="330" cy="220" r="6" fill="#cc4444"/>
+  <text x="348" y="204" fill="#cc4444" font-style="italic">v_k</text>
+  <line x1="290" y1="200" x2="318" y2="200" stroke="#666" stroke-width="1.4" marker-end="url(#z)"/>
+  <text x="430" y="40" text-anchor="middle" fill="#444" font-size="12">similitud  cos(u, v_k)</text>
+  <rect x="380" y="120" width="170" height="18" fill="#cdeccd" stroke="#3a9a3a"/>
+  <text x="558" y="134" fill="#1a7a1a" font-size="11">perro</text>
+  <rect x="380" y="150" width="55" height="18" fill="#eee" stroke="#bbb"/>
+  <text x="443" y="164" fill="#888" font-size="11">gato</text>
+  <rect x="380" y="180" width="45" height="18" fill="#eee" stroke="#bbb"/>
+  <text x="433" y="194" fill="#888" font-size="11">auto</text>
+  <line x1="345" y1="57" x2="378" y2="120" stroke="#999" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="345" y1="200" x2="378" y2="160" stroke="#999" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="600" y1="129" x2="630" y2="129" stroke="#666" stroke-width="1.4" marker-end="url(#z)"/>
+  <rect x="630" y="104" width="118" height="52" rx="7" fill="#eef7ee" stroke="#339933" stroke-width="1.6"/>
+  <text x="689" y="126" text-anchor="middle" fill="#1a4d1a" font-weight="bold">softmax</text>
+  <text x="689" y="144" text-anchor="middle" fill="#2d6b2d" font-size="11">&#8594; "perro"</text>
+</svg></div>
+<div class="slide-num">18</div>
 </section>
 
 <section>
-  <div class="section-label">§ 4 · La brecha de modalidad</div>
-  <h2>Implicancias prácticas de la brecha</h2>
-  <ul>
-    <li>La inferencia debe basarse en comparaciones <strong>relativas</strong> de similitud, no en distancias absolutas entre modalidades.</li>
-    <li>Comparar imagen-imagen o texto-texto opera a una escala distinta que la comparación cruzada imagen-texto.</li>
-    <li>Cerrar la brecha artificialmente puede mejorar tareas posteriores: confirma que es un <strong>artefacto geométrico</strong>, no una necesidad semántica.</li>
-  </ul>
-  <div class="slide-num">20</div>
-</section>
-
-<!-- ============ § 5 ============ -->
-<section>
-  <div class="section-label">§ 5 · Variantes y extensiones</div>
-  <h2>El esquema contrastivo como componente reutilizable</h2>
-  <ul>
-    <li>La receta de CLIP no quedó aislada: se convirtió en una pieza que aparece en numerosos sistemas posteriores.</li>
-    <li>Las variantes empujan en dos ejes: <strong>escala de datos</strong> y <strong>forma de la pérdida</strong>.</li>
-    <li>Y su espacio latente sirve de puente hacia la generación y los modelos de lenguaje.</li>
-  </ul>
-  <div class="slide-num">21</div>
+<div class="section-label">§ 3 · Inferencia zero-shot</div>
+<h2>La probabilidad de cada clase es un softmax sobre similitudes</h2>
+$$p(y = k \mid \text{imagen}) = \frac{e^{s_k / \tau}}{\sum_{m} e^{s_m / \tau}} \tag{4}$$
+<p class="note">$s_k$ es la similitud entre la imagen y el texto de la clase $k$. Gana la clase cuyo texto se parece más a la imagen, sin entrenamiento específico para esa tarea.</p>
+<div class="slide-num">19</div>
 </section>
 
 <section>
-  <div class="section-label">§ 5 · Variantes y extensiones</div>
-  <h2>ALIGN y SigLIP: más escala, otra pérdida</h2>
-  <ul>
-    <li><strong>ALIGN</strong> (Jia et al., 2021): escaló la receta a más de mil millones de pares con filtrado mínimo — la cantidad de datos compensa el ruido.</li>
-    <li><strong>SigLIP</strong> (Zhai et al., 2023): reemplazó el softmax sobre el lote por una pérdida <strong>sigmoidal</strong> independiente por par, evitando normalizar sobre todo el lote.</li>
-    <li>SigLIP gana eficiencia y permite lotes más pequeños.</li>
-  </ul>
-  <div class="slide-num">22</div>
+<div class="section-label">§ 3 · Inferencia zero-shot</div>
+<h2>Cómo lo preguntas cambia el resultado</h2>
+<ul><li>«una foto de un perro» rinde mejor que «perro» a secas; promediar varias plantillas mejora aún más.</li></ul>
+<div class="slide-num">20</div>
+</section>
+
+<!-- § 4 · La brecha de modalidad -->
+
+<section>
+<div class="section-label">§ 4 · La brecha de modalidad</div>
+<h2>Una sorpresa: imagen y texto no terminan en el mismo lugar</h2>
+<ul><li>Aunque las parejas se emparejan, los embeddings de imagen y de texto ocupan zonas separadas del espacio.</li></ul>
+<div class="slide-num">21</div>
 </section>
 
 <section>
-  <div class="section-label">§ 5 · Variantes y extensiones</div>
-  <h2>El espacio CLIP como puente hacia generación y LLM</h2>
-  <ul>
-    <li><strong>DALL-E 2</strong> (Ramesh et al., 2022): un modelo genera el <em>embedding</em> CLIP de una imagen desde el texto, y un decodificador de difusión lo convierte en píxeles.</li>
-    <li>El codificador visual de CLIP es la elección habitual como <strong>codificador de modalidad</strong> en los modelos de lenguaje multimodales (sus <em>embeddings</em> se proyectan como tokens visuales).</li>
-  </ul>
-  <p class="note">El contexto general de la multimodalidad se desarrolla en el notebook Modelos multimodales (§H).</p>
-  <div class="slide-num">23</div>
+<div class="section-label">§ 4 · La brecha de modalidad</div>
+<h2>La brecha de modalidad</h2>
+<ul><li>Las imágenes forman un cono y los textos otro; las parejas se conectan a través de la brecha, no se superponen.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 680 320" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+  <defs><marker id="gp" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#7a2d7a"/></marker></defs>
+  <rect x="25" y="22" width="630" height="276" rx="12" fill="none" stroke="#ccc" stroke-width="1.3"/>
+  <text x="45" y="44" fill="#aaa" font-size="11">espacio de embedding compartido</text>
+  <line x1="150" y1="140" x2="470" y2="195" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="185" y1="120" x2="505" y2="175" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="210" y1="155" x2="535" y2="205" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="170" y1="170" x2="495" y2="225" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+  <ellipse cx="185" cy="148" rx="95" ry="62" fill="#eaf2fb" stroke="#5599cc" stroke-width="1.2" opacity="0.55"/>
+  <circle cx="150" cy="140" r="7" fill="#2c6aa0"/>
+  <circle cx="185" cy="120" r="7" fill="#2c6aa0"/>
+  <circle cx="210" cy="155" r="7" fill="#2c6aa0"/>
+  <circle cx="170" cy="170" r="7" fill="#2c6aa0"/>
+  <circle cx="215" cy="128" r="7" fill="#2c6aa0"/>
+  <text x="185" y="226" text-anchor="middle" fill="#2c6aa0" font-size="13">imágenes (un cono)</text>
+  <ellipse cx="505" cy="200" rx="95" ry="62" fill="#fdecea" stroke="#cc6666" stroke-width="1.2" opacity="0.55"/>
+  <rect x="464" y="189" width="13" height="13" fill="#cc4444"/>
+  <rect x="499" y="169" width="13" height="13" fill="#cc4444"/>
+  <rect x="529" y="199" width="13" height="13" fill="#cc4444"/>
+  <rect x="489" y="219" width="13" height="13" fill="#cc4444"/>
+  <text x="505" y="278" text-anchor="middle" fill="#cc4444" font-size="13">textos (otro cono)</text>
+  <line x1="300" y1="158" x2="390" y2="180" stroke="#7a2d7a" stroke-width="2" marker-start="url(#gp)" marker-end="url(#gp)"/>
+  <text x="345" y="150" text-anchor="middle" fill="#7a2d7a" font-size="13" font-weight="bold">brecha</text>
+</svg></div>
+<div class="slide-num">22</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · La brecha de modalidad</div>
+<h2>¿Por qué? El objetivo solo pide orden, no identidad</h2>
+<ul><li>Basta con que la pareja correcta sea más similar que las otras; nunca se exige que imagen y texto coincidan punto a punto.</li></ul>
+<div class="slide-num">23</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · La brecha de modalidad</div>
+<h2>La consecuencia: comparar por similitud relativa, no por distancia</h2>
+<ul><li>La inferencia mira cuál texto es más parecido a la imagen, no la distancia absoluta entre las dos modalidades.</li></ul>
+<div class="slide-num">24</div>
+</section>
+
+<!-- § 5 · Variantes y extensiones -->
+
+<section>
+<div class="section-label">§ 5 · Variantes y extensiones</div>
+<h2>Esta receta se volvió una pieza que se reutiliza en todas partes</h2>
+<ul><li>El esquema contrastivo de CLIP reaparece, escalado y modificado, en casi todo lo que vino después.</li></ul>
+<div class="slide-num">25</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Variantes y extensiones</div>
+<h2>Más datos, o una pérdida más simple</h2>
+<ul><li>ALIGN la llevó a mil millones de pares ruidosos; SigLIP cambió el softmax por una sigmoidea por par, y así caben lotes más chicos.</li></ul>
+<div class="slide-num">26</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Variantes y extensiones</div>
+<h2>Y el espacio CLIP se vuelve puente y percepción</h2>
+<ul><li>DALL-E 2 genera el embedding CLIP desde el texto y lo convierte en píxeles; y el codificador visual de CLIP son los «ojos» de muchos modelos multimodales.</li></ul>
+<div class="slide-num">27</div>
 </section>
 
 <!-- CIERRE -->
-<section class="close-slide">
-  <h1>Alinear imagen y texto en un mismo espacio con una pérdida contrastiva convierte la clasificación en una comparación de similitud — y abre la puerta a reconocer lo nunca visto.</h1>
-  <p class="note">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+<section>
+<div class="close-slide">
+  <h1>Alinear imagen y texto en un espacio común, aprendido solo de qué pares coinciden, convierte la clasificación en geometría — y ese espacio se vuelve la pieza reutilizable de la era multimodal.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
 </section>
 
 </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
 <script>
