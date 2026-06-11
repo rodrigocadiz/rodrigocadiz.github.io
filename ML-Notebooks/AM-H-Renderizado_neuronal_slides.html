@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Renderizado Neuronal · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 2% 5% 2% 5%;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-height: 0;
+}
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+/* Equations: direct display math, no card borders */
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 0.85em;
+  color: var(--ink-soft);
+  margin-top: 0.4em;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+/* SVG fills remaining vertical space without overflowing */
+.svg-holder {
+  display: flex; align-items: stretch;
+  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
+  margin-top: 0.3em; overflow: hidden;
+}
+.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
+
+.title-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+}
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num {
+  position: absolute; bottom: 2%; right: 3%;
+  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.1em;
+}
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ===== Portada ===== -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Renderizado Neuronal</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- ===== Apertura narrativa ===== -->
+<section>
+  <h2>El render clásico calcula la imagen; el neuronal la aprende</h2>
+  <ul>
+    <li>El render clásico parte de una escena hecha a mano y aplica reglas físicas fijas para calcular cada píxel.</li>
+    <li>El renderizado neuronal invierte el planteamiento: en lugar de programar el dibujado, lo aprende de los datos.</li>
+  </ul>
+  <div class="slide-num">2</div>
+</section>
+
+<section>
+  <h2>La apuesta: hacer diferenciable el dibujado</h2>
+  <ul>
+    <li>Si todo el proceso de formación de la imagen es diferenciable, el error de cada píxel puede retroceder, hacia atrás, hasta la escena que lo produjo.</li>
+  </ul>
+  <p class="note">Este es el hilo conductor de toda la clase: un render diferenciable que se esculpe desde los píxeles.</p>
+  <div class="slide-num">3</div>
+</section>
+
+<section>
+  <h2>Un planteamiento, no una arquitectura</h2>
+  <ul>
+    <li>Renderizado neuronal no es una red concreta, sino una estrategia: hacer diferenciable la formación de la imagen.</li>
+    <li>La restricción esencial es la diferenciabilidad de extremo a extremo, no la arquitectura elegida.</li>
+  </ul>
+  <div class="slide-num">4</div>
+</section>
+
+<!-- ===== §1 ===== -->
+<section>
+  <div class="section-label">§ 1 · De la representación explícita a la neuronal</div>
+  <h2>¿Cómo dibujar sin programar la física?</h2>
+  <ul>
+    <li>Generar vistas de un objeto exigía, históricamente, programar a mano las reglas geométricas y de luz del dibujado.</li>
+    <li>La pregunta de esta sección: ¿se puede aprender ese mapeo en vez de codificarlo?</li>
+  </ul>
+  <div class="slide-num">5</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · De la representación explícita a la neuronal</div>
+  <h2>La vía explícita y su costo $O(N^3)$</h2>
+  <ul>
+    <li>Una representación <strong>explícita</strong> almacena la geometría como mallas, nubes de puntos o vóxeles.</li>
+    <li>Es discreta, así que el gradiente no fluye con facilidad, y una rejilla de vóxeles cuesta $O(N^3)$ en memoria: crece con el cubo de la resolución $N$.</li>
+  </ul>
+  <div class="slide-num">6</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · De la representación explícita a la neuronal</div>
+  <h2>La vía neuronal: aprender el render</h2>
+  <ul>
+    <li>El renderizado neuronal reemplaza partes del pipeline por funciones diferenciables.</li>
+    <li>Una red recibe parámetros de alto nivel (tipo de objeto, ángulo de cámara, iluminación) y produce la imagen píxel a píxel, sin reglas geométricas explícitas.</li>
+  </ul>
+  <div class="slide-num">7</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · De la representación explícita a la neuronal</div>
+  <h2>El error de píxeles retrocede como gradiente</h2>
+  <ul><li>Arriba el render clásico (geometría + reglas físicas, cálculo fijo); abajo el neuronal: la red diferenciable aprende el mapeo y el gradiente del error de píxeles la ajusta.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 700 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+  <defs>
+    <marker id="arrp" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
+    </marker>
+    <marker id="arrpg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#cc4444"/>
+    </marker>
+  </defs>
+  <text x="20" y="28" fill="#333" font-weight="bold">Renderizado clásico</text>
+  <rect x="20" y="40" width="150" height="46" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="95" y="60" text-anchor="middle" fill="#1a3a5c" font-weight="bold">Geometría explícita</text>
+  <text x="95" y="76" text-anchor="middle" fill="#3a6a8c" font-size="11">mallas · vóxeles</text>
+  <rect x="270" y="40" width="150" height="46" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="345" y="60" text-anchor="middle" fill="#663300" font-weight="bold">Reglas físicas</text>
+  <text x="345" y="76" text-anchor="middle" fill="#885500" font-size="11">rasterización · ray tracing</text>
+  <rect x="525" y="40" width="150" height="46" rx="6" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+  <text x="600" y="67" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Imagen</text>
+  <line x1="170" y1="63" x2="270" y2="63" stroke="#555" stroke-width="1.5" marker-end="url(#arrp)"/>
+  <line x1="420" y1="63" x2="525" y2="63" stroke="#555" stroke-width="1.5" marker-end="url(#arrp)"/>
+  <text x="20" y="150" fill="#333" font-weight="bold">Renderizado neuronal</text>
+  <rect x="20" y="162" width="150" height="46" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="95" y="182" text-anchor="middle" fill="#1a3a5c" font-weight="bold">Parámetros</text>
+  <text x="95" y="198" text-anchor="middle" fill="#3a6a8c" font-size="11">vista · observaciones</text>
+  <rect x="270" y="162" width="150" height="46" rx="6" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.5"/>
+  <text x="345" y="182" text-anchor="middle" fill="#5c1a5c" font-weight="bold">Red diferenciable</text>
+  <text x="345" y="198" text-anchor="middle" fill="#7a2d7a" font-size="11">aprende el render</text>
+  <rect x="525" y="162" width="150" height="46" rx="6" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+  <text x="600" y="189" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Imagen</text>
+  <line x1="170" y1="185" x2="270" y2="185" stroke="#555" stroke-width="1.5" marker-end="url(#arrp)"/>
+  <line x1="420" y1="185" x2="525" y2="185" stroke="#555" stroke-width="1.5" marker-end="url(#arrp)"/>
+  <path d="M600 208 L600 232 L345 232 L345 208" fill="none" stroke="#cc4444" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrpg)"/>
+  <text x="472" y="248" text-anchor="middle" fill="#cc4444" font-size="11" font-style="italic">gradiente del error de píxeles</text>
+  </svg></div>
+  <div class="slide-num">8</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · De la representación explícita a la neuronal</div>
+  <h2>Explícito frente a implícito</h2>
+  <ul>
+    <li><strong>Explícito:</strong> estructura discreta (mallas, vóxeles); acceso directo, pero memoria que crece con la resolución y difícil de optimizar por gradiente.</li>
+    <li><strong>Implícito o neuronal:</strong> una función continua aproximada por una red, evaluable en cualquier punto; memoria independiente de la resolución y diferenciable, a costa de evaluar la red.</li>
+  </ul>
+  <div class="slide-num">9</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · De la representación explícita a la neuronal</div>
+  <h2>Coordenada a valor: más allá del 3D</h2>
+  <ul><li>La radiancia es 3D, pero la idea compartida (una red que mapea una coordenada continua a un valor) sirve en cualquier modalidad: imagen, audio o resonancia magnética.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 700 220" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+    <defs><marker id="arrg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"/></marker></defs>
+    <rect x="300" y="80" width="100" height="58" rx="9" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.6"/>
+    <text x="350" y="106" text-anchor="middle" fill="#5c1a5c" font-weight="bold" font-size="18">F_Θ</text>
+    <text x="350" y="125" text-anchor="middle" fill="#7a2d7a" font-size="11">red neuronal</text>
+    <text x="100" y="56" text-anchor="middle" fill="#1a3a5c">imagen: (x, y)</text>
+    <text x="100" y="114" text-anchor="middle" fill="#1a3a5c">audio: t</text>
+    <text x="100" y="172" text-anchor="middle" fill="#1a3a5c">MRI: (x, y, z)</text>
+    <text x="100" y="196" text-anchor="middle" fill="#888" font-size="11">coordenada</text>
+    <line x1="180" y1="51" x2="298" y2="92" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+    <line x1="150" y1="110" x2="298" y2="110" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+    <line x1="180" y1="167" x2="298" y2="127" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+    <line x1="402" y1="92" x2="520" y2="51" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+    <line x1="402" y1="110" x2="550" y2="110" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+    <line x1="402" y1="127" x2="520" y2="167" stroke="#555" stroke-width="1.3" marker-end="url(#arrg)"/>
+    <text x="600" y="56" text-anchor="middle" fill="#a33333">color RGB</text>
+    <text x="600" y="114" text-anchor="middle" fill="#a33333">amplitud</text>
+    <text x="600" y="172" text-anchor="middle" fill="#a33333">intensidad</text>
+    <text x="600" y="196" text-anchor="middle" fill="#888" font-size="11">valor</text>
+  </svg></div>
+  <div class="slide-num">10</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · De la representación explícita a la neuronal</div>
+  <h2>Una escena puede ser una memoria consultable</h2>
+  <ul>
+    <li>Si una red puede mapear coordenadas a valores, una escena 3D entera puede vivir en una memoria latente.</li>
+    <li>Lo que sigue: una red que la consulta desde cualquier ángulo para sintetizar la vista correspondiente → GQN.</li>
+  </ul>
+  <div class="slide-num">11</div>
+</section>
+
+<!-- ===== §2 ===== -->
+<section>
+  <div class="section-label">§ 2 · Representación de escenas neuronales</div>
+  <h2>¿Aprender una escena 3D mirando solo fotos?</h2>
+  <ul>
+    <li>El reto: que una red construya y renderice una escena tridimensional a partir de imágenes 2D, sin geometría predefinida ni etiquetas humanas.</li>
+  </ul>
+  <div class="slide-num">12</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Representación de escenas neuronales</div>
+  <h2>GQN descubre la escena por sí misma</h2>
+  <ul>
+    <li>La Generative Query Network (GQN, Eslami 2018) aprende una representación interna de la escena solo a partir de observaciones 2D.</li>
+    <li>Esa representación basta para predecir cómo se vería la escena desde cualquier ángulo nuevo.</li>
+  </ul>
+  <div class="slide-num">13</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Representación de escenas neuronales</div>
+  <h2>Dos redes: representar y generar</h2>
+  <ul>
+    <li><strong>Red de representación</strong> (codificador): resume las observaciones $\{(\text{imagen}_k, \text{vista}_k)\}$ en un latente $\mathbf{r}$ que condensa geometría y apariencia.</li>
+    <li><strong>Red de generación</strong> (renderizador): recibe $\mathbf{r}$ y una vista de consulta $\mathbf{v}_q$, y predice la imagen desde ese ángulo.</li>
+  </ul>
+  <p class="note">En palabras: al ser diferenciable, el error de reconstrucción entrena ambos bloques de forma conjunta.</p>
+  <div class="slide-num">14</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Representación de escenas neuronales</div>
+  <h2>De varias vistas a una jamás observada</h2>
+  <ul><li>Varias vistas se codifican en una representación común $\mathbf{r}$ que, junto con una cámara de consulta, alimenta al renderizador para sintetizar una vista nueva.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 700 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+  <defs>
+    <marker id="arrq" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
+    </marker>
+  </defs>
+  <rect x="20" y="30" width="110" height="30" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
+  <text x="75" y="50" text-anchor="middle" fill="#1a3a5c">vista 1</text>
+  <rect x="20" y="70" width="110" height="30" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
+  <text x="75" y="90" text-anchor="middle" fill="#1a3a5c">vista 2</text>
+  <rect x="20" y="110" width="110" height="30" rx="5" fill="#d4e8f7" stroke="#5599cc"/>
+  <text x="75" y="130" text-anchor="middle" fill="#1a3a5c">vista 3</text>
+  <text x="75" y="162" text-anchor="middle" fill="#888" font-size="10">observaciones 2D</text>
+  <rect x="185" y="55" width="120" height="60" rx="7" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="245" y="80" text-anchor="middle" fill="#663300" font-weight="bold">Red de</text>
+  <text x="245" y="98" text-anchor="middle" fill="#663300" font-weight="bold">representación</text>
+  <line x1="130" y1="45" x2="185" y2="78" stroke="#555" stroke-width="1.3" marker-end="url(#arrq)"/>
+  <line x1="130" y1="85" x2="185" y2="85" stroke="#555" stroke-width="1.3" marker-end="url(#arrq)"/>
+  <line x1="130" y1="125" x2="185" y2="92" stroke="#555" stroke-width="1.3" marker-end="url(#arrq)"/>
+  <rect x="345" y="68" width="70" height="34" rx="17" fill="#e7e0f5" stroke="#7755aa" stroke-width="1.5"/>
+  <text x="380" y="90" text-anchor="middle" fill="#3a2a5c" font-weight="bold">r</text>
+  <line x1="305" y1="85" x2="345" y2="85" stroke="#555" stroke-width="1.3" marker-end="url(#arrq)"/>
+  <rect x="345" y="150" width="120" height="38" rx="6" fill="#fde8e8" stroke="#cc4444"/>
+  <text x="405" y="167" text-anchor="middle" fill="#7a1a1a">nuevo punto</text>
+  <text x="405" y="182" text-anchor="middle" fill="#7a1a1a" font-size="11">de vista (consulta)</text>
+  <rect x="470" y="60" width="120" height="60" rx="7" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.5"/>
+  <text x="530" y="85" text-anchor="middle" fill="#5c1a5c" font-weight="bold">Red de</text>
+  <text x="530" y="103" text-anchor="middle" fill="#5c1a5c" font-weight="bold">generación</text>
+  <line x1="415" y1="85" x2="470" y2="85" stroke="#555" stroke-width="1.3" marker-end="url(#arrq)"/>
+  <line x1="430" y1="150" x2="500" y2="120" stroke="#555" stroke-width="1.3" marker-end="url(#arrq)"/>
+  <rect x="615" y="65" width="70" height="50" rx="6" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+  <text x="650" y="86" text-anchor="middle" fill="#1a4d1a" font-weight="bold">vista</text>
+  <text x="650" y="102" text-anchor="middle" fill="#1a4d1a" font-size="11">predicha</text>
+  <line x1="590" y1="90" x2="615" y2="90" stroke="#555" stroke-width="1.3" marker-end="url(#arrq)"/>
+  </svg></div>
+  <div class="slide-num">15</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Representación de escenas neuronales</div>
+  <h2>Sin 3D, queda un motor de píxeles</h2>
+  <ul>
+    <li>GQN guardaba una escena 3D en su latente. Si se renuncia al 3D, la misma idea "descripción → píxeles" da un motor de renderizado puramente 2D.</li>
+  </ul>
+  <div class="slide-num">16</div>
+</section>
+
+<!-- ===== §3 ===== -->
+<section>
+  <div class="section-label">§ 3 · Modelos generativos como motores de renderizado</div>
+  <h2>¿Y si la red solo traduce una descripción a píxeles?</h2>
+  <ul>
+    <li>Una red puede actuar como motor de renderizado 2D, aprendiendo a convertir descripciones de bajo nivel en píxeles fotorrealistas.</li>
+  </ul>
+  <div class="slide-num">17</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Modelos generativos como motores de renderizado</div>
+  <h2>El discriminador es una pérdida perceptual</h2>
+  <ul>
+    <li>Un error píxel a píxel promedia todas las soluciones posibles y produce resultados borrosos.</li>
+    <li>El discriminador de una red adversaria aprende a distinguir lo real de lo sintético, definiendo una pérdida que premia bordes nítidos y texturas creíbles.</li>
+  </ul>
+  <div class="slide-num">18</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Modelos generativos como motores de renderizado</div>
+  <h2>pix2pix traduce; SRGAN alucina detalle</h2>
+  <ul>
+    <li><strong>pix2pix</strong> (Isola 2017): renderiza una foto realista a partir de un mapa de segmentación, un boceto o un mapa de profundidad.</li>
+    <li><strong>SRGAN</strong> (Ledig 2017): en superresolución, "alucina" microdetalle plausible en vez de promediar los píxeles vecinos.</li>
+  </ul>
+  <div class="slide-num">19</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Modelos generativos como motores de renderizado</div>
+  <h2>Pero un motor 2D no sabe de profundidad</h2>
+  <ul>
+    <li>Estos motores producen imágenes hermosas, pero cada una es independiente: nada garantiza que correspondan al mismo objeto en el espacio.</li>
+    <li>Para sintetizar vistas novedosas coherentes hay que volver a un campo 3D continuo.</li>
+  </ul>
+  <div class="slide-num">20</div>
+</section>
+
+<!-- ===== §4 ===== -->
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>¿Cómo renderizar un campo continuo, y diferenciable?</h2>
+  <ul>
+    <li>La escena deja de ser geometría discreta: una red densa predice, para cada punto continuo del espacio, un color y una densidad.</li>
+    <li>La pregunta: ¿cómo se forma un píxel a partir de ese campo, de modo diferenciable?</li>
+  </ul>
+  <div class="slide-num">21</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>La escena como red densa sobre un rayo</h2>
+  <ul>
+    <li>Para cada píxel se traza un rayo $\mathbf{r}(t) = \mathbf{o} + t\mathbf{d}$ desde la cámara y se acumula la radiancia a lo largo de él.</li>
+    <li>El rayo se muestrea en $N$ puntos con separación $\delta_i$; en cada uno la red entrega densidad $\sigma_i$ y color $\mathbf{c}_i$.</li>
+  </ul>
+  <div class="slide-num">22</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>La opacidad local de cada muestra</h2>
+  <ul>
+    <li>En una muestra de densidad $\sigma_i$ y grosor $\delta_i$, la opacidad local es $\alpha_i = 1 - e^{-\sigma_i \delta_i}$.</li>
+    <li>En palabras: si hay poca materia ($\sigma_i \approx 0$) la muestra es transparente; si hay mucha, $\alpha_i \to 1$.</li>
+  </ul>
+  $$\alpha_i = 1 - e^{-\sigma_i \delta_i}$$
+  <div class="slide-num">23</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>La composición alfa integra el rayo</h2>
+  <ul>
+    <li>El color del píxel suma los aportes ponderados por la <strong>transmitancia acumulada</strong> $T_i$: la probabilidad de que la luz llegue a la muestra $i$ sin haber sido bloqueada antes.</li>
+  </ul>
+  $$C = \sum_{i=1}^{N} T_i\,\alpha_i\,\mathbf{c}_i, \qquad T_i = e^{-\sum_{j&lt;i}\sigma_j \delta_j}$$
+  <div class="slide-num">24</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>En palabras: la oclusión emerge sola</h2>
+  <ul>
+    <li>El peso de cada muestra es $w_i = T_i\,\alpha_i$. En el vacío $\alpha_i \approx 0$ y no aporta.</li>
+    <li>Al llegar a una superficie opaca el peso se concentra allí y $T$ colapsa a cero: todo lo que queda detrás queda ocluido, sin imponerlo a mano.</li>
+  </ul>
+  <div class="slide-num">25</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>Del rayo muestreado al color del píxel</h2>
+  <ul><li>En cada punto $t_i$ la red $F(\mathbf{x},\mathbf{d})$ predice color y densidad; la composición alfa los integra hasta producir el color del píxel.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 700 220" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+  <defs>
+    <marker id="arrr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
+    </marker>
+  </defs>
+  <circle cx="55" cy="110" r="14" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="55" y="140" text-anchor="middle" fill="#1a3a5c" font-size="11">cámara o</text>
+  <line x1="69" y1="110" x2="470" y2="110" stroke="#555" stroke-width="1.5" marker-end="url(#arrr)"/>
+  <text x="250" y="100" text-anchor="middle" fill="#777" font-size="11" font-style="italic">rayo r(t) = o + t d</text>
+  <ellipse cx="300" cy="110" rx="95" ry="55" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.2" opacity="0.45"/>
+  <text x="300" y="178" text-anchor="middle" fill="#7a2d7a" font-size="11">volumen (campo σ, c)</text>
+  <circle cx="150" cy="110" r="4" fill="#888"/>
+  <circle cx="220" cy="110" r="4" fill="#cc7700"/>
+  <circle cx="270" cy="110" r="5" fill="#cc4444"/>
+  <circle cx="320" cy="110" r="5" fill="#cc4444"/>
+  <circle cx="380" cy="110" r="4" fill="#aaa"/>
+  <text x="270" y="128" text-anchor="middle" fill="#7a1a1a" font-size="10">tᵢ</text>
+  <rect x="500" y="35" width="120" height="50" rx="7" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="560" y="56" text-anchor="middle" fill="#663300" font-weight="bold">MLP F(x, d)</text>
+  <text x="560" y="73" text-anchor="middle" fill="#885500" font-size="11">→ (c, σ)</text>
+  <line x1="320" y1="105" x2="500" y2="65" stroke="#aa44aa" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrr)"/>
+  <rect x="500" y="120" width="120" height="50" rx="7" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+  <text x="560" y="141" text-anchor="middle" fill="#1a4d1a" font-weight="bold">composición α</text>
+  <text x="560" y="158" text-anchor="middle" fill="#2d6b2d" font-size="11">C = Σ Tᵢ αᵢ cᵢ</text>
+  <line x1="560" y1="85" x2="560" y2="120" stroke="#555" stroke-width="1.3" marker-end="url(#arrr)"/>
+  <rect x="645" y="125" width="40" height="40" rx="5" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="665" y="185" text-anchor="middle" fill="#333" font-size="10">píxel</text>
+  <line x1="620" y1="145" x2="645" y2="145" stroke="#555" stroke-width="1.3" marker-end="url(#arrr)"/>
+  </svg></div>
+  <div class="slide-num">26</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>Codificación posicional contra el sesgo espectral</h2>
+  <ul>
+    <li>Con coordenadas crudas el resultado es borroso: las redes densas tienen <strong>sesgo espectral</strong> y les cuesta aprender alta frecuencia.</li>
+    <li>La codificación posicional proyecta cada coordenada a sinusoides de frecuencias crecientes (Tancik 2020), recuperando texturas finas y bordes nítidos.</li>
+  </ul>
+  $$\gamma(p) = \big(\sin(2^0\pi p),\, \cos(2^0\pi p),\, \ldots,\, \sin(2^{L-1}\pi p),\, \cos(2^{L-1}\pi p)\big)$$
+  <div class="slide-num">27</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis de vistas novedosas y renderizado volumétrico</div>
+  <h2>Un campo 3D compartido da coherencia</h2>
+  <ul>
+    <li>Como todas las vistas derivan de un único campo continuo, mover la cámara no rompe el objeto.</li>
+    <li>Eso es justo lo que un generador 2D no podía garantizar: la consistencia entre vistas.</li>
+  </ul>
+  <div class="slide-num">28</div>
+</section>
+
+<!-- ===== §5 ===== -->
+<section>
+  <div class="section-label">§ 5 · El desafío de la consistencia multi-vista</div>
+  <h2>¿Por qué el objeto tiembla al rotar?</h2>
+  <ul>
+    <li>Si la cámara se mueve un poco, la nueva imagen no debería presentar artefactos ni parpadeos (flickering).</li>
+    <li>El objeto tiene que comportarse como una entidad 3D estable, no como imágenes independientes.</li>
+  </ul>
+  <div class="slide-num">29</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · El desafío de la consistencia multi-vista</div>
+  <h2>Sin profundidad, cada vista es independiente</h2>
+  <ul>
+    <li>Un modelo que genera cada vista por separado carece de conocimiento de profundidad: nada ata las imágenes al mismo objeto.</li>
+    <li>El resultado son incoherencias geométricas al rotar la cámara.</li>
+  </ul>
+  <div class="slide-num">30</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · El desafío de la consistencia multi-vista</div>
+  <h2>La cura: sesgos inductivos 3D</h2>
+  <ul>
+    <li>Incorporar en el renderizador una representación 3D compartida: un campo volumétrico (NeRF) o una memoria latente de escena (GQN).</li>
+    <li>Así todas las vistas se derivan de una única descripción 3D consistente.</li>
+  </ul>
+  <div class="slide-num">31</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · El desafío de la consistencia multi-vista</div>
+  <h2>Falta un crítico que entienda de texto</h2>
+  <ul>
+    <li>Ya tenemos un render 3D consistente y diferenciable. El último paso es colocar al final un crítico que juzgue las vistas según una descripción de lenguaje.</li>
+  </ul>
+  <div class="slide-num">32</div>
+</section>
+
+<!-- ===== §6 ===== -->
+<section>
+  <div class="section-label">§ 6 · Renderizado guiado por texto: difusión y SDS</div>
+  <h2>¿Un objeto 3D a partir de una frase?</h2>
+  <ul>
+    <li>Se busca generar geometría 3D desde texto libre, pero no existen datasets 3D etiquetados comparables a las miles de millones de imágenes con texto de internet.</li>
+  </ul>
+  <div class="slide-num">33</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Renderizado guiado por texto: difusión y SDS</div>
+  <h2>Una difusión 2D congelada como crítico</h2>
+  <ul>
+    <li>DreamFusion (Poole 2022) usa un modelo de difusión texto-a-imagen preentrenado, sin reentrenarlo, para juzgar vistas renderizadas.</li>
+    <li>El conocimiento sobre imágenes plausibles ya vive en ese modelo 2D; no hace falta dato 3D.</li>
+  </ul>
+  <div class="slide-num">34</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Renderizado guiado por texto: difusión y SDS</div>
+  <h2>El bucle: orbitar, renderizar, criticar</h2>
+  <ul>
+    <li>Una cámara virtual orbita una representación 3D (un NeRF al azar) y le pasa cada captura 2D al modelo de difusión.</li>
+    <li>El crítico, condicionado por el texto, indica cómo debería verse esa vista.</li>
+  </ul>
+  <div class="slide-num">35</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Renderizado guiado por texto: difusión y SDS</div>
+  <h2>SDS: el gradiente que cincela el NeRF</h2>
+  <ul>
+    <li>El crítico entrega un gradiente de <strong>Score Distillation Sampling (SDS)</strong>: cuánto y hacia dónde corregir la vista para acercarla al texto.</li>
+    <li>Ese gradiente retrocede por el renderizador volumétrico y actualiza la representación 3D, iteración tras iteración.</li>
+  </ul>
+  <div class="slide-num">36</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Renderizado guiado por texto: difusión y SDS</div>
+  <h2>El gradiente destilado esculpe la escena</h2>
+  <ul><li>La representación 3D se renderiza desde una cámara que orbita; la difusión condicionada por el texto evalúa la vista, y el gradiente SDS retrocede para esculpir la geometría y el color.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 700 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+  <defs>
+    <marker id="arrs" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
+    </marker>
+    <marker id="arrsg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#cc4444"/>
+    </marker>
+  </defs>
+  <rect x="30" y="90" width="140" height="60" rx="8" fill="#e7e0f5" stroke="#7755aa" stroke-width="1.6"/>
+  <text x="100" y="115" text-anchor="middle" fill="#3a2a5c" font-weight="bold">Representación 3D</text>
+  <text x="100" y="133" text-anchor="middle" fill="#5a4a7c" font-size="11">NeRF (parámetros Θ)</text>
+  <rect x="250" y="90" width="130" height="60" rx="8" fill="#eef7ee" stroke="#339933" stroke-width="1.6"/>
+  <text x="315" y="115" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Renderizador</text>
+  <text x="315" y="133" text-anchor="middle" fill="#2d6b2d" font-size="11">vista 2D · cámara orbita</text>
+  <line x1="170" y1="120" x2="250" y2="120" stroke="#555" stroke-width="1.5" marker-end="url(#arrs)"/>
+  <rect x="460" y="90" width="150" height="60" rx="8" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.6"/>
+  <text x="535" y="112" text-anchor="middle" fill="#663300" font-weight="bold">Difusión (crítico)</text>
+  <text x="535" y="129" text-anchor="middle" fill="#885500" font-size="11">congelada</text>
+  <text x="535" y="144" text-anchor="middle" fill="#885500" font-size="11">gradiente SDS</text>
+  <line x1="380" y1="120" x2="460" y2="120" stroke="#555" stroke-width="1.5" marker-end="url(#arrs)"/>
+  <rect x="460" y="25" width="150" height="38" rx="6" fill="#d4e8f7" stroke="#5599cc"/>
+  <text x="535" y="48" text-anchor="middle" fill="#1a3a5c" font-style="italic">"un conejo de origami"</text>
+  <line x1="535" y1="63" x2="535" y2="90" stroke="#555" stroke-width="1.3" marker-end="url(#arrs)"/>
+  <path d="M535 150 L535 205 L100 205 L100 150" fill="none" stroke="#cc4444" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrsg)"/>
+  <text x="315" y="225" text-anchor="middle" fill="#cc4444" font-size="11" font-style="italic">gradiente SDS esculpe la escena 3D</text>
+  </svg></div>
+  <div class="slide-num">37</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Renderizado guiado por texto: difusión y SDS</div>
+  <h2>Coherente desde todos los ángulos</h2>
+  <ul>
+    <li>Tras miles de iteraciones, la representación implícita adopta la forma dictada por el texto, manteniéndose consistente al rotar.</li>
+    <li>El "error" que esculpe la escena ya no es de píxel, sino semántico: la distancia al lenguaje.</li>
+  </ul>
+  <div class="slide-num">38</div>
+</section>
+
+<!-- ===== Cierre ===== -->
+<section>
+<div class="close-slide">
+  <h1>Hacer diferenciable el dibujado de una imagen permite que el error de cada píxel, hacia atrás, esculpa la escena que lo produjo.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>
