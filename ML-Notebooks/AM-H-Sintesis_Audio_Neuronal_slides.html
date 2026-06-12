@@ -1,14 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Síntesis y Procesamiento de Audio Neuronal</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Síntesis y Procesamiento de Audio Neuronal · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css"/>
 <style>
 :root {
   --pluto-blue: #4e79a7;
@@ -36,15 +37,7 @@
 }
 .reveal .slide-background { background: var(--paper); }
 
-.reveal .slides section {
-  padding: 2% 5% 2% 5%;
-  box-sizing: border-box;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
+.reveal .slides section { padding: 0 5%; box-sizing: border-box; min-width: 0; }
 
 .section-label {
   font-size: 0.75em;
@@ -72,19 +65,8 @@
   line-height: 1.5;
   color: var(--ink);
 }
-.reveal ul {
-  padding-left: 1.3em;
-  margin: 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  min-height: 0;
-}
+.reveal ul { padding-left: 1.3em; margin: 0.2em 0 0 0; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }
+.reveal li + li { margin-top: 0.6em; }
 .reveal li {
   margin: 0;
   min-width: 0;
@@ -98,26 +80,16 @@
 .reveal em { font-style: italic; }
 .reveal a { color: var(--pluto-blue); text-decoration: none; }
 
+/* Equations: direct display math, no card borders */
 .reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
 
-p.note {
-  font-size: 0.85em;
-  color: var(--ink-soft);
-  margin-top: 0.4em;
-  font-style: italic;
-  flex-shrink: 0;
-}
+p.note { font-size: 1.3em; color: var(--ink-soft); margin-top: 0.6em; font-style: italic; }
 
-.svg-holder {
-  display: flex; align-items: stretch;
-  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
-  margin-top: 0.3em; overflow: hidden;
-}
-.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
+/* SVG fills remaining vertical space without overflowing */
+.svg-holder { width: 100%; margin-top: 0.5em; text-align: center; }
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
 
-.title-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
+.title-slide { }
 .title-slide .course-id {
   font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
   text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
@@ -125,68 +97,71 @@ p.note {
 .title-slide h1 { font-size: 2.6em; }
 .title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
 
-.close-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
+.close-slide { }
 .close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
 
-.slide-num {
-  position: absolute; bottom: 2%; right: 3%;
-  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.1em;
-}
+.slide-num { display: none; }
 .reveal .controls { color: var(--ink-faint); }
 .reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
-
-.comp-table {
-  width: 100%; border-collapse: collapse; font-size: 1.1em;
-  flex: 1; min-height: 0;
-}
-.comp-table th {
-  background: var(--pluto-blue); color: #fff;
-  padding: 0.35em 0.6em; text-align: left; font-weight: 600;
-}
-.comp-table td {
-  padding: 0.3em 0.6em; border-bottom: 1px solid #ddd; vertical-align: top;
-}
-.comp-table tr:nth-child(even) td { background: #f5f8fc; }
-@media (prefers-color-scheme: dark) {
-  .comp-table tr:nth-child(even) td { background: #333; }
-  .comp-table td { border-bottom-color: #444; }
-}
 </style>
 </head>
 <body>
 <div class="reveal">
 <div class="slides">
 
-<!-- ══════════════════════════════════════════════════════ PORTADA -->
+<!-- ===== Portada ===== -->
 <section>
-  <div class="title-slide">
-    <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
-    <h1>Síntesis y Procesamiento de Audio Neuronal</h1>
-    <div class="byline">Rodrigo F. Cádiz · Pontificia Universidad Católica de Chile</div>
-  </div>
-  <div class="slide-num">1</div>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Síntesis y Procesamiento de Audio Neuronal</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ §1 -->
+<!-- ===== Apertura ===== -->
 <section>
-  <div class="section-label">§ 1 · Representaciones del Audio</div>
-  <h2>Representar audio requiere elegir entre fidelidad, compacidad y control</h2>
+  <h2>El audio: decenas de miles de muestras por segundo</h2>
   <ul>
-    <li>El audio de alta fidelidad se muestrea a 16–44.1 kHz: modelar coherencia semántica de largo plazo exige capturar dependencias a través de millones de pasos temporales</li>
-    <li>La elección del dominio de representación dicta la arquitectura del modelo generativo y sus vulnerabilidades fundamentales</li>
-    <li>Tres dominios han sido explorados: tiempo (forma de onda), frecuencia (espectrograma STFT) y simbólico (MIDI / tokens discretos)</li>
+    <li>El audio de alta fidelidad se muestrea entre 16 y 44.1 kHz: un solo segundo contiene decenas de miles de variables.</li>
+    <li>Hay que capturar el ritmo y la melodía (largo plazo) sin perder el detalle acústico (alta frecuencia).</li>
   </ul>
   <div class="slide-num">2</div>
 </section>
 
 <section>
-  <div class="section-label">§ 1 · Representaciones del Audio</div>
-  <h2>Tres dominios de representación del audio</h2>
-  <ul><li>Tiempo: alta fidelidad pero problema de fase; frecuencia: compacto pero fuga espectral; simbólico: eficiente pero sin textura acústica</li></ul>
-  <div class="svg-holder">
-    <svg viewBox="0 0 620 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <h2>Cada modelo apuesta por una representación distinta</h2>
+  <ul>
+    <li>La historia de la generación de audio es, en el fondo, la historia de qué representación vuelve tratable un segundo de sonido.</li>
+  </ul>
+  <div class="slide-num">3</div>
+</section>
+
+<!-- ===== §1 ===== -->
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>¿En qué forma representar un segundo de sonido?</h2>
+  <ul>
+    <li>Antes de elegir un modelo hay que elegir la representación; esa decisión condiciona todo lo que viene después.</li>
+  </ul>
+  <div class="slide-num">4</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Tres dominios, tres compromisos</h2>
+  <ul>
+    <li>Históricamente se exploraron tres formas de representar el audio: el tiempo, la frecuencia y lo simbólico.</li>
+    <li>Cada una gana algo y paga un precio; ninguna es gratis.</li>
+  </ul>
+  <div class="slide-num">5</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Tiempo, frecuencia y símbolo: el mapa</h2>
+  <ul><li>Forma de onda (fidelidad, pero fase y lentitud); espectrograma (compacto, pero requiere fase); símbolo MIDI (eficiente, pero sin textura).</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 620 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <defs>
     <marker id="arH2a" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0,8 3,0 6" fill="#555"/>
@@ -225,74 +200,84 @@ p.note {
   <text x="520" y="185" text-anchor="middle" font-size="10" fill="#2e7d32">+ Eficiente, interpretable</text>
   <text x="520" y="200" text-anchor="middle" font-size="10" fill="#c62828">- Sin textura acústica</text>
   <text x="520" y="215" text-anchor="middle" font-size="10" fill="#c62828">- Depende de sintetizador externo</text>
-    </svg>
-  </div>
-  <div class="slide-num">3</div>
-</section>
-
-<section>
-  <div class="section-label">§ 1 · Representaciones del Audio</div>
-  <h2>El dominio del tiempo preserva la fase pero es costoso de modelar</h2>
-  <ul>
-    <li>WaveGAN usa convoluciones con <em>stride</em> directamente sobre la forma de onda cruda, generando audio en un solo paso</li>
-    <li><strong>Problema de fase:</strong> el audio oscila a múltiples frecuencias que no coinciden con los tamaños fijos de las ventanas convolucionales; el modelo debe aprender filtros que cubran todas las variaciones de fase posibles</li>
-    <li>WaveNet (§2) resolvió esto prediciendo muestra a muestra: alta calidad al coste de generación puramente secuencial</li>
-  </ul>
-  <div class="slide-num">4</div>
-</section>
-
-<section>
-  <div class="section-label">§ 1 · Representaciones del Audio</div>
-  <h2>La STFT convierte la señal en tiempo-frecuencia pero pierde la fase</h2>
-  <ul>
-    <li>La Transformada de Fourier a Corto Plazo (STFT) calcula el espectro de magnitud y fase sobre ventanas temporales superpuestas</li>
-    <li><strong>Fuga espectral:</strong> cuando las frecuencias reales no coinciden exactamente con los <em>bins</em> de Fourier, el modelo debe combinar múltiples frecuencias vecinas para representar una sola sinusoide</li>
-    <li>Recuperar la forma de onda a partir de la magnitud requiere reconstruir la fase: algoritmo de Griffin-Lim (iterativo) o vocoders neuronales como HiFi-GAN (§6)</li>
-  </ul>
-  <div class="slide-num">5</div>
-</section>
-
-<section>
-  <div class="section-label">§ 1 · Representaciones del Audio</div>
-  <h2>Los tokens discretos son eficientes pero pierden la textura acústica</h2>
-  <ul>
-    <li>MIDI y tokens musicales (Music Transformer, Huang et al., 2018): eficientes y semánticamente interpretables, pero sin timbre ni dinámica microrrítmica</li>
-    <li>El timbre, la dinámica y los detalles del instrumento se pierden y deben ser restituidos por un sintetizador externo</li>
-    <li>Esta limitación motivó representaciones discretas que sí capturen la acústica, conduciendo a los <strong>codecs neuronales</strong> (§3)</li>
-  </ul>
+  </svg></div>
   <div class="slide-num">6</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ §2 -->
 <section>
-  <div class="section-label">§ 2 · Modelado Autoregresivo: WaveNet</div>
-  <h2>WaveNet modela la forma de onda como distribución condicional muestra a muestra</h2>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Tiempo: fidelidad máxima, pero fase y lentitud</h2>
   <ul>
-    <li>Para evitar los sesgos de fase de WaveGAN, WaveNet (van den Oord et al., 2016) opera directamente en el dominio del tiempo</li>
-    <li>Cada muestra $x_t$ se predice como distribución condicional dado todo el historial $x_1, \dots, x_{t-1}$</li>
-    <li>La salida es categórica sobre 256 niveles de cuantización $\mu$-law, no una regresión continua</li>
+    <li>Generar la forma de onda directamente preserva todo el detalle, pero el audio oscila a frecuencias que no coinciden con las ventanas convolucionales: aparece el problema de alineación de fase.</li>
+    <li>WaveNet lo resolvió generando muestra a muestra, de forma autoregresiva.</li>
   </ul>
   <div class="slide-num">7</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · Modelado Autoregresivo: WaveNet</div>
-  <h2>La distribución de la forma de onda se factoriza como producto de condicionales</h2>
-  $$p(x) = \prod_{t=1}^{T} p(x_t \mid x_1, \dots, x_{t-1})$$
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Frecuencia: compacto, pero hay que recuperar la fase</h2>
   <ul>
-    <li>$T$: número total de muestras (16 000 para 1 s a 16 kHz; 44 100 para 1 s a 44.1 kHz)</li>
-    <li>$p(x_t | x_1,\dots,x_{t-1})$: distribución categorical sobre 256 niveles de amplitud cuantizada</li>
-    <li>El producto garantiza coherencia causal: ninguna muestra futura contamina la predicción de $x_t$</li>
+    <li>La STFT (Transformada de Fourier a Corto Plazo) da una representación tiempo-frecuencia compacta, pero sufre de fuga espectral.</li>
+    <li>Recuperar la onda desde la magnitud exige reconstruir la fase, con Griffin-Lim o con un vocoder neuronal.</li>
   </ul>
   <div class="slide-num">8</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · Modelado Autoregresivo: WaveNet</div>
-  <h2>La dilatación exponencial amplía el campo receptivo con pocas capas</h2>
-  <ul><li>Capa azul $d$=1 conecta pares adyacentes (RF=2); capa roja $d$=2 salta muestras (RF=4); capa verde $d$=4 alcanza RF=8 — con $L$ capas, RF=$2^L-1$</li></ul>
-  <div class="svg-holder">
-    <svg viewBox="0 0 540 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Símbolo: eficiente, pero sin textura acústica</h2>
+  <ul>
+    <li>El MIDI o los tokens discretos son eficientes e interpretables, pero pierden timbre y microdinámica.</li>
+    <li>Esa pérdida motivó buscar representaciones discretas que sí capturen la acústica: los codecs neuronales.</li>
+  </ul>
+  <div class="slide-num">9</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>La vía más directa: modelar la onda, muestra a muestra</h2>
+  <ul>
+    <li>El primer gran modelo apostó por el dominio del tiempo puro, sin pasar por la frecuencia ni por símbolos.</li>
+  </ul>
+  <div class="slide-num">10</div>
+</section>
+
+<!-- ===== §2 ===== -->
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>¿Se puede modelar la forma de onda directamente?</h2>
+  <ul>
+    <li>WaveNet (van den Oord et al., 2016) modela la onda en el tiempo, muestra por muestra, evitando los sesgos de fase de convoluciones y espectrogramas.</li>
+  </ul>
+  <div class="slide-num">11</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>WaveNet factoriza la onda como cadena autoregresiva</h2>
+  <ul>
+    <li>La probabilidad de la señal completa se factoriza como producto de condicionales: cada muestra $x_t$ depende de todas las anteriores.</li>
+  </ul>
+  $$p(x) = \prod_{t=1}^{T} p(x_t \mid x_1, \dots, x_{t-1})$$
+  <p class="note">En palabras: predecir el audio es predecir la próxima muestra una y otra vez, dado todo el pasado.</p>
+  <div class="slide-num">12</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>El truco: convoluciones causales dilatadas</h2>
+  <ul>
+    <li>Convoluciones estrictamente causales (cada $t$ ve solo el pasado) con dilatación creciente por capa, para abarcar miles de muestras sin más parámetros.</li>
+  </ul>
+  <div class="slide-num">13</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>La dilatación crece, el campo receptivo explota</h2>
+  <ul><li>Cada capa duplica la dilatación ($d = 1, 2, 4, \dots$): el campo receptivo crece exponencialmente con la profundidad.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 540 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <defs>
     <marker id="arH2b" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
       <polygon points="0 0,7 2.5,0 5" fill="#555"/>
@@ -350,40 +335,63 @@ p.note {
   <text x="430" y="58" font-size="10" fill="#388e3c" font-weight="bold">RF = 8</text>
   <text x="430" y="113" font-size="10" fill="#c2185b" font-weight="bold">RF = 4</text>
   <text x="430" y="173" font-size="10" fill="#4a6fa5" font-weight="bold">RF = 2</text>
-    </svg>
-  </div>
-  <div class="slide-num">9</div>
+  </svg></div>
+  <div class="slide-num">14</div>
 </section>
 
 <section>
-  <div class="section-label">§ 2 · Modelado Autoregresivo: WaveNet</div>
-  <h2>La síntesis secuencial es 500× más lenta que el tiempo real</h2>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>Con L capas se ven 2^L − 1 muestras</h2>
   <ul>
-    <li>WaveNet a 16 kHz requiere 16 000 pasos secuenciales de inferencia por segundo de audio generado</li>
-    <li>Parallel WaveNet (van den Oord et al., 2018) usó destilación de conocimiento con flujos normalizados para paralelizar la generación, pero añadió complejidad de entrenamiento</li>
-    <li>El problema fundamental de modelar el audio muestra a muestra motivó la búsqueda de representaciones comprimidas y discretas (§3)</li>
+    <li>Con dilataciones $1, 2, 4, \dots, 2^{L-1}$, el campo receptivo es $2^L - 1$ muestras usando solo $L$ capas.</li>
+    <li>A 16 kHz, $L = 14$ capas alcanzan cerca de 1 segundo de contexto.</li>
   </ul>
-  <div class="slide-num">10</div>
+  <div class="slide-num">15</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ §3 -->
 <section>
-  <div class="section-label">§ 3 · Cuantización Vectorial y Codecs Neuronales</div>
-  <h2>VQ-VAE: comprimir el audio en una secuencia corta de tokens discretos</h2>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>Pero generar es secuencial: el cuello de botella</h2>
   <ul>
-    <li>El VQ-VAE (Vector Quantised Variational Autoencoder, van den Oord et al., 2017) proyecta cada vector latente al elemento más cercano de un codebook de tamaño $K$</li>
-    <li>Factor de compresión $C$: el espacio latente opera a $T/C$ vectores discretos por segundo; con $C=588$ se obtienen $\sim$75 tokens/s</li>
-    <li>Un Transformer entrenado sobre estas secuencias cortas puede aprender estructura semántica de largo plazo de forma tratable</li>
+    <li>Cada muestra depende de todas las anteriores, así que la síntesis no se puede paralelizar.</li>
+    <li>Un segundo a 16 kHz son 16 000 pasos secuenciales: el WaveNet original era hasta 500 veces más lento que el tiempo real.</li>
   </ul>
-  <div class="slide-num">11</div>
+  <div class="slide-num">16</div>
 </section>
 
 <section>
-  <div class="section-label">§ 3 · Cuantización Vectorial y Codecs Neuronales</div>
-  <h2>VQ-VAE: encoder → codebook → decoder</h2>
-  <ul><li>Encoder Conv1D ↓$C$×; codebook $K$=1024 entradas; decoder ConvTranspose1D ↑$C$× — la secuencia discreta de $T/C$ tokens comprime toda la señal</li></ul>
-  <div class="svg-holder">
-    <svg viewBox="0 0 560 170" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>El problema de fondo es la tasa de muestreo</h2>
+  <ul>
+    <li>Si modelar cada muestra es tan caro, la salida natural es comprimir el audio a una secuencia mucho más corta de símbolos.</li>
+  </ul>
+  <div class="slide-num">17</div>
+</section>
+
+<!-- ===== §3 ===== -->
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>¿Cómo bajar de decenas de miles de muestras a un Transformer?</h2>
+  <ul>
+    <li>El avance clave fue comprimir la señal en una secuencia discreta de baja tasa que un modelo de secuencias pueda manejar.</li>
+  </ul>
+  <div class="slide-num">18</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>VQ-VAE: comprimir a tokens de un diccionario</h2>
+  <ul>
+    <li>El VQ-VAE (Vector Quantised VAE, van den Oord et al., 2017) usa un codificador convolucional y un cuantizador que proyecta cada latente al elemento más cercano de un codebook finito.</li>
+  </ul>
+  <div class="slide-num">19</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>Codificar, cuantizar, decodificar</h2>
+  <ul><li>El encoder baja la tasa $C$ veces, el cuantizador vectorial (VQ) elige el token del codebook, y el decoder reconstruye la onda.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 560 170" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <defs>
     <marker id="arH2c" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0,8 3,0 6" fill="#555"/>
@@ -415,86 +423,113 @@ p.note {
   <text x="490" y="95" text-anchor="middle" font-size="10" fill="#555">reconstruido</text>
   <text x="265" y="148" text-anchor="middle" font-size="10" fill="#e65100" font-weight="bold">Secuencia discreta: T/C tokens</text>
   <text x="265" y="162" text-anchor="middle" font-size="10" fill="#888">(ej. 75 tokens/s con C=588)</text>
-    </svg>
-  </div>
-  <div class="slide-num">12</div>
+  </svg></div>
+  <div class="slide-num">20</div>
 </section>
 
 <section>
-  <div class="section-label">§ 3 · Cuantización Vectorial y Codecs Neuronales</div>
-  <h2>La compresión profunda fuerza al codebook a codificar solo contenido semántico</h2>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>De decenas de miles a decenas de tokens por segundo</h2>
   <ul>
-    <li>Bajo compresión severa el codebook no puede retener detalles microscópicos: codifica fonemas o contenido del habla, no características de timbre</li>
-    <li>Al reconstruir condicionado en un identificador de hablante distinto, el modelo altera timbre y prosodia preservando el contenido: <strong>conversión de voz</strong> sin supervisión explícita</li>
-    <li>Sobre el espacio latente discreto se entrena un Transformer autoregresivo: la secuencia reducida de tokens hace tratable el aprendizaje de estructura de largo plazo</li>
+    <li>Si el audio tiene $T$ muestras, el espacio latente opera a $T/C$ tokens, con factor de compresión $C$ típico de 320 a 640.</li>
+    <li>Sobre esa secuencia corta, un Transformer aprende la estructura de largo plazo de forma tratable.</li>
   </ul>
-  <div class="slide-num">13</div>
+  <div class="slide-num">21</div>
 </section>
 
 <section>
-  <div class="section-label">§ 3 · Cuantización Vectorial y Codecs Neuronales</div>
-  <h2>SoundStream y EnCodec extienden VQ-VAE con cuantización vectorial residual</h2>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>La compresión fuerza lo semántico: conversión de voz</h2>
   <ul>
-    <li><strong>SoundStream</strong> (Zeghidour et al., 2021): primer codec neuronal en tiempo real; usa RVQ (Residual Vector Quantization), apilando codebooks para capturar distintos niveles de detalle; 3–18 kbps</li>
-    <li><strong>EnCodec</strong> (Défossez et al., 2022, Meta): opera en estéreo a 24/48 kHz con RVQ; backbone de compresión de múltiples modelos de audio generativo</li>
-    <li>Ambos comprimen a 75–150 tokens/s: un Transformer con 1024 tokens de contexto abarca 7–14 s de audio continuo, habilitando el modelado de lenguaje sobre audio (§5)</li>
+    <li>Al comprimir tanto, el codebook solo retiene lo esencial (fonemas, contenido), no los detalles microscópicos.</li>
+    <li>Reconstruir condicionando en otro hablante cambia timbre y prosodia pero preserva el contenido: conversión de voz sin supervisión.</li>
   </ul>
-  <div class="slide-num">14</div>
+  <div class="slide-num">22</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ §4 -->
 <section>
-  <div class="section-label">§ 4 · Síntesis Adversaria: GANSynth</div>
-  <h2>GANSynth evita la ambigüedad de fase generando frecuencias instantáneas</h2>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>Codecs modernos: SoundStream y EnCodec</h2>
   <ul>
-    <li>GANSynth (Engel et al., 2019): GAN que opera sobre espectrogramas pero evita el problema de fase del dominio de la frecuencia convencional</li>
-    <li>En lugar de la magnitud espectral sola, genera simultáneamente magnitud $|X(t,k)|$ y <strong>frecuencias instantáneas</strong> $f_i(t,k)$ (derivada temporal de la fase desenrollada)</li>
-    <li>La generación es <strong>paralela</strong> (no autoregresiva): un solo paso del generador produce todo el espectrograma de alta resolución</li>
+    <li>Usan cuantización vectorial residual (RVQ), apilando codebooks para capturar distintos niveles de detalle.</li>
+    <li>Comprimen a 75-150 tokens por segundo: un contexto de 1024 tokens abarca entre 7 y 14 segundos de audio.</li>
   </ul>
-  <div class="slide-num">15</div>
+  <div class="slide-num">23</div>
 </section>
 
 <section>
-  <div class="section-label">§ 4 · Síntesis Adversaria: GANSynth</div>
-  <h2>La frecuencia instantánea es la derivada temporal de la fase desenrollada</h2>
-  $$f_i(t, k) = \frac{1}{2\pi}\frac{\partial \phi(t,k)}{\partial t}$$
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>Comprimir es una vía; las GAN probaron otra</h2>
   <ul>
-    <li>$\phi(t,k)$: fase de la banda frecuencial $k$ en el instante $t$, desenrollada para eliminar saltos de $\pm\pi$</li>
-    <li>$f_i(t,k)$ es continua y no ambigua: un generador puede aprenderla con pérdida MSE, sin las discontinuidades del espectrograma de fase ordinario</li>
-    <li>Generar $(|X|, f_i)$ en lugar de $(|X|, \angle X)$ hace que el problema sea localmente suave y tratable para una CNN</li>
+    <li>Mientras los autoregresivos comprimían y modelaban tokens, las GAN intentaron sintetizar audio de alta fidelidad en paralelo.</li>
   </ul>
-  <div class="slide-num">16</div>
+  <div class="slide-num">24</div>
 </section>
 
+<!-- ===== §4 ===== -->
 <section>
-  <div class="section-label">§ 4 · Síntesis Adversaria: GANSynth</div>
-  <h2>GANSynth: 15 M parámetros e interpolación tímbrica, pero alcance limitado</h2>
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>¿GAN de alta fidelidad sin el problema de fase?</h2>
   <ul>
-    <li>15 M de parámetros frente a 75 M de un autoencoder basado en WaveNet, con calidad de audio comparable en el dominio de notas musicales aisladas</li>
-    <li>Interpolación suave en espacio latente: gradiente continuo entre timbres de instrumentos distintos del dataset NSynth</li>
-    <li>Limitación estructural: diseñado para notas de instrumentos aislados — no generaliza a voz espontánea ni a música con estructura temporal compleja (estructura que el modelado de lenguaje de §5 sí captura)</li>
+    <li>GANSynth (Engel et al., 2019) mostró que una GAN puede sintetizar audio musical de altísima fidelidad si opera sobre una representación espectral que esquiva la fase.</li>
   </ul>
-  <div class="slide-num">17</div>
+  <div class="slide-num">25</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ §5 -->
 <section>
-  <div class="section-label">§ 5 · Modelos de Lenguaje y Difusión para Audio</div>
-  <h2>El audio reformulado como predicción de secuencias de tokens discretos</h2>
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>GANSynth genera magnitud y frecuencia instantánea</h2>
   <ul>
-    <li>El estado del arte (AudioLM, MusicLM, Seed-Music) formula la generación de audio como <strong>modelado de lenguaje</strong>: un codec convierte el audio en tokens; un Transformer aprende a predecirlos como si fueran texto</li>
-    <li>Esta formulación permite condicionar la síntesis en texto descriptivo, letras, embeddings de melodía o tokens de partitura MIDI</li>
-    <li>La secuencia comprimida (75–150 tokens/s) hace que contextos de 1024–4096 tokens abarquen 7–54 s de audio</li>
+    <li>En vez de la fase cruda, genera la magnitud junto con la frecuencia instantánea, la derivada temporal de la fase de cada banda $k$.</li>
   </ul>
-  <div class="slide-num">18</div>
+  $$f_i(t, k) = \frac{1}{2\pi}\,\frac{\partial \phi(t,k)}{\partial t}$$
+  <p class="note">En palabras: codificar la fase como su tasa de cambio elimina la ambigüedad que arruinaba a los espectrogramas.</p>
+  <div class="slide-num">26</div>
 </section>
 
 <section>
-  <div class="section-label">§ 5 · Modelos de Lenguaje y Difusión para Audio</div>
-  <h2>Cascada: condicionamiento → LM → difusión → vocoder</h2>
-  <ul><li>Condicionamiento multimodal (texto, MIDI, letras) alimenta un LM (Transformer GPT-like); tokens discretos pasan a un DiT de denoising; el vocoder sintetiza la forma de onda estéreo final</li></ul>
-  <div class="svg-holder">
-    <svg viewBox="0 0 580 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>Síntesis paralela e interpolación de timbres</h2>
+  <ul>
+    <li>Genera audio en paralelo (no autoregresivo) y permite interpolar suavemente entre timbres en el espacio latente, con solo ~15 M de parámetros.</li>
+    <li>Su límite: fue diseñado para notas musicales aisladas, no para voz o música con estructura temporal compleja.</li>
+  </ul>
+  <div class="slide-num">27</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>La frontera unificó todo como lenguaje</h2>
+  <ul>
+    <li>El estado del arte tomó otra ruta: tratar el audio comprimido en tokens como si fuera texto, y predecirlo con un modelo de lenguaje.</li>
+  </ul>
+  <div class="slide-num">28</div>
+</section>
+
+<!-- ===== §5 ===== -->
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>¿Generar audio como se genera texto?</h2>
+  <ul>
+    <li>Convertido el audio en tokens discretos por un codec, un Transformer aprende a predecirlos como si fueran palabras.</li>
+  </ul>
+  <div class="slide-num">29</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>La cascada desacopla semántica y acústica</h2>
+  <ul>
+    <li>Sistemas como AudioLM, MusicLM y Seed-Music separan el problema en dos: primero el contenido, luego el sonido.</li>
+  </ul>
+  <div class="slide-num">30</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>De la condición al audio, en cascada</h2>
+  <ul><li>La condición (texto, letras, MIDI, estilo) entra a un LM que produce tokens; difusión y vocoder los convierten en audio de alta calidad.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 580 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <defs>
     <marker id="arH2d" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0,8 3,0 6" fill="#555"/>
@@ -532,62 +567,74 @@ p.note {
   <rect x="510" y="70" width="60" height="60" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
   <text x="540" y="96" text-anchor="middle" font-size="11" font-weight="bold" fill="#1565c0">Audio</text>
   <text x="540" y="112" text-anchor="middle" font-size="10" fill="#555">alta cal.</text>
-    </svg>
-  </div>
-  <div class="slide-num">19</div>
+  </svg></div>
+  <div class="slide-num">31</div>
 </section>
 
 <section>
-  <div class="section-label">§ 5 · Modelos de Lenguaje y Difusión para Audio</div>
-  <h2>El Transformer autoregresivo opera sobre tokens de 75–150 por segundo</h2>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>Etapa 1: un LM predice tokens de audio</h2>
   <ul>
-    <li>Condicionamiento multimodal: texto descriptivo (convertido a fonemas), etiquetas de género como embeddings continuos, tokens MIDI o de partitura</li>
-    <li>La compresión del codec hace tratable el contexto: 1024–4096 tokens cubren 7–54 s de audio con un solo paso de atención</li>
-    <li>El Transformer predice el siguiente token de audio dada la historia y el condicionamiento: <em>next-token prediction</em> sobre la secuencia comprimida, idéntico al modelado de texto</li>
+    <li>Un Transformer procesa los condicionamientos y predice la secuencia de tokens del codec por predicción del siguiente token.</li>
+    <li>Como el codec comprime a 75-150 tokens/s, esto cabe en 1024-4096 tokens de contexto.</li>
   </ul>
-  <div class="slide-num">20</div>
+  <div class="slide-num">32</div>
 </section>
 
 <section>
-  <div class="section-label">§ 5 · Modelos de Lenguaje y Difusión para Audio</div>
-  <h2>El Diffusion Transformer refina latentes; el vocoder sintetiza la forma de onda</h2>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>Etapa 2: difusión y vocoder reconstruyen el sonido</h2>
   <ul>
-    <li>Los tokens discretos del LM alimentan un Diffusion Transformer (DiT) que predice representaciones latentes continuas mediante denoising iterativo</li>
-    <li>El vocoder (decoder del VAE del codec) sintetiza la forma de onda estéreo a 44.1 kHz a partir de los latentes continuos</li>
-    <li>La separación en etapas desacopla semántica (LM) de acústica (difusión + vocoder): cada etapa puede entrenarse y mejorarse de forma independiente</li>
+    <li>Un Diffusion Transformer (DiT) lleva los tokens a latentes continuos por denoising iterativo.</li>
+    <li>Un vocoder (decoder del VAE del codec) sintetiza la forma de onda estéreo de alta calidad.</li>
   </ul>
-  <div class="slide-num">21</div>
+  <div class="slide-num">33</div>
 </section>
 
 <section>
-  <div class="section-label">§ 5 · Modelos de Lenguaje y Difusión para Audio</div>
-  <h2>AudioLM, MusicLM y Seed-Music instancian el paradigma de cascada</h2>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>El bonus: editar melodía, letra o estilo</h2>
   <ul>
-    <li><strong>AudioLM</strong> (Borsos et al., 2022): tokens jerárquicos semánticos (w2v-BERT) más acústicos (SoundStream); sin condicionamiento externo, continúa fragmentos de audio</li>
-    <li><strong>MusicLM</strong> (Agostinelli et al., 2023): extiende AudioLM condicionando en embeddings de texto mediante MuLan; puede además condicionar en melodías de referencia</li>
-    <li><strong>Seed-Music</strong> (ByteDance, 2024): añade módulo de edición sobre representaciones de nivel medio — permite alterar melodía vocal o letras sin reentrenamiento</li>
+    <li>Separar lo semántico de lo acústico permite editar sobre tokens de partitura o fonemas sin rehacer la síntesis.</li>
+    <li>Cambiar la melodía sin tocar el acompañamiento, o la letra preservando el timbre, como demostró Seed-Music.</li>
   </ul>
-  <div class="slide-num">22</div>
+  <div class="slide-num">34</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ §6 -->
 <section>
-  <div class="section-label">§ 6 · Espectrogramas como Entrada a Redes Neuronales</div>
-  <h2>El espectrograma reutiliza la infraestructura CNN de visión computacional</h2>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>Pero, ¿por qué tantas etapas usan espectrogramas?</h2>
   <ul>
-    <li>El audio a 44.1 kHz contiene secuencias muy largas; la STFT con hop de 512 muestras comprime a $\sim$86 tramas/s: secuencias manejables para Transformers</li>
-    <li>El espectrograma es una matriz 2D (tiempo × frecuencia): bordes horizontales son tonos sostenidos; bordes verticales son ataques percusivos</li>
-    <li>CNNs de visión (ResNet, EfficientNet, Vision Transformers) se aplican con mínimas modificaciones, reutilizando décadas de conocimiento de visión</li>
+    <li>Vocoders y modelos de análisis vuelven una y otra vez al dominio de la frecuencia; conviene entender por qué.</li>
   </ul>
-  <div class="slide-num">23</div>
+  <div class="slide-num">35</div>
+</section>
+
+<!-- ===== §6 ===== -->
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>¿Por qué convertir el audio en una imagen?</h2>
+  <ul>
+    <li>El dominio de la frecuencia no solo sirve para analizar: es la entrada predominante para entrenar redes que reconocen o clasifican sonido.</li>
+  </ul>
+  <div class="slide-num">36</div>
 </section>
 
 <section>
-  <div class="section-label">§ 6 · Espectrogramas como Entrada a Redes Neuronales</div>
-  <h2>Pipeline A: dominio tiempo; Pipeline B: espectrograma</h2>
-  <ul><li>Pipeline A (WaveNet, RAVE) preserva fase y genera waveform directamente; Pipeline B aplica STFT+Mel → CNN 2D, ganando eficiencia a costa de perder la fase y requerir un vocoder</li></ul>
-  <div class="svg-holder">
-    <svg viewBox="0 0 580 215" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>El espectrograma es una imagen 2D tiempo-frecuencia</h2>
+  <ul>
+    <li>Al ser una imagen, toda la infraestructura de CNN desarrollada para visión se reutiliza directamente.</li>
+    <li>Bordes horizontales son tonos sostenidos; bordes verticales, ataques percusivos.</li>
+  </ul>
+  <div class="slide-num">37</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>Onda directa vs. espectrograma: dos pipelines</h2>
+  <ul><li>Arriba, una red 1D sobre la forma de onda (preserva fase); abajo, STFT + mel hacia una CNN 2D de visión (reusa modelos, pero pierde la fase).</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 580 215" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <defs>
     <marker id="arH2e" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0,8 3,0 6" fill="#555"/>
@@ -631,62 +678,63 @@ p.note {
   <text x="475" y="145" text-anchor="middle" font-size="10" fill="#555">(clase, embed.)</text>
   <text x="420" y="180" font-size="10" fill="#2e7d32">+ Reusar CNNs de vision</text>
   <text x="420" y="196" font-size="10" fill="#c62828">- Pierde fase; necesita vocoder</text>
-    </svg>
-  </div>
-  <div class="slide-num">24</div>
+  </svg></div>
+  <div class="slide-num">38</div>
 </section>
 
 <section>
-  <div class="section-label">§ 6 · Espectrogramas como Entrada a Redes Neuronales</div>
-  <h2>El mel-espectrograma comprime $F$ bins de Fourier a $M \ll F$ canales perceptuales</h2>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>El mel-espectrograma imita la percepción</h2>
   <ul>
-    <li>Banco de filtros triangulares en escala mel (imita la percepción auditiva humana): comprime frecuencias altas, expande frecuencias bajas</li>
-    <li>$M = 80$ o $128$ canales frente a miles de bins del STFT; resultado: matriz $(M \times T)$ donde $T$ es el número de ventanas temporales</li>
-    <li>Entrada estándar de sistemas de reconocimiento de voz automático (ASR), clasificación de música y vocoders neuronales como WaveGlow y HiFi-GAN</li>
+    <li>Un banco de filtros en escala mel comprime las frecuencias altas y expande las bajas, como el oído humano.</li>
+    <li>Reduce el STFT a $M \ll F$ canales (80 o 128): la entrada estándar de reconocimiento de voz y vocoders.</li>
   </ul>
-  <div class="slide-num">25</div>
+  <div class="slide-num">39</div>
 </section>
 
 <section>
-  <div class="section-label">§ 6 · Espectrogramas como Entrada a Redes Neuronales</div>
-  <h2>Los espectrogramas son robustos al ruido y eficientes para Transformers</h2>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>Pero sintetizar exige recuperar la fase: el vocoder</h2>
   <ul>
-    <li>Tasa reducida de 44.1 kHz a $\sim$86 tramas/s con hop de 512 muestras: secuencias manejables para recurrentes y Transformers</li>
-    <li>Patrones tempo-espectrales relevantes (formantes, armónicos, transitorios) son locales en 2D, facilitando el aprendizaje convolucional</li>
-    <li>Robustez al ruido aditivo: el espectrograma comprime el ruido de fase; modelos entrenados sobre espectrogramas son más estables que equivalentes sobre forma de onda</li>
+    <li>La magnitud del STFT descarta la fase, necesaria para volver a la onda.</li>
+    <li>Griffin-Lim la estima de forma iterativa (con artefactos metálicos); los vocoders neuronales como HiFi-GAN aprenden magnitud → onda directamente.</li>
   </ul>
-  <div class="slide-num">26</div>
+  <div class="slide-num">40</div>
 </section>
 
 <section>
-  <div class="section-label">§ 6 · Espectrogramas como Entrada a Redes Neuronales</div>
-  <h2>La síntesis desde espectrogramas requiere reconstruir la fase con un vocoder</h2>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>Dos sistemas reales, dos filosofías</h2>
   <ul>
-    <li><strong>Griffin-Lim</strong> (iterativo, clásico): estima la fase consistente con la magnitud dada mediante proyecciones alternadas — produce artefactos metálicos audibles</li>
-    <li><strong>HiFi-GAN</strong> (Kong et al., 2020): aprende directamente $|X| \to$ forma de onda con generadores convolucionales y discriminadores multi-escala y multi-periodo; latencia $\sim$8 ms, calidad cercana al original</li>
-    <li>Dos paradigmas en §7: RAVE evita el problema operando sobre forma de onda directamente; AudioGen lo evita via tokens de codec neuronal</li>
+    <li>Con todas las piezas vistas, dos arquitecturas representativas muestran caminos opuestos del campo.</li>
   </ul>
-  <div class="slide-num">27</div>
+  <div class="slide-num">41</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ §7 -->
+<!-- ===== §7 ===== -->
 <section>
-  <div class="section-label">§ 7 · Arquitecturas Representativas: RAVE y AudioGen</div>
-  <h2>RAVE y AudioGen representan dos filosofías opuestas de síntesis neuronal</h2>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>¿Cómo se ven estos principios en sistemas reales?</h2>
   <ul>
-    <li><strong>RAVE</strong> (Realtime Audio Variational autoEncoder, Caillon y Esling, 2021, IRCAM): VAE en tiempo real sobre forma de onda cruda, diseñado para control creativo en vivo con recursos limitados</li>
-    <li><strong>AudioGen</strong> (Kreuk et al., 2022, Meta AI): LM autoregresivo sobre tokens de codec, diseñado para generalización a efectos de sonido descritos en lenguaje natural</li>
-    <li>Ambos complementan sus limitaciones: RAVE es rápido pero no generalizable; AudioGen generaliza pero no es en tiempo real</li>
+    <li>RAVE prioriza eficiencia y control creativo en tiempo real; AudioGen prioriza generar desde lenguaje natural.</li>
   </ul>
-  <div class="slide-num">28</div>
+  <div class="slide-num">42</div>
 </section>
 
 <section>
-  <div class="section-label">§ 7 · Arquitecturas Representativas: RAVE y AudioGen</div>
-  <h2>RAVE: encoder-VAE-decoder con dos fases de entrenamiento</h2>
-  <ul><li>Fase 1 (verde punteado): VAE entrenado con MSE espectral multi-resolución + divergencia KL; Fase 2 (rojo punteado): fine-tuning con discriminador multi-escala sobre el decoder completo</li></ul>
-  <div class="svg-holder">
-    <svg viewBox="0 0 618 210" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>RAVE: un VAE sobre la onda, en tiempo real</h2>
+  <ul>
+    <li>RAVE (Caillon y Esling, 2021, IRCAM) es un autoencoder variacional que opera directamente en la forma de onda, sin pasar por espectrogramas.</li>
+  </ul>
+  <div class="slide-num">43</div>
+</section>
+
+<section>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>RAVE: dos fases de entrenamiento</h2>
+  <ul><li>Fase 1: el VAE se entrena con pérdida espectral multi-resolución más KL; fase 2: se añade un discriminador adversario para afinar el timbre.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 618 210" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <defs>
     <marker id="arH2f" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0,8 3,0 6" fill="#555"/>
@@ -722,65 +770,68 @@ p.note {
   <rect x="5" y="160" width="608" height="46" rx="6" fill="#fce4ec" stroke="#c2185b" stroke-width="1" stroke-dasharray="5,3"/>
   <text x="309" y="178" text-anchor="middle" font-size="10" font-weight="bold" fill="#c2185b">Fase 2: Fine-tuning adversarial</text>
   <text x="309" y="194" text-anchor="middle" font-size="9" fill="#555">Se agrega discriminador multi-escala (MelGAN-style). Loss += adversarial + feature matching</text>
-    </svg>
-  </div>
-  <div class="slide-num">29</div>
+  </svg></div>
+  <div class="slide-num">44</div>
 </section>
 
 <section>
-  <div class="section-label">§ 7 · Arquitecturas Representativas: RAVE y AudioGen</div>
-  <h2>RAVE: 10 M parámetros, 100× tiempo real, espacio latente continuo</h2>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>Tiempo real y control tímbrico continuo</h2>
   <ul>
-    <li>Encoder Conv1D dilatadas con stride acumulado 2048 → representación latente a $\sim$21 Hz, dim=128</li>
-    <li>Espacio latente de 8–64 dimensiones: permite interpolación suave entre timbres, como gradiente continuo entre el sonido de un violín y una voz humana</li>
-    <li>100× la velocidad del tiempo real en CPU: viable para performance musical en vivo e instalaciones interactivas sin GPU dedicada</li>
+    <li>Con 10 M de parámetros y compresión de 2048 muestras por latente, el decoder corre a más de 100× tiempo real en CPU.</li>
+    <li>Su espacio latente continuo permite interpolar timbres, por ejemplo mezclar un violín con una voz.</li>
   </ul>
-  <div class="slide-num">30</div>
+  <div class="slide-num">45</div>
 </section>
 
 <section>
-  <div class="section-label">§ 7 · Arquitecturas Representativas: RAVE y AudioGen</div>
-  <h2>AudioGen genera efectos de sonido condicionados en texto libre</h2>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>AudioGen: un LM que genera sonido desde texto</h2>
   <ul>
-    <li>El audio se comprime con EnCodec a 16 kHz a $\sim$50 tokens/s; un Transformer autoregresivo predice el siguiente token dado el historial y el embedding del prompt</li>
-    <li>El encoder de texto (T5 preentrenado) se mantiene congelado: solo el Transformer de audio se entrena, reutilizando representaciones semánticas de texto sin coste adicional</li>
-    <li>Precursor directo de <strong>MusicGen</strong> (Copet et al., 2023): misma arquitectura extendida al dominio musical con condicionamiento en texto y en melodías de referencia</li>
+    <li>AudioGen (Kreuk et al., 2022, Meta) genera efectos de sonido a partir de descripciones como "lluvia sobre hojas con truenos".</li>
+    <li>Comprime el audio con un codec y un Transformer autoregresivo predice tokens condicionado en el texto (encoder T5 congelado).</li>
   </ul>
-  <div class="slide-num">31</div>
+  <div class="slide-num">46</div>
 </section>
 
 <section>
-  <div class="section-label">§ 7 · Arquitecturas Representativas: RAVE y AudioGen</div>
-  <h2>RAVE vs. AudioGen: eficiencia creativa frente a generalización textual</h2>
-  <table class="comp-table">
-    <tr>
-      <th>Característica</th>
-      <th>RAVE</th>
-      <th>AudioGen</th>
-    </tr>
-    <tr><td>Dominio</td><td>Forma de onda (VAE)</td><td>Tokens discretos (LM)</td></tr>
-    <tr><td>Condicionamiento</td><td>Ninguno (tímbrico)</td><td>Texto (T5 congelado)</td></tr>
-    <tr><td>Generación</td><td>Continua, paralela</td><td>Autoregresiva token a token</td></tr>
-    <tr><td>Tiempo real</td><td>Sí (100× en CPU)</td><td>No</td></tr>
-    <tr><td>Parámetros</td><td>10 M</td><td>300+ M</td></tr>
-    <tr><td>Uso típico</td><td>Performance en vivo</td><td>Generación de SFX, TTS</td></tr>
-    <tr><td>Institución</td><td>IRCAM (2021)</td><td>Meta AI (2022)</td></tr>
-  </table>
-  <div class="slide-num">32</div>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>RAVE frente a AudioGen, lado a lado</h2>
+  <ul><li>Dos filosofías opuestas: VAE sobre la onda en tiempo real, frente a un modelo de lenguaje sobre tokens condicionado en texto.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 760 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+    <text x="375" y="30" text-anchor="middle" font-weight="bold" fill="#1565c0">RAVE</text>
+    <text x="615" y="30" text-anchor="middle" font-weight="bold" fill="#c2185b">AudioGen</text>
+    <text x="20" y="63" fill="#555">Dominio</text>
+    <text x="20" y="103" fill="#555">Condicionamiento</text>
+    <text x="20" y="143" fill="#555">Generación</text>
+    <text x="20" y="183" fill="#555">Tiempo real</text>
+    <text x="20" y="223" fill="#555">Parámetros</text>
+    <line x1="255" y1="42" x2="255" y2="238" stroke="#ccc" stroke-width="1"/>
+    <line x1="495" y1="42" x2="495" y2="238" stroke="#ccc" stroke-width="1"/>
+    <text x="375" y="63" text-anchor="middle" fill="#1a4d6c">forma de onda (VAE)</text>
+    <text x="375" y="103" text-anchor="middle" fill="#1a4d6c">ninguno (tímbrico)</text>
+    <text x="375" y="143" text-anchor="middle" fill="#1a4d6c">continua, paralela</text>
+    <text x="375" y="183" text-anchor="middle" fill="#2e7d32" font-weight="bold">sí (100× CPU)</text>
+    <text x="375" y="223" text-anchor="middle" fill="#1a4d6c">10 M</text>
+    <text x="615" y="63" text-anchor="middle" fill="#7a1a3a">tokens discretos (LM)</text>
+    <text x="615" y="103" text-anchor="middle" fill="#7a1a3a">texto (T5)</text>
+    <text x="615" y="143" text-anchor="middle" fill="#7a1a3a">autoregresiva</text>
+    <text x="615" y="183" text-anchor="middle" fill="#c62828" font-weight="bold">no</text>
+    <text x="615" y="223" text-anchor="middle" fill="#7a1a3a">300+ M</text>
+  </svg></div>
+  <div class="slide-num">47</div>
 </section>
 
-<!-- ══════════════════════════════════════════════════════ CIERRE -->
+<!-- ===== Cierre ===== -->
 <section>
-  <div class="close-slide">
-    <h1>Los modelos generativos de audio convergen en una arquitectura híbrida que une representaciones comprimidas discretas, modelado de lenguaje y conocimiento del dominio acústico.</h1>
-    <p class="note">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
-  </div>
-  <div class="slide-num">33</div>
+<div class="close-slide">
+  <h1>Generar audio es domar decenas de miles de muestras por segundo; cada arquitectura es una apuesta distinta sobre en qué representación el problema se vuelve tratable.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
 </section>
 
 </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
 <script>

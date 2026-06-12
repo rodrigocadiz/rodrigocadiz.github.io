@@ -2,12 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DDSP: Procesamiento de Señales Digitales Diferenciable</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DDSP: Procesamiento de Señales Diferenciable · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 <style>
 :root {
   --pluto-blue: #4e79a7;
@@ -26,6 +28,7 @@
   }
   .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
 }
+
 .reveal, .reveal .slides section {
   font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--ink);
@@ -33,15 +36,9 @@
   background: var(--paper);
 }
 .reveal .slide-background { background: var(--paper); }
-.reveal .slides section {
-  padding: 2% 5% 2% 5%;
-  box-sizing: border-box;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
+
+.reveal .slides section { padding: 0 5%; box-sizing: border-box; min-width: 0; }
+
 .section-label {
   font-size: 0.75em;
   color: var(--ink-faint);
@@ -51,6 +48,7 @@
   margin-bottom: 0.3em;
   flex-shrink: 0;
 }
+
 .reveal h1 {
   font-size: 2.6em; font-weight: 700; color: var(--ink);
   margin: 0 0 0.4em 0; line-height: 1.15;
@@ -61,24 +59,14 @@
   margin: 0 0 0.3em 0; line-height: 1.2;
   text-transform: none; border: none; flex-shrink: 0;
 }
+
 .reveal p, .reveal li {
   font-size: 1.75em;
   line-height: 1.5;
   color: var(--ink);
 }
-.reveal ul {
-  padding-left: 1.3em;
-  margin: 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  min-height: 0;
-}
+.reveal ul { padding-left: 1.3em; margin: 0.2em 0 0 0; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }
+.reveal li + li { margin-top: 0.6em; }
 .reveal li {
   margin: 0;
   min-width: 0;
@@ -91,37 +79,28 @@
 .reveal strong { font-weight: 700; color: var(--ink); }
 .reveal em { font-style: italic; }
 .reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+/* Equations: direct display math, no card borders */
 .reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
-p.note {
-  font-size: 0.85em;
-  color: var(--ink-soft);
-  margin-top: 0.4em;
-  font-style: italic;
-  flex-shrink: 0;
-}
-.svg-holder {
-  display: flex; align-items: stretch;
-  width: 100%; flex: 1 1 0; min-height: 0; min-width: 0;
-  margin-top: 0.3em; overflow: hidden;
-}
-.svg-holder svg { flex: 1 1 0; min-width: 0; min-height: 0; display: block; }
-.title-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
+
+p.note { font-size: 1.3em; color: var(--ink-soft); margin-top: 0.6em; font-style: italic; }
+
+/* SVG fills remaining vertical space without overflowing */
+.svg-holder { width: 100%; margin-top: 0.5em; text-align: center; }
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
 .title-slide .course-id {
   font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
   text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
 }
 .title-slide h1 { font-size: 2.6em; }
 .title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
-.close-slide {
-  display: flex; flex-direction: column; justify-content: center; height: 100%;
-}
+
+.close-slide { }
 .close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
-.slide-num {
-  position: absolute; bottom: 2%; right: 3%;
-  font-size: 0.55em; color: var(--ink-faint); letter-spacing: 0.1em;
-}
+
+.slide-num { display: none; }
 .reveal .controls { color: var(--ink-faint); }
 .reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
 </style>
@@ -130,291 +109,351 @@ p.note {
 <div class="reveal">
 <div class="slides">
 
-<!-- 1. PORTADA -->
-<section class="title-slide">
+<!-- ===== Portada ===== -->
+<section>
+<div class="title-slide">
   <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
   <h1>DDSP: Procesamiento de Señales Digitales Diferenciable</h1>
-  <div class="byline">Rodrigo F. Cádiz · Pontificia Universidad Católica de Chile</div>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
 </section>
 
-<!-- §1 — DSP Clásico: Fundamentos y Limitaciones -->
-
-<!-- 2 -->
+<!-- ===== Apertura ===== -->
 <section>
-  <div class="section-label">§ 1 · DSP Clásico: Fundamentos y Limitaciones</div>
-  <h2>El DSP clásico no puede integrarse al aprendizaje profundo</h2>
+  <h2>Décadas de ingeniería de señales que una red no podía aprovechar</h2>
   <ul>
-    <li>El Procesamiento de Señales Digitales (DSP) acumula décadas de herramientas precisas: filtros, osciladores, transformadas espectrales</li>
-    <li>Sus parámetros los fija un experto; las operaciones son deterministas y matemáticamente exactas</li>
-    <li>El obstáculo: las operaciones DSP clásicas no están en el grafo computacional de auto-diferenciación; el gradiente de la pérdida no puede atravesarlas</li>
-    <li>Consecuencia: no es posible entrenar de extremo a extremo si hay un módulo DSP clásico en el decodificador</li>
+    <li>El procesamiento de señales clásico (filtros, osciladores, Fourier) sabe la física exacta de cómo se forma una señal.</li>
+    <li>Pero ese conocimiento quedaba fuera del aprendizaje profundo, porque sus operaciones cortaban el flujo del gradiente.</li>
   </ul>
   <div class="slide-num">2</div>
 </section>
 
-<!-- 3 -->
 <section>
-  <div class="section-label">§ 1 · DSP Clásico: Fundamentos y Limitaciones</div>
-  <h2>El filtro FIR: convolución discreta</h2>
+  <h2>DDSP: la red no genera la señal, controla un sintetizador</h2>
   <ul>
-    <li><strong>Filtro de Respuesta al Impulso Finita (FIR):</strong> convolución entre la señal $x[n]$ y los coeficientes $h[k]$</li>
-    <li>$M$: orden del filtro; $h[k]$: coeficientes que moldean la envolvente espectral de la salida $y[n]$</li>
+    <li>El procesamiento de señales digitales diferenciable (DDSP) reescribe las operaciones clásicas como funciones diferenciables, para que la red aprenda a controlar un sintetizador físico en lugar de reaprender la señal desde cero.</li>
   </ul>
-  $$y[n] = \sum_{k=0}^{M} h[k] \cdot x[n - k] \tag{1}$$
-  <p class="note">La convolución lineal es diferenciable respecto a $h[k]$: si el filtro está en el grafo computacional, la pérdida puede propagarse hasta sus coeficientes.</p>
   <div class="slide-num">3</div>
 </section>
 
-<!-- 4 -->
+<!-- ===== §1 ===== -->
 <section>
-  <div class="section-label">§ 1 · DSP Clásico: Fundamentos y Limitaciones</div>
-  <h2>El oscilador armónico: síntesis aditiva</h2>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>¿Por qué no usar filtros y osciladores dentro de una red?</h2>
   <ul>
-    <li><strong>Síntesis aditiva:</strong> suma ponderada de sinusoides a frecuencias múltiplas de $f_0$ (la frecuencia fundamental)</li>
-    <li>$a_k(t)$: amplitud del armónico $k$; $\phi_k$: fase inicial; $K$: número total de armónicos</li>
+    <li>Existen herramientas de señales depuradas durante décadas; la pregunta natural es por qué no se enchufan directamente a una red neuronal.</li>
   </ul>
-  $$x(t) = \sum_{k=1}^{K} a_k \sin(2\pi k f_0 t + \phi_k) \tag{2}$$
-  <p class="note">La suma es diferenciable respecto a $a_k$ y $f_0$: el gradiente puede retropropagarse hasta las amplitudes y la frecuencia fundamental.</p>
   <div class="slide-num">4</div>
 </section>
 
-<!-- 5 -->
 <section>
-  <div class="section-label">§ 1 · DSP Clásico: Fundamentos y Limitaciones</div>
-  <h2>La DFT descompone la señal en sus frecuencias</h2>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>El filtro FIR es una convolución</h2>
   <ul>
-    <li><strong>Transformada Discreta de Fourier (DFT):</strong> descompone la señal discreta $x[n]$ en sus $N$ componentes frecuenciales $X[m]$</li>
-    <li>$m$: índice de frecuencia discreta; la multiplicación espectral en este dominio equivale a convolución en el tiempo</li>
+    <li>Un filtro de respuesta al impulso finita (FIR) convoluciona la señal de entrada $x$ con coeficientes $h[k]$ fijados por un experto.</li>
   </ul>
-  $$X[m] = \sum_{n=0}^{N-1} x[n] \cdot e^{-j 2\pi mn / N} \tag{3}$$
-  <p class="note">La multiplicación espectral es diferenciable respecto a la respuesta en frecuencia $H(\omega)$, clave para la reverberación diferenciable en DDSP.</p>
+  $$y[n] = \sum_{k=0}^{M} h[k] \cdot x[n - k]$$
+  <p class="note">En palabras: cada muestra de salida es una mezcla ponderada de las $M+1$ muestras de entrada más recientes.</p>
   <div class="slide-num">5</div>
 </section>
 
-<!-- 6 — SVG pipeline clásico -->
 <section>
-  <div class="section-label">§ 1 · DSP Clásico: Fundamentos y Limitaciones</div>
-  <h2>El módulo DSP clásico bloquea el gradiente</h2>
-  <ul><li>Parámetros fijados por diseño manual; la pérdida $\mathcal{L}$ no puede retropropagarse a través del bloque DSP</li></ul>
-  <div class="svg-holder">
-<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 660 140" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
-  <defs>
-    <marker id="arr-s1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
-    </marker>
-  </defs>
-  <rect x="20" y="50" width="100" height="40" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
-  <text x="70" y="73" text-anchor="middle" fill="#1a3a5c" font-weight="bold">Se&#xF1;al x</text>
-  <line x1="120" y1="70" x2="190" y2="70" stroke="#555" stroke-width="1.5" marker-end="url(#arr-s1)"/>
-  <rect x="190" y="30" width="200" height="80" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
-  <text x="290" y="62" text-anchor="middle" fill="#663300" font-weight="bold">M&#xF3;dulo DSP</text>
-  <text x="290" y="82" text-anchor="middle" fill="#885500" font-size="11">filtros &#xB7; osciladores &#xB7; DFT</text>
-  <text x="290" y="100" text-anchor="middle" fill="#885500" font-size="10">par&#xE1;metros: dise&#xF1;o manual</text>
-  <line x1="390" y1="70" x2="460" y2="70" stroke="#555" stroke-width="1.5" marker-end="url(#arr-s1)"/>
-  <rect x="460" y="50" width="120" height="40" rx="6" fill="#d4f7d4" stroke="#339933" stroke-width="1.5"/>
-  <text x="520" y="73" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Salida x&#x302;</text>
-  <text x="330" y="128" text-anchor="middle" fill="#cc3300" font-size="11" font-style="italic">&#x2717; No diferenciable: el gradiente no puede atravesar este bloque</text>
-</svg>
-  </div>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>El oscilador suma sinusoides armónicas</h2>
+  <ul>
+    <li>La síntesis aditiva construye un sonido como suma de $K$ armónicos de una frecuencia fundamental $f_0$, cada uno con amplitud $a_k$ y fase $\phi_k$.</li>
+  </ul>
+  $$x(t) = \sum_{k=1}^{K} a_k \sin(2\pi k f_0 t + \phi_k)$$
+  <p class="note">En palabras: el tono lo fija $f_0$; el timbre, el perfil de amplitudes $a_k$ de sus armónicos.</p>
   <div class="slide-num">6</div>
 </section>
 
-<!-- 7 -->
 <section>
-  <div class="section-label">§ 1 · DSP Clásico: Fundamentos y Limitaciones</div>
-  <h2>El gradiente es la barrera: se necesita reformular el DSP</h2>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>La DFT descompone la señal en frecuencias</h2>
   <ul>
-    <li>El DSP tiene décadas de conocimiento acumulado; el problema no es matemático sino de implementación</li>
-    <li>Las operaciones DSP no están en frameworks de auto-diferenciación (PyTorch, Flux.jl): el gradiente no puede fluir a través de ellas</li>
-    <li>Incluso operaciones matemáticamente diferenciables (como la suma de sinusoides) resultan opacas al grafo si se ejecutan fuera de él</li>
+    <li>La Transformada Discreta de Fourier (DFT) lleva la señal del tiempo a sus componentes de frecuencia $X[m]$.</li>
   </ul>
-  <p class="note">Con el problema establecido, el §2 propone el paradigma DDSP: reimplementar las operaciones DSP como capas del grafo de auto-diferenciación.</p>
+  $$X[m] = \sum_{n=0}^{N-1} x[n] \, e^{-j 2\pi mn / N}$$
+  <p class="note">En palabras: es el cambio de coordenadas que revela de qué frecuencias está hecha una señal.</p>
   <div class="slide-num">7</div>
 </section>
 
-<!-- §2 — El Paradigma DDSP -->
-
-<!-- 8 -->
 <section>
-  <div class="section-label">§ 2 · El Paradigma DDSP</div>
-  <h2>DDSP: el módulo DSP se convierte en una capa del grafo</h2>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>Exactos y físicos, pero con parámetros fijados a mano</h2>
   <ul>
-    <li><strong>Procesamiento de Señales Digitales Diferenciable (DDSP)</strong> (Engel et al., 2020): reformula osciladores, filtros FIR y convoluciones espectrales como funciones diferenciables en un framework de auto-diferenciación</li>
-    <li>El módulo DSP deja de ser una caja opaca: se convierte en una capa del grafo computacional por la que el gradiente puede fluir hacia atrás</li>
-    <li>El rol del decodificador neuronal cambia radicalmente: no genera muestras $\hat{x}$ directamente, sino que predice <strong>parámetros de control</strong> $\mathbf{p}(t)$ con significado físico explícito</li>
+    <li>Estas operaciones son deterministas y exactas: un oscilador a 440 Hz produce exactamente esa frecuencia.</li>
+    <li>Pero sus parámetros (coeficientes, frecuencias, amplitudes) los elige un experto; el dominio físico está codificado a mano, no aprendido.</li>
   </ul>
   <div class="slide-num">8</div>
 </section>
 
-<!-- 9 -->
 <section>
-  <div class="section-label">§ 2 · El Paradigma DDSP</div>
-  <h2>El decodificador predice $\mathbf{p}(t)$, no la señal de salida</h2>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>El problema: el gradiente no atraviesa el DSP</h2>
   <ul>
-    <li><strong>Arquitectura convencional:</strong> la red genera las muestras $\hat{x}$ una a una; debe aprender las leyes físicas desde cero a partir de los datos</li>
-    <li><strong>Arquitectura DDSP:</strong> la red predice parámetros $\mathbf{p}(t)$ con interpretación física ($f_0$, amplitudes $a_k$, coeficientes FIR $h[k]$); el módulo DSP ejecuta la síntesis con ecuaciones exactas</li>
-    <li>La separación de responsabilidades es la esencia del paradigma: la red aprende <em>qué parámetros</em> producen reconstrucción fiel, no <em>cómo</em> generar señales</li>
+    <li>Muchas operaciones (cuantizar, seleccionar peaks espectrales) no son diferenciables; y aun las que sí lo son no estaban implementadas en frameworks de autodiferenciación.</li>
+    <li>Por eso el gradiente de la pérdida no podía fluir a través del módulo DSP hacia la red.</li>
   </ul>
   <div class="slide-num">9</div>
 </section>
 
-<!-- 10 -->
 <section>
-  <div class="section-label">§ 2 · El Paradigma DDSP</div>
-  <h2>Tres operaciones DSP reformuladas como diferenciables</h2>
-  <ul>
-    <li><strong>Síntesis aditiva (ec. 2):</strong> suma ponderada de sinusoides — diferenciable respecto a amplitudes $a_k$ y frecuencia fundamental $f_0$</li>
-    <li><strong>Filtrado FIR (ec. 1):</strong> convolución lineal — diferenciable respecto a los coeficientes $h[k]$</li>
-    <li><strong>Reverberación convolucional:</strong> multiplicación espectral tras la DFT (ec. 3) — diferenciable respecto a la respuesta en frecuencia $H(\omega)$</li>
-    <li>Implementadas en un framework de auto-diferenciación, el gradiente $\partial \mathcal{L}/\partial \boldsymbol{\theta}$ fluye sin interrupción hasta los pesos de la red</li>
-  </ul>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>El módulo DSP corta el flujo del gradiente</h2>
+  <ul><li>La señal pasa hacia adelante por el módulo DSP, pero el gradiente de la pérdida no puede volver: el bloque es opaco al entrenamiento.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 660 140" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+  <rect x="20" y="50" width="100" height="40" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="70" y="73" text-anchor="middle" fill="#1a3a5c" font-weight="bold">Señal x</text>
+  <line x1="120" y1="70" x2="190" y2="70" stroke="#555" stroke-width="1.5" marker-end="url(#arr1)"/>
+  <rect x="190" y="30" width="200" height="80" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="290" y="62" text-anchor="middle" fill="#663300" font-weight="bold">Módulo DSP</text>
+  <text x="290" y="82" text-anchor="middle" fill="#885500" font-size="11">filtros · osciladores · DFT</text>
+  <text x="290" y="100" text-anchor="middle" fill="#885500" font-size="10">parámetros: diseño manual</text>
+  <line x1="390" y1="70" x2="460" y2="70" stroke="#555" stroke-width="1.5" marker-end="url(#arr1)"/>
+  <rect x="460" y="50" width="120" height="40" rx="6" fill="#d4f7d4" stroke="#339933" stroke-width="1.5"/>
+  <text x="520" y="73" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Salida x̂</text>
+  <text x="330" y="128" text-anchor="middle" fill="#cc3300" font-size="11" font-style="italic">✗  No diferenciable: el gradiente no puede atravesar este bloque</text>
+  <defs><marker id="arr1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#555"/></marker></defs>
+  </svg></div>
   <div class="slide-num">10</div>
 </section>
 
-<!-- 11 -->
 <section>
-  <div class="section-label">§ 2 · El Paradigma DDSP</div>
-  <h2>El paradigma habilita una arquitectura de tres etapas</h2>
+  <div class="section-label">§ 1 · DSP Clásico: fundamentos y limitaciones</div>
+  <h2>¿Y si reescribimos el DSP como algo diferenciable?</h2>
   <ul>
-    <li>El módulo DSP diferenciable es ahora un componente entrenable: recibe parámetros de la red y devuelve gradientes al actualizarlos</li>
-    <li>La red se libera de aprender la física desde cero; se concentra en estimar parámetros de control a partir de los datos de entrada</li>
-    <li>El resultado es un sistema generativo más eficiente, interpretable y con capacidad de extrapolación real fuera del rango de entrenamiento</li>
+    <li>Si el único obstáculo es la diferenciabilidad, la salida es clara: expresar las operaciones de señal como funciones por las que el gradiente sí pueda fluir.</li>
   </ul>
-  <p class="note">Con el paradigma definido, el §3 describe el flujo completo de información en la arquitectura híbrida: codificador, decodificador y módulo DSP.</p>
   <div class="slide-num">11</div>
 </section>
 
-<!-- §3 — La Arquitectura Híbrida -->
-
-<!-- 12 -->
+<!-- ===== §2 ===== -->
 <section>
-  <div class="section-label">§ 3 · La Arquitectura Híbrida</div>
-  <h2>Tres etapas: codificador, decodificador, módulo DSP</h2>
+  <div class="section-label">§ 2 · El paradigma DDSP</div>
+  <h2>¿Cómo meter el DSP en el grafo de autodiferenciación?</h2>
   <ul>
-    <li><strong>Codificador:</strong> mapea los datos $x$ al espacio latente $\mathbf{z}$; extrae variables con significado físico ($f_0$, amplitud) junto con variables residuales de timbre</li>
-    <li><strong>Decodificador neuronal:</strong> red densa o recurrente que toma $\mathbf{z}$ y produce la secuencia temporal de parámetros $\mathbf{p}(t)$ — amplitudes $a_k(t)$, coeficientes FIR $h[k](t)$</li>
-    <li><strong>Módulo DSP diferenciable:</strong> sintetiza la señal final $\hat{x}$ con ecuaciones físicas exactas; devuelve gradientes hacia la red por retropropagación</li>
+    <li>La propuesta de DDSP (Engel et al., 2020) es convertir el módulo de señal de una caja opaca en una capa más del grafo computacional.</li>
   </ul>
   <div class="slide-num">12</div>
 </section>
 
-<!-- 13 — SVG arquitectura híbrida -->
 <section>
-  <div class="section-label">§ 3 · La Arquitectura Híbrida</div>
-  <h2>Flujo: $x$ → Encoder → $z$ → Decoder → $p(t)$ → DSP</h2>
-  <ul><li>Línea roja: retropropagación del gradiente a través del módulo DSP diferenciable hasta los pesos de la red neuronal</li></ul>
-  <div class="svg-holder">
-<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 195" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+  <div class="section-label">§ 2 · El paradigma DDSP</div>
+  <h2>Reescribir las operaciones de señal como diferenciables</h2>
+  <ul>
+    <li>Se hacen diferenciables las operaciones DSP relevantes: osciladores armónicos, síntesis de ruido con filtros FIR y reverberación convolucional.</li>
+    <li>Así la pérdida de reconstrucción puede retropropagar por el módulo DSP hasta los parámetros de la red.</li>
+  </ul>
+  <div class="slide-num">13</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · El paradigma DDSP</div>
+  <h2>El decodificador cambia de oficio</h2>
+  <ul>
+    <li>En DDSP el decodificador ya no genera la señal de salida directamente, sino un vector de <strong>parámetros de control</strong> $\mathbf{p}(t)$ con significado físico: frecuencias, amplitudes armónicas, coeficientes de filtro.</li>
+    <li>El módulo DSP toma esos parámetros y ejecuta la síntesis con ecuaciones exactas.</li>
+  </ul>
+  <div class="slide-num">14</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · El paradigma DDSP</div>
+  <h2>De generar la señal a controlar el sintetizador</h2>
+  <ul><li>Arriba, el decodificador estándar produce la señal muestra a muestra; abajo, en DDSP predice parámetros y el módulo DSP sintetiza la señal.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 720 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+    <defs><marker id="arrd" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#555"/></marker></defs>
+    <text x="20" y="24" fill="#333" font-weight="bold">Generativo estándar</text>
+    <ellipse cx="58" cy="62" rx="26" ry="20" fill="#fff5cc" stroke="#cc9900" stroke-width="1.5"/>
+    <text x="58" y="67" text-anchor="middle" fill="#665500" font-weight="bold">z</text>
+    <line x1="84" y1="62" x2="120" y2="62" stroke="#555" stroke-width="1.4" marker-end="url(#arrd)"/>
+    <rect x="120" y="42" width="150" height="40" rx="6" fill="#ffe0e0" stroke="#cc4444" stroke-width="1.5"/>
+    <text x="195" y="66" text-anchor="middle" fill="#6c1a1a" font-weight="bold">Decodificador</text>
+    <line x1="270" y1="62" x2="306" y2="62" stroke="#555" stroke-width="1.4" marker-end="url(#arrd)"/>
+    <rect x="306" y="42" width="150" height="40" rx="6" fill="#d4f7d4" stroke="#339933" stroke-width="1.5"/>
+    <text x="381" y="66" text-anchor="middle" fill="#1a4d1a" font-weight="bold">señal x̂</text>
+    <text x="306" y="100" fill="#888" font-size="11" font-style="italic">produce la señal directamente, muestra a muestra</text>
+    <text x="20" y="150" fill="#333" font-weight="bold">DDSP</text>
+    <ellipse cx="58" cy="190" rx="26" ry="20" fill="#fff5cc" stroke="#cc9900" stroke-width="1.5"/>
+    <text x="58" y="195" text-anchor="middle" fill="#665500" font-weight="bold">z</text>
+    <line x1="84" y1="190" x2="112" y2="190" stroke="#555" stroke-width="1.4" marker-end="url(#arrd)"/>
+    <rect x="112" y="170" width="120" height="40" rx="6" fill="#ffe0e0" stroke="#cc4444" stroke-width="1.5"/>
+    <text x="172" y="194" text-anchor="middle" fill="#6c1a1a" font-weight="bold">Decodificador</text>
+    <line x1="232" y1="190" x2="258" y2="190" stroke="#555" stroke-width="1.4" marker-end="url(#arrd)"/>
+    <rect x="258" y="166" width="130" height="48" rx="6" fill="#fff5cc" stroke="#cc9900" stroke-width="1.5"/>
+    <text x="323" y="186" text-anchor="middle" fill="#664400" font-weight="bold">parámetros p(t)</text>
+    <text x="323" y="203" text-anchor="middle" fill="#886600" font-size="10">f₀ · aₖ · H(ω)</text>
+    <line x1="388" y1="190" x2="414" y2="190" stroke="#555" stroke-width="1.4" marker-end="url(#arrd)"/>
+    <rect x="414" y="168" width="126" height="44" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+    <text x="477" y="187" text-anchor="middle" fill="#5a2800" font-weight="bold">Módulo DSP</text>
+    <text x="477" y="203" text-anchor="middle" fill="#884400" font-size="10">diferenciable</text>
+    <line x1="540" y1="190" x2="566" y2="190" stroke="#555" stroke-width="1.4" marker-end="url(#arrd)"/>
+    <rect x="566" y="170" width="130" height="40" rx="6" fill="#d4f7d4" stroke="#339933" stroke-width="1.5"/>
+    <text x="631" y="194" text-anchor="middle" fill="#1a4d1a" font-weight="bold">señal x̂</text>
+  </svg></div>
+  <div class="slide-num">15</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · El paradigma DDSP</div>
+  <h2>Por qué cada operación es diferenciable</h2>
+  <ul>
+    <li>La síntesis aditiva es una suma ponderada de sinusoides, diferenciable respecto a $a_k$ y $f_0$.</li>
+    <li>El ruido filtrado FIR es una convolución lineal, diferenciable respecto a $h[k]$; la reverb es un producto espectral, diferenciable respecto a $H(\omega)$.</li>
+  </ul>
+  <div class="slide-num">16</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · El paradigma DDSP</div>
+  <h2>Con un módulo diferenciable, ¿cómo se arma el sistema?</h2>
+  <ul>
+    <li>Ya tenemos las piezas: un decodificador que predice parámetros y un módulo DSP que el gradiente puede atravesar. Falta ver cómo se conectan y entrenan.</li>
+  </ul>
+  <div class="slide-num">17</div>
+</section>
+
+<!-- ===== §3 ===== -->
+<section>
+  <div class="section-label">§ 3 · La arquitectura híbrida</div>
+  <h2>¿Cómo se conectan la red y el módulo DSP?</h2>
+  <ul>
+    <li>DDSP combina red neuronal y módulo de señal en un flujo de tres etapas, entrenable de extremo a extremo.</li>
+  </ul>
+  <div class="slide-num">18</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · La arquitectura híbrida</div>
+  <h2>Tres etapas: codificar, predecir, sintetizar</h2>
+  <ul>
+    <li>El codificador lleva la entrada a un latente $\mathbf{z}$; el decodificador predice los parámetros $\mathbf{p}(t)$; el módulo DSP sintetiza la salida $\hat{\mathbf{x}}$.</li>
+  </ul>
+  <div class="slide-num">19</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · La arquitectura híbrida</div>
+  <h2>El gradiente retropropaga a través del módulo DSP</h2>
+  <ul><li>La pérdida $\mathcal{L}(x,\hat{x})$ compara entrada y salida, y su gradiente vuelve por el módulo DSP (ahora diferenciable) hasta los pesos de la red.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 760 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
   <defs>
-    <marker id="arr2-s3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <marker id="arr2-ddsp" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#444"/>
     </marker>
   </defs>
   <rect x="10" y="45" width="60" height="36" rx="5" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
   <text x="40" y="66" text-anchor="middle" fill="#1a3a5c" font-weight="bold">x</text>
-  <line x1="70" y1="63" x2="108" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-s3)"/>
+  <line x1="70" y1="63" x2="108" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-ddsp)"/>
   <rect x="108" y="38" width="100" height="50" rx="5" fill="#ede0ff" stroke="#7744cc" stroke-width="1.5"/>
   <text x="158" y="60" text-anchor="middle" fill="#3a1a6c" font-weight="bold">Encoder</text>
-  <text x="158" y="78" text-anchor="middle" fill="#5522aa" font-size="10">extracci&#xF3;n</text>
-  <line x1="208" y1="63" x2="244" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-s3)"/>
+  <text x="158" y="78" text-anchor="middle" fill="#5522aa" font-size="10">extracción</text>
+  <line x1="208" y1="63" x2="244" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-ddsp)"/>
   <ellipse cx="266" cy="63" rx="24" ry="22" fill="#fff5cc" stroke="#cc9900" stroke-width="1.5"/>
   <text x="266" y="60" text-anchor="middle" fill="#665500" font-weight="bold" font-size="11">z</text>
   <text x="266" y="75" text-anchor="middle" fill="#886600" font-size="9">latente</text>
-  <line x1="290" y1="63" x2="322" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-s3)"/>
+  <line x1="290" y1="63" x2="322" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-ddsp)"/>
   <rect x="322" y="38" width="120" height="50" rx="5" fill="#ffe0e0" stroke="#cc4444" stroke-width="1.5"/>
   <text x="382" y="58" text-anchor="middle" fill="#6c1a1a" font-weight="bold">Decoder</text>
   <text x="382" y="74" text-anchor="middle" fill="#aa3333" font-size="10">red neuronal (MLP/RNN)</text>
-  <line x1="442" y1="63" x2="474" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-s3)"/>
+  <line x1="442" y1="63" x2="474" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-ddsp)"/>
   <rect x="474" y="45" width="70" height="36" rx="5" fill="#fff5cc" stroke="#cc9900" stroke-width="1.5"/>
   <text x="509" y="61" text-anchor="middle" fill="#664400" font-weight="bold" font-size="11">p(t)</text>
-  <text x="509" y="75" text-anchor="middle" fill="#886600" font-size="9">f&#x2080;, a&#x2096;, H(&#x03C9;)</text>
-  <line x1="544" y1="63" x2="576" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-s3)"/>
+  <text x="509" y="75" text-anchor="middle" fill="#886600" font-size="9">f₀, aₖ, H(ω)</text>
+  <line x1="544" y1="63" x2="576" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-ddsp)"/>
   <rect x="576" y="30" width="110" height="66" rx="5" fill="#ffe8cc" stroke="#cc7700" stroke-width="2"/>
-  <text x="631" y="54" text-anchor="middle" fill="#5a2800" font-weight="bold">M&#xF3;dulo DSP</text>
+  <text x="631" y="54" text-anchor="middle" fill="#5a2800" font-weight="bold">Módulo DSP</text>
   <text x="631" y="70" text-anchor="middle" fill="#884400" font-size="9.5">osciladores + filtros</text>
   <text x="631" y="84" text-anchor="middle" fill="#884400" font-size="9">(diferenciable)</text>
-  <line x1="686" y1="63" x2="700" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-s3)"/>
+  <line x1="686" y1="63" x2="700" y2="63" stroke="#444" stroke-width="1.5" marker-end="url(#arr2-ddsp)"/>
   <rect x="700" y="45" width="50" height="36" rx="5" fill="#d4f7d4" stroke="#339933" stroke-width="1.5"/>
-  <text x="725" y="64" text-anchor="middle" fill="#1a4d1a" font-weight="bold" font-size="13">x&#x302;</text>
-  <text x="158" y="108" text-anchor="middle" fill="#7744cc" font-size="10">caracter&#xED;sticas</text>
-  <text x="382" y="108" text-anchor="middle" fill="#cc4444" font-size="10">predice par&#xE1;metros</text>
-  <text x="631" y="108" text-anchor="middle" fill="#cc7700" font-size="10">sintetiza se&#xF1;al</text>
+  <text x="725" y="64" text-anchor="middle" fill="#1a4d1a" font-weight="bold" font-size="13">x̂</text>
+  <text x="158" y="108" text-anchor="middle" fill="#7744cc" font-size="10">características</text>
+  <text x="382" y="108" text-anchor="middle" fill="#cc4444" font-size="10">predice parámetros</text>
+  <text x="631" y="108" text-anchor="middle" fill="#cc7700" font-size="10">sintetiza señal</text>
   <line x1="725" y1="81" x2="725" y2="145" stroke="#aa2200" stroke-width="1.5"/>
   <line x1="40" y1="145" x2="725" y2="145" stroke="#aa2200" stroke-width="1.5"/>
   <line x1="40" y1="91" x2="40" y2="145" stroke="#aa2200" stroke-width="1.5"/>
   <polygon points="40,81 35,91 45,91" fill="#aa2200"/>
-  <text x="718" y="138" text-anchor="end" fill="#333" font-size="11">P&#xE9;rdida L(x, x&#x302;)</text>
-  <text x="380" y="165" text-anchor="middle" fill="#aa2200" font-size="11" font-style="italic">&#x2190; retropropagaci&#xF3;n del gradiente a trav&#xE9;s del m&#xF3;dulo DSP &#x2192;</text>
+  <text x="718" y="138" text-anchor="end" fill="#333" font-size="11">Pérdida L(x, x̂)</text>
+  <text x="380" y="165" text-anchor="middle" fill="#aa2200" font-size="11" font-style="italic">← retropropagación del gradiente a través del módulo DSP →</text>
   <rect x="18" y="89" width="44" height="14" fill="white"/>
   <text x="40" y="100" text-anchor="middle" fill="#5599cc" font-size="9">entrada</text>
   <rect x="702" y="89" width="46" height="14" fill="white"/>
   <text x="725" y="100" text-anchor="middle" fill="#339933" font-size="9">salida</text>
-</svg>
-  </div>
-  <div class="slide-num">13</div>
+  </svg></div>
+  <div class="slide-num">20</div>
 </section>
 
-<!-- 14 -->
 <section>
-  <div class="section-label">§ 3 · La Arquitectura Híbrida</div>
-  <h2>Codificador: extracción de variables con significado físico</h2>
+  <div class="section-label">§ 3 · La arquitectura híbrida</div>
+  <h2>El codificador extrae variables con significado físico</h2>
   <ul>
-    <li>Mapea los datos $x$ al espacio latente $\mathbf{z}$ con interpretación física directa: $f_0(t)$, envolvente de amplitud, variables de timbre</li>
-    <li>En DDSP para audio, parte del espacio latente se fija como $f_0$ extraído con un estimador de pitch externo — no aprendido, sino calculado deterministamente</li>
-    <li>Las variables residuales $\mathbf{z}$ capturan variaciones de timbre no explicadas por $f_0$: ataque, brillantez, vibrato</li>
+    <li>Parte del latente $\mathbf{z}$ tiene interpretación directa, como la frecuencia fundamental $f_0(t)$ obtenida por un estimador de pitch o la envolvente de amplitud.</li>
+    <li>Las variables residuales capturan el timbre que el módulo DSP no modela.</li>
   </ul>
-  <p class="note">Al forzar parte del espacio latente a representar variables físicas conocidas, se obtiene desentrelazamiento estructural sin regularización adicional.</p>
-  <div class="slide-num">14</div>
+  <div class="slide-num">21</div>
 </section>
 
-<!-- 15 -->
 <section>
-  <div class="section-label">§ 3 · La Arquitectura Híbrida</div>
-  <h2>Decodificador y módulo DSP: responsabilidades complementarias</h2>
+  <div class="section-label">§ 3 · La arquitectura híbrida</div>
+  <h2>El decodificador predice parámetros, no muestras</h2>
   <ul>
-    <li><strong>Decodificador:</strong> MLP o RNN que toma $\mathbf{z}$ y produce $\mathbf{p}(t)$ — amplitudes $a_k(t)$ para el banco de osciladores y coeficientes $h[k](t)$ para el filtro FIR</li>
-    <li><strong>Módulo DSP:</strong> banco de osciladores armónicos (ec. 2) + ruido coloreado con filtro FIR (ec. 1); su salida es la señal $\hat{x}$ directamente reproducible</li>
-    <li>Ambos son diferenciables: la pérdida de reconstrucción retropropaga a través del módulo DSP hasta los pesos de la red neuronal</li>
+    <li>A partir de $\mathbf{z}$, una red densa o recurrente produce la secuencia $\mathbf{p}(t)$: amplitudes armónicas $a_k(t)$, frecuencias y coeficientes de filtro.</li>
+    <li>La red aprende qué parámetros dan una reconstrucción fiel, no cómo generar cada muestra.</li>
   </ul>
-  <p class="note">Con la arquitectura definida, el §4 muestra la instanciación concreta de Engel et al. (2020): el sintetizador DDSP de Magenta para instrumentos musicales.</p>
-  <div class="slide-num">15</div>
+  <div class="slide-num">22</div>
 </section>
 
-<!-- §4 — Caso de Estudio: el Sintetizador DDSP de Magenta -->
-
-<!-- 16 -->
 <section>
-  <div class="section-label">§ 4 · Caso de Estudio: Sintetizador DDSP de Magenta</div>
-  <h2>Magenta DDSP: síntesis de instrumentos monofónicos</h2>
+  <div class="section-label">§ 3 · La arquitectura híbrida</div>
+  <h2>El módulo DSP: osciladores más ruido filtrado</h2>
   <ul>
-    <li>Engel et al. (2020), grupo Magenta de Google Brain: primera instancia concreta del paradigma DDSP para síntesis de sonidos de instrumentos musicales monofónicos</li>
-    <li>Tres representaciones del audio objetivo alimentan el sistema en paralelo: la frecuencia fundamental $f_0(t)$, el vector latente de timbre $Z(t)$ y la sonoridad $\ell(t)$</li>
-    <li>Un decodificador recurrente liviano (GRU + MLP) predice los parámetros de dos sintetizadores DSP en paralelo; la salida se convoluciona con una reverberación entrenable</li>
+    <li>La síntesis final combina un banco de osciladores armónicos (la parte tonal) con un sintetizador de ruido coloreado por un filtro FIR (la parte ruidosa).</li>
+    <li>Ambas operaciones son diferenciables respecto a sus parámetros.</li>
   </ul>
-  <div class="slide-num">16</div>
+  <div class="slide-num">23</div>
 </section>
 
-<!-- 17 -->
 <section>
-  <div class="section-label">§ 4 · Caso de Estudio: Sintetizador DDSP de Magenta</div>
-  <h2>Tres representaciones: $f_0$, $Z$ y sonoridad $\ell$</h2>
+  <div class="section-label">§ 3 · La arquitectura híbrida</div>
+  <h2>Veámoslo en el sistema que inauguró el paradigma</h2>
   <ul>
-    <li><strong>Frecuencia fundamental $f_0(t)$:</strong> extraída con CREPE (estimador de pitch preentrenado); proporciona la altura melódica en cada instante sin necesidad de aprendizaje</li>
-    <li><strong>Sonoridad $\ell(t)$:</strong> densidad espectral de potencia ponderada en A; captura la dinámica de amplitud percibida; bypasa el Encoder y va directamente al Decoder</li>
-    <li><strong>Vector latente $Z(t)$:</strong> aprendido por una red convolucional; captura variaciones de timbre no explicadas por $f_0$ y $\ell$ (ataque, brillantez, vibrato); borde discontinuo indica variable estocástica</li>
+    <li>El marco abstracto se vuelve concreto en el sintetizador DDSP de Magenta, diseñado para sonidos de instrumentos musicales.</li>
   </ul>
-  <div class="slide-num">17</div>
+  <div class="slide-num">24</div>
 </section>
 
-<!-- 18 — SVG Magenta DDSP -->
+<!-- ===== §4 ===== -->
 <section>
-  <div class="section-label">§ 4 · Caso de Estudio: Sintetizador DDSP de Magenta</div>
-  <h2>Pipeline Magenta DDSP (Engel et al., 2020)</h2>
-  <ul><li>F0 y Z salen del Encoder; Loudness rodea el Encoder; Decoder predice parámetros para Harmonic Audio, Filtered Noise y Reverb; ambos audios van al bloque Multi-Scale Spectrogram Loss</li></ul>
-  <div class="svg-holder">
-<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 820 290" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif" font-size="11">
+  <div class="section-label">§ 4 · Caso de estudio: el sintetizador DDSP de Magenta</div>
+  <h2>¿Cómo se ve DDSP en un sintetizador de instrumentos?</h2>
+  <ul>
+    <li>Engel et al. (2020), en el grupo Magenta de Google, instancian el paradigma para síntesis de instrumentos monofónicos.</li>
+  </ul>
+  <div class="slide-num">25</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Caso de estudio: el sintetizador DDSP de Magenta</div>
+  <h2>Tres representaciones del audio: f0, timbre y sonoridad</h2>
+  <ul>
+    <li>La frecuencia fundamental $f_0(t)$ (de un estimador de pitch como CREPE) da la altura; la sonoridad $\ell(t)$, la dinámica percibida.</li>
+    <li>El latente $z(t)$, aprendido, captura el timbre no explicado por $f_0$ ni $\ell$ (ataque, brillantez, vibrato).</li>
+  </ul>
+  <div class="slide-num">26</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Caso de estudio: el sintetizador DDSP de Magenta</div>
+  <h2>El sintetizador DDSP de Magenta, de punta a punta</h2>
+  <ul><li>El codificador extrae f0, z y sonoridad; el decodificador alimenta dos sintetizadores en paralelo, se suman, se aplica reverb y se compara por pérdida espectral.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 820 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif" font-size="11">
   <defs>
-    <marker id="mag-arr-s4" markerWidth="8" markerHeight="7" refX="7" refY="3.5" orient="auto">
+    <marker id="mag-arr-magenta" markerWidth="8" markerHeight="7" refX="7" refY="3.5" orient="auto">
       <polygon points="0 0,8 3.5,0 7" fill="#444"/>
     </marker>
   </defs>
@@ -436,7 +475,6 @@ p.note {
   <text x="492" y="79" text-anchor="middle" font-size="11" font-weight="bold" fill="#555511">Harmonic</text>
   <text x="492" y="93" text-anchor="middle" font-size="11" font-weight="bold" fill="#555511">Audio</text>
   <polyline points="450,108 455,100 460,108 465,116 470,108 475,100 480,108 485,116 490,108 495,100 500,108 505,116 510,108 515,100 520,108 525,116 530,108 535,100 540,108" fill="none" stroke="#4488cc" stroke-width="1.4"/>
-  <polyline points="450,108 452,103 454,108 456,113 458,108 460,103 462,108 464,113 466,108 468,103 470,108 472,113 474,108 476,103 478,108 480,113 482,108 484,103 486,108 488,113 490,108 492,103 494,108 496,113 498,108 500,103 502,108 504,113 506,108 508,103 510,108 512,113 514,108 516,103 518,108 520,113 522,108 524,103 526,108 528,113 530,108 532,103 534,108 536,113 538,108" fill="none" stroke="#cc4444" stroke-width="1.1" opacity="0.8"/>
   <rect x="444" y="150" width="96" height="58" rx="6" fill="#eeeebb" stroke="#888833" stroke-width="1.5"/>
   <text x="492" y="169" text-anchor="middle" font-size="11" font-weight="bold" fill="#555511">Filtered</text>
   <text x="492" y="183" text-anchor="middle" font-size="11" font-weight="bold" fill="#555511">Noise</text>
@@ -445,189 +483,208 @@ p.note {
   <text x="592" y="140" text-anchor="middle" font-size="17" font-weight="bold" fill="#555">+</text>
   <rect x="628" y="96" width="78" height="68" rx="6" fill="#eeeebb" stroke="#888833" stroke-width="1.5" stroke-dasharray="7,3"/>
   <text x="667" y="125" text-anchor="middle" font-size="12" font-weight="bold" fill="#555511">Reverb</text>
-  <polyline points="635,150 639,140 643,150 647,160 651,150 654,144 657,150 660,155 663,150 665,147 667,150 669,153 671,150 673,148 675,150 677,152 679,150 685,150 698,150" fill="none" stroke="#888840" stroke-width="1.4" opacity="0.9"/>
   <rect x="724" y="65" width="82" height="118" rx="8" fill="#c8d0f0" stroke="#4455aa" stroke-width="2"/>
   <text x="765" y="88" text-anchor="middle" font-size="10" font-weight="bold" fill="#1a2a88">Synthesized</text>
   <text x="765" y="103" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a2a88">Audio</text>
   <polyline points="729,148 733,137 737,156 741,132 745,150 749,128 753,152 757,140 761,152 765,131 769,147 773,140 777,151 781,138 785,150 789,143 793,151 797,145 801,150" fill="none" stroke="#4455aa" stroke-width="1.4" opacity="0.7"/>
   <rect x="26" y="247" width="762" height="26" rx="5" fill="#f9caca" stroke="#cc3333" stroke-width="1.5"/>
   <text x="407" y="265" text-anchor="middle" font-size="12" font-weight="bold" fill="#881111">Multi-Scale Spectrogram Loss</text>
-  <line x1="90" y1="126" x2="128" y2="126" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="192" y1="106" x2="230" y2="89" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="192" y1="128" x2="230" y2="131" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <path d="M 90 165 L 115 165 L 115 220 L 224 220 L 224 173 L 228 173" stroke="#444" stroke-width="1.5" fill="none" marker-end="url(#mag-arr-s4)"/>
-  <line x1="300" y1="89" x2="338" y2="105" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="300" y1="131" x2="338" y2="128" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="300" y1="173" x2="338" y2="152" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="402" y1="105" x2="444" y2="87" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="402" y1="149" x2="444" y2="170" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="540" y1="89" x2="580" y2="122" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="540" y1="179" x2="580" y2="147" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="609" y1="134" x2="628" y2="132" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="706" y1="130" x2="724" y2="126" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="49" y1="183" x2="49" y2="247" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-  <line x1="765" y1="183" x2="765" y2="247" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-s4)"/>
-</svg>
-  </div>
-  <div class="slide-num">18</div>
-</section>
-
-<!-- 19 -->
-<section>
-  <div class="section-label">§ 4 · Caso de Estudio: Sintetizador DDSP de Magenta</div>
-  <h2>Decodificador GRU+MLP y dos sintetizadores en paralelo</h2>
-  <ul>
-    <li><strong>Decodificador:</strong> GRU (Gated Recurrent Unit) seguida de MLP; toma la concatenación $(f_0, Z, \ell)$ y predice las $K$ amplitudes $a_k(t)$ y los $L$ coeficientes FIR $h[n](t)$</li>
-    <li><strong>Sintetizador armónico (Harmonic Audio):</strong> aplica ec. 2 con las amplitudes predichas; genera la componente tonal periódica</li>
-    <li><strong>Sintetizador de ruido (Filtered Noise):</strong> filtra ruido blanco con el filtro FIR predicho (ec. 1); genera la componente aperiódica</li>
-    <li>Ambas señales se suman y se convoluciona con la IR de sala del bloque Reverb para producir el audio sintetizado final</li>
-  </ul>
-  <div class="slide-num">19</div>
-</section>
-
-<!-- 20 -->
-<section>
-  <div class="section-label">§ 4 · Caso de Estudio: Sintetizador DDSP de Magenta</div>
-  <h2>Reverberación entrenable y pérdida espectral multi-escala</h2>
-  <ul>
-    <li><strong>Reverberación diferenciable:</strong> convolución de la señal seca con una respuesta impulsiva (IR) de sala cuyos coeficientes son parámetros entrenables; el gradiente fluye hasta la IR al ser una convolución lineal</li>
-    <li><strong>Multi-Scale Spectrogram Loss:</strong> distancia $\ell_1$ entre log-espectrogramas del audio objetivo y sintetizado a múltiples tamaños de ventana STFT (2048, 1024, 512, 256 muestras)</li>
-    <li>Ventanas grandes capturan dependencias de largo plazo; ventanas pequeñas capturan transitorios; operar sobre magnitud espectral es robusto a desfases de fase global</li>
-  </ul>
-  <div class="slide-num">20</div>
-</section>
-
-<!-- 21 -->
-<section>
-  <div class="section-label">§ 4 · Caso de Estudio: Sintetizador DDSP de Magenta</div>
-  <h2>Magenta DDSP: calidad comparable con 100× menos parámetros</h2>
-  <ul>
-    <li>El sintetizador logra calidad perceptual comparable a modelos autoregresivos puros como WaveNet con órdenes de magnitud menos parámetros y datos de entrenamiento</li>
-    <li>La eficiencia surge directamente del paradigma: la red no aprende síntesis desde cero; el módulo DSP aporta el conocimiento físico que libera a la red de esa carga</li>
-    <li>El caso audio plantea la pregunta: ¿el mismo principio DDSP aplica a otras modalidades de señal? → §5</li>
-  </ul>
-  <div class="slide-num">21</div>
-</section>
-
-<!-- §5 — Generalización a Múltiples Modalidades -->
-
-<!-- 22 -->
-<section>
-  <div class="section-label">§ 5 · Generalización a Múltiples Modalidades</div>
-  <h2>El principio DDSP se aplica a cualquier señal diferenciable</h2>
-  <ul>
-    <li>El principio es genérico: reemplazar el decodificador de red neuronal pura por un módulo de procesamiento diferenciable basado en física o matemáticas de dominio</li>
-    <li>La clave es que el módulo sea expresable como código diferenciable; puede ser un motor de renderizado gráfico, un integrador de EDO, o cualquier transformación con gradiente analítico</li>
-    <li>Tres dominios ilustran la generalidad: señales 1D, imágenes 2D/3D (renderizado diferenciable) y sistemas físicos en robótica (simuladores diferenciables)</li>
-  </ul>
-  <div class="slide-num">22</div>
-</section>
-
-<!-- 23 -->
-<section>
-  <div class="section-label">§ 5 · Generalización a Múltiples Modalidades</div>
-  <h2>Señales 1D: síntesis aditiva y filtrado diferenciable</h2>
-  <ul>
-    <li>El decodificador predice $f_0$, amplitudes $a_k(t)$ y coeficientes FIR $h[k](t)$; el módulo DSP aplica las ecs. 1–2 para generar la forma de onda final</li>
-    <li>La pérdida es la distancia espectral entre señal original y sintetizada a múltiples escalas de tiempo (STFT multi-escala)</li>
-    <li>Aplicaciones: síntesis de voz e instrumentos musicales, series de tiempo biomédicas (ECG, EEG), señales industriales de series de tiempo</li>
-  </ul>
-  <div class="slide-num">23</div>
-</section>
-
-<!-- 24 -->
-<section>
-  <div class="section-label">§ 5 · Generalización a Múltiples Modalidades</div>
-  <h2>Renderizado diferenciable: visión 2D/3D</h2>
-  <ul>
-    <li>El decodificador predice parámetros geométricos: mallas 3D, texturas, fuentes de luz, posición de cámara</li>
-    <li>El módulo DSP equivalente es un <strong>motor de renderizado diferenciable</strong>: proyecta las propiedades físicas en una imagen 2D mediante las ecuaciones ópticas exactas</li>
-    <li>El gradiente de la pérdida fotométrica fluye hasta los parámetros geométricos; permite reconstrucción 3D a partir de imágenes 2D sin supervisión 3D explícita</li>
-  </ul>
-  <div class="slide-num">24</div>
-</section>
-
-<!-- 25 -->
-<section>
-  <div class="section-label">§ 5 · Generalización a Múltiples Modalidades</div>
-  <h2>Simuladores físicos diferenciables en robótica</h2>
-  <ul>
-    <li>El módulo de decodificación puede ser un simulador de Ecuaciones Diferenciales Ordinarias (EDO) integrado con métodos Runge-Kutta diferenciables</li>
-    <li>La red predice fuerzas, masas y coeficientes de fricción; el simulador integra las ecuaciones de movimiento respetando la conservación de energía</li>
-    <li>El gradiente de la pérdida de predicción fluye hacia los parámetros físicos: el sistema aprende el modelo del entorno directamente desde datos observados</li>
-  </ul>
-  <p class="note">Con la universalidad establecida, el §6 examina las propiedades fundamentales que emergen de incorporar sesgo inductivo estructural en el decodificador.</p>
-  <div class="slide-num">25</div>
-</section>
-
-<!-- §6 — Propiedades Fundamentales -->
-
-<!-- 26 -->
-<section>
-  <div class="section-label">§ 6 · Propiedades Fundamentales</div>
-  <h2>El sesgo inductivo estructural modifica el modelo generativo</h2>
-  <ul>
-    <li>Incorporar conocimiento de dominio en la decodificación no es una mejora incremental: altera propiedades fundamentales del sistema generativo</li>
-    <li><strong>Sesgo inductivo estructural:</strong> imponer la estructura matemática del dominio en la arquitectura restringe el espacio de hipótesis a soluciones físicamente coherentes</li>
-    <li>Tres propiedades emergen directamente: eficiencia masiva de parámetros, extrapolación fuera de distribución, e interpretación y control explícito</li>
-  </ul>
-  <div class="slide-num">26</div>
-</section>
-
-<!-- 27 -->
-<section>
-  <div class="section-label">§ 6 · Propiedades Fundamentales</div>
-  <h2>Eficiencia masiva: cientos de miles vs. 75 millones de parámetros</h2>
-  <ul>
-    <li>Al delegar la síntesis final al módulo DSP, la red solo necesita aprender a predecir un vector pequeño de parámetros de control, no generar muestras una a una</li>
-    <li>Engel et al. (2020): un modelo DDSP logra calidad comparable a WaveNet (75M parámetros) con solo cientos de miles de parámetros y significativamente menos datos de entrenamiento</li>
-    <li>La eficiencia no es un truco de ingeniería: es consecuencia directa de que el módulo DSP aporta el conocimiento físico que la red no tiene que aprender</li>
-  </ul>
+  <line x1="90" y1="126" x2="128" y2="126" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="192" y1="106" x2="230" y2="89" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="192" y1="128" x2="230" y2="131" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <path d="M 90 165 L 115 165 L 115 220 L 224 220 L 224 173 L 228 173" stroke="#444" stroke-width="1.5" fill="none" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="300" y1="89" x2="338" y2="105" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="300" y1="131" x2="338" y2="128" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="300" y1="173" x2="338" y2="152" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="402" y1="105" x2="444" y2="87" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="402" y1="149" x2="444" y2="170" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="540" y1="89" x2="580" y2="122" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="540" y1="179" x2="580" y2="147" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="609" y1="134" x2="628" y2="132" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="706" y1="130" x2="724" y2="126" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="49" y1="183" x2="49" y2="247" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  <line x1="765" y1="183" x2="765" y2="247" stroke="#444" stroke-width="1.5" marker-end="url(#mag-arr-magenta)"/>
+  </svg></div>
   <div class="slide-num">27</div>
 </section>
 
-<!-- 28 -->
 <section>
-  <div class="section-label">§ 6 · Propiedades Fundamentales</div>
-  <h2>Extrapolación real fuera de la distribución de entrenamiento</h2>
+  <div class="section-label">§ 4 · Caso de estudio: el sintetizador DDSP de Magenta</div>
+  <h2>Un decodificador liviano y dos sintetizadores en paralelo</h2>
   <ul>
-    <li>Las redes neuronales estándar fallan al generar señales con características fuera del rango de entrenamiento (Out-of-Distribution, OOD): la interpolación aprendida no se extiende correctamente</li>
-    <li>En DDSP, si el decodificador predice una $f_0$ no vista en entrenamiento, el módulo DSP sintetiza armónicos en las posiciones físicamente correctas; las ecuaciones de síntesis son válidas por construcción</li>
-    <li>La extrapolación es correcta porque el módulo DSP aplica matemáticas exactas, no una interpolación de los datos de entrenamiento</li>
+    <li>Una GRU (Gated Recurrent Unit) seguida de una MLP predice, en cada instante, las amplitudes armónicas y los coeficientes del filtro de ruido.</li>
+    <li>El sintetizador armónico y el de ruido operan en paralelo y se suman: la parte tonal más la ruidosa.</li>
   </ul>
   <div class="slide-num">28</div>
 </section>
 
-<!-- 29 -->
 <section>
-  <div class="section-label">§ 6 · Propiedades Fundamentales</div>
-  <h2>Control explícito e independiente de cada atributo</h2>
+  <div class="section-label">§ 4 · Caso de estudio: el sintetizador DDSP de Magenta</div>
+  <h2>¿Cómo comparar dos audios sin que la fase estorbe?</h2>
   <ul>
-    <li>Los espacios latentes de modelos generativos clásicos están entrelazados (<em>entangled</em>): modificar una dimensión afecta múltiples atributos de la señal simultáneamente</li>
-    <li>En DDSP, las salidas del decodificador están estructuralmente ligadas a parámetros físicos interpretables: tono $f_0$, brillantez espectral, envoltura dinámica $\ell$, IR de reverberación</li>
-    <li>Esto habilita manipulación independiente: cambiar $f_0$ sin alterar el timbre; cambiar la IR de sala sin modificar la melodía</li>
+    <li>Comparar las formas de onda muestra a muestra es frágil: dos señales que suenan igual pueden estar desfasadas y dar un error enorme.</li>
   </ul>
   <div class="slide-num">29</div>
 </section>
 
-<!-- 30 -->
 <section>
-  <div class="section-label">§ 6 · Propiedades Fundamentales</div>
-  <h2>El sesgo inductivo como restricción del espacio de hipótesis</h2>
+  <div class="section-label">§ 4 · Caso de estudio: el sintetizador DDSP de Magenta</div>
+  <h2>La pérdida espectral multi-escala</h2>
   <ul>
-    <li>El paradigma DDSP demuestra que el aprendizaje profundo no tiene que reemplazar el conocimiento experto de décadas de ingeniería de señales, física o infografía</li>
-    <li>Las matemáticas clásicas proveen el mejor sesgo inductivo posible: restringen el espacio de búsqueda a soluciones físicamente coherentes, maximizando la generalización con menos datos</li>
-    <li>El principio es general: cualquier conocimiento previo expresable como función diferenciable puede incorporarse como sesgo inductivo en un modelo generativo profundo</li>
+    <li>Se compara la magnitud de los log-espectrogramas a varios tamaños de ventana (2048, 1024, 512, 256), capturando lo lento y lo transitorio.</li>
   </ul>
+  <p class="note">En palabras: medir sobre la magnitud espectral, y no la onda, la vuelve robusta a desfases de fase.</p>
   <div class="slide-num">30</div>
 </section>
 
-<!-- CIERRE -->
-<section class="close-slide">
-  <h1>El conocimiento físico y el aprendizaje profundo no son opciones alternativas: son complementarios.</h1>
-  <div style="margin-top:2em; font-size:1em; color: var(--ink-soft);">
-    Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a>
-  </div>
+<section>
+  <div class="section-label">§ 4 · Caso de estudio: el sintetizador DDSP de Magenta</div>
+  <h2>Nada de esto era específico del audio</h2>
+  <ul>
+    <li>La receta (la red predice parámetros, un módulo de física diferenciable sintetiza) no depende de que la señal sea sonido.</li>
+  </ul>
+  <div class="slide-num">31</div>
+</section>
+
+<!-- ===== §5 ===== -->
+<section>
+  <div class="section-label">§ 5 · Generalización a múltiples modalidades</div>
+  <h2>¿Sirve la receta más allá del audio?</h2>
+  <ul>
+    <li>Si el principio es reemplazar el decodificador puro por un módulo diferenciable de dominio, debería aplicarse a cualquier modalidad de señal.</li>
+  </ul>
+  <div class="slide-num">32</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Generalización a múltiples modalidades</div>
+  <h2>El mismo esqueleto, tres módulos distintos</h2>
+  <ul><li>La red predice los parámetros del dominio; un módulo diferenciable los convierte en señal. Solo cambia qué es el módulo y qué produce.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 760 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+    <defs><marker id="arrg5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#555"/></marker></defs>
+    <text x="125" y="26" text-anchor="middle" font-weight="bold" fill="#3a1a6c">Audio</text>
+    <text x="375" y="26" text-anchor="middle" font-weight="bold" fill="#3a1a6c">Visión</text>
+    <text x="630" y="26" text-anchor="middle" font-weight="bold" fill="#3a1a6c">Física / Robótica</text>
+    <rect x="20" y="42" width="210" height="52" rx="6" fill="#ffe0e0" stroke="#cc4444" stroke-width="1.4"/>
+    <text x="125" y="63" text-anchor="middle" fill="#6c1a1a" font-size="11">la red predice</text>
+    <text x="125" y="82" text-anchor="middle" fill="#882222" font-weight="bold" font-size="11">f₀, aₖ, coef. FIR</text>
+    <rect x="270" y="42" width="210" height="52" rx="6" fill="#ffe0e0" stroke="#cc4444" stroke-width="1.4"/>
+    <text x="375" y="63" text-anchor="middle" fill="#6c1a1a" font-size="11">la red predice</text>
+    <text x="375" y="82" text-anchor="middle" fill="#882222" font-weight="bold" font-size="11">malla, textura, luz, cámara</text>
+    <rect x="520" y="42" width="220" height="52" rx="6" fill="#ffe0e0" stroke="#cc4444" stroke-width="1.4"/>
+    <text x="630" y="63" text-anchor="middle" fill="#6c1a1a" font-size="11">la red predice</text>
+    <text x="630" y="82" text-anchor="middle" fill="#882222" font-weight="bold" font-size="11">fuerzas, masas, fricción</text>
+    <line x1="125" y1="94" x2="125" y2="128" stroke="#555" stroke-width="1.4" marker-end="url(#arrg5)"/>
+    <line x1="375" y1="94" x2="375" y2="128" stroke="#555" stroke-width="1.4" marker-end="url(#arrg5)"/>
+    <line x1="630" y1="94" x2="630" y2="128" stroke="#555" stroke-width="1.4" marker-end="url(#arrg5)"/>
+    <rect x="20" y="130" width="210" height="52" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.6"/>
+    <text x="125" y="151" text-anchor="middle" fill="#5a2800" font-size="11">módulo diferenciable</text>
+    <text x="125" y="170" text-anchor="middle" fill="#884400" font-weight="bold" font-size="11">sintetizador DSP</text>
+    <rect x="270" y="130" width="210" height="52" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.6"/>
+    <text x="375" y="151" text-anchor="middle" fill="#5a2800" font-size="11">módulo diferenciable</text>
+    <text x="375" y="170" text-anchor="middle" fill="#884400" font-weight="bold" font-size="11">renderizador</text>
+    <rect x="520" y="130" width="220" height="52" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.6"/>
+    <text x="630" y="151" text-anchor="middle" fill="#5a2800" font-size="11">módulo diferenciable</text>
+    <text x="630" y="170" text-anchor="middle" fill="#884400" font-weight="bold" font-size="11">simulador de EDO</text>
+    <line x1="125" y1="182" x2="125" y2="214" stroke="#555" stroke-width="1.4" marker-end="url(#arrg5)"/>
+    <line x1="375" y1="182" x2="375" y2="214" stroke="#555" stroke-width="1.4" marker-end="url(#arrg5)"/>
+    <line x1="630" y1="182" x2="630" y2="214" stroke="#555" stroke-width="1.4" marker-end="url(#arrg5)"/>
+    <rect x="35" y="216" width="180" height="36" rx="6" fill="#d4f7d4" stroke="#339933" stroke-width="1.4"/>
+    <text x="125" y="239" text-anchor="middle" fill="#1a4d1a" font-weight="bold" font-size="11">forma de onda</text>
+    <rect x="285" y="216" width="180" height="36" rx="6" fill="#d4f7d4" stroke="#339933" stroke-width="1.4"/>
+    <text x="375" y="239" text-anchor="middle" fill="#1a4d1a" font-weight="bold" font-size="11">imagen 2D</text>
+    <rect x="540" y="216" width="180" height="36" rx="6" fill="#d4f7d4" stroke="#339933" stroke-width="1.4"/>
+    <text x="630" y="239" text-anchor="middle" fill="#1a4d1a" font-weight="bold" font-size="11">trayectoria</text>
+  </svg></div>
+  <div class="slide-num">33</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Generalización a múltiples modalidades</div>
+  <h2>Visión: un renderizador diferenciable</h2>
+  <ul>
+    <li>En vez de generar píxeles con convoluciones, el decodificador predice geometría: mallas 3D, texturas, luces, cámara.</li>
+    <li>Un renderizador diferenciable las proyecta a una imagen, y el gradiente fotométrico vuelve a los parámetros geométricos.</li>
+  </ul>
+  <p class="note">El renderizado neuronal (notebook H.6) desarrolla esta idea en profundidad.</p>
+  <div class="slide-num">34</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Generalización a múltiples modalidades</div>
+  <h2>Física: un simulador de ecuaciones diferenciable</h2>
+  <ul>
+    <li>La red predice fuerzas, masas y coeficientes de fricción; un simulador de EDO diferenciable integra las ecuaciones de movimiento.</li>
+    <li>El gradiente de la pérdida de predicción fluye hacia esos parámetros físicos.</li>
+  </ul>
+  <div class="slide-num">35</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Generalización a múltiples modalidades</div>
+  <h2>¿Qué gana de fondo el modelo?</h2>
+  <ul>
+    <li>La receta funciona en todas estas modalidades; queda preguntarse qué propiedades profundas le confiere al modelo, más allá del rendimiento.</li>
+  </ul>
+  <div class="slide-num">36</div>
+</section>
+
+<!-- ===== §6 ===== -->
+<section>
+  <div class="section-label">§ 6 · Propiedades fundamentales</div>
+  <h2>¿Qué cambia de raíz, más allá de andar mejor?</h2>
+  <ul>
+    <li>Inyectar el módulo de dominio modifica propiedades de fondo del modelo generativo, no solo su exactitud.</li>
+  </ul>
+  <div class="slide-num">37</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Propiedades fundamentales</div>
+  <h2>Cientos de miles de parámetros en vez de 75 millones</h2>
+  <ul>
+    <li>Como el módulo DSP hace la síntesis, la red solo predice un pequeño vector de control en lugar de generar la señal muestra a muestra.</li>
+    <li>El modelo original de Engel igualó la calidad de redes de 75 M de parámetros usando cientos de miles, con menos datos y menos cómputo.</li>
+  </ul>
+  <div class="slide-num">38</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Propiedades fundamentales</div>
+  <h2>Extrapola porque la física es válida por construcción</h2>
+  <ul>
+    <li>Una red estándar falla fuera del rango de entrenamiento; DDSP no.</li>
+    <li>Si el decodificador pide un $f_0$ nunca visto, el módulo DSP coloca los armónicos en su posición correcta, porque las ecuaciones no se aprendieron, se impusieron.</li>
+  </ul>
+  <div class="slide-num">39</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Propiedades fundamentales</div>
+  <h2>Control desenredado de cada atributo</h2>
+  <ul>
+    <li>Los latentes clásicos suelen estar entrelazados: mover una dimensión altera varios atributos a la vez.</li>
+    <li>En DDSP las salidas se conectan a parámetros físicos (tono, brillantez, dinámica, reverb), que se pueden manipular por separado.</li>
+  </ul>
+  <div class="slide-num">40</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Propiedades fundamentales</div>
+  <h2>El gran principio: sesgo inductivo estructural</h2>
+  <ul>
+    <li>En vez de que la red aprenda la física desde cero, se impone la estructura del dominio en la arquitectura, restringiendo el espacio de hipótesis a soluciones coherentes.</li>
+    <li>El principio es general: todo conocimiento previo expresable como función diferenciable puede incorporarse como sesgo inductivo.</li>
+  </ul>
+  <div class="slide-num">41</div>
+</section>
+
+<!-- ===== Cierre ===== -->
+<section>
+<div class="close-slide">
+  <h1>DDSP no hace que la red dibuje la señal: le enseña a controlar un sintetizador clásico hecho diferenciable, heredando la física en lugar de reaprenderla.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
 </section>
 
 </div>
