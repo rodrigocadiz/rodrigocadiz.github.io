@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aceleración de inferencia en modelos de difusión · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Aceleración de inferencia en modelos de difusión</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- APERTURA -->
+<section>
+<h2>La difusión genera lo mejor, pero lo genera lento</h2>
+<ul>
+  <li>Una GAN o un VAE producen una imagen con una sola pasada por la red; un modelo de difusión repite esa evaluación cientos o miles de veces.</li>
+  <li>La pregunta de toda la clase: cómo recuperar esa velocidad sin renunciar a la calidad.</li>
+</ul>
+<div class="slide-num">1</div>
+</section>
+
+<!-- § 1 · El cuello de botella de la inferencia -->
+
+<section>
+<div class="section-label">§ 1 · El cuello de botella de la inferencia</div>
+<h2>¿Por qué es lento generar con difusión?</h2>
+<ul>
+  <li>El proceso inverso reconstruye el dato deshaciendo el ruido paso a paso, y cada paso exige una evaluación completa de la red.</li>
+</ul>
+<div class="slide-num">2</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El cuello de botella de la inferencia</div>
+<h2>El costo se mide en evaluaciones de red</h2>
+<ul>
+  <li>El NFE (Number of Function Evaluations) cuenta cuántas veces se llama a la red para producir una sola muestra.</li>
+</ul>
+<p class="note">En palabras: cada evaluación de la U-Net domina el tiempo y la energía; el NFE es la métrica natural de costo.</p>
+<div class="slide-num">3</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El cuello de botella de la inferencia</div>
+<h2>Uno frente a mil</h2>
+<ul>
+  <li>Una GAN o un VAE tienen NFE = 1.</li>
+  <li>Un DDPM (Denoising Diffusion Probabilistic Model) clásico necesita del orden de 1000, con latencias prohibitivas para tiempo real.</li>
+</ul>
+<div class="slide-num">4</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El cuello de botella de la inferencia</div>
+<h2>La causa de raíz: la dependencia secuencial</h2>
+<ul>
+  <li>El estado $\mathbf{x}_{t-1}$ solo puede calcularse una vez conocido $\mathbf{x}_t$, así que los pasos no se pueden paralelizar.</li>
+</ul>
+<p class="note">En palabras: hay que esperar la última evaluación para obtener la muestra; la cadena impide repartir el trabajo.</p>
+<div class="slide-num">5</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El cuello de botella de la inferencia</div>
+<h2>Una pasada frente a una cadena de mil</h2>
+<ul>
+  <li>GAN/VAE resuelven en una pasada (NFE = 1); la difusión encadena cientos de pasos secuenciales.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 660 240" font-family="sans-serif" font-size="14">
+  <defs>
+    <marker id="arrA" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <text x="20" y="38" font-weight="bold" fill="#1a1a1a">GAN / VAE: una sola pasada (NFE = 1)</text>
+  <rect x="30" y="55" width="60" height="42" rx="6" fill="#e8f0fe" stroke="#1a1a1a"/>
+  <text x="60" y="81" text-anchor="middle" fill="#1a1a1a">z</text>
+  <line x1="90" y1="76" x2="150" y2="76" stroke="#1a1a1a" marker-end="url(#arrA)"/>
+  <rect x="150" y="55" width="90" height="42" rx="6" fill="#fde8e8" stroke="#1a1a1a"/>
+  <text x="195" y="81" text-anchor="middle" fill="#1a1a1a">Red</text>
+  <line x1="240" y1="76" x2="300" y2="76" stroke="#1a1a1a" marker-end="url(#arrA)"/>
+  <rect x="300" y="55" width="60" height="42" rx="6" fill="#e8f0fe" stroke="#1a1a1a"/>
+  <text x="330" y="81" text-anchor="middle" fill="#1a1a1a">x</text>
+
+  <text x="20" y="150" font-weight="bold" fill="#1a1a1a">Difusión: cadena secuencial (NFE ≈ 1000)</text>
+  <rect x="30" y="168" width="48" height="40" rx="5" fill="#eee" stroke="#1a1a1a"/>
+  <text x="54" y="192" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">T</tspan></text>
+  <line x1="78" y1="188" x2="112" y2="188" stroke="#1a1a1a" marker-end="url(#arrA)"/>
+  <rect x="112" y="168" width="48" height="40" rx="5" fill="#fde8e8" stroke="#1a1a1a"/>
+  <text x="136" y="192" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">t</tspan></text>
+  <line x1="160" y1="188" x2="194" y2="188" stroke="#1a1a1a" marker-end="url(#arrA)"/>
+  <text x="206" y="193" fill="#1a1a1a">· · ·</text>
+  <line x1="232" y1="188" x2="266" y2="188" stroke="#1a1a1a" marker-end="url(#arrA)"/>
+  <rect x="266" y="168" width="48" height="40" rx="5" fill="#fde8e8" stroke="#1a1a1a"/>
+  <text x="290" y="192" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">1</tspan></text>
+  <line x1="314" y1="188" x2="348" y2="188" stroke="#1a1a1a" marker-end="url(#arrA)"/>
+  <rect x="348" y="168" width="48" height="40" rx="5" fill="#e8f0fe" stroke="#1a1a1a"/>
+  <text x="372" y="192" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">0</tspan></text>
+  <text x="420" y="193" fill="#b00" font-size="13">cientos de pasos</text>
+</svg>
+</div>
+<div class="slide-num">6</div>
+</section>
+
+<!-- § 2 · Del proceso estocástico al flujo determinista -->
+
+<section>
+<div class="section-label">§ 2 · Del proceso estocástico al flujo determinista</div>
+<h2>¿Y si generamos sin azar en cada paso?</h2>
+<ul>
+  <li>Si la cadena estocástica es el problema, cambiemos la formulación matemática del muestreo.</li>
+</ul>
+<div class="slide-num">7</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Del proceso estocástico al flujo determinista</div>
+<h2>El proceso directo es una ecuación diferencial estocástica</h2>
+$$d\mathbf{x} = \mathbf{f}(\mathbf{x}, t)\, dt + g(t)\, d\mathbf{w}$$
+<ul>
+  <li>$\mathbf{f}$ es el arrastre, $g(t)$ el coeficiente de difusión y $\mathbf{w}$ un proceso de Wiener (ruido browniano).</li>
+</ul>
+<p class="note">En palabras: añadir ruido a los datos es seguir una SDE (ecuación diferencial estocástica) hacia adelante en el tiempo.</p>
+<div class="slide-num">8</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Del proceso estocástico al flujo determinista</div>
+<h2>Generar es integrar la SDE inversa</h2>
+$$d\mathbf{x} = \left[\mathbf{f}(\mathbf{x}, t) - g(t)^2 \nabla_{\mathbf{x}} \log p_t(\mathbf{x})\right] dt + g(t)\, d\bar{\mathbf{w}}$$
+<ul>
+  <li>Requiere el <em>score</em> $\nabla_{\mathbf{x}} \log p_t(\mathbf{x})$, el gradiente del log de la densidad, que la red aprende.</li>
+</ul>
+<p class="note">En palabras: para revertir el ruido hay que saber, en cada punto, hacia dónde crece la probabilidad.</p>
+<div class="slide-num">9</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Del proceso estocástico al flujo determinista</div>
+<h2>Toda SDE tiene una ODE con las mismas marginales</h2>
+$$\frac{d\mathbf{x}}{dt} = \mathbf{f}(\mathbf{x}, t) - \frac{1}{2} g(t)^2 \nabla_{\mathbf{x}} \log p_t(\mathbf{x})$$
+<ul>
+  <li>La ODE de flujo de probabilidad recorre las mismas densidades $p_t(\mathbf{x})$, pero con trayectorias deterministas.</li>
+</ul>
+<p class="note">En palabras: misma película de distribuciones, pero sin azar en el camino.</p>
+<div class="slide-num">10</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Del proceso estocástico al flujo determinista</div>
+<h2>Qué cambia de la SDE a la ODE</h2>
+<ul>
+  <li>Desaparece el término de ruido $g(t)\, d\bar{\mathbf{w}}$: la trayectoria deja de ser aleatoria.</li>
+  <li>El coeficiente del <em>score</em> se reduce a la mitad; se reutiliza exactamente la misma red.</li>
+</ul>
+<div class="slide-num">11</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Del proceso estocástico al flujo determinista</div>
+<h2>La trayectoria determinista es suave</h2>
+<ul>
+  <li>SDE: trayectoria quebrada que exige pasos diminutos; ODE: trayectoria suave que admite pasos largos.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 640 250" font-family="sans-serif" font-size="14">
+  <line x1="60" y1="210" x2="600" y2="210" stroke="#888" stroke-width="1"/>
+  <line x1="60" y1="30" x2="60" y2="210" stroke="#888" stroke-width="1"/>
+  <text x="300" y="238" text-anchor="middle" fill="#1a1a1a">tiempo de muestreo (ruido alto a la izquierda)</text>
+  <polyline points="80,70 110,120 130,80 160,150 185,95 215,165 245,110 275,175 305,130 335,185 365,150 395,190 430,160 470,178 510,165 560,170"
+            fill="none" stroke="#c0392b" stroke-width="2.2"/>
+  <text x="80" y="60" fill="#c0392b" font-size="13">SDE: trayectoria quebrada</text>
+  <path d="M80,70 C 200,80 360,150 560,170" fill="none" stroke="#2471a3" stroke-width="2.6"/>
+  <text x="370" y="120" fill="#2471a3" font-size="13">ODE: trayectoria suave</text>
+  <circle cx="80" cy="70" r="4" fill="#1a1a1a"/>
+  <text x="50" y="62" fill="#1a1a1a" font-size="12">ruido</text>
+  <circle cx="560" cy="170" r="4" fill="#1a1a1a"/>
+  <text x="540" y="190" fill="#1a1a1a" font-size="12">datos</text>
+</svg>
+</div>
+<div class="slide-num">12</div>
+</section>
+
+<!-- § 3 · Solvers numéricos y discretización gruesa -->
+
+<section>
+<div class="section-label">§ 3 · Solvers numéricos y discretización gruesa</div>
+<h2>Si es una ODE, ¿cómo integrarla con pocos pasos?</h2>
+<ul>
+  <li>Una trayectoria suave permite importar décadas de análisis numérico para dar pasos grandes sin acumular error.</li>
+</ul>
+<div class="slide-num">13</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Solvers numéricos y discretización gruesa</div>
+<h2>Euler es barato pero impreciso</h2>
+<ul>
+  <li>El método de Euler tiene error global $\mathcal{O}(\Delta t)$: con pasos largos se desvía de la trayectoria real.</li>
+</ul>
+<div class="slide-num">14</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Solvers numéricos y discretización gruesa</div>
+<h2>Heun corrige la curvatura promediando pendientes</h2>
+$$\tilde{\mathbf{x}}_{i+1} = \mathbf{x}_i + \Delta t\, \mathbf{d}_i, \qquad \mathbf{x}_{i+1} = \mathbf{x}_i + \frac{\Delta t}{2}\left(\mathbf{d}_i + \tilde{\mathbf{d}}_{i+1}\right)$$
+<ul>
+  <li>Predice con la pendiente $\mathbf{d}_i$ y corrige con el promedio de la pendiente inicial y la del punto de llegada $\tilde{\mathbf{d}}_{i+1}$.</li>
+</ul>
+<p class="note">En palabras: miras a dónde llegarías y ajustas; error global $\mathcal{O}(\Delta t^2)$ con menos evaluaciones.</p>
+<div class="slide-num">15</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Solvers numéricos y discretización gruesa</div>
+<h2>Más orden, menos pasos</h2>
+<ul>
+  <li>Euler (2 pasos) se sale de la curva; Heun sigue la curvatura con pasos largos.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 600 230" font-family="sans-serif" font-size="14">
+  <path d="M60,180 C 200,180 260,60 540,50" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="430" y="80" fill="#1a1a1a" font-size="13">trayectoria real</text>
+  <polyline points="60,180 300,150 540,50" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,4"/>
+  <circle cx="60" cy="180" r="4" fill="#1a1a1a"/>
+  <circle cx="300" cy="150" r="4" fill="#c0392b"/>
+  <text x="250" y="172" fill="#c0392b" font-size="13">Euler: 2 pasos</text>
+  <polyline points="60,180 200,110 300,95 420,62 540,50" fill="none" stroke="#2471a3" stroke-width="2" stroke-dasharray="2,3"/>
+  <text x="120" y="100" fill="#2471a3" font-size="13">Heun: corrige curvatura</text>
+  <text x="60" y="205" fill="#1a1a1a" font-size="12">pocos pasos largos</text>
+</svg>
+</div>
+<div class="slide-num">16</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Solvers numéricos y discretización gruesa</div>
+<h2>Solvers especializados bajan a un dígito</h2>
+<ul>
+  <li>DDIM (Denoising Diffusion Implicit Models): primer muestreador determinista, de 1000 a 30-50 pasos.</li>
+  <li>DPM-Solver explota la estructura semilineal de la ODE y llega a alrededor de 10 pasos.</li>
+</ul>
+<div class="slide-num">17</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Solvers numéricos y discretización gruesa</div>
+<h2>Otra vía: paralelizar el tiempo</h2>
+<ul>
+  <li>Métodos como ParaDiGMS plantean la integración como un punto fijo (iteraciones de Picard) y predicen segmentos enteros de la trayectoria en paralelo sobre varias GPU.</li>
+</ul>
+<p class="note">En palabras: se cambia mayor cómputo total por menos tiempo de reloj.</p>
+<div class="slide-num">18</div>
+</section>
+
+<!-- § 4 · Destilación progresiva -->
+
+<section>
+<div class="section-label">§ 4 · Destilación progresiva</div>
+<h2>Tiempo real exige un solo dígito de pasos</h2>
+<ul>
+  <li>Diez pasos es rápido, pero la generación interactiva pide 1-4; eso ya no se logra con mejor solver, sino reentrenando el modelo.</li>
+</ul>
+<div class="slide-num">19</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Destilación progresiva</div>
+<h2>Un estudiante imita al profesor</h2>
+<ul>
+  <li>Un muestreador determinista entrenado actúa de profesor; el estudiante aprende a hacer en un paso lo que el profesor hace en dos.</li>
+</ul>
+<p class="note">En palabras: se enseña a la red a saltarse la mitad de los pasos.</p>
+<div class="slide-num">20</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Destilación progresiva</div>
+<h2>Halving progresivo: 1000 → … → 2</h2>
+<ul>
+  <li>Cada ronda el estudiante reemplaza dos pasos del profesor por uno y luego pasa a ser el nuevo profesor.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 640 210" font-family="sans-serif" font-size="14">
+  <defs>
+    <marker id="arrD" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <text x="20" y="34" font-weight="bold" fill="#1a1a1a">Profesor: 2 pasos</text>
+  <rect x="30" y="50" width="56" height="38" rx="5" fill="#eee" stroke="#1a1a1a"/>
+  <text x="58" y="74" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">t</tspan></text>
+  <line x1="86" y1="69" x2="124" y2="69" stroke="#1a1a1a" marker-end="url(#arrD)"/>
+  <rect x="124" y="50" width="64" height="38" rx="5" fill="#fde8e8" stroke="#1a1a1a"/>
+  <text x="156" y="74" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">t-1</tspan></text>
+  <line x1="188" y1="69" x2="226" y2="69" stroke="#1a1a1a" marker-end="url(#arrD)"/>
+  <rect x="226" y="50" width="64" height="38" rx="5" fill="#e8f0fe" stroke="#1a1a1a"/>
+  <text x="258" y="74" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">t-2</tspan></text>
+
+  <text x="20" y="134" font-weight="bold" fill="#1a1a1a">Estudiante: 1 paso</text>
+  <rect x="30" y="150" width="56" height="38" rx="5" fill="#eee" stroke="#1a1a1a"/>
+  <text x="58" y="174" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">t</tspan></text>
+  <line x1="86" y1="169" x2="226" y2="169" stroke="#2e7d32" stroke-width="2.4" marker-end="url(#arrD)"/>
+  <rect x="226" y="150" width="64" height="38" rx="5" fill="#e8f0fe" stroke="#1a1a1a"/>
+  <text x="258" y="174" text-anchor="middle" fill="#1a1a1a" font-size="12">x<tspan baseline-shift="sub" font-size="9">t-2</tspan></text>
+
+  <text x="360" y="90" fill="#1a1a1a" font-size="13">1000 → 500 → 250 → · · ·</text>
+  <text x="360" y="120" fill="#2e7d32" font-size="13">· · · → 8 → 4 → 2 pasos</text>
+</svg>
+</div>
+<div class="slide-num">21</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Destilación progresiva</div>
+<h2>La velocidad se paga en entrenamiento</h2>
+<ul>
+  <li>Cada ronda de halving es un ciclo completo de entrenamiento: el costo se paga una vez y rinde muestras baratas de forma indefinida.</li>
+</ul>
+<div class="slide-num">22</div>
+</section>
+
+<!-- § 5 · Modelos de consistencia -->
+
+<section>
+<div class="section-label">§ 5 · Modelos de consistencia</div>
+<h2>¿Un atajo a un paso, entrenando una sola vez?</h2>
+<ul>
+  <li>La destilación progresiva es iterativa; los modelos de consistencia buscan el salto directo al dato limpio.</li>
+</ul>
+<div class="slide-num">23</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Modelos de consistencia</div>
+<h2>Una función que lleva cualquier punto a su origen</h2>
+<ul>
+  <li>La función de consistencia $f_\theta(\mathbf{x}_t, t)$ mapea cualquier punto de la trayectoria de la ODE directamente a los datos limpios $\mathbf{x}_0$.</li>
+</ul>
+<div class="slide-num">24</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Modelos de consistencia</div>
+<h2>Dos condiciones definen la consistencia</h2>
+<ul>
+  <li>Borde: $f_\theta(\mathbf{x}, \epsilon) = \mathbf{x}$; en el ruido mínimo $\epsilon$ la función es la identidad.</li>
+  <li>Auto-consistencia: dos instantes de una misma trayectoria dan el mismo resultado.</li>
+</ul>
+<div class="slide-num">25</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Modelos de consistencia</div>
+<h2>Todos los puntos colapsan al mismo origen</h2>
+<ul>
+  <li>Distintos $\mathbf{x}_t$ de una trayectoria se mapean al mismo $\mathbf{x}_0$ en un solo paso.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 620 240" font-family="sans-serif" font-size="14">
+  <defs>
+    <marker id="arrC" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <path d="M70,40 C 220,70 360,150 540,180" fill="none" stroke="#888" stroke-width="2"/>
+  <text x="80" y="34" fill="#1a1a1a" font-size="13">trayectoria de la ODE</text>
+  <circle cx="540" cy="180" r="6" fill="#2e7d32"/>
+  <text x="548" y="200" fill="#2e7d32" font-size="13">x<tspan baseline-shift="sub" font-size="10">0</tspan> (origen)</text>
+  <circle cx="120" cy="48" r="5" fill="#1a1a1a"/>
+  <path d="M126,50 C 320,120 420,170 532,178" fill="none" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#arrC)"/>
+  <circle cx="250" cy="92" r="5" fill="#1a1a1a"/>
+  <path d="M256,94 C 380,140 450,170 532,178" fill="none" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#arrC)"/>
+  <circle cx="400" cy="150" r="5" fill="#1a1a1a"/>
+  <path d="M406,151 C 460,165 500,173 532,178" fill="none" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#arrC)"/>
+  <text x="150" y="220" fill="#c0392b" font-size="13">f(x<tspan baseline-shift="sub" font-size="9">t</tspan>, t) lleva cualquier punto a x<tspan baseline-shift="sub" font-size="9">0</tspan> en un paso</text>
+</svg>
+</div>
+<div class="slide-num">26</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Modelos de consistencia</div>
+<h2>La pérdida fuerza esa coincidencia</h2>
+$$\mathcal{L} = \mathbb{E}\left[d\big(f_\theta(\mathbf{x}_t, t),\, f_{\theta^-}(\mathbf{x}_{t-\Delta}, t-\Delta)\big)\right]$$
+<ul>
+  <li>$d$ es una distancia y $\theta^-$ una copia con promedio móvil de los parámetros; se comparan dos puntos vecinos de la trayectoria.</li>
+</ul>
+<p class="note">En palabras: dos puntos contiguos del mismo camino deben predecir el mismo dato limpio.</p>
+<div class="slide-num">27</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Modelos de consistencia</div>
+<h2>Con profesor o desde cero</h2>
+<ul>
+  <li>Destilación de consistencia: un modelo de difusión preentrenado genera los pares de la trayectoria.</li>
+  <li>Entrenamiento de consistencia: aprende directo de los datos; los LCM (Latent Consistency Models) lo aplican en el latente de Stable Diffusion.</li>
+</ul>
+<div class="slide-num">28</div>
+</section>
+
+<!-- § 6 · Difusión latente -->
+
+<section>
+<div class="section-label">§ 6 · Difusión latente</div>
+<h2>Falta el otro eje: el tamaño de cada paso</h2>
+<ul>
+  <li>Todo lo anterior reduce el número de pasos; aún con pocos, evaluar la red sobre imágenes de $1024 \times 1024$ píxeles sigue siendo caro.</li>
+</ul>
+<div class="slide-num">29</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Difusión latente</div>
+<h2>Difundir en un espacio latente comprimido</h2>
+<ul>
+  <li>Un autoencoder comprime la imagen a un latente de baja dimensión (factor $f = 8$); la difusión opera solo ahí y un decodificador reconstruye.</li>
+</ul>
+<div class="slide-num">30</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Difusión latente</div>
+<h2>El pipeline de la difusión latente</h2>
+<ul>
+  <li>Encoder → difusión en el latente → decoder; los píxeles solo se tocan al inicio y al final.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 660 180" font-family="sans-serif" font-size="14">
+  <defs>
+    <marker id="arrL" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <rect x="20" y="55" width="70" height="70" rx="5" fill="#e8f0fe" stroke="#1a1a1a"/>
+  <text x="55" y="145" text-anchor="middle" fill="#1a1a1a" font-size="12">imagen</text>
+  <line x1="90" y1="90" x2="128" y2="90" stroke="#1a1a1a" marker-end="url(#arrL)"/>
+  <polygon points="128,60 160,75 160,105 128,120" fill="#fde8e8" stroke="#1a1a1a"/>
+  <text x="144" y="145" text-anchor="middle" fill="#1a1a1a" font-size="11">Encoder</text>
+  <rect x="172" y="72" width="36" height="36" rx="4" fill="#fff7d6" stroke="#1a1a1a"/>
+  <text x="190" y="145" text-anchor="middle" fill="#1a1a1a" font-size="11">latente</text>
+  <line x1="208" y1="90" x2="246" y2="90" stroke="#1a1a1a" marker-end="url(#arrL)"/>
+  <rect x="246" y="64" width="150" height="52" rx="6" fill="#eafaf1" stroke="#1a1a1a"/>
+  <text x="321" y="94" text-anchor="middle" fill="#1a1a1a" font-size="12">difusión en el latente</text>
+  <line x1="396" y1="90" x2="434" y2="90" stroke="#1a1a1a" marker-end="url(#arrL)"/>
+  <rect x="434" y="72" width="36" height="36" rx="4" fill="#fff7d6" stroke="#1a1a1a"/>
+  <text x="452" y="145" text-anchor="middle" fill="#1a1a1a" font-size="11">latente</text>
+  <line x1="470" y1="90" x2="508" y2="90" stroke="#1a1a1a" marker-end="url(#arrL)"/>
+  <polygon points="508,75 540,60 540,120 508,105" fill="#fde8e8" stroke="#1a1a1a"/>
+  <text x="524" y="145" text-anchor="middle" fill="#1a1a1a" font-size="11">Decoder</text>
+  <line x1="540" y1="90" x2="578" y2="90" stroke="#1a1a1a" marker-end="url(#arrL)"/>
+  <rect x="578" y="55" width="70" height="70" rx="5" fill="#e8f0fe" stroke="#1a1a1a"/>
+  <text x="613" y="145" text-anchor="middle" fill="#1a1a1a" font-size="12">imagen</text>
+</svg>
+</div>
+<div class="slide-num">31</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Difusión latente</div>
+<h2>Órdenes de magnitud más barato</h2>
+<ul>
+  <li>Operar en el latente baja el costo varias órdenes de magnitud: hace posible entrenar modelos grandes y correrlos en GPU de consumo (Stable Diffusion).</li>
+</ul>
+<div class="slide-num">32</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Difusión latente</div>
+<h2>Y además, multimodal</h2>
+<ul>
+  <li>El latente continuo unifica modalidades: texto, audio o grafos se proyectan a una representación común.</li>
+</ul>
+<div class="slide-num">33</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Difusión latente</div>
+<h2>Dos ejes que se multiplican</h2>
+<ul>
+  <li>Menos pasos (ODE, solvers, destilación, consistencia) × cada paso más barato (latente) = difusión en tiempo real.</li>
+</ul>
+<div class="slide-num">34</div>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>Acelerar la difusión es comprar velocidad con cuatro monedas: geometría, mejores solvers, entrenamiento y dimensión.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>
