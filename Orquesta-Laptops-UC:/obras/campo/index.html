@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAMPO — Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --warn:#e06a5a; --ok:#7fc47f;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:14px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 16px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;letter-spacing:.24em;font-weight:600}
+  header h1 small{letter-spacing:.06em;color:var(--dim);font-weight:400;margin-left:10px}
+  .grow{flex:1}
+  label{color:var(--dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  select,button{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;
+    padding:5px 9px;font:12px var(--mono)}
+  button{cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.armed{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  main{flex:1;display:grid;grid-template-columns:330px 1fr;min-height:0}
+  #score{border-right:1px solid var(--line);background:var(--panel);padding:14px 16px;overflow:auto}
+  #stage{padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:0}
+  .clock{font-size:34px;letter-spacing:.04em;line-height:1.1}
+  .clock .ms{color:var(--dim);font-size:20px}
+  .sys{color:var(--dim);font-size:11px;margin-top:2px}
+  .bar{height:4px;background:#1d232b;border-radius:2px;overflow:hidden;margin:10px 0 2px}
+  .bar>i{display:block;height:100%;background:var(--acc);width:0}
+  .secname{color:var(--acc);font-size:16px;margin:14px 0 2px;letter-spacing:.1em}
+  .secrange{color:var(--dim);font-size:11px}
+  .part{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:5px;background:#10141a;font-size:12.5px}
+  .part b{color:var(--acc2);font-weight:600}
+  ul.secs{list-style:none;margin:10px 0 0;padding:0;font-size:11.5px}
+  ul.secs li{padding:3px 0 3px 10px;border-left:2px solid #222a33;color:var(--dim)}
+  ul.secs li.on{border-left-color:var(--acc);color:var(--tx)}
+  ul.secs li.done{color:#5d6874}
+  #gate{border:1px solid var(--acc2);border-radius:6px;padding:10px 14px;background:#2a2010;
+    display:flex;align-items:center;gap:14px;animation:pulso 1.5s ease-in-out infinite}
+  #gate .big{font-size:18px;letter-spacing:.12em;color:var(--acc2);font-weight:700}
+  #gate .sub{color:#c9a463;font-size:12px}
+  #gate.on{animation:none;border-color:var(--ok);background:#122318}
+  #gate.on .big{color:var(--ok)} #gate.on .sub{color:#87b98d}
+  @keyframes pulso{0%,100%{opacity:1}50%{opacity:.45}}
+  #field{flex:1;min-height:0;position:relative;border:1px solid var(--line);border-radius:6px;
+    background:#0d1116;overflow:hidden;cursor:crosshair}
+  #cv{position:absolute;inset:0;width:100%;height:100%}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+  .r{border:1px solid var(--line);border-radius:5px;padding:6px 9px;background:var(--panel)}
+  .r .t{font-size:10.5px;color:var(--dim);letter-spacing:.06em}
+  .r .v{font-size:15px;margin-top:1px}
+  .r .v small{font-size:10px;color:var(--dim)}
+  .r.hot .v{color:var(--acc2)}
+  #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;
+    justify-content:center;z-index:9;padding:20px}
+  #splash .box{max-width:680px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #splash h2{margin:0 0 6px;font-size:20px;letter-spacing:.26em}
+  #splash p{color:var(--dim);font-size:12.5px}
+  #splash b{color:var(--tx)}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:11px;color:var(--tx)}
+  .note{color:var(--dim);font-size:11.5px}
+  .rowflex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  #sheet{position:fixed;inset:0;background:rgba(6,8,10,.96);z-index:20;overflow:auto;padding:28px}
+  #sheet .wrap{max-width:1080px;margin:0 auto}
+  #sheet h2{font-size:17px;letter-spacing:.24em;margin:0 0 4px}
+  #sheet .aviso{border:1px solid var(--acc2);border-radius:5px;padding:10px 13px;background:#221a0e;
+    color:#e3c489;font-size:12.5px;margin:14px 0 18px}
+  #sheet table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}
+  #sheet th,#sheet td{border:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left}
+  #sheet th{background:#171d24;color:var(--dim);font-weight:400;font-size:11px;letter-spacing:.08em}
+  #sheet td.v{width:64px;color:var(--dim);white-space:nowrap}
+  #sheet tr.me td{background:#161a2b}
+  #sheet tr.me td.v{color:var(--acc);font-weight:700}
+  #sheet .sechead{color:var(--acc);font-size:14px;letter-spacing:.12em;margin:20px 0 3px}
+  #sheet .sectxt{color:var(--tx);font-size:12.5px;margin:0 0 10px;max-width:78ch}
+  #sheet .sectime{color:var(--dim);font-size:11px}
+  #sheet .close{position:sticky;top:0;float:right}
+  #sheet .zonas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:420px;margin:6px 0 18px}
+  #sheet .z{border:1px solid var(--line);border-radius:5px;padding:8px;background:#12171d;font-size:11px}
+  #sheet .z b{color:var(--acc);font-size:13px}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div id="splash"><div class="box">
+  <h2>C A M P O</h2>
+  <p>Obra para orquesta de laptops · síntesis FM controlada solo con el mouse<br>
+  IEE2003 Orquesta de Laptops · Pontificia Universidad Católica de Chile</p>
+  <p style="margin-top:16px"><b>Todo se toca con el mouse o el trackpad.</b> Mantén apretado el
+  <b>botón izquierdo</b> sobre el cuadrante para sonar; al soltarlo, callas.
+  (Si usas trackpad y te resulta incómodo arrastrar, la barra espaciadora hace lo mismo.)</p>
+  <p><b>Dónde estás</b> define el timbre: cada una de las nueve zonas es una relación distinta entre
+  portadora y moduladora. <b>Cuán rápido te mueves</b> define el brillo: quieto suena casi una
+  sinusoide, rápido se vuelve ruido. Quedarte quieto un segundo y medio <b>ancla</b> el sonido: queda
+  sonando solo y puedes seguir tocando encima. <b>Doble clic sobre un anclaje</b> lo apaga con dos
+  segundos de caída; con shift, se apagan todos.</p>
+  <p>Verifica que la hora de tu laptop se sincronice automáticamente con internet: de eso depende que
+  los tres movimientos empiecen juntos.</p>
+  <div class="rowflex" style="margin-top:18px">
+    <button class="primary" id="go" style="background:var(--acc);color:#0a0d1c;border-color:var(--acc);font-weight:700">Activar audio</button>
+    <span class="note">Chrome o Firefox.</span>
+  </div>
+</div></div>
+
+<header>
+  <h1>C A M P O<small>orquesta de laptops uc</small></h1>
+  <label>voz</label><select id="voice"></select>
+  <div class="grow"></div>
+  <button id="sheetbtn">Partitura completa</button>
+  <button id="arm">Iniciar en el próximo minuto</button>
+  <button id="now">Ensayar ahora</button>
+  <button id="stop">Detener</button>
+</header>
+
+<main>
+  <section id="score">
+    <label>tiempo de obra</label>
+    <div class="clock" id="t">--:--<span class="ms">.-</span></div>
+    <div class="sys" id="sys">reloj del sistema —</div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="secname" id="secname">en espera</div>
+    <div class="secrange" id="secrange">arma el inicio y espera la cuenta</div>
+    <div class="part" id="part">Elige tu número de voz arriba.</div>
+    <ul class="secs" id="seclist"></ul>
+    <p class="note" style="margin-top:14px">La zona con borde ámbar en el cuadrante es la que pide la
+    partitura ahora. El aro alrededor del cursor crece con tu velocidad: es tu índice de modulación.</p>
+  </section>
+
+  <section id="stage">
+    <div id="gate">
+      <span class="big" id="gatebig">▸ MANTÉN EL BOTÓN IZQUIERDO SOBRE EL CUADRANTE</span>
+      <span class="sub" id="gatesub">nada suena mientras no lo tengas apretado</span>
+    </div>
+    <div id="field"><canvas id="cv"></canvas></div>
+    <div class="readout">
+      <div class="r"><div class="t">ZONA</div><div class="v" id="rz">—</div></div>
+      <div class="r"><div class="t">RELACIÓN c:m</div><div class="v" id="rr">—</div></div>
+      <div class="r"><div class="t">PORTADORA</div><div class="v" id="rf">— <small>Hz</small></div></div>
+      <div class="r"><div class="t">ÍNDICE</div><div class="v" id="ri">—</div></div>
+      <div class="r"><div class="t">VELOCIDAD</div><div class="v" id="rv">—</div></div>
+      <div class="r"><div class="t">ANCLADOS</div><div class="v" id="ra">0 / 4</div></div>
+      <div class="r"><div class="t">OCTAVA <small>(rueda)</small></div><div class="v" id="ro">0</div></div>
+    </div>
+    <p class="note" id="hint"></p>
+  </section>
+</main>
+
+<div id="sheet" class="hidden"><div class="wrap">
+  <button class="close" id="sheetclose">Cerrar (Esc)</button>
+  <h2>C A M P O · PARTITURA COMPLETA</h2>
+  <div class="sectime">7:30 · tres movimientos con dos entreactos · 8 voces</div>
+  <div class="aviso">
+    <b>Solo el mouse.</b> No hay teclas que aprender: la posición elige el timbre, la velocidad elige el
+    brillo y el botón decide si suenas. <b>Nadie se mueve de su puesto</b> y nadie mira la pantalla del
+    vecino: todo se ajusta escuchando.
+  </div>
+  <div class="sectime">las nueve zonas · relación portadora : moduladora</div>
+  <div class="zonas" id="zonas"></div>
+  <div id="sheetbody"></div>
+</div></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CAMPO — obra para orquesta de laptops · FM con mouse
+   Rodrigo Cádiz · IEE2003 · 2026
+   Un solo archivo. Sin servidor, sin red entre laptops, sin dependencias.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Motor FM (AudioWorklet) ─────────────────────────────────────────── */
+const WORKLET_SRC = `
+class FM extends AudioWorkletProcessor {
+  constructor(){
+    super();
+    this.sr = sampleRate;
+    this.N = 5;                      // 0 = voz activa, 1..4 = anclados
+    this.on  = new Uint8Array(this.N);
+    this.fc  = new Float32Array(this.N).fill(220);
+    this.rt  = new Float32Array(this.N).fill(1);
+    this.ix  = new Float32Array(this.N);
+    this.am  = new Float32Array(this.N).fill(0.5);
+    this.pn  = new Float32Array(this.N);
+    this.rl  = new Float32Array(this.N).fill(0.25);   // tiempo de caída, en segundos
+    this.sfc = new Float32Array(this.N).fill(220);
+    this.srt = new Float32Array(this.N).fill(1);
+    this.six = new Float32Array(this.N);
+    this.spn = new Float32Array(this.N);
+    this.env = new Float32Array(this.N);
+    this.pc  = new Float32Array(this.N);
+    this.pm  = new Float32Array(this.N);
+    this.imp = 0;                    // impulso por aceleración
+    this.rms = 0; this.fr = 0;
+    this.port.onmessage = (e) => {
+      const d = e.data;
+      if (d.type === 'v'){
+        const i = d.i;
+        if (d.v.fc !== undefined) this.fc[i] = d.v.fc;
+        if (d.v.rt !== undefined) this.rt[i] = d.v.rt;
+        if (d.v.ix !== undefined) this.ix[i] = d.v.ix;
+        if (d.v.am !== undefined) this.am[i] = d.v.am;
+        if (d.v.pn !== undefined) this.pn[i] = d.v.pn;
+        if (d.v.rel !== undefined) this.rl[i] = Math.max(0.01, d.v.rel);
+        if (d.v.on !== undefined) this.on[i] = d.v.on;
+        if (d.v.jump){ this.sfc[i] = this.fc[i]; this.srt[i] = this.rt[i]; }
+      }
+      else if (d.type === 'imp') this.imp = Math.min(6, this.imp + d.v);
+      else if (d.type === 'clear'){
+        const r = d.rel || 2.2;
+        for (let i = 1; i < this.N; i++){ this.on[i] = 0; this.rl[i] = r; }
+      }
+    };
+  }
+  process(inputs, outputs){
+    const out = outputs[0], L = out[0], R = out[1] || out[0], n = L.length;
+    const TAU = 6.283185307179586, sr = this.sr;
+    const kf = 0.0016, ki = 0.0009;          // suavizados por muestra
+    for (let s = 0; s < n; s++){
+      let l = 0, r = 0;
+      this.imp *= 0.99975;
+      for (let i = 0; i < this.N; i++){
+        const tgt = this.on[i] ? 1 : 0;
+        // ataque fijo de 12 ms; caída con la constante pedida (cae a ~2 % en rl segundos)
+        this.env[i] += (tgt - this.env[i]) * (tgt ? 1/(0.012*sr) : 4/(this.rl[i]*sr));
+        if (!tgt && this.env[i] < 0.0006){ this.env[i] = 0; continue; }
+        this.sfc[i] += (this.fc[i] - this.sfc[i]) * kf;
+        this.srt[i] += (this.rt[i] - this.srt[i]) * kf;
+        this.spn[i] += (this.pn[i] - this.spn[i]) * ki;
+        const idxT = this.ix[i] + (i === 0 ? this.imp : 0);
+        this.six[i] += (idxT - this.six[i]) * ki;
+        const fc = this.sfc[i], fm = fc * this.srt[i];
+        // techo de índice para no plegar el espectro sobre Nyquist
+        const lim = Math.max(0.4, (sr * 0.42) / Math.max(1, fm) - 1);
+        const I = Math.min(this.six[i], lim);
+        this.pm[i] += TAU * fm / sr; if (this.pm[i] > TAU) this.pm[i] -= TAU;
+        const mod = Math.sin(this.pm[i]) * I;
+        this.pc[i] += TAU * fc / sr; if (this.pc[i] > TAU) this.pc[i] -= TAU;
+        const v = Math.sin(this.pc[i] + mod) * this.am[i] * this.env[i];
+        const p = (this.spn[i] + 1) * 0.7853981634;
+        l += v * Math.cos(p); r += v * Math.sin(p);
+      }
+      l = Math.tanh(l * 0.9); r = Math.tanh(r * 0.9);
+      L[s] = l; if (R !== L) R[s] = r;
+      const m = l < 0 ? -l : l; if (m > this.rms) this.rms = m;
+    }
+    this.rms *= 0.86;
+    if ((this.fr++ & 7) === 0) this.port.postMessage({ rms: this.rms });
+    return true;
+  }
+}
+registerProcessor('fm', FM);
+`;
+
+/* ─── 2. Audio: worklet con respaldo para file:// ────────────────────────── */
+let ctx, engine = null;
+const post = (m) => { if (engine) engine.post(m); };
+
+async function tryWorklet(){
+  const tries = [
+    () => URL.createObjectURL(new Blob([WORKLET_SRC], { type:'application/javascript' })),
+    () => 'data:application/javascript;charset=utf-8,' + encodeURIComponent(WORKLET_SRC)
+  ];
+  for (const mk of tries){
+    let url = null;
+    try{
+      url = mk();
+      await ctx.audioWorklet.addModule(url);
+      const n = new AudioWorkletNode(ctx, 'fm', { numberOfInputs:0, numberOfOutputs:1, outputChannelCount:[2] });
+      n.port.onmessage = e => { if (e.data.rms !== undefined) lastRms = e.data.rms; };
+      n.connect(ctx.destination);
+      return { kind:'AudioWorklet', node:n, post:m => n.port.postMessage(m) };
+    }catch(err){ /* siguiente */ }
+    finally{ if (url && url.startsWith('blob:')) URL.revokeObjectURL(url); }
+  }
+  return null;
+}
+function scriptFallback(){
+  const Base = class { constructor(){ this.port = { postMessage(){}, onmessage:null }; } };
+  const factory = new Function('sampleRate', 'AudioWorkletProcessor', 'registerProcessor',
+                               WORKLET_SRC + '\n; return FM;');
+  const proc = new (factory(ctx.sampleRate, Base, () => {}))();
+  proc.port.postMessage = m => { if (m && m.rms !== undefined) lastRms = m.rms; };
+  const sp = ctx.createScriptProcessor(1024, 0, 2);
+  sp.onaudioprocess = e => {
+    const ob = e.outputBuffer;
+    proc.process([], [[ob.getChannelData(0), ob.getChannelData(1)]]);
+  };
+  sp.connect(ctx.destination);
+  return { kind:'ScriptProcessor', node:sp, proc,
+           post:m => { if (proc.port.onmessage) proc.port.onmessage({ data:m }); } };
+}
+async function initAudio(){
+  ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint:'interactive' });
+  engine = await tryWorklet() || scriptFallback();
+  await ctx.resume();
+  pushVoice();
+}
+
+/* ─── 3. El campo: zonas y mapeo ─────────────────────────────────────────── */
+/* Filas: arriba armónico simple · medio armónico compuesto · abajo inarmónico  */
+const ZONES = [
+  [{r:1,    n:'1:1',    d:'sinusoide que se abre en armónicos impares'},
+   {r:2,    n:'1:2',    d:'octava: brillo limpio, espectro par'},
+   {r:0.5,  n:'2:1',    d:'subarmónico: cuerpo grave y hueco'}],
+  [{r:1.5,  n:'2:3',    d:'quinta: metálico con fundamental clara'},
+   {r:0.667,n:'3:2',    d:'quinta invertida: doble fundamental'},
+   {r:3,    n:'1:3',    d:'duodécima: nasal, tipo clarinete'}],
+  [{r:1.414,n:'1:√2',   d:'inarmónico suave: batidos internos'},
+   {r:2.76, n:'1:2.76', d:'campana: parciales sin fundamental'},
+   {r:3.53, n:'1:3.53', d:'gong: ruido tonal, el más áspero'}]
+];
+const zone = (col,row) => ZONES[row][col];
+const zoneNum = (col,row) => row * 3 + col + 1;
+
+const M = {                       // estado del ejecutante
+  x:0.5, y:0.5, col:1, row:1, vel:0, acc:0, fc:220, idx:0, oct:0,
+  gate:0, still:0, inside:false
+};
+/* Cuatro ranuras de anclaje. Cada una corresponde a la voz i+1 del motor.
+   Al soltarse, la ranura queda ocupada hasta que termina su caída, para no
+   pisar un sonido que todavía se está apagando. */
+const SLOTS = [null, null, null, null];
+const RELEASE_ANCLA = 2.2, RELEASE_FIN = 3.5;
+const anchorsLive = () => SLOTS.filter(s => s && !s.rel).length;
+let lastRms = 0, voice = 1;
+
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const carrier = (x, oct) => 55 * Math.pow(2, x * 5 + oct);
+
+function pushVoice(jump, rel){
+  const z = zone(M.col, M.row);
+  const v = { fc:M.fc, rt:z.r, ix:M.idx, am:0.42, pn:(M.x*2-1)*0.85,
+              on:M.gate, jump: jump && !M.gate ? 1 : 0 };
+  if (rel !== undefined) v.rel = rel;
+  post({ type:'v', i:0, v });
+}
+
+/* suelta un anclaje concreto con caída larga; la ranura se libera al terminar */
+function releaseSlot(k, rel){
+  const s = SLOTS[k]; if (!s || s.rel) return false;
+  s.rel = true; s.relAt = performance.now(); s.relDur = rel * 1000;
+  post({ type:'v', i:k+1, v:{ on:0, rel } });
+  return true;
+}
+function releaseAll(rel){ SLOTS.forEach((s, k) => releaseSlot(k, rel)); }
+
+/* ─── 4. Partitura: tres movimientos ─────────────────────────────────────── */
+const MOVS = [
+  { t:0,   d:135, n:'I · RETÍCULA', kind:'mov',
+    txt:'Sonidos separados. Vas a una zona, tocas dos o tres segundos y sueltas el botón. Entre sonido y sonido hay silencio real. Los saltos son secos: no arrastres el cursor de una zona a otra con el botón apretado. Solo zonas de la fila superior y media: aquí el campo todavía es armónico.',
+    goal:{ vel:[0,0.25], rows:[0,1] },
+    per:[ 'Zonas 1 → 2 → 5. Vuelve al 1 cada vez que dudes.',
+          'Zonas 2 → 3 → 6.',
+          'Zonas 3 → 1 → 4.',
+          'Zonas 4 → 5 → 2.',
+          'Zonas 5 → 6 → 3.',
+          'Zonas 6 → 4 → 1.',
+          'Solo zona 5, todo el movimiento: eres el eje del que los demás se apartan.',
+          'Zonas 1 y 3 alternadas, sin pasar nunca por el centro.' ] },
+
+  { t:135, d:15,  n:'entreacto', kind:'gap',
+    txt:'Silencio. Manos fuera del mouse, apoyadas sobre la mesa. Nadie prueba nada.',
+    goal:null, per:Array(8).fill('Manos quietas sobre la mesa.') },
+
+  { t:150, d:135, n:'II · DERIVA', kind:'mov',
+    txt:'Un solo sonido continuo: aprieta el botón al empezar y no lo sueltes hasta el final del movimiento. Te desplazas tan lento que el aro del cursor casi no crece. Cruza las nueve zonas siguiendo tu trayectoria. Ancla al menos dos sonidos por el camino: quédate completamente quieto un segundo y medio y sigue.',
+    goal:{ vel:[0,0.09], rows:[0,2] },
+    per:[ 'Trayectoria: borde superior de izquierda a derecha, y bajas por la derecha.',
+          'Trayectoria: diagonal de la zona 1 a la 9, sin desviarte.',
+          'Trayectoria: diagonal de la zona 3 a la 7.',
+          'Trayectoria: espiral desde el borde hacia el centro.',
+          'Trayectoria: espiral desde el centro hacia el borde.',
+          'Trayectoria: solo la columna izquierda, bajando y subiendo una vez.',
+          'Trayectoria: solo la fila inferior, de un extremo al otro. Eres el fondo inarmónico.',
+          'Quédate en la zona 5 y ancla cuatro sonidos ahí mismo, uno cada 30 s.' ] },
+
+  { t:285, d:15,  n:'entreacto', kind:'gap',
+    txt:'Silencio. Los sonidos anclados siguen sonando: no los borres todavía.',
+    goal:null, per:Array(8).fill('No toques nada. Deja sonar lo anclado.') },
+
+  { t:300, d:150, n:'III · TORMENTA', kind:'mov',
+    txt:'Agitación en la fila inferior, la inarmónica. Botón apretado y movimiento rápido y errático: el índice sube y el timbre se vuelve ruido. A partir de 6:45 cada voz se detiene en su tiempo y NO suelta el botón: al dejar de moverse el índice cae solo y queda una sinusoide pura. La obra termina en ocho senos inmóviles.',
+    goal:{ vel:[0.35,1], rows:[1,2] },
+    per:[ 'Detente a 6:45. Eres el primer seno.',
+          'Detente a 6:52.', 'Detente a 6:59.', 'Detente a 7:06.',
+          'Detente a 7:13.', 'Detente a 7:20.', 'Detente a 7:27.',
+          'No te detengas hasta 7:30 en punto: sostienes la tormenta solo al final.' ] }
+];
+const TOTAL = 450;
+
+/* ─── 5. Reloj de obra ───────────────────────────────────────────────────── */
+let T0 = null, armed = false;
+const fmt = s => { s = Math.max(0, s); return String(Math.floor(s/60)).padStart(2,'0') + ':' +
+                   String(Math.floor(s%60)).padStart(2,'0'); };
+const clockT = () => T0 === null ? null : (Date.now() - T0) / 1000;
+function curSection(t){
+  if (t === null || t < 0 || t > TOTAL) return null;
+  for (let i = MOVS.length - 1; i >= 0; i--) if (t >= MOVS[i].t) return i;
+  return 0;
+}
+
+/* ─── 6. Entrada de mouse ────────────────────────────────────────────────── */
+const field = document.getElementById('field'), cv = document.getElementById('cv');
+const trail = [];
+let px = 0.5, py = 0.5, pt = performance.now();
+
+function setGate(on, rel){
+  if (on && ctx && ctx.state === 'suspended') ctx.resume();
+  M.gate = on ? 1 : 0;
+  if (!on) M.still = 0;
+  pushVoice(false, rel);
+}
+field.addEventListener('pointerdown', e => {
+  e.preventDefault(); field.setPointerCapture(e.pointerId); move(e); setGate(1);
+});
+addEventListener('pointerup', () => setGate(0));
+addEventListener('pointermove', e => move(e));
+field.addEventListener('contextmenu', e => e.preventDefault());
+
+/* Doble clic: apaga el anclaje que está bajo el puntero, con dos segundos de caída.
+   Con shift, apaga todos. Sobre una zona vacía no hace nada. */
+field.addEventListener('dblclick', e => {
+  e.preventDefault();
+  if (e.shiftKey){ releaseAll(RELEASE_ANCLA); return; }
+  const r = field.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  let best = -1, bd = 1e9;
+  SLOTS.forEach((s, k) => {
+    if (!s || s.rel) return;
+    const d = Math.hypot(s.x * r.width - mx, s.y * r.height - my);
+    if (d < bd){ bd = d; best = k; }
+  });
+  if (best >= 0 && bd < 60) releaseSlot(best, RELEASE_ANCLA);
+  else flash('no hay ningún anclaje bajo el puntero · shift + doble clic los apaga todos');
+});
+field.addEventListener('wheel', e => {
+  e.preventDefault();
+  M.oct = clamp(M.oct + (e.deltaY < 0 ? 0.5 : -0.5), -2, 2);
+  M.fc = carrier(M.x, M.oct); pushVoice();
+}, { passive:false });
+addEventListener('keydown', e => {          // respaldo ergonómico para trackpad
+  if (e.code === 'Escape'){ toggleSheet(false); return; }
+  if (e.code === 'Space' && !e.repeat){ e.preventDefault(); setGate(1); }
+});
+addEventListener('keyup', e => { if (e.code === 'Space') setGate(0); });
+addEventListener('blur', () => setGate(0));
+
+function move(e){
+  const r = field.getBoundingClientRect();
+  const nx = clamp((e.clientX - r.left) / r.width, 0, 1);
+  const ny = clamp((e.clientY - r.top) / r.height, 0, 1);
+  M.inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  const now = performance.now(), dt = Math.max(0.008, (now - pt) / 1000);
+  const d = Math.hypot(nx - px, ny - py);
+  const v = clamp(d / dt / 2.2, 0, 1);                 // 1 = cruzar el campo en medio segundo
+  const dv = v - M.vel;
+  M.vel += (v - M.vel) * 0.35;
+  M.acc = Math.abs(dv);
+  if (M.acc > 0.28 && M.gate) post({ type:'imp', v:M.acc * 5 });
+  px = nx; py = ny; pt = now;
+  M.x = nx; M.y = ny;
+  const col = clamp(Math.floor(nx * 3), 0, 2), row = clamp(Math.floor(ny * 3), 0, 2);
+  const jumped = (col !== M.col || row !== M.row);
+  M.col = col; M.row = row;
+  M.fc = carrier(nx, M.oct);
+  M.idx = clamp(0.35 + row * 1.1 + M.vel * 9, 0, 14);
+  if (M.vel > 0.03) M.still = 0;
+  trail.push({ x:nx, y:ny, g:M.gate, t:now });
+  if (trail.length > 90) trail.shift();
+  pushVoice(jumped);
+}
+
+/* anclaje: quieto 1,5 s con el botón apretado */
+setInterval(() => {
+  const now = performance.now();
+  SLOTS.forEach((s, k) => { if (s && s.rel && now - s.relAt > s.relDur + 250) SLOTS[k] = null; });
+
+  if (M.gate && M.vel < 0.03){
+    M.still += 0.1;
+    const libre = SLOTS.indexOf(null);
+    if (M.still >= 1.5 && libre >= 0){
+      const z = zone(M.col, M.row);
+      SLOTS[libre] = { x:M.x, y:M.y, fc:M.fc, n:z.n, rel:false, relAt:0, relDur:0 };
+      post({ type:'v', i:libre+1, v:{ fc:M.fc, rt:z.r, ix:clamp(0.35 + M.row * 1.1, 0, 6),
+                                      am:0.3, pn:(M.x*2-1)*0.85, rel:RELEASE_ANCLA, on:1, jump:1 } });
+      M.still = -3;                       // margen antes de permitir otro anclaje
+    }
+  } else if (!M.gate) M.still = 0;
+  M.vel *= 0.86;                          // la velocidad decae si no llegan eventos
+  if (M.gate) pushVoice();
+}, 100);
+
+/* aviso breve en la línea inferior */
+let flashUntil = 0, flashTxt = '', baseHint = '';
+function flash(txt){ flashTxt = txt; flashUntil = performance.now() + 3500; }
+
+/* ─── 7. Dibujo del campo ────────────────────────────────────────────────── */
+const g = cv.getContext('2d');
+function draw(){
+  const r = field.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const w = Math.round(r.width), h = Math.round(r.height);
+  if (cv.width !== w * dpr || cv.height !== h * dpr){
+    cv.width = w * dpr; cv.height = h * dpr; g.setTransform(dpr,0,0,dpr,0,0);
+  }
+  g.clearRect(0,0,w,h);
+
+  const t = clockT(), si = curSection(t), S = si !== null ? MOVS[si] : null;
+  const goal = S && S.goal;
+
+  // zonas
+  for (let row = 0; row < 3; row++) for (let col = 0; col < 3; col++){
+    const x = col*w/3, y = row*h/3, zw = w/3, zh = h/3;
+    const active = (col === M.col && row === M.row && M.inside);
+    const inGoal = goal && row >= goal.rows[0] && row <= goal.rows[1];
+    g.fillStyle = active ? 'rgba(143,158,240,.13)' : (inGoal ? 'rgba(232,178,90,.05)' : 'rgba(255,255,255,.012)');
+    g.fillRect(x+1, y+1, zw-2, zh-2);
+    g.strokeStyle = active ? '#8f9ef0' : (inGoal ? 'rgba(232,178,90,.5)' : '#232a32');
+    g.lineWidth = active ? 2 : 1;
+    g.strokeRect(x+1, y+1, zw-2, zh-2);
+    const z = ZONES[row][col];
+    g.fillStyle = active ? '#c9d2ff' : '#57616e';
+    g.font = '600 15px ' + getComputedStyle(document.body).fontFamily;
+    g.fillText(z.n, x + 12, y + 24);
+    g.fillStyle = active ? '#8b97a6' : '#39424c';
+    g.font = '10px ' + getComputedStyle(document.body).fontFamily;
+    g.fillText('zona ' + zoneNum(col,row), x + 12, y + 40);
+    if (zh > 80){ g.fillStyle = '#39424c'; wrap(z.d, x + 12, y + zh - 22, zw - 24); }
+  }
+
+  // estela
+  for (let i = 1; i < trail.length; i++){
+    const a = trail[i-1], b = trail[i];
+    if (!b.g) continue;
+    g.strokeStyle = 'rgba(143,158,240,' + (i / trail.length * 0.5).toFixed(3) + ')';
+    g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(a.x*w, a.y*h); g.lineTo(b.x*w, b.y*h); g.stroke();
+  }
+
+  // anclados (los que se están apagando se encogen y se desvanecen)
+  const now = performance.now();
+  SLOTS.forEach(s => {
+    if (!s) return;
+    let a = 1;
+    if (s.rel) a = clamp(1 - (now - s.relAt) / s.relDur, 0, 1);
+    const rad = 9 * (0.4 + 0.6 * a);
+    g.strokeStyle = 'rgba(127,196,127,' + (0.8 * a).toFixed(3) + ')'; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(s.x*w, s.y*h, rad, 0, 6.2832); g.stroke();
+    g.fillStyle = 'rgba(127,196,127,' + (0.9 * a).toFixed(3) + ')';
+    g.beginPath(); g.arc(s.x*w, s.y*h, 3 * a + 0.6, 0, 6.2832); g.fill();
+  });
+
+  // cursor: el aro es el índice de modulación
+  if (M.inside){
+    const cx = M.x*w, cy = M.y*h, rad = 7 + M.idx * 3.4;
+    g.strokeStyle = M.gate ? 'rgba(232,178,90,.9)' : 'rgba(139,151,166,.5)';
+    g.lineWidth = M.gate ? 2 : 1;
+    g.beginPath(); g.arc(cx, cy, rad, 0, 6.2832); g.stroke();
+    g.fillStyle = M.gate ? '#e8b25a' : '#8b97a6';
+    g.beginPath(); g.arc(cx, cy, 3.5, 0, 6.2832); g.fill();
+    if (M.gate && M.still > 0){
+      g.strokeStyle = 'rgba(127,196,127,.85)'; g.lineWidth = 3;
+      g.beginPath(); g.arc(cx, cy, rad + 7, -1.5708, -1.5708 + 6.2832 * Math.min(1, M.still/1.5)); g.stroke();
+    }
+  }
+  requestAnimationFrame(draw);
+}
+function wrap(txt, x, y, maxw){
+  const words = txt.split(' '); let line = '';
+  for (const wd of words){
+    if (g.measureText(line + wd).width > maxw){ g.fillText(line, x, y); line = ''; y += 12; break; }
+    line += wd + ' ';
+  }
+  g.fillText(line, x, y);
+}
+
+/* ─── 8. Interfaz ────────────────────────────────────────────────────────── */
+const vsel = document.getElementById('voice');
+for (let i = 1; i <= 8; i++){ const o = document.createElement('option'); o.value = i;
+  o.textContent = 'voz ' + i; vsel.appendChild(o); }
+vsel.value = localStorage.getItem('campo_voz') || 1; voice = +vsel.value;
+vsel.onchange = () => { voice = +vsel.value; localStorage.setItem('campo_voz', voice); vsel.blur(); };
+
+const seclist = document.getElementById('seclist');
+MOVS.forEach(S => { const li = document.createElement('li');
+  li.textContent = fmt(S.t) + '  ' + S.n; seclist.appendChild(li); });
+
+document.getElementById('zonas').innerHTML = [0,1,2].map(row => [0,1,2].map(col => {
+  const z = ZONES[row][col];
+  return '<div class="z"><b>' + z.n + '</b> · zona ' + zoneNum(col,row) + '<br>' + z.d + '</div>';
+}).join('')).join('');
+
+function buildSheet(){
+  document.getElementById('sheetbody').innerHTML = MOVS.map(S => {
+    const filas = S.per.map((p, i) =>
+      '<tr class="' + (i + 1 === voice ? 'me' : '') + '"><td class="v">voz ' + (i+1) + '</td><td>' + p + '</td></tr>').join('');
+    return '<div class="sechead">' + S.n.toUpperCase() + '</div>' +
+      '<div class="sectime">' + fmt(S.t) + ' – ' + fmt(S.t + S.d) + '</div>' +
+      '<p class="sectxt">' + S.txt + '</p>' +
+      (S.kind === 'gap' ? '' : '<table><tr><th>voz</th><th>indicación individual</th></tr>' + filas + '</table>');
+  }).join('');
+}
+function toggleSheet(show){
+  const el = document.getElementById('sheet');
+  if (show === undefined) show = el.classList.contains('hidden');
+  if (show) buildSheet();
+  el.classList.toggle('hidden', !show);
+  if (show) document.getElementById('sheetclose').blur();
+}
+
+function paint(){
+  const t = clockT(), si = curSection(t), S = si !== null ? MOVS[si] : null;
+
+  const cl = document.getElementById('t');
+  if (t === null) cl.innerHTML = '--:--<span class="ms">.-</span>';
+  else if (t < 0) cl.innerHTML = '<span style="color:var(--acc2)">−' + fmt(-t) + '<span class="ms">.' +
+      Math.floor((1 - (-t % 1)) * 10) + '</span></span>';
+  else cl.innerHTML = fmt(t) + '<span class="ms">.' + Math.floor((t % 1) * 10) + '</span>';
+  const d = new Date();
+  document.getElementById('sys').textContent = 'reloj del sistema ' +
+    d.toLocaleTimeString('es-CL', { hour12:false }) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+  document.getElementById('prog').style.width =
+    (t === null || t < 0 ? 0 : Math.min(100, t / TOTAL * 100)) + '%';
+
+  const nm = document.getElementById('secname'), rg = document.getElementById('secrange'),
+        pt2 = document.getElementById('part');
+  if (t !== null && t < 0){
+    nm.textContent = 'cuenta regresiva'; rg.textContent = 'todos arrancan en el mismo instante';
+    pt2.innerHTML = 'Mano en el mouse, botón sin apretar.';
+  } else if (S){
+    nm.textContent = S.n; rg.textContent = fmt(S.t) + ' – ' + fmt(S.t + S.d);
+    pt2.innerHTML = S.txt + '<br><br><b>Tu voz ' + voice + ':</b> ' + S.per[(voice-1) % 8];
+  } else if (t !== null){
+    nm.textContent = 'fin'; rg.textContent = 'suelta el botón · silencio';
+    pt2.textContent = 'Manos fuera del mouse.';
+  }
+  [...seclist.children].forEach((li, i) =>
+    li.className = (si === i) ? 'on' : (si !== null && i < si ? 'done' : ''));
+
+  const gEl = document.getElementById('gate');
+  gEl.classList.toggle('on', !!M.gate);
+  document.getElementById('gatebig').textContent = M.gate
+    ? '● SONANDO' : '▸ MANTÉN EL BOTÓN IZQUIERDO SOBRE EL CUADRANTE';
+  document.getElementById('gatesub').textContent = M.gate
+    ? 'muévete despacio para timbre limpio, rápido para ruido · quieto 1,5 s = anclar'
+    : 'nada suena mientras no lo tengas apretado';
+
+  const z = zone(M.col, M.row);
+  document.getElementById('rz').textContent = zoneNum(M.col, M.row);
+  document.getElementById('rr').textContent = z.n;
+  document.getElementById('rf').innerHTML = Math.round(M.fc) + ' <small>Hz</small>';
+  document.getElementById('ri').textContent = M.idx.toFixed(1);
+  document.getElementById('rv').textContent = M.vel.toFixed(2);
+  document.getElementById('ra').textContent = anchorsLive() + ' / 4';
+  document.getElementById('ro').textContent = (M.oct > 0 ? '+' : '') + M.oct;
+  const hint = document.getElementById('hint');
+  if (performance.now() < flashUntil){ hint.textContent = flashTxt; hint.style.color = 'var(--acc2)'; }
+  else if (hint.style.color){ hint.textContent = baseHint; hint.style.color = ''; }
+
+  const gl = S && S.goal;
+  document.getElementById('rv').parentElement.classList.toggle('hot',
+    !!gl && (M.vel < gl.vel[0] || M.vel > gl.vel[1]));
+  document.getElementById('rz').parentElement.classList.toggle('hot',
+    !!gl && (M.row < gl.rows[0] || M.row > gl.rows[1]));
+}
+
+/* al llegar a 7:30 la obra se apaga sola, con caída larga */
+let ended = false;
+function finObra(){
+  ended = true;
+  setGate(0, RELEASE_FIN);
+  releaseAll(RELEASE_FIN);
+  flash('fin de la obra: todo se apaga solo · suelta el botón y quita la mano del mouse');
+}
+
+setInterval(() => {
+  if (armed && T0 !== null && Date.now() >= T0){ armed = false;
+    document.getElementById('arm').classList.remove('armed'); }
+  const t = clockT();
+  if (t !== null && t >= TOTAL && !ended) finObra();
+  if (t === null || t < TOTAL) ended = false;
+  paint();
+}, 60);
+
+document.getElementById('go').onclick = async () => {
+  try{
+    await initAudio();
+    document.getElementById('splash').classList.add('hidden');
+    baseHint =
+      'Motor: ' + engine.kind + ' · ' + ctx.sampleRate + ' Hz' +
+      (engine.kind === 'ScriptProcessor' ? ' · respaldo activo (abierta desde el disco)' : '') +
+      ' · rueda = octava · doble clic sobre un anclaje lo apaga · shift + doble clic los apaga todos';
+    document.getElementById('hint').textContent = baseHint;
+    requestAnimationFrame(draw);
+  }catch(err){ alert('No se pudo iniciar el audio: ' + err.message); }
+};
+document.getElementById('sheetbtn').onclick   = e => { e.target.blur(); toggleSheet(true); };
+document.getElementById('sheetclose').onclick = () => toggleSheet(false);
+document.getElementById('arm').onclick = e => { e.target.blur();
+  T0 = Math.ceil(Date.now()/60000)*60000; armed = true;
+  document.getElementById('arm').classList.add('armed'); };
+document.getElementById('now').onclick = e => { e.target.blur(); T0 = Date.now(); armed = false;
+  document.getElementById('arm').classList.remove('armed'); };
+document.getElementById('stop').onclick = e => { e.target.blur(); T0 = null; armed = false;
+  document.getElementById('arm').classList.remove('armed');
+  setGate(0, 1.2); releaseAll(1.2); };
+
+paint();
+</script>
+</body>
+</html>

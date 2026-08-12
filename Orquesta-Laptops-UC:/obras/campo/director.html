@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAMPO · consola del director</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --warn:#e06a5a; --ok:#7fc47f;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:14px/1.45 var(--mono);display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 16px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:14px;margin:0;letter-spacing:.2em}
+  header h1 small{color:var(--dim);letter-spacing:.05em;margin-left:10px;font-weight:400}
+  .grow{flex:1}
+  button{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;
+    padding:5px 10px;font:12px var(--mono);cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.armed{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  main{flex:1;display:grid;grid-template-columns:300px 1fr 300px;min-height:0}
+  section{padding:14px;overflow:auto;min-height:0}
+  #left{border-right:1px solid var(--line);background:var(--panel)}
+  #right{border-left:1px solid var(--line);background:var(--panel)}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px}
+  .clock{font-size:40px;line-height:1.05}
+  .clock .ms{font-size:22px;color:var(--dim)}
+  .sys{color:var(--dim);font-size:11px}
+  .sec{color:var(--acc);font-size:17px;letter-spacing:.1em;margin-top:14px}
+  .secr{color:var(--dim);font-size:11px}
+  .bar{height:4px;background:#1d232b;border-radius:2px;overflow:hidden;margin:9px 0}
+  .bar>i{display:block;height:100%;background:var(--acc);width:0}
+  .next{border:1px solid var(--acc2);border-radius:5px;padding:10px;background:#221a0e;margin-top:14px}
+  .next .cd{font-size:26px;color:var(--acc2);font-weight:700}
+  .next .w{font-size:12.5px;color:#e3c489}
+  .next.soon{animation:pulso .5s ease-in-out infinite}
+  @keyframes pulso{0%,100%{opacity:1}50%{opacity:.5}}
+  ul.up{list-style:none;margin:10px 0 0;padding:0;font-size:11.5px;color:var(--dim)}
+  ul.up li{padding:2px 0}
+  ul.up li b{color:var(--tx);font-weight:600}
+  .guion{margin-top:16px;border:1px solid var(--line);border-radius:5px;padding:10px;background:#10141a;font-size:12px}
+  .guion b{color:var(--acc2)}
+  .voices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  .v{border:1px solid var(--line);border-radius:6px;padding:9px 11px;background:var(--panel);cursor:pointer}
+  .v:hover{border-color:var(--acc)}
+  .v .n{color:var(--acc);font-size:12px;letter-spacing:.1em}
+  .v .i{font-size:12px;margin-top:4px}
+  .v .cd{float:right;color:var(--acc2);font-weight:700}
+  .v.alert{border-color:var(--acc2);background:#1e1811}
+  .v.alert .n{color:var(--acc2)}
+  .v.solo{border-color:var(--ok);background:#12211a}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px;max-width:270px}
+  .grid3 .z{border:1px solid var(--line);border-radius:4px;padding:6px;background:#12171d;font-size:10.5px;text-align:center}
+  .grid3 .z b{display:block;color:var(--acc);font-size:12px}
+  .cmds{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .c{border:1px solid var(--line);border-radius:5px;padding:7px 9px;background:#12171c;cursor:pointer}
+  .c:hover{border-color:var(--acc)}
+  .c .t{font-size:11.5px;letter-spacing:.05em}
+  .c .k{font-size:10px;color:var(--dim);margin-top:2px}
+  .c .num{float:right;color:var(--dim);font-size:10px}
+  .c.on{background:var(--acc);color:#0a0d1c;border-color:var(--acc)}
+  .c.on .k,.c.on .num{color:#1a1f3a}
+  table.senas{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+  table.senas td{border-bottom:1px solid var(--line);padding:4px 3px;vertical-align:top}
+  table.senas td:first-child{color:var(--acc2);white-space:nowrap;padding-right:8px}
+  #proj{position:fixed;inset:0;background:#06080a;z-index:30;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px}
+  #proj .big{font-size:11vw;letter-spacing:.05em;line-height:1;color:var(--acc)}
+  #proj .sub{font-size:3vw;color:var(--acc2)}
+  #proj .clk{font-size:6vw}
+  #proj .sc{font-size:2.4vw;color:var(--dim);letter-spacing:.2em}
+  #proj .esc{position:fixed;bottom:14px;right:18px;color:#39424c;font-size:12px}
+  .hidden{display:none !important}
+  .note{color:var(--dim);font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CAMPO · DIRECCIÓN<small>los laptops no reciben nada de esta pantalla: se dirige con la voz, las manos y el proyector</small></h1>
+  <div class="grow"></div>
+  <button id="arm">Iniciar en el próximo minuto</button>
+  <button id="now">Ensayar ahora</button>
+  <button id="stop">Detener</button>
+  <button id="projwin">Abrir proyección ⧉</button>
+  <button id="projbtn">Proyectar aquí</button>
+</header>
+
+<main>
+  <section id="left">
+    <label>tiempo de obra</label>
+    <div class="clock" id="t">--:--<span class="ms">.-</span></div>
+    <div class="sys" id="sys">reloj del sistema —</div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="sec" id="secname">en espera</div>
+    <div class="secr" id="secr">arma el inicio y pide que todos armen el suyo</div>
+    <div class="next" id="next">
+      <label style="color:#c9a463">próximo evento</label>
+      <div class="cd" id="cd">—</div>
+      <div class="w" id="cdw">arma el reloj para empezar</div>
+    </div>
+    <ul class="up" id="up"></ul>
+    <div class="guion" id="guion"></div>
+  </section>
+
+  <section id="center">
+    <label>las ocho voces · clic para poner una en solo</label>
+    <div class="voices" id="voices"></div>
+    <label style="margin-top:16px">el campo · relación portadora : moduladora</label>
+    <div class="grid3" id="grid"></div>
+    <p class="note" style="margin-top:12px">
+      <b>Abrir proyección ⧉</b> lanza una ventana aparte para el monitor extendido: arrástrala allá y
+      haz doble clic para pantalla completa. Los comandos se disparan con el teclado desde cualquiera
+      de las dos ventanas.
+    </p>
+    <p class="note" id="projstate" style="color:var(--acc2)"></p>
+  </section>
+
+  <section id="right">
+    <label>comandos en vivo</label>
+    <div class="cmds" id="cmds"></div>
+    <label style="margin-top:16px">señas manuales (sin proyector)</label>
+    <table class="senas" id="senas"></table>
+    <label style="margin-top:16px">antes de empezar</label>
+    <ul class="up">
+      <li>Relojes sincronizados: comparar milisegundos entre laptops.</li>
+      <li>Cada uno elige su número de voz.</li>
+      <li>Mouse con espacio libre para moverse; quien use trackpad, que sepa que la barra espaciadora
+          también abre la compuerta.</li>
+      <li>Nadie se mueve de su puesto ni mira la pantalla del vecino.</li>
+      <li>Prueba de rango: que cada uno recorra el cuadrante de esquina a esquina una vez, sin sonar.</li>
+    </ul>
+  </section>
+</main>
+
+<div id="proj" class="hidden">
+  <div class="sc" id="psec">—</div>
+  <div class="big" id="pbig">CAMPO</div>
+  <div class="sub" id="psub">consola de dirección</div>
+  <div class="clk" id="pclk">--:--</div>
+  <div class="esc">Esc para salir · teclas para lanzar comandos</div>
+</div>
+
+<script>
+/* ═══ CAMPO · consola del director ════════════════════════════════════════
+   Espejo de la partitura de index.html. Sin red: esta pantalla es un guion y,
+   proyectada, un canal visual hacia la orquesta.
+   Si editas MOVS en index.html, edítalo también aquí.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const MOVS = [
+  { t:0, d:135, n:'I · RETÍCULA', kind:'mov',
+    guion:'Sonidos sueltos con silencio entre medio. Vigila que nadie arrastre el cursor con el botón apretado: los saltos son secos. Si empieza a sonar continuo, corta a todos con un puño y vuelve a entrar. Solo filas superior y media.',
+    per:['Zonas 1 → 2 → 5.','Zonas 2 → 3 → 6.','Zonas 3 → 1 → 4.','Zonas 4 → 5 → 2.',
+         'Zonas 5 → 6 → 3.','Zonas 6 → 4 → 1.','Solo zona 5, todo el movimiento.','Zonas 1 y 3 alternadas.'] },
+  { t:135, d:15, n:'entreacto', kind:'gap',
+    guion:'Silencio absoluto. Manos sobre la mesa, a la vista. Cuenta los quince segundos completos: la pausa es parte de la obra.',
+    per:Array(8).fill('Manos quietas sobre la mesa.') },
+  { t:150, d:135, n:'II · DERIVA', kind:'mov',
+    guion:'Nadie suelta el botón en todo el movimiento. El enemigo es la prisa: si el timbre se ensucia, es que se están moviendo rápido. Marca lentitud con la palma bajando muy despacio. Deben quedar anclajes sonando; recuérdalo a media sección.',
+    per:['Borde superior, izquierda a derecha, y baja por la derecha.','Diagonal de la zona 1 a la 9.',
+         'Diagonal de la zona 3 a la 7.','Espiral del borde al centro.','Espiral del centro al borde.',
+         'Columna izquierda, bajando y subiendo una vez.','Fila inferior de extremo a extremo.',
+         'Zona 5 fija: ancla cuatro sonidos, uno cada 30 s.'] },
+  { t:285, d:15, n:'entreacto', kind:'gap',
+    guion:'Silencio de manos, pero los anclajes siguen sonando: no dejes que nadie los borre. Es el único momento en que la orquesta suena sin que nadie la toque.',
+    per:Array(8).fill('No toques nada. Deja sonar lo anclado.') },
+  { t:300, d:150, n:'III · TORMENTA', kind:'mov',
+    guion:'Fila inferior, movimiento rápido y errático, botón siempre apretado. Desde 6:45 empieza la detención escalonada: llama a cada voz por su número. Nadie suelta el botón al detenerse; el índice cae solo y queda un seno puro. A 7:30, todos sueltan a tu señal.',
+    per:['Detente a 6:45.','Detente a 6:52.','Detente a 6:59.','Detente a 7:06.',
+         'Detente a 7:13.','Detente a 7:20.','Detente a 7:27.','No te detengas hasta 7:30 en punto.'] }
+];
+const TOTAL = 450;
+
+const ZONES = [['1:1','1:2','2:1'],['2:3','3:2','1:3'],['1:√2','1:2.76','1:3.53']];
+
+const EVENTS = [
+  { t:0,   w:'I · RETÍCULA — sonidos sueltos' },
+  { t:135, w:'entreacto — silencio, manos sobre la mesa' },
+  { t:150, w:'II · DERIVA — botón apretado, movimiento lentísimo' },
+  { t:285, w:'entreacto — solo suenan los anclajes' },
+  { t:300, w:'III · TORMENTA — agitación en la fila inferior' },
+  { t:405, w:'se detiene voz 1' }, { t:412, w:'se detiene voz 2' },
+  { t:419, w:'se detiene voz 3' }, { t:426, w:'se detiene voz 4' },
+  { t:433, w:'se detiene voz 5' }, { t:440, w:'se detiene voz 6' },
+  { t:447, w:'se detiene voz 7' }, { t:450, w:'se detiene voz 8 — todos sueltan' }
+].sort((a,b) => a.t - b.t);
+
+const CMDS = [
+  { k:'Digit1', n:'1', t:'TODOS SUENAN',  s:'mantén el botón izquierdo' },
+  { k:'Digit2', n:'2', t:'SILENCIO',      s:'suelta el botón' },
+  { k:'Digit3', n:'3', t:'QUIETOS',       s:'no muevas el mouse' },
+  { k:'Digit4', n:'4', t:'AGITAR',        s:'muévete rápido y errático' },
+  { k:'Digit5', n:'5', t:'ARMÓNICO',      s:'fila superior · zonas 1–3' },
+  { k:'Digit6', n:'6', t:'INARMÓNICO',    s:'fila inferior · zonas 7–9' },
+  { k:'Digit7', n:'7', t:'AL CENTRO',     s:'zona 5' },
+  { k:'Digit8', n:'8', t:'ANCLAR',        s:'quédate quieto 1,5 s' },
+  { k:'Digit9', n:'9', t:'BORRAR ANCLAS', s:'doble clic en el cuadrante' },
+  { k:'Digit0', n:'0', t:'DERIVA LENTA',  s:'lo más lento que puedas' },
+  { k:'KeyG',   n:'G', t:'GRAVE',         s:'cursor al borde izquierdo' },
+  { k:'KeyA',   n:'A', t:'AGUDO',         s:'cursor al borde derecho' },
+  { k:'KeyO',   n:'O', t:'SUBE UNA OCTAVA', s:'rueda del mouse hacia arriba' },
+  { k:'KeyE',   n:'E', t:'ESQUINAS',      s:'ve a las cuatro esquinas' }
+];
+
+const SENAS = [
+  ['palma abierta arriba',    'todos suenan: botón apretado'],
+  ['puño cerrado',            'silencio: suelten el botón'],
+  ['mano inmóvil en el aire', 'quietos: dejen de mover el mouse'],
+  ['mano sacudida',           'agitar: movimiento rápido'],
+  ['palma bajando muy lenta', 'deriva lenta'],
+  ['mano arriba plana',       'fila superior (armónico)'],
+  ['mano abajo plana',        'fila inferior (inarmónico)'],
+  ['puño al centro del pecho','zona 5'],
+  ['dos dedos en pausa',      'anclar: quedarse quieto'],
+  ['barrido lateral',         'borrar anclajes'],
+  ['señalar a una voz',       'esa voz sola; el resto suelta'],
+  ['ambas manos cayendo',     'fin: todos sueltan']
+];
+
+/* ─── reloj ─── */
+let T0 = null, armed = false, solo = 0, cmd = null;
+const fmt = s => { s = Math.max(0,s); return String(Math.floor(s/60)).padStart(2,'0') + ':' +
+                   String(Math.floor(s%60)).padStart(2,'0'); };
+const clockT = () => T0 === null ? null : (Date.now() - T0) / 1000;
+
+document.getElementById('arm').onclick = e => { e.target.blur();
+  T0 = Math.ceil(Date.now()/60000)*60000; armed = true;
+  document.getElementById('arm').classList.add('armed'); };
+document.getElementById('now').onclick = e => { e.target.blur(); T0 = Date.now(); armed = false;
+  document.getElementById('arm').classList.remove('armed'); };
+document.getElementById('stop').onclick = e => { e.target.blur(); T0 = null; armed = false;
+  document.getElementById('arm').classList.remove('armed'); };
+document.getElementById('projbtn').onclick = e => { e.target.blur(); proj(true); };
+document.getElementById('projwin').onclick = e => { e.target.blur(); openProjWindow(); };
+function proj(on){ document.getElementById('proj').classList.toggle('hidden', !on); }
+
+/* ─── ventana de proyección para monitor extendido ─── */
+let pw = null, pel = null;
+const PROJ_HTML =
+  '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>CAMPO · proyección</title><style>' +
+  'html,body{margin:0;height:100%;background:#06080a;color:#dfe5ec;overflow:hidden;' +
+  'font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;cursor:none}' +
+  'body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.2vh;text-align:center;padding:3vh}' +
+  '#psec{font-size:2.4vw;color:#8b97a6;letter-spacing:.22em}' +
+  '#pbig{font-size:11.5vw;line-height:1;letter-spacing:.05em;color:#8f9ef0;font-weight:700}' +
+  '#psub{font-size:3.4vw;color:#e8b25a}#pclk{font-size:6vw;color:#dfe5ec}' +
+  '#pfoot{position:fixed;bottom:12px;right:16px;font-size:12px;color:#39424c;cursor:default}' +
+  '</style></head><body><div id="psec"></div><div id="pbig">CAMPO</div><div id="psub">esperando</div>' +
+  '<div id="pclk">--:--</div><div id="pfoot">doble clic = pantalla completa · Esc = salir</div></body></html>';
+
+function openProjWindow(){
+  if (pw && !pw.closed){ pw.focus(); return; }
+  pw = window.open('', 'campo_proyeccion', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
+  if (!pw){ document.getElementById('projstate').textContent =
+      'El navegador bloqueó la ventana. Permite ventanas emergentes para esta página y reintenta.'; return; }
+  pw.document.open(); pw.document.write(PROJ_HTML); pw.document.close();
+  pel = { sec:pw.document.getElementById('psec'), big:pw.document.getElementById('pbig'),
+          sub:pw.document.getElementById('psub'), clk:pw.document.getElementById('pclk') };
+  pw.addEventListener('keydown', onKey);
+  pw.document.addEventListener('dblclick', () => {
+    const el = pw.document.documentElement;
+    if (pw.document.fullscreenElement) pw.document.exitFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen();
+  });
+  pw.addEventListener('beforeunload', () => { pw = null; pel = null; });
+  proj(false); paint();
+}
+
+/* ─── construcción ─── */
+const vEl = document.getElementById('voices');
+for (let i = 1; i <= 8; i++){
+  const d = document.createElement('div'); d.className = 'v'; d.id = 'v' + i;
+  d.innerHTML = '<div class="n">VOZ ' + i + '<span class="cd"></span></div><div class="i">—</div>';
+  d.onclick = () => { solo = (solo === i ? 0 : i);
+    setCmd(solo ? { t:'SOLO VOZ ' + solo, s:'las demás sueltan el botón' } : null); };
+  vEl.appendChild(d);
+}
+document.getElementById('grid').innerHTML = ZONES.map((row, r) => row.map((z, c) =>
+  '<div class="z"><b>' + z + '</b>zona ' + (r*3+c+1) + '</div>').join('')).join('');
+const cEl = document.getElementById('cmds');
+CMDS.forEach(c => {
+  const d = document.createElement('div'); d.className = 'c'; d.id = 'c_' + c.k;
+  d.innerHTML = '<div class="t">' + c.t + '<span class="num">' + c.n + '</span></div><div class="k">' + c.s + '</div>';
+  d.onclick = () => setCmd(cmd && cmd.t === c.t ? null : c);
+  cEl.appendChild(d);
+});
+document.getElementById('senas').innerHTML =
+  SENAS.map(s => '<tr><td>' + s[0] + '</td><td>' + s[1] + '</td></tr>').join('');
+
+function setCmd(c){
+  cmd = c; if (!c) solo = 0;
+  document.querySelectorAll('.c').forEach(e => e.classList.remove('on'));
+  if (c && c.k) document.getElementById('c_' + c.k).classList.add('on');
+  paint();
+}
+function onKey(e){
+  if (e.code === 'Escape'){ proj(false); setCmd(null); return; }
+  const c = CMDS.find(x => x.k === e.code);
+  if (c){ e.preventDefault(); setCmd(cmd && cmd.t === c.t ? null : c); }
+}
+addEventListener('keydown', onKey);
+
+/* ─── pintado ─── */
+function curSection(t){
+  if (t === null || t < 0 || t > TOTAL) return null;
+  for (let i = MOVS.length - 1; i >= 0; i--) if (t >= MOVS[i].t) return i;
+  return 0;
+}
+function paint(){
+  const t = clockT(), si = curSection(t), S = si !== null ? MOVS[si] : null;
+
+  const cl = document.getElementById('t');
+  if (t === null) cl.innerHTML = '--:--<span class="ms">.-</span>';
+  else if (t < 0) cl.innerHTML = '<span style="color:var(--acc2)">−' + fmt(-t) + '<span class="ms">.' +
+      Math.floor((1 - (-t % 1)) * 10) + '</span></span>';
+  else cl.innerHTML = fmt(t) + '<span class="ms">.' + Math.floor((t % 1) * 10) + '</span>';
+  const d = new Date();
+  document.getElementById('sys').textContent = 'reloj del sistema ' +
+    d.toLocaleTimeString('es-CL', { hour12:false }) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+  document.getElementById('prog').style.width =
+    (t === null || t < 0 ? 0 : Math.min(100, t / TOTAL * 100)) + '%';
+
+  document.getElementById('secname').textContent =
+    t === null ? 'en espera' : (t < 0 ? 'cuenta regresiva' : (S ? S.n : 'fin'));
+  document.getElementById('secr').textContent =
+    S ? fmt(S.t) + ' – ' + fmt(S.t + S.d) : (t !== null && t >= TOTAL ? 'silencio · manos arriba' : '');
+  document.getElementById('guion').innerHTML =
+    S ? '<b>Dirección:</b> ' + S.guion
+      : '<b>Antes de arrancar:</b> relojes, voces asignadas, espacio libre para el mouse. Arma tu inicio y pide que todos armen el suyo en el mismo minuto.';
+
+  const nx = document.getElementById('next');
+  if (t !== null){
+    const fut = EVENTS.filter(e => e.t > t);
+    if (fut.length){
+      const e0 = fut[0], dt = e0.t - t;
+      document.getElementById('cd').textContent = dt < 60 ? dt.toFixed(1) + ' s' : 'en ' + fmt(dt);
+      document.getElementById('cdw').textContent = e0.w;
+      nx.classList.toggle('soon', dt <= 3);
+      document.getElementById('up').innerHTML =
+        fut.slice(1,5).map(e => '<li><b>' + fmt(e.t) + '</b> · ' + e.w + '</li>').join('');
+    } else {
+      document.getElementById('cd').textContent = '—';
+      document.getElementById('cdw').textContent = 'obra terminada';
+      nx.classList.remove('soon'); document.getElementById('up').innerHTML = '';
+    }
+  }
+
+  for (let i = 1; i <= 8; i++){
+    const el = document.getElementById('v' + i);
+    el.querySelector('.i').textContent = S ? S.per[i-1] : '—';
+    const ev = t !== null ? EVENTS.find(e => e.t > t && e.t - t < 10 && e.w.includes('voz ' + i)) : null;
+    el.querySelector('.cd').textContent = ev ? Math.ceil(ev.t - t) + 's' : '';
+    el.classList.toggle('alert', !!ev);
+    el.classList.toggle('solo', solo === i);
+  }
+
+  let bigTx, subTx, col;
+  if (cmd){ bigTx = cmd.t; subTx = cmd.s; col = '#8f9ef0'; }
+  else if (t !== null && t < 0){ bigTx = Math.ceil(-t) + ''; subTx = 'preparados'; col = '#e8b25a'; }
+  else { bigTx = S ? (S.n.split('· ')[1] || S.n.toUpperCase()) : 'CAMPO';
+         subTx = S ? (S.kind === 'gap' ? 'manos sobre la mesa' : 'sigue tu pantalla') : 'consola de dirección';
+         col = '#8f9ef0'; }
+  const clkTx = t === null ? '--:--' : (t < 0 ? '−' + fmt(-t) : fmt(t));
+  const secTx = S ? fmt(t) + ' / ' + fmt(TOTAL) : '';
+
+  const big = document.getElementById('pbig');
+  big.textContent = bigTx; big.style.color = col;
+  document.getElementById('psub').textContent = subTx;
+  document.getElementById('pclk').textContent = clkTx;
+  document.getElementById('psec').textContent = secTx;
+
+  if (pw && pw.closed){ pw = null; pel = null; }
+  if (pel){
+    try{
+      pel.big.textContent = bigTx; pel.big.style.color = col;
+      pel.sub.textContent = subTx; pel.clk.textContent = clkTx; pel.sec.textContent = secTx;
+    }catch(err){ pw = null; pel = null; }
+  }
+  const st = document.getElementById('projstate');
+  if (st && !st.textContent.startsWith('El navegador'))
+    st.textContent = pel ? 'Ventana de proyección abierta: arrástrala al monitor extendido y haz doble clic para pantalla completa.' : '';
+}
+
+setInterval(() => {
+  if (armed && T0 !== null && Date.now() >= T0){ armed = false;
+    document.getElementById('arm').classList.remove('armed'); }
+  paint();
+}, 60);
+paint();
+</script>
+</body>
+</html>

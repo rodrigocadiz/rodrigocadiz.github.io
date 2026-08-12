@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NUBE · consola del director</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#6fd3c7; --acc2:#e8b25a; --warn:#e06a5a; --ok:#7fc47f;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:14px/1.45 var(--mono);display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 16px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:14px;margin:0;letter-spacing:.2em}
+  header h1 small{color:var(--dim);letter-spacing:.05em;margin-left:10px;font-weight:400}
+  .grow{flex:1}
+  button{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;
+    padding:5px 10px;font:12px var(--mono);cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.armed{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  main{flex:1;display:grid;grid-template-columns:300px 1fr 300px;min-height:0}
+  section{padding:14px;overflow:auto;min-height:0}
+  #left{border-right:1px solid var(--line);background:var(--panel)}
+  #right{border-left:1px solid var(--line);background:var(--panel)}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px}
+  .clock{font-size:40px;line-height:1.05}
+  .clock .ms{font-size:22px;color:var(--dim)}
+  .sys{color:var(--dim);font-size:11px}
+  .sec{color:var(--acc);font-size:17px;letter-spacing:.1em;margin-top:14px}
+  .secr{color:var(--dim);font-size:11px}
+  .bar{height:4px;background:#1d232b;border-radius:2px;overflow:hidden;margin:9px 0}
+  .bar>i{display:block;height:100%;background:var(--acc);width:0}
+  .next{border:1px solid var(--acc2);border-radius:5px;padding:10px;background:#221a0e;margin-top:14px}
+  .next .cd{font-size:26px;color:var(--acc2);font-weight:700}
+  .next .w{font-size:12.5px;color:#e3c489}
+  .next.soon{animation:pulso .5s ease-in-out infinite}
+  @keyframes pulso{0%,100%{opacity:1}50%{opacity:.5}}
+  ul.up{list-style:none;margin:10px 0 0;padding:0;font-size:11.5px;color:var(--dim)}
+  ul.up li{padding:2px 0}
+  ul.up li b{color:var(--tx);font-weight:600}
+  .guion{margin-top:16px;border:1px solid var(--line);border-radius:5px;padding:10px;background:#10141a;font-size:12px}
+  .guion b{color:var(--acc2)}
+  .voices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  .v{border:1px solid var(--line);border-radius:6px;padding:9px 11px;background:var(--panel);cursor:pointer}
+  .v:hover{border-color:var(--acc)}
+  .v .n{color:var(--acc);font-size:12px;letter-spacing:.1em}
+  .v .i{font-size:12px;margin-top:4px;color:var(--tx)}
+  .v.alert{border-color:var(--acc2);background:#1e1811}
+  .v.alert .n{color:var(--acc2)}
+  .v.solo{border-color:var(--ok);background:#12211a}
+  .v .cd{float:right;color:var(--acc2);font-weight:700}
+  .cmds{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .c{border:1px solid var(--line);border-radius:5px;padding:7px 9px;background:#12171c;cursor:pointer}
+  .c:hover{border-color:var(--acc)}
+  .c .t{font-size:12px;letter-spacing:.06em}
+  .c .k{font-size:10px;color:var(--dim);margin-top:2px}
+  .c .num{float:right;color:var(--dim);font-size:10px}
+  .c.on{background:var(--acc);color:#07100e;border-color:var(--acc)}
+  .c.on .k,.c.on .num{color:#0b2a26}
+  table.senas{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+  table.senas td{border-bottom:1px solid var(--line);padding:4px 3px;vertical-align:top}
+  table.senas td:first-child{color:var(--acc2);white-space:nowrap;padding-right:8px}
+  #proj{position:fixed;inset:0;background:#06080a;z-index:30;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px}
+  #proj .big{font-size:11vw;letter-spacing:.06em;line-height:1;color:var(--acc)}
+  #proj .sub{font-size:3vw;color:var(--acc2)}
+  #proj .clk{font-size:6vw;color:var(--tx)}
+  #proj .sc{font-size:2.4vw;color:var(--dim);letter-spacing:.2em}
+  #proj .esc{position:fixed;bottom:14px;right:18px;color:#39424c;font-size:12px}
+  .hidden{display:none !important}
+  .note{color:var(--dim);font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NUBE · DIRECCIÓN<small>los laptops no reciben nada de esta pantalla: se dirige con la voz, las manos y el proyector</small></h1>
+  <div class="grow"></div>
+  <button id="arm">Iniciar en el próximo minuto</button>
+  <button id="now">Ensayar ahora</button>
+  <button id="stop">Detener</button>
+  <button id="projwin">Abrir proyección ⧉</button>
+  <button id="projbtn">Proyectar aquí</button>
+</header>
+
+<main>
+  <section id="left">
+    <label>tiempo de obra</label>
+    <div class="clock" id="t">--:--<span class="ms">.-</span></div>
+    <div class="sys" id="sys">reloj del sistema —</div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="sec" id="secname">en espera</div>
+    <div class="secr" id="secr">arma el inicio y avisa a la orquesta que armen el suyo</div>
+
+    <div class="next" id="next">
+      <label style="color:#c9a463">próximo evento</label>
+      <div class="cd" id="cd">—</div>
+      <div class="w" id="cdw">arma el reloj para empezar</div>
+    </div>
+    <ul class="up" id="up"></ul>
+
+    <div class="guion" id="guion"></div>
+  </section>
+
+  <section id="center">
+    <label>las ocho voces · clic para poner una en solo</label>
+    <div class="voices" id="voices"></div>
+    <p class="note" style="margin-top:14px">
+      La orquesta no ve esta pantalla salvo que proyectes. Para dirigir sin proyector, usa las señas de
+      la derecha. Con proyector, presiona <b>Abrir proyección ⧉</b>: se abre una ventana aparte que
+      puedes arrastrar al monitor extendido y poner a pantalla completa con doble clic, mientras esta
+      consola sigue visible en tu laptop. Los comandos se lanzan con las teclas numéricas desde
+      cualquiera de las dos ventanas. <b>Proyectar aquí</b> usa esta misma pantalla, para cuando
+      diriges con un solo monitor.
+    </p>
+    <p class="note" id="projstate" style="color:var(--acc2)"></p>
+  </section>
+
+  <section id="right">
+    <label>comandos en vivo</label>
+    <div class="cmds" id="cmds"></div>
+    <label style="margin-top:16px">señas manuales (sin proyector)</label>
+    <table class="senas" id="senas"></table>
+    <label style="margin-top:16px">antes de empezar</label>
+    <ul class="up">
+      <li>Relojes: comparar los milisegundos de los 8 laptops. Más de 100 ms de diferencia = no sincronizado.</li>
+      <li>Cada uno elige su número de voz y su fuente.</li>
+      <li>Todos presionan «Activar audio» y luego «Iniciar en el próximo minuto» a tu señal.</li>
+      <li>Nadie se mueve de su puesto durante la obra.</li>
+      <li>Volumen: que se oigan entre ellos sin taparse. Si alguien no oye a su vecino, está muy fuerte.</li>
+    </ul>
+  </section>
+</main>
+
+<div id="proj" class="hidden">
+  <div class="sc" id="psec">—</div>
+  <div class="big" id="pbig">NUBE</div>
+  <div class="sub" id="psub">consola de dirección</div>
+  <div class="clk" id="pclk">--:--</div>
+  <div class="esc">Esc para salir · teclas 1–9 y 0 para lanzar comandos</div>
+</div>
+
+<script>
+/* ═══ NUBE · consola del director ═════════════════════════════════════════
+   Espejo de la partitura de index.html. No hay red: esta pantalla es un guion
+   y, si se proyecta, un canal visual hacia la orquesta.
+   Si editas SECTIONS en index.html, edítalo también aquí.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const SECTIONS = [
+  { t:0, d:90, n:'I · APARICIÓN',
+    guion:'Deja que entren solos, uno cada 10 s. No aceleres. Si alguien sostiene más de 4 s, córtalo con un puño. Debe oírse como goteo, no como acorde.',
+    per:['Entra de inmediato. Eres el primer punto.','Entra a los 0:10.','Entra a los 0:20.','Entra a los 0:30.',
+         'Entra a los 0:40.','Entra a los 0:50.','Entra a 1:00.','Entra a 1:10.'] },
+  { t:90, d:90, n:'II · MIGRACIÓN',
+    guion:'Marca el descenso con la mano bajando, lento y continuo. Vigila que nadie salte al grave de golpe. Sube densidad con los dedos abriéndose. El espesor debe crecer sin que se note el momento.',
+    per:['Desciende rápido: al grave antes que el resto.','Desciende a paso medio.','Desciende a paso medio.',
+         'Desciende lento: registro medio.','Desciende lento: registro medio.','Desciende rápido y sostén el grave.',
+         'Mantén una capa aguda todo el tramo.','Desciende y vuelve a subir una vez, como una ola.'] },
+  { t:180, d:75, n:'III · FRACTURA',
+    guion:'Aquí diriges de verdad: señala entradas y cortes. Sacude la mano para ráfagas. Exige silencios reales, de 3 s o más. Si se llena, corta a la mitad de la orquesta con un puño.',
+    per:['Ráfagas en los segundos impares.','Ráfagas en los segundos pares.','Solo tres ráfagas largas (5 s).',
+         'Ráfagas brevísimas, como estática.','Responde: suena solo después de oír a otro.',
+         'Ráfagas brevísimas, como estática.','Responde: suena solo después de oír a otro.',
+         'Fondo tenue sin cortar: la grieta que no se cierra.'] },
+  { t:255, d:90, n:'IV · CONVERGENCIA',
+    guion:'Dedos en punta: todos a la tecla H. Voz 1 es la referencia y no se mueve. Deja que los batidos se oigan un rato antes de pedir que afinen; ese roce es la sección. Granos largos, dispersión al mínimo.',
+    per:['Tecla H, posición T. Referencia: no cambies de altura.','Tecla H, llegando desde el agudo.',
+         'Tecla H, llegando desde el grave.','Tecla H, llegando desde el agudo.','Tecla H, llegando desde el grave.',
+         'Tecla K (octava). Sostén.','Tecla K (octava). Sostén.','Tecla D (dos octavas abajo). Sostén.'] },
+  { t:345, d:75, n:'V · EVAPORACIÓN',
+    guion:'Palma bajando muy lento durante todo el tramo. Cada voz calla en su tiempo; no los apures. Cuando quede la voz 8 sola, no la mires: que decida ella el último grano. Mantén las manos arriba unos segundos después del silencio.',
+    per:['Calla a 6:20.','Calla a 6:10.','Calla a 6:30.','Calla a 6:00.','Calla a 6:40.','Calla a 6:15.','Calla a 6:50.',
+         'Última voz: sostén hasta 7:00.'] }
+];
+const TOTAL = 420;
+
+const EVENTS = [
+  ...[0,1,2,3,4,5,6,7].map(i => ({ t:i*10, w:'entra voz ' + (i+1) })),
+  { t:90,  w:'II · MIGRACIÓN — empieza el descenso' },
+  { t:180, w:'III · FRACTURA — ráfagas y silencios' },
+  { t:255, w:'IV · CONVERGENCIA — todos a la tecla H' },
+  { t:345, w:'V · EVAPORACIÓN — empieza a disolverse' },
+  { t:360, w:'calla voz 4' }, { t:370, w:'calla voz 2' }, { t:375, w:'calla voz 6' },
+  { t:380, w:'calla voz 1' }, { t:390, w:'calla voz 3' }, { t:400, w:'calla voz 5' },
+  { t:410, w:'calla voz 7' }, { t:420, w:'calla voz 8 — fin' }
+].sort((a,b) => a.t - b.t);
+
+const CMDS = [
+  { k:'Digit1', n:'1', t:'TUTTI',       s:'mantén ESPACIO' },
+  { k:'Digit2', n:'2', t:'SILENCIO',    s:'suelta ESPACIO' },
+  { k:'Digit3', n:'3', t:'GRAVE',       s:'fila A S D' },
+  { k:'Digit4', n:'4', t:'AGUDO',       s:'fila K L Ñ' },
+  { k:'Digit5', n:'5', t:'UNÍSONO',     s:'todos a la tecla H' },
+  { k:'Digit6', n:'6', t:'DISPERSAR',   s:'mantén X y V' },
+  { k:'Digit7', n:'7', t:'CONCENTRAR',  s:'mantén Z y C' },
+  { k:'Digit8', n:'8', t:'GRANO LARGO', s:'mantén →' },
+  { k:'Digit9', n:'9', t:'GRANO CORTO', s:'mantén ←' },
+  { k:'Digit0', n:'0', t:'RÁFAGA',      s:'mantén SHIFT' },
+  { k:'KeyD',   n:'D', t:'MÁS DENSO',   s:'mantén ↑' },
+  { k:'KeyR',   n:'R', t:'MÁS RALO',    s:'mantén ↓' },
+  { k:'KeyF',   n:'F', t:'CONGELAR',    s:'tecla M' },
+  { k:'KeyT',   n:'T', t:'CAMBIA FUENTE', s:'menú FUENTE arriba' }
+];
+
+const SENAS = [
+  ['palma abierta arriba', 'tutti: todos mantienen espacio'],
+  ['puño cerrado',         'silencio: suelten el espacio'],
+  ['mano bajando lenta',   'bajar de registro (fila A–Ñ hacia la izquierda)'],
+  ['mano subiendo',        'subir de registro'],
+  ['dedos en punta',       'unísono: todos a la tecla H'],
+  ['manos separándose',    'dispersar (X y V)'],
+  ['manos juntándose',     'concentrar (Z y C)'],
+  ['mano sacudida',        'ráfaga (shift)'],
+  ['dedos abriéndose',     'más densidad (↑)'],
+  ['dedos cerrándose',     'menos densidad (↓)'],
+  ['señalar a una voz',    'esa voz sola; el resto suelta'],
+  ['palma bajando muy lenta', 'evaporar: ir apagándose']
+];
+
+/* ─── reloj ─── */
+let T0 = null, armed = false, solo = 0, cmd = null, cmdT = 0;
+const fmt = s => { s = Math.max(0, s); return String(Math.floor(s/60)).padStart(2,'0') + ':' +
+                   String(Math.floor(s%60)).padStart(2,'0'); };
+const clockT = () => T0 === null ? null : (Date.now() - T0) / 1000;
+
+document.getElementById('arm').onclick = e => { e.target.blur();
+  T0 = Math.ceil(Date.now() / 60000) * 60000; armed = true;
+  document.getElementById('arm').classList.add('armed'); };
+document.getElementById('now').onclick = e => { e.target.blur();
+  T0 = Date.now(); armed = false; document.getElementById('arm').classList.remove('armed'); };
+document.getElementById('stop').onclick = e => { e.target.blur();
+  T0 = null; armed = false; document.getElementById('arm').classList.remove('armed'); };
+document.getElementById('projbtn').onclick = e => { e.target.blur(); proj(true); };
+document.getElementById('projwin').onclick = e => { e.target.blur(); openProjWindow(); };
+
+function proj(on){ document.getElementById('proj').classList.toggle('hidden', !on); }
+
+/* ─── ventana de proyección independiente (para monitor extendido) ───────
+   Se abre con about:blank, que hereda el origen de esta página, así que el
+   contenido se escribe directamente desde acá. No necesita red ni servidor. */
+let pw = null, pel = null;
+
+const PROJ_HTML =
+  '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>NUBE · proyección</title><style>' +
+  'html,body{margin:0;height:100%;background:#06080a;color:#dfe5ec;overflow:hidden;' +
+  'font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;cursor:none}' +
+  'body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.2vh;text-align:center;padding:3vh}' +
+  '#psec{font-size:2.4vw;color:#8b97a6;letter-spacing:.22em}' +
+  '#pbig{font-size:12vw;line-height:1;letter-spacing:.05em;color:#6fd3c7;font-weight:700}' +
+  '#psub{font-size:3.4vw;color:#e8b25a}' +
+  '#pclk{font-size:6vw;color:#dfe5ec}' +
+  '#pfoot{position:fixed;bottom:12px;right:16px;font-size:12px;color:#39424c;cursor:default}' +
+  '</style></head><body>' +
+  '<div id="psec"></div><div id="pbig">NUBE</div><div id="psub">esperando</div>' +
+  '<div id="pclk">--:--</div><div id="pfoot">doble clic = pantalla completa · Esc = salir</div>' +
+  '</body></html>';
+
+function openProjWindow(){
+  if (pw && !pw.closed){ pw.focus(); return; }
+  pw = window.open('', 'nube_proyeccion', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
+  if (!pw){
+    document.getElementById('projstate').textContent =
+      'El navegador bloqueó la ventana. Permite ventanas emergentes para esta página y vuelve a intentarlo.';
+    return;
+  }
+  pw.document.open(); pw.document.write(PROJ_HTML); pw.document.close();
+  pel = { sec:pw.document.getElementById('psec'), big:pw.document.getElementById('pbig'),
+          sub:pw.document.getElementById('psub'), clk:pw.document.getElementById('pclk') };
+  pw.addEventListener('keydown', onKey);
+  pw.document.addEventListener('dblclick', () => {
+    const el = pw.document.documentElement;
+    if (pw.document.fullscreenElement) pw.document.exitFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen();
+  });
+  pw.addEventListener('beforeunload', () => { pw = null; pel = null; });
+  proj(false);   // si estaba el overlay local, sobra
+  paint();
+}
+
+/* ─── construcción ─── */
+const vEl = document.getElementById('voices');
+for (let i = 1; i <= 8; i++){
+  const d = document.createElement('div'); d.className = 'v'; d.id = 'v' + i;
+  d.innerHTML = '<div class="n">VOZ ' + i + '<span class="cd"></span></div><div class="i">—</div>';
+  d.onclick = () => { solo = (solo === i ? 0 : i); setCmd(solo ? {
+      t:'SOLO VOZ ' + solo, s:'las demás voces sueltan el espacio' } : null); paint(); };
+  vEl.appendChild(d);
+}
+const cEl = document.getElementById('cmds');
+CMDS.forEach(c => {
+  const d = document.createElement('div'); d.className = 'c'; d.id = 'c_' + c.k;
+  d.innerHTML = '<div class="t">' + c.t + '<span class="num">' + c.n + '</span></div><div class="k">' + c.s + '</div>';
+  d.onclick = () => setCmd(cmd && cmd.t === c.t ? null : c);
+  cEl.appendChild(d);
+});
+document.getElementById('senas').innerHTML =
+  SENAS.map(s => '<tr><td>' + s[0] + '</td><td>' + s[1] + '</td></tr>').join('');
+
+function setCmd(c){
+  cmd = c; cmdT = Date.now();
+  if (!c) solo = 0;
+  document.querySelectorAll('.c').forEach(e => e.classList.remove('on'));
+  if (c && c.k) document.getElementById('c_' + c.k).classList.add('on');
+  paint();
+}
+
+function onKey(e){
+  if (e.code === 'Escape'){ proj(false); setCmd(null); return; }
+  const c = CMDS.find(x => x.k === e.code);
+  if (c){ e.preventDefault(); setCmd(cmd && cmd.t === c.t ? null : c); }
+}
+addEventListener('keydown', onKey);
+
+/* ─── pintado ─── */
+function curSection(t){
+  if (t === null || t < 0 || t > TOTAL) return null;
+  for (let i = SECTIONS.length - 1; i >= 0; i--) if (t >= SECTIONS[i].t) return i;
+  return 0;
+}
+function paint(){
+  const t = clockT();
+  const si = curSection(t), S = si !== null ? SECTIONS[si] : null;
+
+  const cl = document.getElementById('t');
+  if (t === null) cl.innerHTML = '--:--<span class="ms">.-</span>';
+  else if (t < 0) cl.innerHTML = '<span style="color:var(--acc2)">−' + fmt(-t) + '<span class="ms">.' +
+      Math.floor((1 - (-t % 1)) * 10) + '</span></span>';
+  else cl.innerHTML = fmt(t) + '<span class="ms">.' + Math.floor((t % 1) * 10) + '</span>';
+
+  const d = new Date();
+  document.getElementById('sys').textContent = 'reloj del sistema ' +
+    d.toLocaleTimeString('es-CL', { hour12:false }) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+  document.getElementById('prog').style.width =
+    (t === null || t < 0 ? 0 : Math.min(100, t / TOTAL * 100)) + '%';
+
+  document.getElementById('secname').textContent =
+    t === null ? 'en espera' : (t < 0 ? 'cuenta regresiva' : (S ? S.n : 'fin'));
+  document.getElementById('secr').textContent =
+    S ? fmt(S.t) + ' – ' + fmt(S.t + S.d) : (t !== null && t >= TOTAL ? 'silencio · manos arriba' : '');
+  document.getElementById('guion').innerHTML =
+    S ? '<b>Dirección:</b> ' + S.guion
+      : '<b>Antes de arrancar:</b> verifica relojes, voces asignadas y volúmenes. Arma tu inicio y pide que todos armen el suyo en el mismo minuto.';
+
+  // próximos eventos
+  const nx = document.getElementById('next');
+  if (t !== null){
+    const fut = EVENTS.filter(e => e.t > t);
+    if (fut.length){
+      const e0 = fut[0], dt = e0.t - t;
+      document.getElementById('cd').textContent = (dt < 60 ? dt.toFixed(1) + ' s' : 'en ' + fmt(dt));
+      document.getElementById('cdw').textContent = e0.w;
+      nx.classList.toggle('soon', dt <= 3);
+      document.getElementById('up').innerHTML =
+        fut.slice(1, 5).map(e => '<li><b>' + fmt(e.t) + '</b> · ' + e.w + '</li>').join('');
+    } else {
+      document.getElementById('cd').textContent = '—';
+      document.getElementById('cdw').textContent = 'obra terminada';
+      nx.classList.remove('soon'); document.getElementById('up').innerHTML = '';
+    }
+  }
+
+  // voces
+  for (let i = 1; i <= 8; i++){
+    const el = document.getElementById('v' + i);
+    el.querySelector('.i').textContent = S ? S.per[i-1] : '—';
+    const ev = t !== null ? EVENTS.find(e => e.t > t && e.t - t < 10 && e.w.includes('voz ' + i)) : null;
+    el.querySelector('.cd').textContent = ev ? Math.ceil(ev.t - t) + 's' : '';
+    el.classList.toggle('alert', !!ev);
+    el.classList.toggle('solo', solo === i);
+  }
+
+  // ── contenido de proyección (compartido por el overlay y la ventana aparte) ──
+  let bigTx, subTx, col;
+  if (cmd){ bigTx = cmd.t; subTx = cmd.s; col = '#6fd3c7'; }
+  else if (t !== null && t < 0){ bigTx = Math.ceil(-t) + ''; subTx = 'preparados'; col = '#e8b25a'; }
+  else { bigTx = S ? (S.n.split('· ')[1] || S.n) : 'NUBE';
+         subTx = S ? 'sigue tu pantalla' : 'consola de dirección'; col = '#6fd3c7'; }
+  const clkTx = t === null ? '--:--' : (t < 0 ? '−' + fmt(-t) : fmt(t));
+  const secTx = S ? fmt(t) + ' / ' + fmt(TOTAL) : '';
+
+  const big = document.getElementById('pbig'), sub = document.getElementById('psub');
+  big.textContent = bigTx; big.style.color = col; sub.textContent = subTx;
+  document.getElementById('pclk').textContent = clkTx;
+  document.getElementById('psec').textContent = secTx;
+
+  if (pw && pw.closed){ pw = null; pel = null; }
+  if (pel){
+    try{
+      pel.big.textContent = bigTx; pel.big.style.color = col;
+      pel.sub.textContent = subTx; pel.clk.textContent = clkTx; pel.sec.textContent = secTx;
+    }catch(err){ pw = null; pel = null; }   // la ventana se recargó o se cerró
+  }
+  const st = document.getElementById('projstate');
+  if (st && !st.textContent.startsWith('El navegador'))
+    st.textContent = pel ? 'Ventana de proyección abierta: arrástrala al monitor extendido y haz doble clic para pantalla completa.' : '';
+}
+
+setInterval(() => {
+  if (armed && T0 !== null && Date.now() >= T0){ armed = false;
+    document.getElementById('arm').classList.remove('armed'); }
+  paint();
+}, 60);
+paint();
+</script>
+</body>
+</html>

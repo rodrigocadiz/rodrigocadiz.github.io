@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NUBE — Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#6fd3c7; --acc2:#e8b25a; --warn:#e06a5a; --ok:#7fc47f;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--tx);
+    font:14px/1.45 var(--mono);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  header{
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    padding:10px 16px; border-bottom:1px solid var(--line); background:var(--panel);
+  }
+  header h1{font-size:15px;margin:0;letter-spacing:.22em;font-weight:600}
+  header h1 small{letter-spacing:.06em;color:var(--dim);font-weight:400;margin-left:10px}
+  .grow{flex:1}
+  label{color:var(--dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  select,button,input[type=time]{
+    background:#1b2128;color:var(--tx);border:1px solid var(--line);
+    border-radius:4px;padding:5px 9px;font:12px var(--mono);
+  }
+  button{cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.primary{background:var(--acc);color:#07100e;border-color:var(--acc);font-weight:700}
+  button.armed{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  main{flex:1;display:grid;grid-template-columns:340px 1fr;min-height:0}
+  #score{border-right:1px solid var(--line);background:var(--panel);padding:14px 16px;overflow:auto}
+  #stage{padding:14px 16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+  .clock{font-size:34px;letter-spacing:.04em;line-height:1.1}
+  .clock .ms{color:var(--dim);font-size:20px}
+  .sys{color:var(--dim);font-size:11px;margin-top:2px}
+  .secname{color:var(--acc);font-size:16px;margin:14px 0 2px;letter-spacing:.1em}
+  .secrange{color:var(--dim);font-size:11px}
+  .part{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:5px;background:#10141a}
+  .part b{color:var(--acc2);font-weight:600}
+  .bar{height:4px;background:#1d232b;border-radius:2px;overflow:hidden;margin:10px 0 2px}
+  .bar > i{display:block;height:100%;background:var(--acc);width:0%}
+  ul.secs{list-style:none;margin:10px 0 0;padding:0;font-size:11.5px}
+  ul.secs li{padding:3px 0 3px 10px;border-left:2px solid #222a33;color:var(--dim)}
+  ul.secs li.on{border-left-color:var(--acc);color:var(--tx)}
+  ul.secs li.done{color:#5d6874}
+  .meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+  .m{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--panel)}
+  .m .top{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);letter-spacing:.06em}
+  .m .top b{color:var(--tx);font-weight:600}
+  .m .track{position:relative;height:9px;background:#1b2128;border-radius:3px;margin-top:7px;overflow:hidden}
+  .m .goal{position:absolute;top:0;bottom:0;background:rgba(232,178,90,.22);border-left:1px solid rgba(232,178,90,.55);border-right:1px solid rgba(232,178,90,.55)}
+  .m .val{position:absolute;top:0;bottom:0;left:0;background:var(--acc)}
+  .m .keys{font-size:10.5px;color:#65707d;margin-top:5px;letter-spacing:.04em}
+  .m.off .val{background:#3c4650}
+  #kb{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+  .krow{display:flex;gap:5px}
+  .k{
+    width:38px;height:38px;border:1px solid var(--line);border-radius:5px;background:#161b21;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:11px;color:var(--dim);transition:background .05s,border-color .05s;
+  }
+  .k .lbl{font-size:8px;color:#5a646f;margin-top:1px}
+  .k.wide{width:250px}
+  .k.on{background:var(--acc);color:#07100e;border-color:var(--acc)}
+  .k.on .lbl{color:#0b2a26}
+  .k.hint{border-color:var(--acc2);color:var(--acc2)}
+  .k.sel{background:#2b3742;color:var(--tx)}
+  #vu{height:26px;border:1px solid var(--line);border-radius:4px;background:#12171c;position:relative;overflow:hidden}
+  #vu i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--ok),var(--acc2) 78%,var(--warn))}
+  #vu span{position:absolute;right:8px;top:5px;font-size:11px;color:var(--dim)}
+  .note{color:var(--dim);font-size:11.5px}
+  .rowflex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;justify-content:center;z-index:9}
+  #splash .box{max-width:640px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #splash h2{margin:0 0 6px;font-size:20px;letter-spacing:.24em}
+  #splash p{color:var(--dim);font-size:12.5px}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:11px;color:var(--tx)}
+  .hidden{display:none !important}
+  /* aviso de compuerta */
+  #gate{
+    border:1px solid var(--acc2); border-radius:6px; padding:12px 16px; background:#2a2010;
+    display:flex; align-items:center; gap:16px; animation:pulso 1.5s ease-in-out infinite;
+  }
+  #gate .big{font-size:19px;letter-spacing:.14em;color:var(--acc2);font-weight:700}
+  #gate .sub{color:#c9a463;font-size:12px}
+  #gate.on{animation:none;border-color:var(--ok);background:#122318}
+  #gate.on .big{color:var(--ok)}
+  #gate.on .sub{color:#87b98d}
+  @keyframes pulso{0%,100%{opacity:1}50%{opacity:.45}}
+  /* partitura completa */
+  #sheet{position:fixed;inset:0;background:rgba(6,8,10,.96);z-index:20;overflow:auto;padding:28px}
+  #sheet .wrap{max-width:1080px;margin:0 auto}
+  #sheet h2{font-size:17px;letter-spacing:.24em;margin:0 0 4px}
+  #sheet .aviso{border:1px solid var(--acc2);border-radius:5px;padding:10px 13px;background:#221a0e;
+    color:#e3c489;font-size:12.5px;margin:14px 0 18px}
+  #sheet table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:22px}
+  #sheet th,#sheet td{border:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left}
+  #sheet th{background:#171d24;color:var(--dim);font-weight:400;letter-spacing:.08em;font-size:11px}
+  #sheet td.v{width:64px;color:var(--dim);white-space:nowrap}
+  #sheet tr.me td{background:#12211f}
+  #sheet tr.me td.v{color:var(--acc);font-weight:700}
+  #sheet .sechead{color:var(--acc);font-size:14px;letter-spacing:.12em;margin:20px 0 3px}
+  #sheet .sectxt{color:var(--tx);font-size:12.5px;margin:0 0 10px;max-width:78ch}
+  #sheet .sectime{color:var(--dim);font-size:11px}
+  #sheet .close{position:sticky;top:0;float:right}
+</style>
+</head>
+<body>
+
+<div id="splash"><div class="box">
+  <h2>N U B E</h2>
+  <p>Obra para orquesta de laptops · síntesis granular · sincronía por reloj de sistema<br>
+  IEE2003 Orquesta de Laptops · Pontificia Universidad Católica de Chile</p>
+  <p style="margin-top:16px">Usa <b style="color:var(--tx)">audífonos o parlante propio</b>.
+  <b style="color:var(--acc2)">Mantén apretada la barra espaciadora para sonar</b>: mientras no la
+  tengas apretada no sale nada, y al soltarla callas. Nadie hace una nota; entre todos se hace una nube.</p>
+  <p>El plan completo de la obra está en el botón <b style="color:var(--tx)">Partitura completa</b>, arriba
+  a la derecha. <b style="color:var(--tx)">Nadie se mueve de su puesto:</b> todo se resuelve con las teclas
+  y con el oído.</p>
+  <p>Antes de empezar verifica que la hora de tu laptop esté sincronizada automáticamente con internet
+  (Preferencias del sistema → Fecha y hora). De eso depende que toquemos juntos.</p>
+  <div class="rowflex" style="margin-top:18px">
+    <button class="primary" id="go">Activar audio</button>
+    <span class="note">Chrome o Firefox. El navegador exige un clic para dejar sonar.</span>
+  </div>
+</div></div>
+
+<header>
+  <h1>N U B E<small>orquesta de laptops uc</small></h1>
+  <label>voz</label><select id="voice"></select>
+  <label>fuente</label>
+  <select id="src">
+    <option value="voz">muestra · voz</option>
+    <option value="campana">muestra · campana</option>
+    <option value="cuerda">muestra · cuerda</option>
+    <option value="mic">micrófono en vivo</option>
+    <option value="synth">síntesis pura</option>
+    <option value="file">archivo local…</option>
+  </select>
+  <input type="file" id="file" accept="audio/*" class="hidden">
+  <div class="grow"></div>
+  <button id="sheetbtn">Partitura completa</button>
+  <button id="arm">Iniciar en el próximo minuto</button>
+  <button id="now">Ensayar ahora</button>
+  <button id="stop">Detener</button>
+</header>
+
+<main>
+  <section id="score">
+    <label>tiempo de obra</label>
+    <div class="clock" id="t">--:--<span class="ms">.-</span></div>
+    <div class="sys" id="sys">reloj del sistema —</div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="secname" id="secname">en espera</div>
+    <div class="secrange" id="secrange">presiona «Iniciar en el próximo minuto» y espera la cuenta</div>
+    <div class="part" id="part">Elige tu número de voz arriba. Cada voz recibe indicaciones distintas.</div>
+    <ul class="secs" id="seclist"></ul>
+    <p class="note" style="margin-top:16px">La barra ámbar en cada medidor es el rango que pide la partitura
+    en este instante. Llévate ahí con las teclas; no tiene que ser exacto.</p>
+  </section>
+
+  <section id="stage">
+    <div id="gate">
+      <span class="big" id="gatebig">▸ MANTÉN LA BARRA ESPACIADORA</span>
+      <span class="sub" id="gatesub">nada suena mientras no la tengas apretada · al soltarla, callas</span>
+    </div>
+    <div id="vu"><i></i><span id="vutx">silencio</span></div>
+    <div class="meters" id="meters"></div>
+    <div id="kb"></div>
+    <p class="note" id="hint"></p>
+  </section>
+</main>
+
+<div id="sheet" class="hidden"><div class="wrap">
+  <button class="close" id="sheetclose">Cerrar (Esc)</button>
+  <h2>N U B E · PARTITURA COMPLETA</h2>
+  <div class="sectime">7:00 · 8 voces · las cinco secciones corren solas una tras otra</div>
+  <div class="aviso">
+    <b>Nadie se mueve de su puesto durante toda la obra.</b> Cuando la partitura dice descender, migrar,
+    llegar desde el agudo o converger, habla del <b>sonido</b>, nunca de tu cuerpo ni de tu laptop.
+    Te quedas sentado donde estás y todo lo resuelves con las teclas y con el oído: la única
+    retroalimentación es auditiva.
+  </div>
+  <div id="sheetbody"></div>
+</div></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   NUBE — obra para orquesta de laptops
+   Rodrigo Cádiz · IEE2003 · 2026
+   Un solo archivo. Sin servidor, sin red entre laptops, sin dependencias.
+   La sincronía se obtiene del reloj del sistema operativo (NTP), no de la red local.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Procesador granular (AudioWorklet, inyectado como Blob) ─────────── */
+const WORKLET_SRC = `
+class Gran extends AudioWorkletProcessor {
+  constructor(){
+    super();
+    this.sr = sampleRate;
+    this.src = new Float32Array(2048); this.srcLen = 2048;
+    this.micDur = 6;
+    this.micLen = Math.floor(sampleRate * this.micDur);
+    this.mic = new Float32Array(this.micLen);
+    this.micW = 0;
+    this.mode = 0;                       // 0 = muestra, 1 = micrófono, 2 = síntesis
+    this.W = 2048;
+    this.win = new Float32Array(this.W + 1);
+    for (let i = 0; i <= this.W; i++) this.win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / this.W);
+    this.N = 160;                        // polifonía de granos
+    this.gPos = new Float32Array(this.N);
+    this.gInc = new Float32Array(this.N);
+    this.gAge = new Float32Array(this.N);
+    this.gDur = new Float32Array(this.N);
+    this.gL   = new Float32Array(this.N);
+    this.gR   = new Float32Array(this.N);
+    this.gPh  = new Float32Array(this.N);
+    this.gFr  = new Float32Array(this.N);
+    this.gOn  = new Uint8Array(this.N);
+    this.acc = 0; this.env = 0; this.rms = 0; this.frame = 0;
+    this.p = { dens:6, dur:0.09, pos:0.5, posJit:0.03, pitch:0, pitchJit:0,
+               spread:0.6, gain:0.7, gate:0, freeze:0, burst:1 };
+    this.s = Object.assign({}, this.p);
+    this.port.onmessage = (e) => {
+      const d = e.data;
+      if (d.type === 'buf'){ this.src = d.buf; this.srcLen = d.buf.length; this.frz = -1; }
+      else if (d.type === 'p'){ Object.assign(this.p, d.v); }
+      else if (d.type === 'mode'){ this.mode = d.v; }
+    };
+    this.frz = -1;
+  }
+  rnd(){ return Math.random() * 2 - 1; }
+  trigger(){
+    let i = -1;
+    for (let k = 0; k < this.N; k++){ if (!this.gOn[k]){ i = k; break; } }
+    if (i < 0) return;
+    const s = this.s;
+    const semi = s.pitch + this.rnd() * s.pitchJit * 12;
+    const rate = Math.pow(2, semi / 12);
+    const dur  = Math.max(0.004, s.dur * (1 + this.rnd() * 0.3));
+    const pan  = this.rnd() * s.spread;
+    const a    = 0.34;
+    this.gDur[i] = dur * this.sr;
+    this.gAge[i] = 0;
+    this.gL[i]   = a * Math.cos((pan + 1) * Math.PI / 4);
+    this.gR[i]   = a * Math.sin((pan + 1) * Math.PI / 4);
+    this.gInc[i] = rate;
+    if (this.mode === 2){
+      this.gFr[i] = 70 * Math.pow(2, s.pos * 5.2) * rate * (1 + this.rnd() * s.posJit * 0.9);
+      this.gPh[i] = Math.random() * 6.283185;
+    } else if (this.mode === 1){
+      const delay = (0.06 + s.pos * (this.micDur - 0.35)) * this.sr;
+      let p = this.micW - delay + this.rnd() * s.posJit * this.micDur * this.sr;
+      p = ((p % this.micLen) + this.micLen) % this.micLen;
+      this.gPos[i] = p;
+    } else {
+      const base = (this.frz >= 0 ? this.frz : s.pos) * this.srcLen;
+      let p = base + this.rnd() * s.posJit * this.srcLen;
+      p = ((p % this.srcLen) + this.srcLen) % this.srcLen;
+      this.gPos[i] = p;
+    }
+    this.gOn[i] = 1;
+  }
+  process(inputs, outputs){
+    const out = outputs[0];
+    const L = out[0], R = out[1] || out[0];
+    const n = L.length;
+    const inp = inputs[0] && inputs[0][0];
+
+    // suavizado de parámetros por bloque
+    const k = 0.08, p = this.p, s = this.s;
+    for (const key in p){
+      if (key === 'gate' || key === 'freeze') { s[key] = p[key]; continue; }
+      s[key] += (p[key] - s[key]) * k;
+    }
+    if (p.freeze && this.frz < 0) this.frz = s.pos;
+    if (!p.freeze) this.frz = -1;
+
+    // captura de micrófono en buffer circular
+    if (inp){
+      for (let i = 0; i < n; i++){
+        this.mic[this.micW] = inp[i];
+        this.micW = (this.micW + 1) % this.micLen;
+      }
+    }
+
+    const tgt = p.gate ? 1 : 0;
+    // ataque ~25 ms / caída ~180 ms (evita clics al abrir y cerrar la compuerta)
+    const cf  = p.gate ? 1 / (0.025 * this.sr) : 1 / (0.18 * this.sr);
+    const dens = s.dens * (p.burst || 1);
+    const inc  = dens / this.sr;
+    let peak = 0;
+
+    for (let i = 0; i < n; i++){
+      this.env += (tgt - this.env) * cf;
+      if (this.env > 1) this.env = 1;
+      if (!tgt && this.env < 0.0012) this.env = 0;   // corta la cola: deja de disparar granos
+
+      this.acc += inc;
+      while (this.acc >= 1){ this.acc -= 1; if (this.env > 0.001) this.trigger(); }
+
+      let l = 0, r = 0;
+      for (let g = 0; g < this.N; g++){
+        if (!this.gOn[g]) continue;
+        const a = this.gAge[g], d = this.gDur[g];
+        if (a >= d){ this.gOn[g] = 0; continue; }
+        const w = this.win[(a / d * this.W) | 0];
+        let v;
+        if (this.mode === 2){
+          v = Math.sin(this.gPh[g]) * w;
+          this.gPh[g] += 6.283185307 * this.gFr[g] / this.sr;
+        } else {
+          const buf = (this.mode === 1) ? this.mic : this.src;
+          const len = (this.mode === 1) ? this.micLen : this.srcLen;
+          let ps = this.gPos[g];
+          const i0 = ps | 0, fr = ps - i0;
+          const x0 = buf[i0 % len], x1 = buf[(i0 + 1) % len];
+          v = (x0 + (x1 - x0) * fr) * w;
+          ps += this.gInc[g];
+          if (ps >= len) ps -= len;
+          this.gPos[g] = ps;
+        }
+        l += v * this.gL[g];
+        r += v * this.gR[g];
+        this.gAge[g] = a + 1;
+      }
+      const gg = s.gain * this.env;
+      l *= gg; r *= gg;
+      l = Math.tanh(l * 1.25); r = Math.tanh(r * 1.25);   // limitador suave
+      L[i] = l; if (R !== L) R[i] = r;
+      const m = Math.abs(l); if (m > peak) peak = m;
+    }
+    this.rms += (peak - this.rms) * 0.25;
+    if ((this.frame++ & 7) === 0) this.port.postMessage({ rms: this.rms });
+    return true;
+  }
+}
+registerProcessor('gran', Gran);
+`;
+
+/* ─── 2. Estado y audio ──────────────────────────────────────────────────── */
+/* El motor se monta en AudioWorklet cuando el navegador lo permite. Chrome bloquea
+   addModule() con blob: y con data: cuando la página se abrió con file://, así que
+   ahí se cae a un ScriptProcessorNode que ejecuta EXACTAMENTE el mismo código DSP
+   en el hilo principal. Suena igual; solo sube un poco la latencia. */
+let ctx, engine = null, micStream, micNode, running = false;
+const P = { dens:6, dur:0.09, pos:0.5, posJit:0.03, pitch:0, pitchJit:0,
+            spread:0.6, gain:0.7, gate:0, freeze:0, burst:1 };
+let voice = 1;
+
+const post = (m, tr) => { if (engine) engine.post(m, tr); };
+const send = () => post({ type:'p', v:P });
+
+async function tryWorklet(){
+  const tries = [
+    () => URL.createObjectURL(new Blob([WORKLET_SRC], { type:'application/javascript' })),
+    () => 'data:application/javascript;charset=utf-8,' + encodeURIComponent(WORKLET_SRC)
+  ];
+  for (const mk of tries){
+    let url = null;
+    try{
+      url = mk();
+      await ctx.audioWorklet.addModule(url);
+      const n = new AudioWorkletNode(ctx, 'gran',
+        { numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[2] });
+      n.port.onmessage = e => { if (e.data.rms !== undefined) vu(e.data.rms); };
+      n.connect(ctx.destination);
+      return { kind:'AudioWorklet', node:n,
+               post:(m, tr) => tr ? n.port.postMessage(m, tr) : n.port.postMessage(m) };
+    }catch(err){ /* siguiente estrategia */ }
+    finally{ if (url && url.startsWith('blob:')) URL.revokeObjectURL(url); }
+  }
+  return null;
+}
+
+function scriptFallback(){
+  // Reutiliza el mismo fuente del worklet, con la clase base y sampleRate inyectados.
+  const Base = class { constructor(){ this.port = { postMessage(){}, onmessage:null }; } };
+  const factory = new Function('sampleRate', 'AudioWorkletProcessor', 'registerProcessor',
+                               WORKLET_SRC + '\n; return Gran;');
+  const Gran = factory(ctx.sampleRate, Base, () => {});
+  const proc = new Gran();
+  proc.port.postMessage = m => { if (m && m.rms !== undefined) vu(m.rms); };
+  const sp = ctx.createScriptProcessor(1024, 1, 2);
+  sp.onaudioprocess = e => {
+    const ib = e.inputBuffer.getChannelData(0), ob = e.outputBuffer;
+    proc.process([[ib]], [[ob.getChannelData(0), ob.getChannelData(1)]]);
+  };
+  sp.connect(ctx.destination);
+  return { kind:'ScriptProcessor', node:sp, proc,
+           post:(m) => { if (proc.port.onmessage) proc.port.onmessage({ data:m }); } };
+}
+
+async function initAudio(){
+  ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint:'interactive' });
+  engine = await tryWorklet() || scriptFallback();
+  await ctx.resume();
+  loadSource(document.getElementById('src').value);
+  send();
+}
+
+/* ─── 3. Muestras generadas proceduralmente (cero descargas) ─────────────── */
+function makeSample(kind, sr){
+  const dur = 6, n = Math.floor(sr * dur), b = new Float32Array(n);
+  if (kind === 'voz'){
+    // canto sostenido: armónicos de f0 con envolvente formántica que se desplaza
+    const f0 = 138.6, H = 46;
+    const F = [[620,1180,2600],[440,900,2450],[730,1300,2700],[380,760,2300]];
+    for (let i = 0; i < n; i++){
+      const t = i / sr, u = t / dur;
+      const seg = Math.min(3, Math.floor(u * 4)), nx = Math.min(3, seg + 1), fr = u * 4 - seg;
+      const vib = 1 + 0.006 * Math.sin(2 * Math.PI * 4.7 * t) * Math.min(1, t / 1.2);
+      let x = 0;
+      for (let h = 1; h <= H; h++){
+        const f = f0 * h * vib;
+        if (f > sr * 0.45) break;
+        let amp = 0;
+        for (let q = 0; q < 3; q++){
+          const fc = F[seg][q] * (1 - fr) + F[nx][q] * fr;
+          const bw = 110 + q * 95;
+          amp += Math.exp(-Math.pow((f - fc) / bw, 2)) * [1, .55, .3][q];
+        }
+        x += amp / h * 0.9 * Math.sin(2 * Math.PI * f * t + h * 1.7);
+      }
+      b[i] = x;
+    }
+  } else if (kind === 'campana'){
+    // parciales inarmónicos con decaimientos independientes
+    const par = [1,2.01,2.77,3.94,5.13,6.02,7.31,8.65,10.2,12.4,14.9,17.3];
+    const f0 = 196;
+    for (let j = 0; j < par.length; j++){
+      const f = f0 * par[j], dec = 1.6 + 5.5 / (1 + j * 0.55), a = 0.9 / (1 + j * 0.75);
+      const beat = 1 + 0.0013 * j;
+      for (let i = 0; i < n; i++){
+        const t = i / sr;
+        b[i] += a * Math.exp(-t / dec) * (Math.sin(2*Math.PI*f*t) + 0.6*Math.sin(2*Math.PI*f*beat*t + 1.1));
+      }
+    }
+  } else {
+    // cuerda frotada: armónicos con inarmonicidad leve + ruido de arco filtrado
+    const f0 = 110, H = 34, B = 0.00012;
+    const ph = []; for (let h = 0; h <= H; h++) ph[h] = Math.random() * 6.283;
+    let lp = 0;
+    for (let i = 0; i < n; i++){
+      const t = i / sr;
+      const at = Math.min(1, t / 0.45), rel = Math.min(1, (dur - t) / 1.1);
+      let x = 0;
+      for (let h = 1; h <= H; h++){
+        const f = f0 * h * Math.sqrt(1 + B * h * h);
+        if (f > sr * 0.45) break;
+        const wob = 1 + 0.004 * Math.sin(2 * Math.PI * (3.1 + h * 0.07) * t);
+        x += Math.sin(2 * Math.PI * f * t * wob + ph[h]) / Math.pow(h, 1.25);
+      }
+      lp += ((Math.random() * 2 - 1) - lp) * 0.16;
+      b[i] = (x * 0.85 + lp * 0.14) * at * rel;
+    }
+  }
+  let mx = 0; for (let i = 0; i < n; i++) mx = Math.max(mx, Math.abs(b[i]));
+  if (mx > 0) for (let i = 0; i < n; i++) b[i] /= mx;
+  return b;
+}
+
+async function loadSource(kind){
+  if (!engine) return;
+  if (kind === 'mic'){
+    post({ type:'mode', v:1 });
+    if (!micNode){
+      try{
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+        micNode = ctx.createMediaStreamSource(micStream);
+        micNode.connect(engine.node);
+      }catch(err){ alert('No se pudo abrir el micrófono: ' + err.message); }
+    }
+    return;
+  }
+  if (micNode){ try{ micNode.disconnect(); }catch(e){} micNode = null;
+                if (micStream) micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if (kind === 'synth'){ post({ type:'mode', v:2 }); return; }
+  if (kind === 'file'){ document.getElementById('file').click(); return; }
+  post({ type:'mode', v:0 });
+  const buf = makeSample(kind, ctx.sampleRate);
+  post({ type:'buf', buf }, engine.kind === 'AudioWorklet' ? [buf.buffer] : null);
+}
+
+/* ─── 4. Partitura ───────────────────────────────────────────────────────── */
+const SCALE = [-24,-19,-12,-7,-5,0,7,12,19,24];              // grados de la fila ASDF…
+const POSK  = ['KeyQ','KeyW','KeyE','KeyR','KeyT','KeyY','KeyU','KeyI','KeyO','KeyP'];
+const PITK  = ['KeyA','KeyS','KeyD','KeyF','KeyG','KeyH','KeyJ','KeyK','KeyL','Semicolon'];
+
+const SECTIONS = [
+  { t:0,   d:90,  n:'I · APARICIÓN',
+    txt:'Granos escasos y agudos, muy separados. Todavía no hay nube: hay puntos. Escucha más de lo que tocas. Toca en ráfagas cortas de 2–4 s y calla.',
+    goal:{ dens:[1.5,5], dur:[0.02,0.06], pos:[0,1], posJit:[0.15,0.5], pitch:[7,24], pitchJit:[0.2,0.6] },
+    per:[ 'Entra de inmediato. Eres el primer punto.',
+          'Entra a los 0:10.',
+          'Entra a los 0:20.',
+          'Entra a los 0:30.',
+          'Entra a los 0:40.',
+          'Entra a los 0:50.',
+          'Entra a 1:00. Hasta entonces, escucha.',
+          'Entra a 1:10. Hasta entonces, escucha.' ] },
+
+  { t:90,  d:90,  n:'II · MIGRACIÓN',
+    txt:'La nube desciende de registro y se espesa. Baja de a un grado por vez en la fila A–Ñ y sube densidad y duración de grano. Nadie salta: se desciende junto. (Migra el sonido, no tú: quédate en tu puesto.)',
+    goal:{ dens:[6,26], dur:[0.08,0.22], pos:[0,1], posJit:[0.05,0.25], pitch:[-12,7], pitchJit:[0.05,0.25] },
+    per:[ 'Desciende rápido: llega al registro grave antes que el resto.',
+          'Desciende a paso medio.',
+          'Desciende a paso medio.',
+          'Desciende lento: quédate en el registro medio.',
+          'Desciende lento: quédate en el registro medio.',
+          'Desciende rápido y sostén el registro grave.',
+          'Mantén una capa aguda todo el tramo: eres el resto de la sección anterior.',
+          'Desciende de registro y vuelve a subir una vez, como una ola.' ] },
+
+  { t:180, d:75,  n:'III · FRACTURA',
+    txt:'La nube se rompe. Ráfagas violentas con SHIFT y silencios largos. Dispersión al máximo (X y V). Nunca más de 4 s sonando seguidos.',
+    goal:{ dens:[18,60], dur:[0.006,0.05], pos:[0,1], posJit:[0.4,1], pitch:[-24,24], pitchJit:[0.5,1] },
+    per:[ 'Ráfagas en los segundos impares. Silencio absoluto entre ellas.',
+          'Ráfagas en los segundos pares.',
+          'Ráfagas muy largas (5 s) pero solo tres en toda la sección.',
+          'Ráfagas brevísimas y muy frecuentes, como estática.',
+          'Responde: solo suena inmediatamente después de oír a otro.',
+          'Ráfagas brevísimas y muy frecuentes, como estática.',
+          'Responde: solo suena inmediatamente después de oír a otro.',
+          'Sostén un fondo tenue sin cortar: eres la grieta que no se cierra.' ] },
+
+  { t:255, d:90,  n:'IV · CONVERGENCIA',
+    txt:'Todos a la MISMA tecla de altura (H = grado 0) y a la MISMA posición (tecla T). Dispersión al mínimo (Z y C). Granos largos, densidad media: un hilo continuo. Afina escuchando los batidos y acércate hasta que desaparezcan.',
+    goal:{ dens:[10,30], dur:[0.16,0.4], pos:[0.4,0.6], posJit:[0,0.06], pitch:[-1,1], pitchJit:[0,0.06] },
+    per:[ 'Tecla H, posición T. Eres la referencia: no cambies de altura.',
+          'Tecla H. Llega desde el registro agudo, bajando de a un grado.',
+          'Tecla H. Llega desde el registro grave, subiendo de a un grado.',
+          'Tecla H. Llega desde el registro agudo, bajando de a un grado.',
+          'Tecla H. Llega desde el registro grave, subiendo de a un grado.',
+          'Tecla K (octava). Sostén.',
+          'Tecla K (octava). Sostén.',
+          'Tecla D (dos octavas abajo). Sostén.' ] },
+
+  { t:345, d:75,  n:'V · EVAPORACIÓN',
+    txt:'Granos cada vez más largos y más escasos, hasta que solo quede el aire. Baja densidad con ↓ y ganancia con la coma. El último sonido debe ser de una sola persona.',
+    goal:{ dens:[0.4,8], dur:[0.25,0.6], pos:[0.3,0.7], posJit:[0,0.15], pitch:[-12,12], pitchJit:[0,0.1] },
+    per:[ 'Calla a los 6:20.', 'Calla a los 6:10.', 'Calla a los 6:30.', 'Calla a los 6:00.',
+          'Calla a los 6:40.', 'Calla a los 6:15.', 'Calla a los 6:50.',
+          'Eres la última voz: sostén hasta 7:00 y suelta el espacio en silencio.' ] }
+];
+const TOTAL = 420;
+
+/* ─── 5. Reloj de obra: sincronía sin red ───────────────────────────────── */
+let T0 = null, armed = false;
+const fmt = s => { s = Math.max(0, s); return String(Math.floor(s/60)).padStart(2,'0') + ':' +
+                   String(Math.floor(s%60)).padStart(2,'0'); };
+
+function armNextMinute(){
+  const now = Date.now();
+  T0 = Math.ceil(now / 60000) * 60000;
+  armed = true; running = false;
+  document.getElementById('arm').classList.add('armed');
+}
+function startNow(){ T0 = Date.now(); armed = false; running = true;
+  document.getElementById('arm').classList.remove('armed'); }
+function stopAll(){ T0 = null; armed = false; running = false;
+  document.getElementById('arm').classList.remove('armed'); }
+
+function clockT(){
+  if (T0 === null) return null;
+  return (Date.now() - T0) / 1000;
+}
+
+/* ─── 6. Interfaz ────────────────────────────────────────────────────────── */
+const MET = [
+  { id:'dens',    n:'densidad',            u:'granos/s', lo:0.3, hi:60,  log:true,  keys:'↑ ↓', x:1, fix:1 },
+  { id:'dur',     n:'tamaño de grano',     u:'ms',       lo:0.005, hi:0.6, log:true, keys:'← →', x:1000, fix:0 },
+  { id:'pos',     n:'posición en material',u:'',         lo:0, hi:1,      keys:'Q…P' },
+  { id:'posJit',  n:'dispersión posición', u:'',         lo:0, hi:1,      keys:'Z X' },
+  { id:'pitch',   n:'transposición',       u:'st',       lo:-24, hi:24,   keys:'A…Ñ' },
+  { id:'pitchJit',n:'dispersión altura',   u:'',         lo:0, hi:1,      keys:'C V' },
+  { id:'spread',  n:'apertura estéreo',    u:'',         lo:0, hi:1,      keys:'B N' },
+  { id:'gain',    n:'ganancia',            u:'',         lo:0, hi:1.4,    keys:', .' }
+];
+const norm = (m, v) => m.log ? (Math.log(Math.max(v, m.lo)/m.lo) / Math.log(m.hi/m.lo))
+                             : ((v - m.lo) / (m.hi - m.lo));
+
+const metersEl = document.getElementById('meters');
+MET.forEach(m => {
+  const d = document.createElement('div'); d.className = 'm'; d.id = 'm_' + m.id;
+  d.innerHTML = '<div class="top"><span>' + m.n + '</span><b class="v">–</b></div>' +
+                '<div class="track"><span class="goal"></span><span class="val"></span></div>' +
+                '<div class="keys">' + m.keys + '</div>';
+  metersEl.appendChild(d);
+});
+
+const KBROWS = [
+  POSK.map((c,i) => ({ code:c, top:'QWERTYUIOP'[i], lbl:'pos ' + (i+1) })),
+  PITK.map((c,i) => ({ code:c, top:'ASDFGHJKLÑ'[i], lbl:(SCALE[i] > 0 ? '+' : '') + SCALE[i] })),
+  [ {code:'KeyZ',top:'Z',lbl:'disp−'},{code:'KeyX',top:'X',lbl:'disp+'},
+    {code:'KeyC',top:'C',lbl:'alt−'}, {code:'KeyV',top:'V',lbl:'alt+'},
+    {code:'KeyB',top:'B',lbl:'est−'}, {code:'KeyN',top:'N',lbl:'est+'},
+    {code:'KeyM',top:'M',lbl:'freeze'},{code:'Comma',top:',',lbl:'vol−'},
+    {code:'Period',top:'.',lbl:'vol+'} ],
+  [ {code:'ShiftLeft',top:'⇧',lbl:'ráfaga'},{code:'Space',top:'espacio',lbl:'sonar',wide:true},
+    {code:'ArrowDown',top:'↓',lbl:'dens−'},{code:'ArrowUp',top:'↑',lbl:'dens+'},
+    {code:'ArrowLeft',top:'←',lbl:'grano−'},{code:'ArrowRight',top:'→',lbl:'grano+'} ]
+];
+const kbEl = document.getElementById('kb'), KEYEL = {};
+KBROWS.forEach(row => {
+  const r = document.createElement('div'); r.className = 'krow';
+  row.forEach(k => {
+    const e = document.createElement('div');
+    e.className = 'k' + (k.wide ? ' wide' : '');
+    e.innerHTML = '<span>' + k.top + '</span><span class="lbl">' + k.lbl + '</span>';
+    if (k.code === 'Space'){          // la barra en pantalla también funciona con el mouse
+      e.style.cursor = 'pointer';
+      e.addEventListener('pointerdown', ev => { ev.preventDefault();
+        if (ctx && ctx.state === 'suspended') ctx.resume();
+        P.gate = 1; send(); held.add('Space'); paint(); });
+      addEventListener('pointerup', () => { if (held.has('Space')){
+        P.gate = 0; send(); held.delete('Space'); paint(); } });
+    }
+    r.appendChild(e); KEYEL[k.code] = e;
+  });
+  kbEl.appendChild(r);
+});
+
+const vsel = document.getElementById('voice');
+for (let i = 1; i <= 8; i++){ const o = document.createElement('option'); o.value = i;
+  o.textContent = 'voz ' + i; vsel.appendChild(o); }
+vsel.value = localStorage.getItem('nube_voz') || 1;
+voice = +vsel.value;
+vsel.onchange = () => { voice = +vsel.value; localStorage.setItem('nube_voz', voice); vsel.blur(); };
+
+const seclist = document.getElementById('seclist');
+SECTIONS.forEach(s => { const li = document.createElement('li');
+  li.textContent = fmt(s.t) + '  ' + s.n; seclist.appendChild(li); });
+
+/* partitura completa */
+function buildSheet(){
+  const b = document.getElementById('sheetbody');
+  b.innerHTML = SECTIONS.map((S, si) => {
+    const filas = S.per.map((p, i) =>
+      '<tr class="' + (i + 1 === voice ? 'me' : '') + '"><td class="v">voz ' + (i + 1) + '</td><td>' + p + '</td></tr>'
+    ).join('');
+    return '<div class="sechead">' + S.n + '</div>' +
+      '<div class="sectime">' + fmt(S.t) + ' – ' + fmt(S.t + S.d) + '</div>' +
+      '<p class="sectxt">' + S.txt + '</p>' +
+      '<table><tr><th>voz</th><th>indicación individual</th></tr>' + filas + '</table>';
+  }).join('');
+}
+function toggleSheet(show){
+  const el = document.getElementById('sheet');
+  if (show === undefined) show = el.classList.contains('hidden');
+  if (show) buildSheet();
+  el.classList.toggle('hidden', !show);
+  if (show) document.getElementById('sheetclose').blur();
+}
+
+function vu(r){
+  const e = document.querySelector('#vu i'), tx = document.getElementById('vutx');
+  e.style.width = Math.min(100, r * 130) + '%';
+  if (!P.gate) { tx.textContent = 'compuerta cerrada · mantén ESPACIO para sonar';
+                 tx.style.color = 'var(--dim)'; return; }
+  tx.textContent = r < 0.002 ? 'compuerta abierta · sin señal' : (r > 0.92 ? 'saturando' : 'sonando');
+  tx.style.color = r > 0.92 ? 'var(--warn)' : (r < 0.002 ? 'var(--acc2)' : 'var(--ok)');
+}
+
+/* ─── 7. Teclado ─────────────────────────────────────────────────────────── */
+const held = new Set();
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const RATE = { dens:1.06, dur:1.05, jit:0.02, spread:0.03, gain:0.03 };
+
+addEventListener('keydown', e => {
+  if (e.repeat){ e.preventDefault(); return; }
+  // si el foco quedó en un menú, devolverlo al documento: si no, el menú se come la barra
+  const a = document.activeElement;
+  if (a && (a.tagName === 'SELECT' || a.tagName === 'BUTTON')) a.blur();
+  const c = e.code;
+  if (c === 'Escape'){ toggleSheet(false); return; }
+  if (c === 'Space'){ if (ctx && ctx.state === 'suspended') ctx.resume(); P.gate = 1; send(); }
+  if (c === 'ShiftLeft' || c === 'ShiftRight'){ P.burst = 4; send(); }
+  if (c === 'KeyM'){ P.freeze = P.freeze ? 0 : 1; send(); }
+  let i = POSK.indexOf(c);
+  if (i >= 0){ P.pos = i / (POSK.length - 1); send(); }
+  i = PITK.indexOf(c);
+  if (i >= 0){ P.pitch = SCALE[i]; send(); }
+  if (c.startsWith('Arrow') || c === 'Space') e.preventDefault();
+  held.add(c);
+  paint();
+});
+addEventListener('keyup', e => {
+  const c = e.code;
+  if (c === 'Space'){ P.gate = 0; send(); }
+  if (c === 'ShiftLeft' || c === 'ShiftRight'){ P.burst = 1; send(); }
+  held.delete(c);
+  paint();
+});
+addEventListener('blur', () => { held.clear(); P.gate = 0; P.burst = 1; send(); paint(); });
+
+setInterval(() => {                            // controles continuos, 30 Hz
+  let ch = false;
+  if (held.has('ArrowUp'))    { P.dens = clamp(P.dens * RATE.dens, 0.3, 60); ch = 1; }
+  if (held.has('ArrowDown'))  { P.dens = clamp(P.dens / RATE.dens, 0.3, 60); ch = 1; }
+  if (held.has('ArrowRight')) { P.dur  = clamp(P.dur * RATE.dur, 0.005, 0.6); ch = 1; }
+  if (held.has('ArrowLeft'))  { P.dur  = clamp(P.dur / RATE.dur, 0.005, 0.6); ch = 1; }
+  if (held.has('KeyX'))       { P.posJit   = clamp(P.posJit + RATE.jit, 0, 1); ch = 1; }
+  if (held.has('KeyZ'))       { P.posJit   = clamp(P.posJit - RATE.jit, 0, 1); ch = 1; }
+  if (held.has('KeyV'))       { P.pitchJit = clamp(P.pitchJit + RATE.jit, 0, 1); ch = 1; }
+  if (held.has('KeyC'))       { P.pitchJit = clamp(P.pitchJit - RATE.jit, 0, 1); ch = 1; }
+  if (held.has('KeyN'))       { P.spread = clamp(P.spread + RATE.spread, 0, 1); ch = 1; }
+  if (held.has('KeyB'))       { P.spread = clamp(P.spread - RATE.spread, 0, 1); ch = 1; }
+  if (held.has('Period'))     { P.gain = clamp(P.gain + RATE.gain, 0, 1.4); ch = 1; }
+  if (held.has('Comma'))      { P.gain = clamp(P.gain - RATE.gain, 0, 1.4); ch = 1; }
+  if (ch) send();
+}, 33);
+
+/* ─── 8. Pintado ─────────────────────────────────────────────────────────── */
+function curSection(t){
+  if (t === null || t < 0) return null;
+  for (let i = SECTIONS.length - 1; i >= 0; i--) if (t >= SECTIONS[i].t) return i;
+  return 0;
+}
+function paint(){
+  const t = clockT();
+  const si = (t !== null && t >= 0 && t <= TOTAL) ? curSection(t) : null;
+  const S = si !== null ? SECTIONS[si] : null;
+
+  // reloj
+  const cl = document.getElementById('t');
+  if (t === null) cl.innerHTML = '--:--<span class="ms">.-</span>';
+  else if (t < 0) cl.innerHTML = '<span style="color:var(--acc2)">−' + fmt(-t) +
+      '<span class="ms">.' + Math.floor((1 - (-t % 1)) * 10) + '</span></span>';
+  else cl.innerHTML = fmt(t) + '<span class="ms">.' + Math.floor((t % 1) * 10) + '</span>';
+
+  const d = new Date();
+  document.getElementById('sys').textContent = 'reloj del sistema ' +
+    d.toLocaleTimeString('es-CL', { hour12:false }) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+
+  document.getElementById('prog').style.width =
+    (t === null || t < 0 ? 0 : Math.min(100, t / TOTAL * 100)) + '%';
+
+  const nameEl = document.getElementById('secname'), rangeEl = document.getElementById('secrange'),
+        partEl = document.getElementById('part');
+  if (t !== null && t < 0){
+    nameEl.textContent = 'cuenta regresiva';
+    rangeEl.textContent = 'todos los laptops arrancan en el mismo instante del reloj del sistema';
+    partEl.innerHTML = 'Prepara la mano izquierda sobre <b>espacio</b>. No toques todavía.';
+  } else if (S){
+    nameEl.textContent = S.n;
+    rangeEl.textContent = fmt(S.t) + ' – ' + fmt(S.t + S.d);
+    partEl.innerHTML = S.txt + '<br><br><b>Tu voz ' + voice + ':</b> ' + S.per[(voice - 1) % 8];
+  } else if (t !== null){
+    nameEl.textContent = 'fin';
+    rangeEl.textContent = 'silencio · no aplaudan hasta que el profesor baje las manos';
+    partEl.textContent = 'Suelta el espacio.';
+  }
+  [...seclist.children].forEach((li, i) => {
+    li.className = (si === i) ? 'on' : (si !== null && i < si ? 'done' : '');
+  });
+
+  // aviso de compuerta
+  const gEl = document.getElementById('gate');
+  gEl.classList.toggle('on', !!P.gate);
+  document.getElementById('gatebig').textContent = P.gate
+    ? '● SONANDO — no sueltes la barra' : '▸ MANTÉN LA BARRA ESPACIADORA';
+  document.getElementById('gatesub').textContent = P.gate
+    ? 'suelta solo cuando la partitura pida callar'
+    : 'nada suena mientras no la tengas apretada · al soltarla, callas';
+
+  // medidores + guía
+  MET.forEach(m => {
+    const el = document.getElementById('m_' + m.id);
+    const v = P[m.id];
+    const shown = m.x ? (v * m.x).toFixed(m.fix === undefined ? 1 : m.fix) : v.toFixed(m.id === 'pitch' ? 0 : 2);
+    el.querySelector('.v').textContent = shown + (m.u ? ' ' + m.u : '');
+    el.querySelector('.val').style.width = clamp(norm(m, v) * 100, 0, 100) + '%';
+    const g = el.querySelector('.goal');
+    const gr = S && S.goal[m.id];
+    if (gr){
+      const a = clamp(norm(m, gr[0]) * 100, 0, 100), b = clamp(norm(m, gr[1]) * 100, 0, 100);
+      g.style.left = a + '%'; g.style.width = Math.max(1.5, b - a) + '%'; g.style.display = 'block';
+      const inRange = v >= gr[0] * 0.92 && v <= gr[1] * 1.08;
+      el.querySelector('.v').style.color = inRange ? 'var(--tx)' : 'var(--acc2)';
+    } else { g.style.display = 'none'; el.querySelector('.v').style.color = 'var(--tx)'; }
+    el.classList.toggle('off', !P.gate);
+  });
+
+  // teclado
+  for (const code in KEYEL){
+    const e = KEYEL[code];
+    e.classList.toggle('on', held.has(code));
+    e.classList.remove('sel');
+  }
+  const pi = Math.round(P.pos * (POSK.length - 1));
+  if (!held.has(POSK[pi])) KEYEL[POSK[pi]].classList.add('sel');
+  let bi = 0, bd = 1e9;
+  SCALE.forEach((s, i) => { const dd = Math.abs(s - P.pitch); if (dd < bd){ bd = dd; bi = i; } });
+  if (!held.has(PITK[bi])) KEYEL[PITK[bi]].classList.add('sel');
+  KEYEL['KeyM'].classList.toggle('sel', !!P.freeze);
+}
+
+setInterval(() => {
+  if (armed && T0 !== null && Date.now() >= T0){ armed = false; running = true;
+    document.getElementById('arm').classList.remove('armed'); }
+  paint();
+}, 60);
+
+/* ─── 9. Cableado de la interfaz ─────────────────────────────────────────── */
+document.getElementById('go').onclick = async () => {
+  try{
+    await initAudio();
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('hint').textContent =
+      'Motor: ' + engine.kind + ' · ' + ctx.sampleRate + ' Hz · latencia base ' +
+      (ctx.baseLatency ? (ctx.baseLatency * 1000).toFixed(1) + ' ms' : 'n/d') +
+      (engine.kind === 'ScriptProcessor'
+        ? ' · respaldo activo (página abierta desde el disco). Para menor latencia, ábrela desde una URL http.'
+        : '') +
+      ' · mantén el foco en esta ventana o el teclado deja de responder.';
+  }catch(err){ alert('No se pudo iniciar el audio: ' + err.message); }
+};
+document.getElementById('src').onchange = e => { e.target.blur(); loadSource(e.target.value); };
+document.getElementById('file').onchange = async e => {
+  const f = e.target.files[0]; if (!f || !engine) return;
+  const ab = await f.arrayBuffer();
+  const ad = await ctx.decodeAudioData(ab);
+  const buf = new Float32Array(ad.getChannelData(0));
+  post({ type:'mode', v:0 });
+  post({ type:'buf', buf }, engine.kind === 'AudioWorklet' ? [buf.buffer] : null);
+};
+document.getElementById('sheetbtn').onclick   = e => { e.target.blur(); toggleSheet(true); };
+document.getElementById('sheetclose').onclick = () => toggleSheet(false);
+document.getElementById('arm').onclick  = armNextMinute;
+document.getElementById('now').onclick  = startNow;
+document.getElementById('stop').onclick = stopAll;
+
+paint();
+</script>
+</body>
+</html>
