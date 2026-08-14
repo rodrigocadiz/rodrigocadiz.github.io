@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validación — Aprendizaje de Máquina</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Validación</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- 2 · APERTURA -->
+<section>
+<h2>Cada familia de predictores trae perillas que el ajuste no fija</h2>
+<ul>
+<li>El grado del polinomio, el $k$ de los vecinos, la profundidad del árbol: nada de eso sale del entrenamiento.</li>
+</ul>
+</section>
+
+<!-- 3 -->
+<section>
+<h2>Y hay algo más de fondo</h2>
+<ul>
+<li>Bajar el error sobre los datos que ya se tienen no es el objetivo; el objetivo es acertar sobre los que todavía no se han visto.</li>
+</ul>
+<p class="note">La validación es la única manera honesta de saber si eso ocurre.</p>
+</section>
+
+<!-- ============ §1 MÉTRICAS ============ -->
+
+<!-- 4 -->
+<section>
+<div class="section-label">§ 1 · Métricas de rendimiento</div>
+<h2>Para comparar dos modelos hace falta un número</h2>
+<ul>
+<li>Ese número resume, sobre un conjunto de datos, cuánto se aparta cada predicción $\hat y_i = h(x_i)$ del valor real $y_i$.</li>
+</ul>
+</section>
+
+<!-- 5 -->
+<section>
+<div class="section-label">§ 1 · Métricas de rendimiento</div>
+<h2>El error cuadrático castiga fuerte los errores grandes</h2>
+$$\text{RMSE} = \left(\frac{1}{n}\sum_{i=1}^n (\hat y_i - y_i)^2\right)^{1/2}$$
+<p class="note">En palabras: al elevar al cuadrado, un error de 10 pesa cien veces más que uno de 1, de modo que un solo dato muy mal predicho domina la métrica.</p>
+</section>
+
+<!-- 6 -->
+<section>
+<div class="section-label">§ 1 · Métricas de rendimiento</div>
+<h2>El error absoluto los trata a todos por igual</h2>
+$$\text{MAE} = \frac{1}{n}\sum_{i=1}^n |\hat y_i - y_i|$$
+<p class="note">En palabras: cada error aporta en proporción a su tamaño, sin amplificar; por eso resiste mejor la presencia de valores atípicos.</p>
+</section>
+
+<!-- 7 -->
+<section>
+<div class="section-label">§ 1 · Métricas de rendimiento</div>
+<h2>La misma función sirve para entrenar y para evaluar</h2>
+<ul>
+<li>Como guía del ajuste decide en qué dirección se mueven los parámetros; como métrica decide qué modelo se declara mejor.</li>
+</ul>
+<p class="note">El catálogo completo de pérdidas está en A.4; las métricas propias de clasificación y la calibración, en I.1.</p>
+</section>
+
+<!-- 8 · puente -->
+<section>
+<div class="section-label">§ 1 · Métricas de rendimiento</div>
+<h2>Pero medido sobre los datos de entrenamiento, ese número miente</h2>
+<ul>
+<li>Es la nota que se pone un estudiante corrigiendo su propia prueba con el libro abierto.</li>
+</ul>
+</section>
+
+<!-- ============ §2 GENERALIZACIÓN ============ -->
+
+<!-- 9 -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>El error de entrenamiento siempre se puede bajar más</h2>
+<ul>
+<li>Basta subir la complejidad: con grado suficiente, un polinomio pasa exactamente por todos los puntos y su error cae a cero.</li>
+</ul>
+</section>
+
+<!-- 10 -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Generalizar es rendir bien fuera de la muestra</h2>
+<ul>
+<li>Un modelo generaliza cuando el error de entrenamiento es bajo <em>y</em> el de datos no vistos también lo es, y ambos se parecen.</li>
+</ul>
+</section>
+
+<!-- 11 -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Se puede fallar de dos maneras opuestas</h2>
+<ul>
+<li>Por exceso de flexibilidad, o por falta de ella.</li>
+</ul>
+</section>
+
+<!-- 12 -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Sobreajuste: el modelo memorizó también el ruido</h2>
+<ul>
+<li>Aprendió particularidades de esas observaciones que no describen la relación real, y por eso se derrumba con datos nuevos.</li>
+</ul>
+<p class="note">Va asociado a varianza alta: entrenado con otra muestra de la misma población, daría un modelo muy distinto.</p>
+</section>
+
+<!-- 13 -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Subajuste: el modelo nunca capturó la señal</h2>
+<ul>
+<li>Su estructura es demasiado simple para la forma de los datos, y falla parejo en entrenamiento y en prueba.</li>
+</ul>
+<p class="note">Va asociado a sesgo alto: el error persistiría incluso con infinitos datos de entrenamiento.</p>
+</section>
+
+<!-- 14 -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Un solo error no distingue una cosa de la otra</h2>
+<ul>
+<li>El diagnóstico exige mirar los dos a la vez.</li>
+</ul>
+</section>
+
+<!-- 15 · SVG diagnóstico 2x2 -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>El diagnóstico vive en un cuadro de dos por dos</h2>
+<ul><li>La esquina inferior izquierda delata un conjunto de prueba poco representativo.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" fill="#222">
+    <text x="420" y="26" font-size="14" text-anchor="middle" font-style="italic" fill="#555">error de prueba</text>
+    <text x="270" y="52" font-size="14" text-anchor="middle">pequeño</text>
+    <text x="570" y="52" font-size="14" text-anchor="middle">grande</text>
+    <text x="76" y="128" font-size="14" text-anchor="middle">pequeño</text>
+    <text x="76" y="222" font-size="14" text-anchor="middle">grande</text>
+    <text x="26" y="175" font-size="14" text-anchor="middle" font-style="italic" fill="#555" transform="rotate(-90 26 175)">error de entrenamiento</text>
+
+    <rect x="130" y="66" width="280" height="98" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.8"/>
+    <text x="270" y="106" font-size="17" text-anchor="middle" font-weight="bold">Generaliza bien</text>
+    <text x="270" y="132" font-size="13" text-anchor="middle" fill="#555">es el objetivo</text>
+
+    <rect x="430" y="66" width="280" height="98" rx="8" fill="#f7dcdc" stroke="#a63d3d" stroke-width="1.8"/>
+    <text x="570" y="106" font-size="17" text-anchor="middle" font-weight="bold">Sobreajuste</text>
+    <text x="570" y="132" font-size="13" text-anchor="middle" fill="#555">memorizó el ruido</text>
+
+    <rect x="130" y="176" width="280" height="98" rx="8" fill="#eeeeee" stroke="#777" stroke-width="1.8"/>
+    <text x="270" y="210" font-size="15" text-anchor="middle" font-weight="bold">Anómalo</text>
+    <text x="270" y="234" font-size="13" text-anchor="middle" fill="#555">el conjunto de prueba</text>
+    <text x="270" y="252" font-size="13" text-anchor="middle" fill="#555">no es representativo</text>
+
+    <rect x="430" y="176" width="280" height="98" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.8"/>
+    <text x="570" y="216" font-size="17" text-anchor="middle" font-weight="bold">Subajuste</text>
+    <text x="570" y="242" font-size="13" text-anchor="middle" fill="#555">nunca capturó la señal</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 16 · puente -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Si el entrenamiento no puede juzgar, hay que reservar datos</h2>
+<ul>
+<li>Queda por decidir cuántos conjuntos y qué hace cada uno.</li>
+</ul>
+</section>
+
+<!-- ============ §3 TRES CONJUNTOS ============ -->
+
+<!-- 17 -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>La práctica estándar divide los datos en tres</h2>
+<ul>
+<li>Proporciones habituales: 60/20/20, o 70/15/15 cuando hay datos de sobra.</li>
+</ul>
+</section>
+
+<!-- 18 · SVG tres conjuntos -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>Tres conjuntos, tres roles, tres momentos</h2>
+<ul><li>La diferencia decisiva está en cuántas veces se puede mirar cada uno.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arv" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#222">
+    <rect x="40" y="30" width="384" height="34" fill="#dbe9f4" stroke="#333" stroke-width="1.3"/>
+    <text x="232" y="52" font-size="13.5">Entrenamiento (60%)</text>
+    <rect x="424" y="30" width="128" height="34" fill="#f0c8a0" stroke="#333" stroke-width="1.3"/>
+    <text x="488" y="52" font-size="13.5">Validación (20%)</text>
+    <rect x="552" y="30" width="128" height="34" fill="#e0b7c8" stroke="#333" stroke-width="1.3"/>
+    <text x="616" y="52" font-size="13.5">Prueba (20%)</text>
+
+    <path d="M232,68 L232,104" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#arv)"/>
+    <path d="M488,68 L488,104" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#arv)"/>
+    <path d="M616,68 L616,176" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#arv)"/>
+
+    <rect x="132" y="110" width="200" height="48" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.4"/>
+    <text x="232" y="131" font-size="13.5">Ajustar los parámetros θ</text>
+    <text x="232" y="149" font-size="11.5" font-style="italic" fill="#555">muchas veces</text>
+
+    <rect x="388" y="110" width="200" height="48" rx="7" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.4"/>
+    <text x="488" y="131" font-size="13.5">Elegir los hiperparámetros</text>
+    <text x="488" y="149" font-size="11.5" font-style="italic" fill="#555">muchas veces</text>
+
+    <rect x="516" y="182" width="200" height="48" rx="7" fill="#f7e9ef" stroke="#8a3a63" stroke-width="1.4"/>
+    <text x="616" y="203" font-size="13.5">Estimar el error real</text>
+    <text x="616" y="221" font-size="11.5" font-style="italic" fill="#555">una sola vez, al final</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 19 -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>Y los tres deben venir de la misma distribución</h2>
+<ul>
+<li>Si el de prueba resulta más fácil que la realidad, el modelo parecerá mejor de lo que es.</li>
+</ul>
+<p class="note">Con etiquetas categóricas se usa división estratificada, que conserva la proporción de cada clase en los tres conjuntos.</p>
+</section>
+
+<!-- 20 -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>¿Y por qué no bastan dos?</h2>
+<ul>
+<li>Es la pregunta que casi todos se hacen, y la respuesta define la ética del oficio.</li>
+</ul>
+</section>
+
+<!-- 21 -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>Porque elegir hiperparámetros también es ajustar</h2>
+<ul>
+<li>Probar cincuenta configuraciones y quedarse con la de menor error es una decisión tomada con esos datos.</li>
+</ul>
+</section>
+
+<!-- 22 · SVG contaminación -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>Mirar dos veces convierte la prueba en validación</h2>
+<ul><li>Cada vuelta del ciclo filtra un poco de información del conjunto hacia el modelo.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arc" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#222">
+    <rect x="30" y="96" width="150" height="56" rx="8" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="105" y="120" font-size="13.5">Probar una</text>
+    <text x="105" y="140" font-size="13.5">configuración</text>
+
+    <path d="M184,124 L244,124" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#arc)"/>
+
+    <rect x="250" y="96" width="170" height="56" rx="8" fill="#f7e9ef" stroke="#8a3a63" stroke-width="1.5"/>
+    <text x="335" y="120" font-size="13.5">Medir en el conjunto</text>
+    <text x="335" y="140" font-size="13.5">de prueba</text>
+
+    <path d="M424,124 L484,124" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#arc)"/>
+
+    <rect x="490" y="96" width="150" height="56" rx="8" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="565" y="120" font-size="13.5">Quedarse con</text>
+    <text x="565" y="140" font-size="13.5">la mejor</text>
+
+    <path d="M565,92 L565,54 L105,54 L105,92" stroke="#a63d3d" stroke-width="1.8" fill="none" marker-end="url(#arc)" stroke-dasharray="6,4"/>
+    <text x="335" y="42" font-size="13.5" fill="#a63d3d">repetir 50 veces</text>
+
+    <text x="370" y="196" font-size="14" fill="#a63d3d" font-weight="bold">El conjunto de prueba participó en la decisión</text>
+    <text x="370" y="222" font-size="13.5" fill="#555">el error que reporta ya no es imparcial: mide en parte</text>
+    <text x="370" y="242" font-size="13.5" fill="#555">cuán bien se eligió la configuración para esos datos</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 23 -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>Por eso la validación absorbe todas las decisiones</h2>
+<ul>
+<li>Compara candidatos tantas veces como haga falta, y así el conjunto de prueba llega virgen al final.</li>
+</ul>
+</section>
+
+<!-- 24 · puente -->
+<section>
+<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<h2>Pero apartar un quinto de los datos es caro</h2>
+<ul>
+<li>Y peor: la estimación queda a merced de qué muestras cayeron justo en esa partición.</li>
+</ul>
+</section>
+
+<!-- ============ §4 VALIDACIÓN CRUZADA ============ -->
+
+<!-- 25 -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>¿Se pueden usar todos los datos sin hacer trampa?</h2>
+<ul>
+<li>La salida no es usar cada dato para las dos cosas a la vez, sino en momentos distintos.</li>
+</ul>
+</section>
+
+<!-- 26 · SVG k-fold -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>El rol de validación va rotando entre las particiones</h2>
+<ul><li>En cada iteración se entrena con $k-1$ bloques y se valida con el restante.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222">
+    <g text-anchor="middle" font-size="12">
+      <text x="215" y="30">1</text><text x="315" y="30">2</text><text x="415" y="30">3</text>
+      <text x="515" y="30">4</text><text x="615" y="30">5</text>
+      <text x="690" y="30" font-style="italic">error</text>
+    </g>
+    <g>
+      <text x="24" y="58" font-size="13">Iter. 1</text>
+      <rect x="165" y="42" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="60" text-anchor="middle" font-style="italic">E₁</text>
+    </g>
+    <g>
+      <text x="24" y="94" font-size="13">Iter. 2</text>
+      <rect x="165" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="78" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="96" text-anchor="middle" font-style="italic">E₂</text>
+    </g>
+    <g>
+      <text x="24" y="130" font-size="13">Iter. 3</text>
+      <rect x="165" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="114" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="132" text-anchor="middle" font-style="italic">E₃</text>
+    </g>
+    <g>
+      <text x="24" y="166" font-size="13">Iter. 4</text>
+      <rect x="165" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="150" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="168" text-anchor="middle" font-style="italic">E₄</text>
+    </g>
+    <g>
+      <text x="24" y="202" font-size="13">Iter. 5</text>
+      <rect x="165" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="186" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <text x="690" y="204" text-anchor="middle" font-style="italic">E₅</text>
+    </g>
+
+    <line x1="655" y1="224" x2="725" y2="224" stroke="#333" stroke-width="1.2"/>
+    <text x="690" y="244" text-anchor="middle" font-style="italic" font-size="12.5">promedio</text>
+
+    <rect x="165" y="248" width="20" height="16" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+    <text x="195" y="261" font-size="13">entrenamiento</text>
+    <rect x="330" y="248" width="20" height="16" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+    <text x="360" y="261" font-size="13">validación</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 27 -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>El error de validación cruzada es el promedio de los $k$</h2>
+$$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{validación}}$$
+<p class="note">En palabras: cada dato termina participando en la validación exactamente una vez y en el entrenamiento las otras $k-1$, de modo que ningún dato se usa nunca para las dos cosas simultáneamente.</p>
+</section>
+
+<!-- 28 -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Promediar $k$ estimaciones estabiliza el resultado</h2>
+<ul>
+<li>Deja de depender del azar de una única partición afortunada o desafortunada.</li>
+</ul>
+</section>
+
+<!-- 29 -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Y la dispersión entre particiones es información gratis</h2>
+<ul>
+<li>Si los $k$ errores se parecen, el modelo es estable; si se disparan entre sí, el rendimiento depende demasiado de qué datos tocó.</li>
+</ul>
+<p class="note">Es exactamente lo que una división única no puede decir, porque entrega un solo número sin margen.</p>
+</section>
+
+<!-- 30 -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Leave-one-out lleva la idea al extremo</h2>
+<ul>
+<li>Cada observación es su propia partición de validación: $k = n$, con $n$ entrenamientos completos y un costo que rara vez compensa.</li>
+</ul>
+</section>
+
+<!-- 31 · puente -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Con el modelo ya elegido queda una última decisión</h2>
+<ul>
+<li>Y es donde más se equivoca en la práctica.</li>
+</ul>
+</section>
+
+<!-- ============ §5 ELECCIÓN FINAL ============ -->
+
+<!-- 32 -->
+<section>
+<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<h2>¿Qué modelo se pone efectivamente a trabajar?</h2>
+<ul>
+<li>La validación dijo cuál familia y qué hiperparámetros; falta decidir con qué datos se entrena la versión definitiva.</li>
+</ul>
+</section>
+
+<!-- 33 -->
+<section>
+<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<h2>Hay dos opciones igualmente legítimas</h2>
+<ul>
+<li>Usar el modelo tal como quedó entrenado, o reentrenarlo desde cero juntando entrenamiento y validación para aprovechar más datos.</li>
+</ul>
+</section>
+
+<!-- 34 -->
+<section>
+<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<h2>Y recién entonces se abre el conjunto de prueba</h2>
+<ul>
+<li>Una sola vez, sobre el modelo ya congelado, sin vuelta atrás.</li>
+</ul>
+</section>
+
+<!-- 35 -->
+<section>
+<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<h2>El número que salga es el número que se reporta</h2>
+<ul>
+<li>Si decepciona, la tentación es volver a ajustar; pero hacerlo convierte ese conjunto en uno más de validación y obliga a conseguir datos nuevos.</li>
+</ul>
+</section>
+
+<!-- 36 · cierre de sección -->
+<section>
+<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<h2>La validación es lo que convierte un ajuste en conocimiento</h2>
+<ul>
+<li>Es el árbitro que fija el grado del polinomio de A.3, el $k$ de los vecinos y, más adelante, cuándo detener el entrenamiento (A.6).</li>
+</ul>
+</section>
+
+<!-- 37 · CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>Un dato sirve para medir una sola vez: en cuanto se usa para decidir algo, deja de ser una prueba honesta.</h1>
+  <p style="font-size:1em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

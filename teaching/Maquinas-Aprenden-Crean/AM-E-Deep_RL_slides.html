@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aprendizaje Reforzado Profundo</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Aprendizaje Reforzado Profundo</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- APERTURA -->
+<section>
+<h2>La tabla es inviable a gran escala</h2>
+<ul>
+<li>Con un espacio de estados continuo o astronómico, los píxeles de una pantalla, la tabla no se puede almacenar ni llenar: es la maldición de la dimensionalidad.</li>
+</ul>
+</section>
+
+<section>
+<h2>Reemplazar la tabla por una función que generaliza</h2>
+<ul>
+<li>Una red neuronal estima el valor de estados nunca vistos a partir de su parecido con los ya visitados.</li>
+</ul>
+<p class="note">Es lo que permitió a un mismo agente aprender decenas de juegos de Atari directamente desde los píxeles.</p>
+</section>
+
+<!-- §1 DE LA TABLA A LA FUNCIÓN -->
+<section>
+<div class="section-label">§ 1 · De la tabla a la función</div>
+<h2>¿Qué hacer cuando los estados son demasiados para una tabla?</h2>
+<ul>
+<li>Dejar de tratar el valor de cada estado como un número independiente y verlo como la salida de una función con parámetros compartidos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · De la tabla a la función</div>
+<h2>Una red aproxima la función de valor</h2>
+$$q(s, a; \phi) \approx q_*(s, a)$$
+<ul>
+<li>Los estados comparten los parámetros $\phi$: ajustar uno modifica también el valor de los parecidos.</li>
+</ul>
+<p class="note">Esa generalización es justo lo que se busca, pero también la fuente de la inestabilidad: una corrección local puede degradar estimaciones lejanas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · De la tabla a la función</div>
+<h2>El semi-gradiente</h2>
+<ul>
+<li>El objetivo $r + \gamma \max_a q(s',a;\phi)$ también depende de $\phi$, pero se trata como constante al derivar.</li>
+</ul>
+<p class="note">Funciona en la práctica, pero rompe la interpretación de minimizar una pérdida fija, y es una de las raíces de la inestabilidad. ¿Funcionó en algo real? → §2</p>
+</section>
+
+<!-- §2 DQN -->
+<section>
+<div class="section-label">§ 2 · El hito de las Deep Q-Networks</div>
+<h2>¿Qué demostró DQN?</h2>
+<ul>
+<li>Mnih et al. (DeepMind, 2015): un único agente, con la misma arquitectura, aprendió 49 juegos de Atari a nivel humano desde los píxeles.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El hito de las Deep Q-Networks</div>
+<h2>Una red que predice todos los q de una vez</h2>
+<ul>
+<li>Toma solo el estado $s_t$ y emite los valores $q$ de <strong>todas</strong> las acciones; una pasada basta para elegir la mejor.</li>
+<li>Para Atari: tres capas convolucionales más capas densas.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El hito de las Deep Q-Networks</div>
+<h2>El estado como pila de 4 cuadros</h2>
+<ul>
+<li>Un cuadro no revela velocidad ni dirección; apilar los últimos 4 (en $84\times84$, escala de grises) recupera la propiedad de Markov.</li>
+</ul>
+<p class="note">Más trucos decisivos: recorte de recompensas a $\{-1,0,+1\}$ y ε-greedy decreciente. ¿Cómo se entrena esa red? → §3</p>
+</section>
+
+<!-- §3 PÉRDIDA -->
+<section>
+<div class="section-label">§ 3 · La función de pérdida</div>
+<h2>¿Qué se minimiza exactamente?</h2>
+<ul>
+<li>El error de consistencia de Bellman entre estados adyacentes, como un problema de mínimos cuadrados.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · La función de pérdida</div>
+<h2>La pérdida de Bellman</h2>
+$$\mathcal{L}(\phi) = \left( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a; \phi^{-}) - q(s_t, a_t; \phi) \right)^2$$
+<p class="note">En palabras: el cuadrado del error TD, con el objetivo evaluado en una copia $\phi^-$ de los parámetros. El mismo $\phi$ aparece en predicción y objetivo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · La función de pérdida</div>
+<h2>La pérdida de Huber acota el gradiente</h2>
+<ul>
+<li>Se comporta como cuadrática para errores pequeños y como lineal para errores grandes, frecuentes al inicio del entrenamiento.</li>
+</ul>
+<p class="note">Evita que un solo objetivo mal estimado produzca un paso desmesurado. Pero mover a la vez blanco y flecha trae inestabilidad. → §4</p>
+</section>
+
+<!-- §4 TRÍADA MORTAL -->
+<section>
+<div class="section-label">§ 4 · Inestabilidad y la tríada mortal</div>
+<h2>¿Por qué diverge el Q-Learning profundo?</h2>
+<ul>
+<li>Sustituir una tabla exacta por una red rompe las garantías de convergencia: el entrenamiento puede oscilar con violencia o divergir.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Inestabilidad y la tríada mortal</div>
+<h2>Los tres ingredientes de la tríada mortal</h2>
+<ul>
+<li><strong>Aproximación de funciones</strong> (redes que acoplan estimaciones), <strong>bootstrapping</strong> (estimar desde estimaciones) y <strong>off-policy</strong> (aprender otra política).</li>
+</ul>
+<p class="note">Cualquiera por separado es manejable; combinados pueden hacer divergir los valores, como un perro persiguiendo su cola.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Inestabilidad y la tríada mortal</div>
+<h2>Amortiguar, no eliminar</h2>
+<ul>
+<li>Quitar cualquiera de los tres restaura la estabilidad pero a un costo inaceptable; DQN no elimina ninguno, amortigua su interacción.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Inestabilidad y la tríada mortal</div>
+<h2>El lazo de entrenamiento de DQN</h2>
+<ul><li>Búfer de repetición y red objetivo congelada son las dos innovaciones que doman la tríada.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 700 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="dq" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <rect x="30" y="40" width="150" height="50" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="105" y="60" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a4d1a">Entorno</text>
+  <text x="105" y="78" text-anchor="middle" font-size="10.5" fill="#2d6b2d">genera transiciones</text>
+  <line x1="180" y1="65" x2="245" y2="65" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#dq)"/>
+  <text x="212" y="56" text-anchor="middle" font-size="9.5" fill="#555">⟨s,a,r,s'⟩</text>
+  <rect x="245" y="40" width="160" height="50" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="325" y="60" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#663300">Búfer de repetición</text>
+  <text x="325" y="78" text-anchor="middle" font-size="10.5" fill="#885500">experience replay</text>
+  <line x1="325" y1="90" x2="325" y2="135" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#dq)"/>
+  <text x="392" y="115" text-anchor="middle" font-size="9.5" fill="#555">minibatch aleatorio</text>
+  <rect x="240" y="135" width="170" height="52" rx="8" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="325" y="156" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a3a5c">Red principal φ</text>
+  <text x="325" y="174" text-anchor="middle" font-size="10.5" fill="#3a6a8c">q(s,a; φ)</text>
+  <rect x="470" y="135" width="200" height="52" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="570" y="156" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5c1a5c">Red objetivo φ⁻ (congelada)</text>
+  <text x="570" y="174" text-anchor="middle" font-size="10.5" fill="#7a2d7a">objetivo: r + γ max q(s',a; φ⁻)</text>
+  <line x1="410" y1="161" x2="468" y2="161" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#dq)"/>
+  <path d="M570 135 C 570 108, 430 108, 410 95" fill="none" stroke="#7b1fa2" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#dq)"/>
+  <text x="500" y="108" text-anchor="middle" font-size="9.5" font-style="italic" fill="#7b1fa2">copia cada K pasos</text>
+  <line x1="240" y1="178" x2="120" y2="90" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#dq)"/>
+  <text x="150" y="160" text-anchor="middle" font-size="9.5" fill="#555">acción ε-greedy</text>
+  <text x="325" y="220" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1a1a1a">descenso de gradiente sobre la pérdida de Bellman</text>
+</svg>
+</div>
+</section>
+
+<!-- §5 REPETICIÓN DE EXPERIENCIA -->
+<section>
+<div class="section-label">§ 5 · Repetición de experiencia</div>
+<h2>¿Cómo romper la correlación entre muestras?</h2>
+<ul>
+<li>Los estados consecutivos están fuertemente correlacionados, lo que arruina el supuesto de datos independientes de las redes.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Repetición de experiencia</div>
+<h2>Experience replay: aprender de minibatches aleatorios</h2>
+<ul>
+<li>El agente almacena sus transiciones en un búfer y entrena con muestras extraídas al azar, no del último paso.</li>
+</ul>
+<p class="note">Rompe la correlación temporal y, además, permite reutilizar datos costosos muchas veces.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Repetición de experiencia</div>
+<h2>Por qué el búfer exige aprendizaje off-policy</h2>
+<ul>
+<li>Las transiciones provienen de políticas <strong>antiguas</strong>; solo un método off-policy puede aprender de ellas, y el $\max$ de Q-Learning lo es.</li>
+</ul>
+<p class="note">La repetición priorizada muestrea más las transiciones de mayor error TD. Falta estabilizar el blanco móvil. → §6</p>
+</section>
+
+<!-- §6 REDES OBJETIVO -->
+<section>
+<div class="section-label">§ 6 · Redes objetivo</div>
+<h2>¿Cómo evitar perseguir un objetivo que se mueve?</h2>
+<ul>
+<li>El objetivo de la pérdida depende de los mismos parámetros que se están actualizando en cada paso.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Redes objetivo</div>
+<h2>Una red objetivo congelada fija el blanco</h2>
+<ul>
+<li>Red principal $\phi$ que se actualiza cada paso, y red objetivo $\phi^{-}$ congelada que se sincroniza cada cierto número de pasos.</li>
+</ul>
+<p class="note">Evaluar $\max_a q(s_{t+1}, a; \phi^{-})$ con la copia congelada mantiene el blanco fijo un tramo y estabiliza drásticamente la convergencia.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Redes objetivo</div>
+<h2>Actualización dura y actualización suave</h2>
+$$\phi^{-} \leftarrow \tau\, \phi + (1-\tau)\, \phi^{-}, \quad \tau \ll 1$$
+<ul>
+<li>La dura copia $\phi$ de golpe cada $K$ pasos; la suave (Polyak) desplaza la objetivo una fracción diminuta en cada paso.</li>
+</ul>
+<p class="note">Aún queda un sesgo matemático del operador $\max$. → §7</p>
+</section>
+
+<!-- §7 SOBREESTIMACIÓN -->
+<section>
+<div class="section-label">§ 7 · Sobreestimación y Double DQN</div>
+<h2>¿Por qué el agente sobrevalora los estados?</h2>
+<ul>
+<li>El $\max$ sobre estimaciones ruidosas elige de forma desproporcionada los valores sobrevaluados: sesgo de sobreestimación sistemática.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Sobreestimación y Double DQN</div>
+<h2>Double DQN: desacoplar selección y evaluación</h2>
+<ul>
+<li>La red principal $\phi_1$ <strong>elige</strong> la mejor acción en $s_{t+1}$; la red objetivo $\phi_2$ <strong>evalúa</strong> su valor.</li>
+</ul>
+<p class="note">Al usar un estimador independiente para evaluar, el error de la selección ya no se alinea con la evaluación y el sesgo se cancela en promedio (van Hasselt et al., 2016).</p>
+</section>
+
+<!-- §8 EXTENSIONES -->
+<section>
+<div class="section-label">§ 8 · Extensiones modernas</div>
+<h2>¿Cómo se mejora el DQN base?</h2>
+<ul>
+<li>Varias extensiones complementarias, cada una atacando una limitación distinta.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Extensiones modernas</div>
+<h2>Dueling, priorizada y distribucional</h2>
+$$q(s,a) = V(s) + A(s,a) - \overline{A}(s)$$
+<ul>
+<li><strong>Dueling</strong> separa valor de estado y ventaja; <strong>PER</strong> muestrea por error TD; <strong>Distributional</strong> predice la distribución completa de retornos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Extensiones modernas</div>
+<h2>Rainbow combina seis mejoras complementarias</h2>
+<ul>
+<li>Suma Noisy Nets (exploración aprendible) y retornos de n pasos; juntas rinden mucho mejor que cualquiera por separado.</li>
+</ul>
+<p class="note">El operador $\max$ aún limita a las acciones discretas. ¿Y si son continuas? → §9</p>
+</section>
+
+<!-- §9 MÁS ALLÁ DE DQN -->
+<section>
+<div class="section-label">§ 9 · Más allá de DQN</div>
+<h2>¿Y si las acciones son continuas?</h2>
+<ul>
+<li>El $\max$ sobre las acciones vuelve a DQN incómodo cuando la acción es el torque de un motor o el ángulo de un volante.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Más allá de DQN</div>
+<h2>Optimizar la política directamente</h2>
+<ul>
+<li>Los métodos de gradiente de política (REINFORCE) parametrizan $\pi(a\mid s;\theta)$ y manejan acciones continuas, a costa de alta varianza.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Más allá de DQN</div>
+<h2>Actor-crítico y el panorama actual</h2>
+<ul>
+<li>Un <em>actor</em> representa la política y un <em>crítico</em> reduce la varianza con una función de valor, reencontrando la ventaja de E.1.</li>
+<li>De aquí salen A2C, DDPG, SAC y <strong>PPO</strong>, el motor del ajuste de modelos de lenguaje por refuerzo (RLHF).</li>
+</ul>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+<h1>Cambiar la tabla por una red da generalización pero rompe la estabilidad; repetición de experiencia y red objetivo son la ingeniería que volvió entrenable el Deep RL.</h1>
+<div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

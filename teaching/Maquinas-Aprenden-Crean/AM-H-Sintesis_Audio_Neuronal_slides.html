@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Síntesis y Procesamiento de Audio Neuronal · Aprendizaje de Máquina y Modelos Generativos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section { padding: 0 5%; box-sizing: border-box; min-width: 0; }
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul { padding-left: 1.3em; margin: 0.2em 0 0 0; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+/* Equations: direct display math, no card borders */
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note { font-size: 1.3em; color: var(--ink-soft); margin-top: 0.6em; font-style: italic; }
+
+/* SVG fills remaining vertical space without overflowing */
+.svg-holder { width: 100%; margin-top: 0.5em; text-align: center; }
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ===== Portada ===== -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Síntesis y Procesamiento de Audio Neuronal</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- ===== Apertura ===== -->
+<section>
+  <h2>El audio: decenas de miles de muestras por segundo</h2>
+  <ul>
+    <li>El audio de alta fidelidad se muestrea entre 16 y 44.1 kHz: un solo segundo contiene decenas de miles de variables.</li>
+    <li>Hay que capturar el ritmo y la melodía (largo plazo) sin perder el detalle acústico (alta frecuencia).</li>
+  </ul>
+  <div class="slide-num">2</div>
+</section>
+
+<section>
+  <h2>Cada modelo apuesta por una representación distinta</h2>
+  <ul>
+    <li>La historia de la generación de audio es, en el fondo, la historia de qué representación vuelve tratable un segundo de sonido.</li>
+  </ul>
+  <div class="slide-num">3</div>
+</section>
+
+<!-- ===== §1 ===== -->
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>¿En qué forma representar un segundo de sonido?</h2>
+  <ul>
+    <li>Antes de elegir un modelo hay que elegir la representación; esa decisión condiciona todo lo que viene después.</li>
+  </ul>
+  <div class="slide-num">4</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Tres dominios, tres compromisos</h2>
+  <ul>
+    <li>Históricamente se exploraron tres formas de representar el audio: el tiempo, la frecuencia y lo simbólico.</li>
+    <li>Cada una gana algo y paga un precio; ninguna es gratis.</li>
+  </ul>
+  <div class="slide-num">5</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Tiempo, frecuencia y símbolo: el mapa</h2>
+  <ul><li>Forma de onda (fidelidad, pero fase y lentitud); espectrograma (compacto, pero requiere fase); símbolo MIDI (eficiente, pero sin textura).</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 620 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arH2a" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#555"/>
+    </marker>
+  </defs>
+  <rect x="10" y="10" width="180" height="210" rx="10" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text x="100" y="35" text-anchor="middle" font-size="13" font-weight="bold" fill="#2c3e50">Dominio Tiempo</text>
+  <text x="100" y="52" text-anchor="middle" font-size="10" fill="#555">(forma de onda)</text>
+  <polyline points="25,130 40,100 55,155 70,90 85,145 100,80 115,150 130,100 145,130 160,115 175,130" fill="none" stroke="#4a6fa5" stroke-width="2"/>
+  <line x1="25" y1="130" x2="175" y2="130" stroke="#aaa" stroke-width="0.8" stroke-dasharray="3,3"/>
+  <text x="100" y="185" text-anchor="middle" font-size="10" fill="#2e7d32">+ Alta fidelidad</text>
+  <text x="100" y="200" text-anchor="middle" font-size="10" fill="#c62828">- Problema de fase</text>
+  <text x="100" y="215" text-anchor="middle" font-size="10" fill="#c62828">- Muy lento (autoregresivo)</text>
+  <rect x="220" y="10" width="180" height="210" rx="10" fill="#fce4ec" stroke="#c2185b" stroke-width="1.5"/>
+  <text x="310" y="35" text-anchor="middle" font-size="13" font-weight="bold" fill="#2c3e50">Dominio Frecuencia</text>
+  <text x="310" y="52" text-anchor="middle" font-size="10" fill="#555">(espectrograma STFT)</text>
+  <rect x="240" y="145" width="14" height="30" fill="#c2185b" opacity="0.7"/>
+  <rect x="258" y="115" width="14" height="60" fill="#c2185b" opacity="0.7"/>
+  <rect x="276" y="90" width="14" height="85" fill="#c2185b" opacity="0.7"/>
+  <rect x="294" y="120" width="14" height="55" fill="#c2185b" opacity="0.7"/>
+  <rect x="312" y="140" width="14" height="35" fill="#c2185b" opacity="0.7"/>
+  <rect x="330" y="155" width="14" height="20" fill="#c2185b" opacity="0.7"/>
+  <rect x="348" y="160" width="14" height="15" fill="#c2185b" opacity="0.7"/>
+  <line x1="235" y1="175" x2="370" y2="175" stroke="#888" stroke-width="1"/>
+  <text x="310" y="185" text-anchor="middle" font-size="10" fill="#2e7d32">+ Compacto, interpretable</text>
+  <text x="310" y="200" text-anchor="middle" font-size="10" fill="#c62828">- Fuga espectral</text>
+  <text x="310" y="215" text-anchor="middle" font-size="10" fill="#c62828">- Requiere reconstrucción de fase</text>
+  <rect x="430" y="10" width="180" height="210" rx="10" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="520" y="35" text-anchor="middle" font-size="13" font-weight="bold" fill="#2c3e50">Dominio Simbólico</text>
+  <text x="520" y="52" text-anchor="middle" font-size="10" fill="#555">(MIDI / tokens)</text>
+  <rect x="450" y="75" width="50" height="10" fill="#388e3c" opacity="0.8" rx="2"/>
+  <rect x="465" y="95" width="60" height="10" fill="#388e3c" opacity="0.8" rx="2"/>
+  <rect x="445" y="115" width="40" height="10" fill="#388e3c" opacity="0.8" rx="2"/>
+  <rect x="475" y="135" width="70" height="10" fill="#388e3c" opacity="0.8" rx="2"/>
+  <rect x="455" y="155" width="45" height="10" fill="#388e3c" opacity="0.8" rx="2"/>
+  <text x="520" y="185" text-anchor="middle" font-size="10" fill="#2e7d32">+ Eficiente, interpretable</text>
+  <text x="520" y="200" text-anchor="middle" font-size="10" fill="#c62828">- Sin textura acústica</text>
+  <text x="520" y="215" text-anchor="middle" font-size="10" fill="#c62828">- Depende de sintetizador externo</text>
+  </svg></div>
+  <div class="slide-num">6</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Tiempo: fidelidad máxima, pero fase y lentitud</h2>
+  <ul>
+    <li>Generar la forma de onda directamente preserva todo el detalle, pero el audio oscila a frecuencias que no coinciden con las ventanas convolucionales: aparece el problema de alineación de fase.</li>
+    <li>WaveNet lo resolvió generando muestra a muestra, de forma autoregresiva.</li>
+  </ul>
+  <div class="slide-num">7</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Frecuencia: compacto, pero hay que recuperar la fase</h2>
+  <ul>
+    <li>La STFT (Transformada de Fourier a Corto Plazo) da una representación tiempo-frecuencia compacta, pero sufre de fuga espectral.</li>
+    <li>Recuperar la onda desde la magnitud exige reconstruir la fase, con Griffin-Lim o con un vocoder neuronal.</li>
+  </ul>
+  <div class="slide-num">8</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>Símbolo: eficiente, pero sin textura acústica</h2>
+  <ul>
+    <li>El MIDI o los tokens discretos son eficientes e interpretables, pero pierden timbre y microdinámica.</li>
+    <li>Esa pérdida motivó buscar representaciones discretas que sí capturen la acústica: los codecs neuronales.</li>
+  </ul>
+  <div class="slide-num">9</div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Representaciones del audio</div>
+  <h2>La vía más directa: modelar la onda, muestra a muestra</h2>
+  <ul>
+    <li>El primer gran modelo apostó por el dominio del tiempo puro, sin pasar por la frecuencia ni por símbolos.</li>
+  </ul>
+  <div class="slide-num">10</div>
+</section>
+
+<!-- ===== §2 ===== -->
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>¿Se puede modelar la forma de onda directamente?</h2>
+  <ul>
+    <li>WaveNet (van den Oord et al., 2016) modela la onda en el tiempo, muestra por muestra, evitando los sesgos de fase de convoluciones y espectrogramas.</li>
+  </ul>
+  <div class="slide-num">11</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>WaveNet factoriza la onda como cadena autoregresiva</h2>
+  <ul>
+    <li>La probabilidad de la señal completa se factoriza como producto de condicionales: cada muestra $x_t$ depende de todas las anteriores.</li>
+  </ul>
+  $$p(x) = \prod_{t=1}^{T} p(x_t \mid x_1, \dots, x_{t-1})$$
+  <p class="note">En palabras: predecir el audio es predecir la próxima muestra una y otra vez, dado todo el pasado.</p>
+  <div class="slide-num">12</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>El truco: convoluciones causales dilatadas</h2>
+  <ul>
+    <li>Convoluciones estrictamente causales (cada $t$ ve solo el pasado) con dilatación creciente por capa, para abarcar miles de muestras sin más parámetros.</li>
+  </ul>
+  <div class="slide-num">13</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>La dilatación crece, el campo receptivo explota</h2>
+  <ul><li>Cada capa duplica la dilatación ($d = 1, 2, 4, \dots$): el campo receptivo crece exponencialmente con la profundidad.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 540 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arH2b" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0,7 2.5,0 5" fill="#555"/>
+    </marker>
+  </defs>
+  <text x="10" y="235" font-size="11" fill="#555">Entrada</text>
+  <text x="10" y="175" font-size="11" fill="#555">d=1</text>
+  <text x="10" y="120" font-size="11" fill="#555">d=2</text>
+  <text x="10" y="65" font-size="11" fill="#555">d=4</text>
+  <text x="10" y="22" font-size="11" fill="#555">Salida</text>
+  <circle cx="80" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="130" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="180" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="230" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="280" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="330" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="380" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="430" cy="230" r="9" fill="#aaa" stroke="#666" stroke-width="1.2"/>
+  <circle cx="105" cy="170" r="9" fill="#4a6fa5" stroke="#2c4a7a" stroke-width="1.2"/>
+  <circle cx="155" cy="170" r="9" fill="#4a6fa5" stroke="#2c4a7a" stroke-width="1.2"/>
+  <circle cx="205" cy="170" r="9" fill="#4a6fa5" stroke="#2c4a7a" stroke-width="1.2"/>
+  <circle cx="255" cy="170" r="9" fill="#4a6fa5" stroke="#2c4a7a" stroke-width="1.2"/>
+  <circle cx="305" cy="170" r="9" fill="#4a6fa5" stroke="#2c4a7a" stroke-width="1.2"/>
+  <circle cx="355" cy="170" r="9" fill="#4a6fa5" stroke="#2c4a7a" stroke-width="1.2"/>
+  <circle cx="405" cy="170" r="9" fill="#4a6fa5" stroke="#2c4a7a" stroke-width="1.2"/>
+  <line x1="80" y1="221" x2="105" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="130" y1="221" x2="105" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="130" y1="221" x2="155" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="180" y1="221" x2="155" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="180" y1="221" x2="205" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="230" y1="221" x2="205" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="230" y1="221" x2="255" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="280" y1="221" x2="255" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="280" y1="221" x2="305" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="330" y1="221" x2="305" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="330" y1="221" x2="355" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="380" y1="221" x2="355" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="380" y1="221" x2="405" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <line x1="430" y1="221" x2="405" y2="179" stroke="#4a6fa5" stroke-width="1.2"/>
+  <circle cx="155" cy="110" r="9" fill="#c2185b" stroke="#8a0036" stroke-width="1.2"/>
+  <circle cx="255" cy="110" r="9" fill="#c2185b" stroke="#8a0036" stroke-width="1.2"/>
+  <circle cx="305" cy="110" r="9" fill="#c2185b" stroke="#8a0036" stroke-width="1.2"/>
+  <circle cx="405" cy="110" r="9" fill="#c2185b" stroke="#8a0036" stroke-width="1.2"/>
+  <line x1="105" y1="161" x2="155" y2="119" stroke="#c2185b" stroke-width="1.2"/>
+  <line x1="205" y1="161" x2="155" y2="119" stroke="#c2185b" stroke-width="1.2"/>
+  <line x1="155" y1="161" x2="255" y2="119" stroke="#c2185b" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <line x1="305" y1="161" x2="255" y2="119" stroke="#c2185b" stroke-width="1.2"/>
+  <line x1="205" y1="161" x2="305" y2="119" stroke="#c2185b" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <line x1="355" y1="161" x2="305" y2="119" stroke="#c2185b" stroke-width="1.2"/>
+  <line x1="305" y1="161" x2="405" y2="119" stroke="#c2185b" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <line x1="405" y1="161" x2="405" y2="119" stroke="#c2185b" stroke-width="1.2"/>
+  <circle cx="305" cy="55" r="9" fill="#388e3c" stroke="#1b5e20" stroke-width="1.2"/>
+  <line x1="155" y1="101" x2="305" y2="64" stroke="#388e3c" stroke-width="1.2" stroke-dasharray="5,2"/>
+  <line x1="405" y1="101" x2="305" y2="64" stroke="#388e3c" stroke-width="1.2"/>
+  <text x="430" y="58" font-size="10" fill="#388e3c" font-weight="bold">RF = 8</text>
+  <text x="430" y="113" font-size="10" fill="#c2185b" font-weight="bold">RF = 4</text>
+  <text x="430" y="173" font-size="10" fill="#4a6fa5" font-weight="bold">RF = 2</text>
+  </svg></div>
+  <div class="slide-num">14</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>Con L capas se ven 2^L − 1 muestras</h2>
+  <ul>
+    <li>Con dilataciones $1, 2, 4, \dots, 2^{L-1}$, el campo receptivo es $2^L - 1$ muestras usando solo $L$ capas.</li>
+    <li>A 16 kHz, $L = 14$ capas alcanzan cerca de 1 segundo de contexto.</li>
+  </ul>
+  <div class="slide-num">15</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>Pero generar es secuencial: el cuello de botella</h2>
+  <ul>
+    <li>Cada muestra depende de todas las anteriores, así que la síntesis no se puede paralelizar.</li>
+    <li>Un segundo a 16 kHz son 16 000 pasos secuenciales: el WaveNet original era hasta 500 veces más lento que el tiempo real.</li>
+  </ul>
+  <div class="slide-num">16</div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Modelado autoregresivo: WaveNet</div>
+  <h2>El problema de fondo es la tasa de muestreo</h2>
+  <ul>
+    <li>Si modelar cada muestra es tan caro, la salida natural es comprimir el audio a una secuencia mucho más corta de símbolos.</li>
+  </ul>
+  <div class="slide-num">17</div>
+</section>
+
+<!-- ===== §3 ===== -->
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>¿Cómo bajar de decenas de miles de muestras a un Transformer?</h2>
+  <ul>
+    <li>El avance clave fue comprimir la señal en una secuencia discreta de baja tasa que un modelo de secuencias pueda manejar.</li>
+  </ul>
+  <div class="slide-num">18</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>VQ-VAE: comprimir a tokens de un diccionario</h2>
+  <ul>
+    <li>El VQ-VAE (Vector Quantised VAE, van den Oord et al., 2017) usa un codificador convolucional y un cuantizador que proyecta cada latente al elemento más cercano de un codebook finito.</li>
+  </ul>
+  <div class="slide-num">19</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>Codificar, cuantizar, decodificar</h2>
+  <ul><li>El encoder baja la tasa $C$ veces, el cuantizador vectorial (VQ) elige el token del codebook, y el decoder reconstruye la onda.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 560 170" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arH2c" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#555"/>
+    </marker>
+  </defs>
+  <rect x="5" y="60" width="75" height="50" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="42" y="80" text-anchor="middle" font-size="11" font-weight="bold" fill="#1565c0">Audio</text>
+  <text x="42" y="95" text-anchor="middle" font-size="10" fill="#555">44.1 kHz</text>
+  <text x="42" y="108" text-anchor="middle" font-size="10" fill="#555">waveform</text>
+  <line x1="80" y1="85" x2="108" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#arH2c)"/>
+  <rect x="110" y="50" width="80" height="70" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="150" y="75" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">Encoder</text>
+  <text x="150" y="92" text-anchor="middle" font-size="10" fill="#555">Conv1D</text>
+  <text x="150" y="107" text-anchor="middle" font-size="10" fill="#555">↓ C×</text>
+  <line x1="190" y1="85" x2="218" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#arH2c)"/>
+  <rect x="220" y="45" width="90" height="80" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="265" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#e65100">VQ</text>
+  <text x="265" y="83" text-anchor="middle" font-size="10" fill="#555">Codebook</text>
+  <text x="265" y="97" text-anchor="middle" font-size="10" fill="#555">K=1024</text>
+  <text x="265" y="112" text-anchor="middle" font-size="10" fill="#555">entradas</text>
+  <line x1="310" y1="85" x2="338" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#arH2c)"/>
+  <rect x="340" y="50" width="80" height="70" rx="6" fill="#fce4ec" stroke="#c2185b" stroke-width="1.5"/>
+  <text x="380" y="75" text-anchor="middle" font-size="11" font-weight="bold" fill="#c2185b">Decoder</text>
+  <text x="380" y="92" text-anchor="middle" font-size="10" fill="#555">ConvTranspose</text>
+  <text x="380" y="107" text-anchor="middle" font-size="10" fill="#555">↑ C×</text>
+  <line x1="420" y1="85" x2="448" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#arH2c)"/>
+  <rect x="450" y="60" width="80" height="50" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="490" y="80" text-anchor="middle" font-size="11" font-weight="bold" fill="#1565c0">Audio</text>
+  <text x="490" y="95" text-anchor="middle" font-size="10" fill="#555">reconstruido</text>
+  <text x="265" y="148" text-anchor="middle" font-size="10" fill="#e65100" font-weight="bold">Secuencia discreta: T/C tokens</text>
+  <text x="265" y="162" text-anchor="middle" font-size="10" fill="#888">(ej. 75 tokens/s con C=588)</text>
+  </svg></div>
+  <div class="slide-num">20</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>De decenas de miles a decenas de tokens por segundo</h2>
+  <ul>
+    <li>Si el audio tiene $T$ muestras, el espacio latente opera a $T/C$ tokens, con factor de compresión $C$ típico de 320 a 640.</li>
+    <li>Sobre esa secuencia corta, un Transformer aprende la estructura de largo plazo de forma tratable.</li>
+  </ul>
+  <div class="slide-num">21</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>La compresión fuerza lo semántico: conversión de voz</h2>
+  <ul>
+    <li>Al comprimir tanto, el codebook solo retiene lo esencial (fonemas, contenido), no los detalles microscópicos.</li>
+    <li>Reconstruir condicionando en otro hablante cambia timbre y prosodia pero preserva el contenido: conversión de voz sin supervisión.</li>
+  </ul>
+  <div class="slide-num">22</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>Codecs modernos: SoundStream y EnCodec</h2>
+  <ul>
+    <li>Usan cuantización vectorial residual (RVQ), apilando codebooks para capturar distintos niveles de detalle.</li>
+    <li>Comprimen a 75-150 tokens por segundo: un contexto de 1024 tokens abarca entre 7 y 14 segundos de audio.</li>
+  </ul>
+  <div class="slide-num">23</div>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Cuantización vectorial y codecs neuronales</div>
+  <h2>Comprimir es una vía; las GAN probaron otra</h2>
+  <ul>
+    <li>Mientras los autoregresivos comprimían y modelaban tokens, las GAN intentaron sintetizar audio de alta fidelidad en paralelo.</li>
+  </ul>
+  <div class="slide-num">24</div>
+</section>
+
+<!-- ===== §4 ===== -->
+<section>
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>¿GAN de alta fidelidad sin el problema de fase?</h2>
+  <ul>
+    <li>GANSynth (Engel et al., 2019) mostró que una GAN puede sintetizar audio musical de altísima fidelidad si opera sobre una representación espectral que esquiva la fase.</li>
+  </ul>
+  <div class="slide-num">25</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>GANSynth genera magnitud y frecuencia instantánea</h2>
+  <ul>
+    <li>En vez de la fase cruda, genera la magnitud junto con la frecuencia instantánea, la derivada temporal de la fase de cada banda $k$.</li>
+  </ul>
+  $$f_i(t, k) = \frac{1}{2\pi}\,\frac{\partial \phi(t,k)}{\partial t}$$
+  <p class="note">En palabras: codificar la fase como su tasa de cambio elimina la ambigüedad que arruinaba a los espectrogramas.</p>
+  <div class="slide-num">26</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>Síntesis paralela e interpolación de timbres</h2>
+  <ul>
+    <li>Genera audio en paralelo (no autoregresivo) y permite interpolar suavemente entre timbres en el espacio latente, con solo ~15 M de parámetros.</li>
+    <li>Su límite: fue diseñado para notas musicales aisladas, no para voz o música con estructura temporal compleja.</li>
+  </ul>
+  <div class="slide-num">27</div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Síntesis adversaria de alta fidelidad: GANSynth</div>
+  <h2>La frontera unificó todo como lenguaje</h2>
+  <ul>
+    <li>El estado del arte tomó otra ruta: tratar el audio comprimido en tokens como si fuera texto, y predecirlo con un modelo de lenguaje.</li>
+  </ul>
+  <div class="slide-num">28</div>
+</section>
+
+<!-- ===== §5 ===== -->
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>¿Generar audio como se genera texto?</h2>
+  <ul>
+    <li>Convertido el audio en tokens discretos por un codec, un Transformer aprende a predecirlos como si fueran palabras.</li>
+  </ul>
+  <div class="slide-num">29</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>La cascada desacopla semántica y acústica</h2>
+  <ul>
+    <li>Sistemas como AudioLM, MusicLM y Seed-Music separan el problema en dos: primero el contenido, luego el sonido.</li>
+  </ul>
+  <div class="slide-num">30</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>De la condición al audio, en cascada</h2>
+  <ul><li>La condición (texto, letras, MIDI, estilo) entra a un LM que produce tokens; difusión y vocoder los convierten en audio de alta calidad.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 580 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arH2d" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#555"/>
+    </marker>
+  </defs>
+  <rect x="5" y="55" width="90" height="90" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="50" y="78" text-anchor="middle" font-size="11" font-weight="bold" fill="#7b1fa2">Condic.</text>
+  <text x="50" y="94" text-anchor="middle" font-size="10" fill="#555">Texto</text>
+  <text x="50" y="108" text-anchor="middle" font-size="10" fill="#555">Letras</text>
+  <text x="50" y="122" text-anchor="middle" font-size="10" fill="#555">MIDI</text>
+  <text x="50" y="136" text-anchor="middle" font-size="10" fill="#555">Estilo</text>
+  <line x1="95" y1="100" x2="118" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arH2d)"/>
+  <rect x="120" y="45" width="110" height="110" rx="8" fill="#e8f0fe" stroke="#1a56db" stroke-width="1.5"/>
+  <text x="175" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a56db">LM Autoregresivo</text>
+  <text x="175" y="84" text-anchor="middle" font-size="10" fill="#555">Transformer</text>
+  <text x="175" y="100" text-anchor="middle" font-size="10" fill="#555">(GPT-like)</text>
+  <text x="175" y="116" text-anchor="middle" font-size="10" fill="#555">next-token</text>
+  <text x="175" y="130" text-anchor="middle" font-size="10" fill="#555">prediction</text>
+  <text x="175" y="148" text-anchor="middle" font-size="10" fill="#1a56db" font-weight="bold">→ tokens discretos</text>
+  <line x1="230" y1="100" x2="253" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arH2d)"/>
+  <rect x="255" y="45" width="115" height="110" rx="8" fill="#fff8e1" stroke="#f57f17" stroke-width="1.5"/>
+  <text x="312" y="68" text-anchor="middle" font-size="11" font-weight="bold" fill="#f57f17">Diffusion</text>
+  <text x="312" y="83" text-anchor="middle" font-size="10" fill="#555">Transformer (DiT)</text>
+  <text x="312" y="99" text-anchor="middle" font-size="10" fill="#555">denoising iterativo</text>
+  <text x="312" y="115" text-anchor="middle" font-size="10" fill="#555">sobre latentes</text>
+  <text x="312" y="131" text-anchor="middle" font-size="10" fill="#555">continuos</text>
+  <text x="312" y="148" text-anchor="middle" font-size="10" fill="#f57f17" font-weight="bold">→ latentes VAE</text>
+  <line x1="370" y1="100" x2="393" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arH2d)"/>
+  <rect x="395" y="55" width="90" height="90" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="440" y="78" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">Vocoder</text>
+  <text x="440" y="94" text-anchor="middle" font-size="10" fill="#555">Decoder VAE</text>
+  <text x="440" y="110" text-anchor="middle" font-size="10" fill="#555">44.1 kHz</text>
+  <text x="440" y="126" text-anchor="middle" font-size="10" fill="#555">estéreo</text>
+  <line x1="485" y1="100" x2="508" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arH2d)"/>
+  <rect x="510" y="70" width="60" height="60" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="540" y="96" text-anchor="middle" font-size="11" font-weight="bold" fill="#1565c0">Audio</text>
+  <text x="540" y="112" text-anchor="middle" font-size="10" fill="#555">alta cal.</text>
+  </svg></div>
+  <div class="slide-num">31</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>Etapa 1: un LM predice tokens de audio</h2>
+  <ul>
+    <li>Un Transformer procesa los condicionamientos y predice la secuencia de tokens del codec por predicción del siguiente token.</li>
+    <li>Como el codec comprime a 75-150 tokens/s, esto cabe en 1024-4096 tokens de contexto.</li>
+  </ul>
+  <div class="slide-num">32</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>Etapa 2: difusión y vocoder reconstruyen el sonido</h2>
+  <ul>
+    <li>Un Diffusion Transformer (DiT) lleva los tokens a latentes continuos por denoising iterativo.</li>
+    <li>Un vocoder (decoder del VAE del codec) sintetiza la forma de onda estéreo de alta calidad.</li>
+  </ul>
+  <div class="slide-num">33</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>El bonus: editar melodía, letra o estilo</h2>
+  <ul>
+    <li>Separar lo semántico de lo acústico permite editar sobre tokens de partitura o fonemas sin rehacer la síntesis.</li>
+    <li>Cambiar la melodía sin tocar el acompañamiento, o la letra preservando el timbre, como demostró Seed-Music.</li>
+  </ul>
+  <div class="slide-num">34</div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · Modelos de lenguaje y difusión para audio</div>
+  <h2>Pero, ¿por qué tantas etapas usan espectrogramas?</h2>
+  <ul>
+    <li>Vocoders y modelos de análisis vuelven una y otra vez al dominio de la frecuencia; conviene entender por qué.</li>
+  </ul>
+  <div class="slide-num">35</div>
+</section>
+
+<!-- ===== §6 ===== -->
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>¿Por qué convertir el audio en una imagen?</h2>
+  <ul>
+    <li>El dominio de la frecuencia no solo sirve para analizar: es la entrada predominante para entrenar redes que reconocen o clasifican sonido.</li>
+  </ul>
+  <div class="slide-num">36</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>El espectrograma es una imagen 2D tiempo-frecuencia</h2>
+  <ul>
+    <li>Al ser una imagen, toda la infraestructura de CNN desarrollada para visión se reutiliza directamente.</li>
+    <li>Bordes horizontales son tonos sostenidos; bordes verticales, ataques percusivos.</li>
+  </ul>
+  <div class="slide-num">37</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>Onda directa vs. espectrograma: dos pipelines</h2>
+  <ul><li>Arriba, una red 1D sobre la forma de onda (preserva fase); abajo, STFT + mel hacia una CNN 2D de visión (reusa modelos, pero pierde la fase).</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 580 215" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arH2e" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#555"/>
+    </marker>
+  </defs>
+  <text x="290" y="18" text-anchor="middle" font-size="11" fill="#888">Pipeline A: dominio del tiempo</text>
+  <rect x="10" y="25" width="90" height="40" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="55" y="42" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">Forma de</text>
+  <text x="55" y="57" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">onda</text>
+  <line x1="100" y1="45" x2="128" y2="45" stroke="#555" stroke-width="1.5" marker-end="url(#arH2e)"/>
+  <rect x="130" y="25" width="120" height="40" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="190" y="42" text-anchor="middle" font-size="10" font-weight="bold" fill="#2e7d32">Red 1D</text>
+  <text x="190" y="57" text-anchor="middle" font-size="10" fill="#555">(WaveNet, RAVE)</text>
+  <line x1="250" y1="45" x2="278" y2="45" stroke="#555" stroke-width="1.5" marker-end="url(#arH2e)"/>
+  <rect x="280" y="25" width="100" height="40" rx="6" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="330" y="42" text-anchor="middle" font-size="10" font-weight="bold" fill="#7b1fa2">Salida</text>
+  <text x="330" y="57" text-anchor="middle" font-size="10" fill="#555">(waveform)</text>
+  <text x="420" y="30" font-size="10" fill="#2e7d32">+ Preserva fase</text>
+  <text x="420" y="46" font-size="10" fill="#2e7d32">+ Alta fidelidad</text>
+  <text x="420" y="62" font-size="10" fill="#c62828">- Secuencias largas</text>
+  <text x="290" y="103" text-anchor="middle" font-size="11" fill="#888">Pipeline B: dominio frecuencia (espectrograma)</text>
+  <rect x="10" y="113" width="90" height="40" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="55" y="130" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">Forma de</text>
+  <text x="55" y="145" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">onda</text>
+  <line x1="100" y1="133" x2="118" y2="133" stroke="#555" stroke-width="1.5" marker-end="url(#arH2e)"/>
+  <rect x="120" y="113" width="100" height="40" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="170" y="130" text-anchor="middle" font-size="10" font-weight="bold" fill="#e65100">STFT + Mel</text>
+  <text x="170" y="145" text-anchor="middle" font-size="10" fill="#555">filter bank</text>
+  <line x1="220" y1="133" x2="238" y2="133" stroke="#555" stroke-width="1.5" marker-end="url(#arH2e)"/>
+  <rect x="240" y="108" width="60" height="50" rx="4" fill="#fce4ec" stroke="#c2185b" stroke-width="1"/>
+  <text x="270" y="127" text-anchor="middle" font-size="9" fill="#c2185b" font-weight="bold">Espectro-</text>
+  <text x="270" y="139" text-anchor="middle" font-size="9" fill="#c2185b">grama</text>
+  <text x="270" y="151" text-anchor="middle" font-size="9" fill="#888">2D imagen</text>
+  <line x1="300" y1="133" x2="318" y2="133" stroke="#555" stroke-width="1.5" marker-end="url(#arH2e)"/>
+  <rect x="320" y="113" width="90" height="40" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="365" y="130" text-anchor="middle" font-size="10" font-weight="bold" fill="#2e7d32">CNN 2D</text>
+  <text x="365" y="145" text-anchor="middle" font-size="10" fill="#555">(ResNet, ViT)</text>
+  <line x1="410" y1="133" x2="428" y2="133" stroke="#555" stroke-width="1.5" marker-end="url(#arH2e)"/>
+  <rect x="430" y="113" width="90" height="40" rx="6" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="475" y="130" text-anchor="middle" font-size="10" font-weight="bold" fill="#7b1fa2">Salida</text>
+  <text x="475" y="145" text-anchor="middle" font-size="10" fill="#555">(clase, embed.)</text>
+  <text x="420" y="180" font-size="10" fill="#2e7d32">+ Reusar CNNs de vision</text>
+  <text x="420" y="196" font-size="10" fill="#c62828">- Pierde fase; necesita vocoder</text>
+  </svg></div>
+  <div class="slide-num">38</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>El mel-espectrograma imita la percepción</h2>
+  <ul>
+    <li>Un banco de filtros en escala mel comprime las frecuencias altas y expande las bajas, como el oído humano.</li>
+    <li>Reduce el STFT a $M \ll F$ canales (80 o 128): la entrada estándar de reconocimiento de voz y vocoders.</li>
+  </ul>
+  <div class="slide-num">39</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>Pero sintetizar exige recuperar la fase: el vocoder</h2>
+  <ul>
+    <li>La magnitud del STFT descarta la fase, necesaria para volver a la onda.</li>
+    <li>Griffin-Lim la estima de forma iterativa (con artefactos metálicos); los vocoders neuronales como HiFi-GAN aprenden magnitud → onda directamente.</li>
+  </ul>
+  <div class="slide-num">40</div>
+</section>
+
+<section>
+  <div class="section-label">§ 6 · Espectrogramas como entrada a redes neuronales</div>
+  <h2>Dos sistemas reales, dos filosofías</h2>
+  <ul>
+    <li>Con todas las piezas vistas, dos arquitecturas representativas muestran caminos opuestos del campo.</li>
+  </ul>
+  <div class="slide-num">41</div>
+</section>
+
+<!-- ===== §7 ===== -->
+<section>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>¿Cómo se ven estos principios en sistemas reales?</h2>
+  <ul>
+    <li>RAVE prioriza eficiencia y control creativo en tiempo real; AudioGen prioriza generar desde lenguaje natural.</li>
+  </ul>
+  <div class="slide-num">42</div>
+</section>
+
+<section>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>RAVE: un VAE sobre la onda, en tiempo real</h2>
+  <ul>
+    <li>RAVE (Caillon y Esling, 2021, IRCAM) es un autoencoder variacional que opera directamente en la forma de onda, sin pasar por espectrogramas.</li>
+  </ul>
+  <div class="slide-num">43</div>
+</section>
+
+<section>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>RAVE: dos fases de entrenamiento</h2>
+  <ul><li>Fase 1: el VAE se entrena con pérdida espectral multi-resolución más KL; fase 2: se añade un discriminador adversario para afinar el timbre.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 618 210" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arH2f" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="#555"/>
+    </marker>
+  </defs>
+  <text x="309" y="14" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Arquitectura RAVE (dos fases de entrenamiento)</text>
+  <rect x="5" y="25" width="80" height="65" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="45" y="47" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">Audio</text>
+  <text x="45" y="62" text-anchor="middle" font-size="10" fill="#555">waveform</text>
+  <text x="45" y="76" text-anchor="middle" font-size="9" fill="#888">44.1 kHz</text>
+  <line x1="85" y1="57" x2="113" y2="57" stroke="#555" stroke-width="1.5" marker-end="url(#arH2f)"/>
+  <rect x="115" y="20" width="108" height="75" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="169" y="44" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">Encoder</text>
+  <text x="169" y="59" text-anchor="middle" font-size="9" fill="#555">Conv1D dilatadas</text>
+  <text x="169" y="73" text-anchor="middle" font-size="9" fill="#555">stride acumulado 2048</text>
+  <line x1="223" y1="57" x2="251" y2="57" stroke="#555" stroke-width="1.5" marker-end="url(#arH2f)"/>
+  <rect x="253" y="20" width="108" height="75" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="307" y="46" text-anchor="middle" font-size="14" font-weight="bold" fill="#e65100">z</text>
+  <text x="307" y="62" text-anchor="middle" font-size="9" fill="#555">~21 Hz, dim=128</text>
+  <text x="307" y="77" text-anchor="middle" font-size="9" fill="#888">espacio latente VAE</text>
+  <line x1="361" y1="57" x2="389" y2="57" stroke="#555" stroke-width="1.5" marker-end="url(#arH2f)"/>
+  <rect x="391" y="20" width="108" height="75" rx="6" fill="#fce4ec" stroke="#c2185b" stroke-width="1.5"/>
+  <text x="445" y="44" text-anchor="middle" font-size="11" font-weight="bold" fill="#c2185b">Decoder</text>
+  <text x="445" y="59" text-anchor="middle" font-size="9" fill="#555">ConvT1D dilatadas</text>
+  <text x="445" y="73" text-anchor="middle" font-size="9" fill="#555">upsample 2048x</text>
+  <line x1="499" y1="57" x2="527" y2="57" stroke="#555" stroke-width="1.5" marker-end="url(#arH2f)"/>
+  <rect x="529" y="25" width="84" height="65" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="571" y="52" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">Audio</text>
+  <text x="571" y="67" text-anchor="middle" font-size="10" fill="#555">reconstruido</text>
+  <rect x="5" y="106" width="370" height="46" rx="6" fill="#f1f8e9" stroke="#558b2f" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="190" y="124" text-anchor="middle" font-size="10" font-weight="bold" fill="#558b2f">Fase 1: Reconstruccion</text>
+  <text x="190" y="140" text-anchor="middle" font-size="9" fill="#555">Loss = MSE espectral multi-resolucion + divergencia KL</text>
+  <rect x="5" y="160" width="608" height="46" rx="6" fill="#fce4ec" stroke="#c2185b" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="309" y="178" text-anchor="middle" font-size="10" font-weight="bold" fill="#c2185b">Fase 2: Fine-tuning adversarial</text>
+  <text x="309" y="194" text-anchor="middle" font-size="9" fill="#555">Se agrega discriminador multi-escala (MelGAN-style). Loss += adversarial + feature matching</text>
+  </svg></div>
+  <div class="slide-num">44</div>
+</section>
+
+<section>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>Tiempo real y control tímbrico continuo</h2>
+  <ul>
+    <li>Con 10 M de parámetros y compresión de 2048 muestras por latente, el decoder corre a más de 100× tiempo real en CPU.</li>
+    <li>Su espacio latente continuo permite interpolar timbres, por ejemplo mezclar un violín con una voz.</li>
+  </ul>
+  <div class="slide-num">45</div>
+</section>
+
+<section>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>AudioGen: un LM que genera sonido desde texto</h2>
+  <ul>
+    <li>AudioGen (Kreuk et al., 2022, Meta) genera efectos de sonido a partir de descripciones como "lluvia sobre hojas con truenos".</li>
+    <li>Comprime el audio con un codec y un Transformer autoregresivo predice tokens condicionado en el texto (encoder T5 congelado).</li>
+  </ul>
+  <div class="slide-num">46</div>
+</section>
+
+<section>
+  <div class="section-label">§ 7 · Arquitecturas representativas: RAVE y AudioGen</div>
+  <h2>RAVE frente a AudioGen, lado a lado</h2>
+  <ul><li>Dos filosofías opuestas: VAE sobre la onda en tiempo real, frente a un modelo de lenguaje sobre tokens condicionado en texto.</li></ul>
+  <div class="svg-holder"><svg viewBox="0 0 760 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+    <text x="375" y="30" text-anchor="middle" font-weight="bold" fill="#1565c0">RAVE</text>
+    <text x="615" y="30" text-anchor="middle" font-weight="bold" fill="#c2185b">AudioGen</text>
+    <text x="20" y="63" fill="#555">Dominio</text>
+    <text x="20" y="103" fill="#555">Condicionamiento</text>
+    <text x="20" y="143" fill="#555">Generación</text>
+    <text x="20" y="183" fill="#555">Tiempo real</text>
+    <text x="20" y="223" fill="#555">Parámetros</text>
+    <line x1="255" y1="42" x2="255" y2="238" stroke="#ccc" stroke-width="1"/>
+    <line x1="495" y1="42" x2="495" y2="238" stroke="#ccc" stroke-width="1"/>
+    <text x="375" y="63" text-anchor="middle" fill="#1a4d6c">forma de onda (VAE)</text>
+    <text x="375" y="103" text-anchor="middle" fill="#1a4d6c">ninguno (tímbrico)</text>
+    <text x="375" y="143" text-anchor="middle" fill="#1a4d6c">continua, paralela</text>
+    <text x="375" y="183" text-anchor="middle" fill="#2e7d32" font-weight="bold">sí (100× CPU)</text>
+    <text x="375" y="223" text-anchor="middle" fill="#1a4d6c">10 M</text>
+    <text x="615" y="63" text-anchor="middle" fill="#7a1a3a">tokens discretos (LM)</text>
+    <text x="615" y="103" text-anchor="middle" fill="#7a1a3a">texto (T5)</text>
+    <text x="615" y="143" text-anchor="middle" fill="#7a1a3a">autoregresiva</text>
+    <text x="615" y="183" text-anchor="middle" fill="#c62828" font-weight="bold">no</text>
+    <text x="615" y="223" text-anchor="middle" fill="#7a1a3a">300+ M</text>
+  </svg></div>
+  <div class="slide-num">47</div>
+</section>
+
+<!-- ===== Cierre ===== -->
+<section>
+<div class="close-slide">
+  <h1>Generar audio es domar decenas de miles de muestras por segundo; cada arquitectura es una apuesta distinta sobre en qué representación el problema se vuelve tratable.</h1>
+  <p style="font-size:0.88em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

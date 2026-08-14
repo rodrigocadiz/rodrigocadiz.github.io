@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Fallos en Modelos Generativos</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ===== PORTADA ===== -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Diagnóstico de Fallos en Modelos Generativos</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- ===== APERTURA NARRATIVA ===== -->
+<section>
+  <h2>Entrenar un generativo es más frágil</h2>
+  <ul>
+    <li>No hay etiqueta $y$ contra la cual medir el error.</li>
+    <li>Se aprende una distribución mapeando ruido $\mathbf{z}$ a datos $\mathbf{x}$.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Y un fallo no siempre se ve en la pérdida</h2>
+  <ul>
+    <li>Un generador colapsado puede tener pérdida baja.</li>
+    <li>Un modelo que memoriza alcanza calidad excelente.</li>
+  </ul>
+  <p class="note">Diagnosticar es medir lo que la pérdida no ve.</p>
+</section>
+
+<!-- ===== §1 MEMORIZACIÓN ===== -->
+<section>
+  <div class="section-label">§ 1 · Memorización y sobreajuste</div>
+  <h2>Si las muestras se ven perfectas, ¿generó o copió?</h2>
+  <ul>
+    <li>Un buen modelo sintetiza muestras realistas que <strong>no existen</strong> en el entrenamiento.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Memorización y sobreajuste</div>
+  <h2>Alta calidad no es generalización</h2>
+  <ul>
+    <li><strong>Memorizar</strong> es reproducir copias.</li>
+    <li>Calidad alta, cero generalización.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Memorización y sobreajuste</div>
+  <h2>La prueba del vecino más cercano lo delata</h2>
+  $$d_{NN}(\mathbf{x}_g) = \min_{\mathbf{x}_i \in \mathcal{D}} \|\mathbf{x}_g - \mathbf{x}_i\|$$
+  <ul>
+    <li>$\mathbf{x}_g$ generada, $\mathcal{D}$ entrenamiento.</li>
+  </ul>
+  <p class="note">Muchas muestras con $d_{NN}\approx 0$: el modelo memoriza.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Memorización y sobreajuste</div>
+  <h2>Lejos vs. encima del dato</h2>
+  <ul><li>Izq.: $d_{NN}$ grande. Der.: $d_{NN}\approx 0$, copia.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 660 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <text x="165" y="24" text-anchor="middle" font-weight="bold" fill="#1a4d1a">Generaliza</text>
+    <rect x="30" y="36" width="270" height="170" rx="8" fill="none" stroke="#aaa" stroke-width="1"/>
+    <circle cx="90" cy="90" r="5" fill="#888"/><circle cx="150" cy="70" r="5" fill="#888"/>
+    <circle cx="220" cy="110" r="5" fill="#888"/><circle cx="110" cy="160" r="5" fill="#888"/>
+    <circle cx="200" cy="175" r="5" fill="#888"/><circle cx="255" cy="65" r="5" fill="#888"/>
+    <line x1="172" y1="120" x2="220" y2="110" stroke="#2d6b2d" stroke-width="1.4" stroke-dasharray="4,3"/>
+    <path d="M165 120 l16 0 l-8 -14 z" fill="#2d6b2d"/>
+    <text x="165" y="200" text-anchor="middle" font-size="11" fill="#2d6b2d">d_NN grande</text>
+    <text x="495" y="24" text-anchor="middle" font-weight="bold" fill="#7a1a1a">Memoriza</text>
+    <rect x="360" y="36" width="270" height="170" rx="8" fill="none" stroke="#aaa" stroke-width="1"/>
+    <circle cx="420" cy="90" r="5" fill="#888"/>
+    <circle cx="550" cy="110" r="5" fill="#888"/><circle cx="440" cy="160" r="5" fill="#888"/>
+    <circle cx="530" cy="175" r="5" fill="#888"/><circle cx="585" cy="65" r="5" fill="#888"/>
+    <circle cx="482" cy="72" r="11" fill="none" stroke="#b03030" stroke-width="1.2" stroke-dasharray="3,2"/>
+    <circle cx="482" cy="72" r="5" fill="#888"/>
+    <path d="M474 80 l16 0 l-8 -14 z" fill="#b03030" fill-opacity="0.85"/>
+    <text x="500" y="56" font-size="10" fill="#7a1a1a">copia exacta de un dato real</text>
+    <text x="495" y="200" text-anchor="middle" font-size="11" fill="#7a1a1a">d_NN ≈ 0 (copia)</text>
+    <circle cx="120" cy="234" r="5" fill="#888"/><text x="132" y="238" font-size="11" fill="#555">dato real (entrenamiento)</text>
+    <path d="M324 234 l14 0 l-7 -12 z" fill="#2d6b2d"/><text x="344" y="238" font-size="11" fill="#555">muestra generada (verde: generaliza · rojo: memoriza)</text>
+  </svg>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Memorización y sobreajuste</div>
+  <h2>Memorizar no es lo mismo que no generalizar</h2>
+  <ul>
+    <li>No generalizar es amplio: colapso, muestras borrosas o fuera de distribución, todas con $d_{NN}$ grande. Memorizar es el caso extremo, con $d_{NN}\approx 0$.</li>
+    <li>La prueba del vecino más cercano solo detecta memorización: un $d_{NN}$ grande la descarta, pero no prueba que el modelo generalice.</li>
+  </ul>
+  <p class="note">Para generalizar, la muestra debe ser a la vez nueva y realista (pertenecer a la distribución real).</p>
+</section>
+
+<!-- ===== §2 COLAPSO DE MODOS ===== -->
+<section>
+  <div class="section-label">§ 2 · Colapso de modos</div>
+  <h2>¿Por qué una GAN se atasca generando siempre lo mismo?</h2>
+  <ul>
+    <li>El generador concentra su producción en una porción reducida de la distribución.</li>
+  </ul>
+  <p class="note">Memorizar copia de más; colapsar cubre de menos. El fallo opuesto.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Colapso de modos</div>
+  <h2>Dos grados de severidad</h2>
+  <ul>
+    <li><strong>Omisión de modos</strong>: faltan regiones enteras.</li>
+    <li><strong>Colapso total</strong>: $G(\mathbf{z})$ casi constante en $\mathbf{z}$.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Colapso de modos</div>
+  <h2>Cubre un modo, olvida los demás</h2>
+  <ul><li>Azul: $p_{\text{data}}$ multimodal; rojo: $p_{\text{model}}$ en un modo.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 660 220" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <line x1="40" y1="175" x2="630" y2="175" stroke="#888" stroke-width="1.2"/>
+    <path d="M60 175 Q110 70 160 175 Q210 95 260 175 Q310 70 360 175 Q410 100 460 175"
+          fill="none" stroke="#5599cc" stroke-width="2.5"/>
+    <text x="250" y="55" text-anchor="middle" fill="#1a3a5c" font-weight="bold">p_data (multimodal)</text>
+    <path d="M60 175 Q200 175 250 175 Q310 30 370 175 Q470 175 600 175"
+          fill="none" stroke="#cc4444" stroke-width="2.5" stroke-dasharray="6,3"/>
+    <text x="500" y="60" text-anchor="middle" fill="#7a1a1a" font-weight="bold">p_model (colapsado)</text>
+    <text x="120" y="150" text-anchor="middle" font-size="22" fill="#cc7700">✗</text>
+    <text x="220" y="150" text-anchor="middle" font-size="22" fill="#cc7700">✗</text>
+    <text x="430" y="150" text-anchor="middle" font-size="22" fill="#cc7700">✗</text>
+    <text x="320" y="205" text-anchor="middle" font-size="12" fill="#555">✗ = modo omitido por el modelo</text>
+  </svg>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Colapso de modos</div>
+  <h2>La GAN minimiza la KL inversa</h2>
+  $$\begin{aligned}
+  D_{KL}(p_{\text{model}} \,\|\, p_{\text{data}}) \\
+  = \int p_{\text{model}}(\mathbf{x}) \, \log \frac{p_{\text{model}}(\mathbf{x})}{p_{\text{data}}(\mathbf{x})} \, d\mathbf{x}
+  \end{aligned}$$
+  <p class="note">Explota si el modelo pone masa donde $p_{\text{data}}\approx 0$.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Colapso de modos</div>
+  <h2>Cubre-modos vs. busca-modos</h2>
+  <ul>
+    <li>KL <strong>directa</strong>: castiga dejar datos sin masa → cubre.</li>
+    <li>KL <strong>inversa</strong>: castiga masa sin datos → busca uno.</li>
+  </ul>
+  <p class="note">El colapso es la cara extrema de busca-modos.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Colapso de modos</div>
+  <h2>Cómo se mitiga</h2>
+  <ul>
+    <li><strong>Minilotes</strong>: penalizar lotes casi idénticos.</li>
+    <li><strong>Nuevas divergencias</strong>: Wasserstein GAN, LSGAN.</li>
+  </ul>
+  <p class="note">Ambas dan gradientes más suaves y fuerzan diversidad.</p>
+</section>
+
+<!-- ===== §3 COLAPSO DEL POSTERIOR ===== -->
+<section>
+  <div class="section-label">§ 3 · Colapso del posterior en VAE</div>
+  <h2>¿Y si el decodificador ya no necesita el código latente?</h2>
+  <ul>
+    <li>El VAE optimiza otra cosa que la GAN: la cota inferior de la evidencia (ELBO).</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Colapso del posterior en VAE</div>
+  <h2>El ELBO: dos términos en tensión</h2>
+  $$\begin{aligned}
+  \mathcal{L}(\theta, \phi) = \; &\underbrace{\mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})}[\log p_\theta(\mathbf{x}|\mathbf{z})]}_{\text{reconstrucción}} \\
+  &- \underbrace{D_{KL}\big(q_\phi(\mathbf{z}|\mathbf{x}) \,\|\, p(\mathbf{z})\big)}_{\text{regularización}}
+  \end{aligned}$$
+  <p class="note">$q_\phi(\mathbf{z}|\mathbf{x})$: posterior aproximado; $p(\mathbf{z})$: prior.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Colapso del posterior en VAE</div>
+  <h2>El atajo del decodificador potente</h2>
+  <ul>
+    <li>Si modela los datos solo, ignora $\mathbf{z}$: el posterior se iguala al prior y $D_{KL}\to 0$.</li>
+  </ul>
+  <p class="note">Baja la pérdida, pero el latente no aprende nada útil.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Colapso del posterior en VAE</div>
+  <h2>La información rodea el código latente</h2>
+  <ul><li>El decodificador reconstruye sin pasar por $\mathbf{z}$.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <defs>
+      <marker id="arv" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"/></marker>
+    </defs>
+    <rect x="25" y="78" width="90" height="44" rx="6" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+    <text x="70" y="105" text-anchor="middle" fill="#1a3a5c" font-weight="bold">x</text>
+    <rect x="165" y="78" width="110" height="44" rx="6" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+    <text x="220" y="100" text-anchor="middle" fill="#663300" font-weight="bold">Codificador</text>
+    <text x="220" y="115" text-anchor="middle" fill="#885500" font-size="11">q(z|x)</text>
+    <rect x="325" y="80" width="70" height="40" rx="20" fill="#eee" stroke="#bbb" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="360" y="98" text-anchor="middle" fill="#999" font-weight="bold">z</text>
+    <text x="360" y="113" text-anchor="middle" fill="#bbb" font-size="10">ignorado</text>
+    <rect x="445" y="78" width="110" height="44" rx="6" fill="#f3e0f0" stroke="#aa44aa" stroke-width="1.5"/>
+    <text x="500" y="100" text-anchor="middle" fill="#5c1a5c" font-weight="bold">Decodificador</text>
+    <text x="500" y="115" text-anchor="middle" fill="#7a2d7a" font-size="11">potente p(x|z)</text>
+    <rect x="600" y="78" width="60" height="44" rx="6" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+    <text x="630" y="105" text-anchor="middle" fill="#1a4d1a" font-weight="bold">x̂</text>
+    <line x1="115" y1="100" x2="165" y2="100" stroke="#555" stroke-width="1.4" marker-end="url(#arv)"/>
+    <line x1="275" y1="100" x2="323" y2="100" stroke="#bbb" stroke-width="1.4" marker-end="url(#arv)"/>
+    <line x1="395" y1="100" x2="445" y2="100" stroke="#bbb" stroke-width="1.4" marker-end="url(#arv)"/>
+    <line x1="555" y1="100" x2="600" y2="100" stroke="#555" stroke-width="1.4" marker-end="url(#arv)"/>
+    <path d="M70 78 Q70 25 360 25 Q500 25 500 78" fill="none" stroke="#cc4444" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#arv)"/>
+    <text x="300" y="18" text-anchor="middle" fill="#cc4444" font-size="11" font-style="italic">el decodificador modela x sin usar z  ⇒  KL → 0</text>
+  </svg>
+  </div>
+</section>
+
+<!-- ===== §4 INESTABILIDAD MINIMAX ===== -->
+<section>
+  <div class="section-label">§ 4 · Inestabilidad del juego minimax</div>
+  <h2>Si la GAN es un juego, ¿converge siquiera?</h2>
+  <ul>
+    <li>El generador minimiza lo que el discriminador maximiza: no hay una única pérdida que baje.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Inestabilidad del juego minimax</div>
+  <h2>El objetivo es un minimax</h2>
+  $$\begin{aligned}
+  \min_G \max_D \; &\mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}[\log D(\mathbf{x})] \\
+  &+ \mathbb{E}_{\mathbf{z} \sim p_z}[\log(1 - D(G(\mathbf{z})))]
+  \end{aligned}$$
+  <p class="note">$D(\mathbf{x})$: probabilidad de que $\mathbf{x}$ sea real. Sin pérdida única, no hay garantía de convergencia.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Inestabilidad del juego minimax</div>
+  <h2>Si $D$ se satura, el gradiente se desvanece</h2>
+  <ul><li>En las zonas planas, la señal hacia el generador se anula.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <line x1="60" y1="180" x2="600" y2="180" stroke="#888" stroke-width="1.2"/>
+    <line x1="60" y1="180" x2="60" y2="30" stroke="#888" stroke-width="1.2"/>
+    <text x="330" y="208" text-anchor="middle" font-size="12" fill="#555">salida del discriminador (pre-sigmoide)</text>
+    <text x="30" y="40" font-size="12" fill="#555">D</text>
+    <path d="M70 170 C250 170 268 168 330 105 C392 42 410 40 590 40"
+          fill="none" stroke="#5599cc" stroke-width="2.6"/>
+    <rect x="70" y="150" width="125" height="40" fill="#cc4444" opacity="0.12"/>
+    <text x="130" y="142" text-anchor="middle" font-size="11" fill="#7a1a1a">saturada</text>
+    <text x="130" y="128" text-anchor="middle" font-size="11" fill="#7a1a1a">∇ ≈ 0</text>
+    <rect x="465" y="20" width="125" height="40" fill="#cc4444" opacity="0.12"/>
+    <text x="527" y="80" text-anchor="middle" font-size="11" fill="#7a1a1a">saturada</text>
+    <text x="527" y="94" text-anchor="middle" font-size="11" fill="#7a1a1a">∇ ≈ 0</text>
+    <line x1="300" y1="135" x2="360" y2="75" stroke="#2d6b2d" stroke-width="1.4" stroke-dasharray="4,3"/>
+    <text x="250" y="92" text-anchor="middle" font-size="11" fill="#2d6b2d">pendiente útil</text>
+  </svg>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Inestabilidad del juego minimax</div>
+  <h2>La pérdida no saturada</h2>
+  <ul>
+    <li>En vez de minimizar $\log(1 - D)$, se maximiza $\log D$.</li>
+    <li>Recupera gradiente fuerte cuando el generador pierde.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Inestabilidad del juego minimax</div>
+  <h2>Y aunque no se sature, puede oscilar</h2>
+  <ul>
+    <li>La meta es un <strong>equilibrio de Nash</strong>, no un mínimo.</li>
+    <li>Las pérdidas pueden oscilar sin estabilizarse.</li>
+  </ul>
+  <p class="note">Que suba y baje no indica fallo, pero tampoco progreso.</p>
+</section>
+
+<!-- ===== §5 OOD ===== -->
+<section>
+  <div class="section-label">§ 5 · El problema fuera de distribución</div>
+  <h2>¿Sirve la verosimilitud como detector de anomalías?</h2>
+  <ul>
+    <li>La intuición: alta verosimilitud para lo conocido, baja para lo raro (out-of-distribution, OOD).</li>
+  </ul>
+  <p class="note">La realidad es más incómoda.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · El problema fuera de distribución</div>
+  <h2>Más verosimilitud a datos ajenos</h2>
+  <ul><li>Entrenado en A, da mayor verosimilitud a un conjunto B ajeno.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <line x1="60" y1="180" x2="600" y2="180" stroke="#888" stroke-width="1.2"/>
+    <text x="330" y="205" text-anchor="middle" font-size="12" fill="#555">log-verosimilitud asignada por el modelo (entrenado en A)</text>
+    <rect x="160" y="110" width="90" height="70" fill="#5599cc" opacity="0.8"/>
+    <text x="205" y="100" text-anchor="middle" font-size="12" fill="#1a3a5c">datos A</text>
+    <text x="205" y="160" text-anchor="middle" font-size="11" fill="#fff">en distrib.</text>
+    <rect x="390" y="70" width="90" height="110" fill="#cc4444" opacity="0.8"/>
+    <text x="435" y="60" text-anchor="middle" font-size="12" fill="#7a1a1a">datos B (OOD)</text>
+    <text x="435" y="140" text-anchor="middle" font-size="11" fill="#fff">¡más alta!</text>
+    <text x="330" y="40" text-anchor="middle" font-weight="bold" fill="#333">La paradoja de la verosimilitud OOD</text>
+  </svg>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · El problema fuera de distribución</div>
+  <h2>La raíz: densidad puntual ≠ conjunto típico</h2>
+  <ul>
+    <li>La verosimilitud mide <strong>densidad puntual</strong>, no pertenencia al conjunto típico.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · El problema fuera de distribución</div>
+  <h2>La masa vive en la envoltura, no en el origen</h2>
+  <ul>
+    <li>Una gaussiana concentra su masa a radio $\|\mathbf{x}\| \approx \sigma\sqrt{d}$.</li>
+  </ul>
+  <p class="note">El máximo de densidad es atípico: un dato OOD cerca del origen recibe más densidad que un dato real.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 5 · El problema fuera de distribución</div>
+  <h2>Un desafío abierto</h2>
+  <ul>
+    <li>El problema OOD sigue sin resolverse para usar generativos en seguridad y sistemas médicos.</li>
+  </ul>
+</section>
+
+<!-- ===== CIERRE ===== -->
+<section>
+<div class="close-slide">
+  <h1>La pérdida puede verse sana mientras el modelo falla: diagnosticar es traer instrumentos que midan lo que la pérdida no ve.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

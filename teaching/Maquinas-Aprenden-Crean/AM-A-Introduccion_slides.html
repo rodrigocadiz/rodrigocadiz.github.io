@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introducción al Aprendizaje de Máquina</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Introducción al<br>Aprendizaje de Máquina</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- 2 · APERTURA -->
+<section>
+<h2>Programar es decirle a un computador qué hacer, paso a paso</h2>
+<ul>
+<li>Funciona espléndidamente hasta que el problema es reconocer un gato, y nadie sabe escribir esas reglas.</li>
+</ul>
+</section>
+
+<!-- 3 -->
+<section>
+<h2>El aprendizaje de máquina invierte el trato</h2>
+<ul>
+<li>En vez de escribir el programa, se escriben los ejemplos, y la máquina escribe el programa.</li>
+</ul>
+<p class="note">Todo lo que viene en el curso son las consecuencias de esa inversión.</p>
+</section>
+
+<!-- ============ §1 APRENDIZAJE ============ -->
+
+<!-- 4 -->
+<section>
+<div class="section-label">§ 1 · Aprendizaje</div>
+<h2>"Aprender" es una palabra vaga, y hay que hacerla operativa</h2>
+<ul>
+<li>La definición de Tom Mitchell la reduce a tres letras y una condición verificable.</li>
+</ul>
+</section>
+
+<!-- 5 -->
+<section>
+<div class="section-label">§ 1 · Aprendizaje</div>
+<h2>Experiencia, tarea y rendimiento</h2>
+<ul>
+<li>Hay aprendizaje si el rendimiento en una tarea $T$, medido por $P$, mejora con la experiencia $E$.</li>
+</ul>
+<p class="note">$E$ son los datos, $T$ el problema a resolver y $P$ la métrica. Si al agregar datos la métrica no mejora, no hay aprendizaje, por sofisticado que sea el método.</p>
+</section>
+
+<!-- 6 · SVG pipeline -->
+<section>
+<div class="section-label">§ 1 · Aprendizaje</div>
+<h2>El esquema general cabe en una línea</h2>
+<ul><li>Los datos y sus etiquetas producen un modelo; el modelo produce predicciones.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 190" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ai1" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="14" text-anchor="middle" fill="#222">
+    <rect x="12" y="26" width="130" height="60" rx="8" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="77" y="50">Datos</text>
+    <text x="77" y="70" font-size="12" font-style="italic">x = características</text>
+    <rect x="12" y="104" width="130" height="60" rx="8" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="77" y="128">Etiquetas</text>
+    <text x="77" y="148" font-size="12" font-style="italic">y = salida esperada</text>
+    <path d="M146,56 L200,84" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#ai1)"/>
+    <path d="M146,134 L200,106" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#ai1)"/>
+    <rect x="206" y="60" width="150" height="70" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6"/>
+    <text x="281" y="88">Algoritmo de</text>
+    <text x="281" y="108">aprendizaje</text>
+    <path d="M360,95 L414,95" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#ai1)"/>
+    <rect x="420" y="60" width="150" height="70" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.6"/>
+    <text x="495" y="88">Modelo</text>
+    <text x="495" y="110" font-size="13" font-style="italic">h(x)</text>
+    <path d="M574,95 L628,95" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#ai1)"/>
+    <rect x="634" y="60" width="114" height="70" rx="8" fill="#f0dce6" stroke="#8a3a63" stroke-width="1.6"/>
+    <text x="691" y="88">Predicción</text>
+    <text x="691" y="110" font-size="13" font-style="italic">ŷ</text>
+    <text x="281" y="152" font-size="12" font-style="italic" fill="#555">entrenamiento</text>
+    <text x="595" y="152" font-size="12" font-style="italic" fill="#555">datos nuevos</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 7 -->
+<section>
+<div class="section-label">§ 1 · Aprendizaje</div>
+<h2>Y esto invierte el flujo de la programación tradicional</h2>
+<ul>
+<li>Antes entraban datos y programa, y salía la respuesta; ahora entran datos y respuestas, y sale el programa.</li>
+</ul>
+</section>
+
+<!-- 8 · SVG paradigma -->
+<section>
+<div class="section-label">§ 1 · Aprendizaje</div>
+<h2>La inversión, vista de frente</h2>
+<ul><li>Lo que era salida pasa a ser entrada, y lo que era entrada pasa a ser resultado.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 720 292" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ai2" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13.5" text-anchor="middle" fill="#222">
+    <text x="360" y="20" font-size="14.5" font-weight="bold">Programación tradicional</text>
+    <rect x="40" y="34" width="120" height="46" rx="7" fill="#dbe9f4" stroke="#33607f" stroke-width="1.5"/>
+    <text x="100" y="62">Datos</text>
+    <rect x="40" y="90" width="120" height="46" rx="7" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="100" y="118">Programa</text>
+    <path d="M164,57 L236,78" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai2)"/>
+    <path d="M164,113 L236,92" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai2)"/>
+    <rect x="242" y="62" width="120" height="46" rx="7" fill="#eeeeee" stroke="#555" stroke-width="1.5"/>
+    <text x="302" y="90">Computador</text>
+    <path d="M366,85 L438,85" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai2)"/>
+    <rect x="444" y="62" width="120" height="46" rx="7" fill="#f0dce6" stroke="#8a3a63" stroke-width="1.5"/>
+    <text x="504" y="90">Salida</text>
+
+    <line x1="40" y1="152" x2="680" y2="152" stroke="#bbb" stroke-width="1" stroke-dasharray="5,4"/>
+
+    <text x="360" y="176" font-size="14.5" font-weight="bold">Aprendizaje de máquina</text>
+    <rect x="40" y="190" width="120" height="46" rx="7" fill="#dbe9f4" stroke="#33607f" stroke-width="1.5"/>
+    <text x="100" y="218">Datos</text>
+    <rect x="40" y="242" width="120" height="46" rx="7" fill="#f0dce6" stroke="#8a3a63" stroke-width="1.5"/>
+    <text x="100" y="270">Salida</text>
+    <path d="M164,213 L236,234" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai2)"/>
+    <path d="M164,265 L236,244" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai2)"/>
+    <rect x="242" y="216" width="120" height="46" rx="7" fill="#eeeeee" stroke="#555" stroke-width="1.5"/>
+    <text x="302" y="244">Computador</text>
+    <path d="M366,239 L438,239" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai2)"/>
+    <rect x="444" y="216" width="120" height="46" rx="7" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="504" y="244">Programa</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 9 · SVG IA/ML/DL -->
+<section>
+<div class="section-label">§ 1 · Aprendizaje</div>
+<h2>Dónde encaja todo esto</h2>
+<ul><li>El aprendizaje profundo es una forma de aprendizaje de máquina, que a su vez es una rama de la IA.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle" fill="#222">
+    <rect x="16" y="20" width="708" height="212" rx="14" fill="#eef3f8" stroke="#33607f" stroke-width="1.8"/>
+    <text x="370" y="44" font-size="15" font-weight="bold">Inteligencia artificial</text>
+    <text x="370" y="62" font-size="11.5" font-style="italic" fill="#555">sistemas que exhiben conducta inteligente</text>
+
+    <rect x="76" y="76" width="588" height="140" rx="12" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.8"/>
+    <text x="370" y="100" font-size="14.5" font-weight="bold">Aprendizaje de máquina</text>
+    <text x="370" y="118" font-size="11.5" font-style="italic" fill="#555">el modelo se infiere a partir de datos</text>
+
+    <rect x="160" y="132" width="420" height="72" rx="10" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.8"/>
+    <text x="370" y="158" font-size="14" font-weight="bold">Aprendizaje profundo</text>
+    <text x="370" y="178" font-size="11.5" font-style="italic" fill="#555">redes neuronales de muchas capas ocultas</text>
+    <text x="370" y="196" font-size="11.5" fill="#555">CNN · RNN · Transformers</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 10 · puente -->
+<section>
+<div class="section-label">§ 1 · Aprendizaje</div>
+<h2>Pero a un computador no se le entrega una casa</h2>
+<ul>
+<li>Ni un correo, ni una fotografía. Antes de cualquier algoritmo hay una traducción pendiente.</li>
+</ul>
+</section>
+
+<!-- ============ §2 DATOS Y CARACTERÍSTICAS ============ -->
+
+<!-- 11 -->
+<section>
+<div class="section-label">§ 2 · Datos y características</div>
+<h2>Los datos crudos se convierten en vectores</h2>
+$$x = \phi(u) \in \mathbb{R}^d, \qquad y = \psi(v) \in \mathbb{R}^m$$
+<p class="note">En palabras: $\phi$ traduce la entrada y $\psi$ la salida. Una casa se vuelve metros cuadrados, número de baños y año de construcción.</p>
+</section>
+
+<!-- 12 -->
+<section>
+<div class="section-label">§ 2 · Datos y características</div>
+<h2>Elegir esas características fue el oficio durante décadas</h2>
+<ul>
+<li>Se llamaba ingeniería de características y dependía por completo del conocimiento experto del dominio.</li>
+</ul>
+</section>
+
+<!-- 13 -->
+<section>
+<div class="section-label">§ 2 · Datos y características</div>
+<h2>El aprendizaje profundo cambió eso</h2>
+<ul>
+<li>Las redes aprenden sus propias características a partir de datos crudos, aunque las que descubren suelen ser imposibles de interpretar.</li>
+</ul>
+<p class="note">El tema completo, con estandarización y codificación de categorías, está en A.2.</p>
+</section>
+
+<!-- 14 · puente -->
+<section>
+<div class="section-label">§ 2 · Datos y características</div>
+<h2>Con los datos ya vectorizados, cabe una pregunta</h2>
+<ul>
+<li>¿Qué tipo de problema es el que se está resolviendo?</li>
+</ul>
+</section>
+
+<!-- ============ §3 TIPOS ============ -->
+
+<!-- 15 -->
+<section>
+<div class="section-label">§ 3 · Tipos de aprendizaje de máquina</div>
+<h2>La partición depende de qué acompaña a los datos</h2>
+<ul>
+<li>Concretamente, de si vienen o no con la respuesta correcta.</li>
+</ul>
+</section>
+
+<!-- 16 -->
+<section>
+<div class="section-label">§ 3 · Tipos de aprendizaje de máquina</div>
+<h2>Supervisado: cada dato trae su respuesta</h2>
+<ul>
+<li>Se entrena con pares $(x^{(i)}, y^{(i)})$ y el modelo aprende la relación entre entradas y salidas esperadas.</li>
+</ul>
+<p class="note">Es el caso de las imágenes etiquetadas como "gato" o "no gato", y el que ocupa la mayor parte del curso.</p>
+</section>
+
+<!-- 17 -->
+<section>
+<div class="section-label">§ 3 · Tipos de aprendizaje de máquina</div>
+<h2>No supervisado: no hay respuestas, solo datos</h2>
+<ul>
+<li>El objetivo pasa a ser descubrir estructura, agrupando lo parecido o encontrando las direcciones donde los datos más varían.</li>
+</ul>
+</section>
+
+<!-- 18 -->
+<section>
+<div class="section-label">§ 3 · Tipos de aprendizaje de máquina</div>
+<h2>Semi supervisado: unas pocas respuestas</h2>
+<ul>
+<li>Muchos datos sin etiqueta y unos pocos con ella, que es la situación real cuando etiquetar es caro o lento.</li>
+</ul>
+</section>
+
+<!-- 19 -->
+<section>
+<div class="section-label">§ 3 · Tipos de aprendizaje de máquina</div>
+<h2>Reforzado: no hay conjunto de datos en absoluto</h2>
+<ul>
+<li>Un agente actúa sobre un entorno, observa las consecuencias y recibe recompensas; los datos los genera él mismo al explorar.</li>
+</ul>
+<p class="note">Es el único de los cuatro donde nadie dice cuál era la respuesta correcta, solo qué tan buena resultó la decisión. Se desarrolla en la sección E.</p>
+</section>
+
+<!-- 20 · puente -->
+<section>
+<div class="section-label">§ 3 · Tipos de aprendizaje de máquina</div>
+<h2>Dentro del supervisado hay todavía una división</h2>
+<ul>
+<li>Y depende de qué tipo de cosa es la salida.</li>
+</ul>
+</section>
+
+<!-- ============ §4 REGRESIÓN VS CLASIFICACIÓN ============ -->
+
+<!-- 21 -->
+<section>
+<div class="section-label">§ 4 · Regresión versus clasificación</div>
+<h2>Si la salida es un número, es regresión</h2>
+$$\hat y = h_\theta(x) \approx y, \qquad y \in \mathbb{R}$$
+<p class="note">En palabras: predecir el precio de una vivienda, una temperatura o una demanda. La salida puede tomar cualquier valor de un continuo.</p>
+</section>
+
+<!-- 22 -->
+<section>
+<div class="section-label">§ 4 · Regresión versus clasificación</div>
+<h2>Si la salida es una categoría, es clasificación</h2>
+$$y \in \mathcal{Y} = \{1, 2, \ldots, K\}$$
+<p class="note">En palabras: decidir si un correo es spam, o cuál de mil objetos aparece en una foto. La salida pertenece a un conjunto finito.</p>
+</section>
+
+<!-- 23 -->
+<section>
+<div class="section-label">§ 4 · Regresión versus clasificación</div>
+<h2>Con dos clases, la sigmoide entrega una probabilidad</h2>
+$$\hat y = \sigma(\theta^T x) = \frac{1}{1 + e^{-\theta^T x}}$$
+<p class="note">En palabras: comprime cualquier número real al intervalo entre 0 y 1, lo que permite leer la salida como la probabilidad de la clase positiva.</p>
+</section>
+
+<!-- 24 -->
+<section>
+<div class="section-label">§ 4 · Regresión versus clasificación</div>
+<h2>Con más de dos, la softmax reparte entre todas</h2>
+$$\hat y_k = \frac{e^{\theta_k^T x}}{\sum_{j=1}^{K} e^{\theta_j^T x}}$$
+<p class="note">En palabras: entrega $K$ números positivos que suman uno, es decir, una distribución de probabilidad sobre las clases.</p>
+</section>
+
+<!-- 25 · puente -->
+<section>
+<div class="section-label">§ 4 · Regresión versus clasificación</div>
+<h2>Sea cual sea el caso, el proceso es el mismo</h2>
+<ul>
+<li>Proponer una forma, ajustarla a los datos y comprobar que sirve. Tres etapas, siempre.</li>
+</ul>
+</section>
+
+<!-- ============ §5 HIPÓTESIS, MODELOS Y PREDICTORES ============ -->
+
+<!-- 26 -->
+<section>
+<div class="section-label">§ 5 · Hipótesis, modelos y predictores</div>
+<h2>Tres palabras que se usan como sinónimas</h2>
+<ul>
+<li>Y que conviene separar desde el primer día, porque nombran cosas distintas.</li>
+</ul>
+</section>
+
+<!-- 27 -->
+<section>
+<div class="section-label">§ 5 · Hipótesis, modelos y predictores</div>
+<h2>La hipótesis es la forma que se propone</h2>
+<ul>
+<li>Una función $h_\theta(x)$ donde $h$ fija la estructura y $\theta$ son los parámetros todavía sin determinar.</li>
+</ul>
+</section>
+
+<!-- 28 -->
+<section>
+<div class="section-label">§ 5 · Hipótesis, modelos y predictores</div>
+<h2>El modelo es esa forma ya ajustada</h2>
+<ul>
+<li>Es el resultado del entrenamiento: la misma estructura, pero con un $\theta$ concreto que resume lo aprendido de los datos.</li>
+</ul>
+</section>
+
+<!-- 29 -->
+<section>
+<div class="section-label">§ 5 · Hipótesis, modelos y predictores</div>
+<h2>Y el predictor es la función lista para usarse</h2>
+<ul>
+<li>El mismo objeto, visto desde su uso operativo: se le entrega un $x$ nuevo y devuelve un $\hat y$.</li>
+</ul>
+</section>
+
+<!-- 30 -->
+<section>
+<div class="section-label">§ 5 · Hipótesis, modelos y predictores</div>
+<h2>Pero no todo lo que define un modelo se aprende</h2>
+<ul>
+<li>Los <strong>parámetros</strong> salen del entrenamiento; los <strong>hiperparámetros</strong> se fijan antes de empezar.</li>
+</ul>
+<p class="note">La profundidad de un árbol, el número de capas o la tasa de aprendizaje no se ajustan solos. Decidirlos es un problema aparte, y es el de A.7.</p>
+</section>
+
+<!-- 31 · puente -->
+<section>
+<div class="section-label">§ 5 · Hipótesis, modelos y predictores</div>
+<h2>Definida la forma, hay que ajustarla</h2>
+<ul>
+<li>Y ahí aparecen los dos problemas que persiguen al campo entero.</li>
+</ul>
+</section>
+
+<!-- ============ §6 ENTRENAMIENTO ============ -->
+
+<!-- 32 -->
+<section>
+<div class="section-label">§ 6 · Entrenamiento o aprendizaje</div>
+<h2>Entrenar es elegir los parámetros con los datos</h2>
+<ul>
+<li>Pero el objetivo no es acertar sobre los datos que ya se tienen: es acertar sobre los que vendrán.</li>
+</ul>
+</section>
+
+<!-- 33 -->
+<section>
+<div class="section-label">§ 6 · Entrenamiento o aprendizaje</div>
+<h2>Un modelo puede fallar por exceso de flexibilidad</h2>
+<ul>
+<li>Se llama sobreajuste: memoriza el ruido de las observaciones, rinde perfecto en ellas y se derrumba con datos nuevos.</li>
+</ul>
+<p class="note">Va asociado a varianza alta: entrenado con otra muestra de la misma población daría un modelo muy distinto.</p>
+</section>
+
+<!-- 34 -->
+<section>
+<div class="section-label">§ 6 · Entrenamiento o aprendizaje</div>
+<h2>O por falta de ella</h2>
+<ul>
+<li>Se llama subajuste: la estructura es demasiado simple para los datos, y falla parejo en todas partes.</li>
+</ul>
+<p class="note">Va asociado a sesgo alto: el error persistiría incluso con infinitos datos de entrenamiento.</p>
+</section>
+
+<!-- 35 -->
+<section>
+<div class="section-label">§ 6 · Entrenamiento o aprendizaje</div>
+<h2>Y para guiar el ajuste se necesita medir el error</h2>
+<ul>
+<li>De eso se encargan las funciones de pérdida, que cuantifican qué tan mal se ajusta la predicción al valor real.</li>
+</ul>
+<p class="note">Error cuadrático medio y error absoluto para regresión; entropía cruzada para clasificación. El catálogo completo es A.4.</p>
+</section>
+
+<!-- 36 · puente -->
+<section>
+<div class="section-label">§ 6 · Entrenamiento o aprendizaje</div>
+<h2>Con una medida del error, falta el principio</h2>
+<ul>
+<li>Qué significa, exactamente, que unos parámetros sean los correctos.</li>
+</ul>
+</section>
+
+<!-- ============ §7 AJUSTE ============ -->
+
+<!-- 37 -->
+<section>
+<div class="section-label">§ 7 · Ajuste de los modelos</div>
+<h2>Un criterio minimiza el error promedio observado</h2>
+$$\hat\theta_{\text{ERM}} = \arg\min_\theta \frac{1}{n}\sum_{i=1}^{n} \mathcal{L}\big(h_\theta(x^{(i)}), y^{(i)}\big)$$
+<p class="note">En palabras: se elige el $\theta$ que hace más pequeño el promedio de la pérdida sobre los datos de entrenamiento. Es la minimización del riesgo empírico.</p>
+</section>
+
+<!-- 38 -->
+<section>
+<div class="section-label">§ 7 · Ajuste de los modelos</div>
+<h2>El otro maximiza la probabilidad de lo observado</h2>
+$$\hat\theta_{\text{MLE}} = \arg\max_\theta \sum_{i=1}^{n} \log p\big(y^{(i)} \mid x^{(i)}; \theta\big)$$
+<p class="note">En palabras: se elige el $\theta$ bajo el cual los datos que efectivamente ocurrieron resultan más creíbles. Es la máxima verosimilitud.</p>
+</section>
+
+<!-- 39 -->
+<section>
+<div class="section-label">§ 7 · Ajuste de los modelos</div>
+<h2>Y bajo una condición son el mismo criterio</h2>
+<ul>
+<li>Si la pérdida elegida es $\mathcal{L} = -\log p(y \mid x; \theta)$, minimizar el riesgo empírico es exactamente maximizar la verosimilitud.</li>
+</ul>
+<p class="note">Esa equivalencia, y sus límites, es todo el contenido de A.5.</p>
+</section>
+
+<!-- 40 · puente -->
+<section>
+<div class="section-label">§ 7 · Ajuste de los modelos</div>
+<h2>Fijado el criterio, queda resolverlo</h2>
+<ul>
+<li>Y salvo casos muy simples, no hay fórmula cerrada.</li>
+</ul>
+</section>
+
+<!-- ============ §8 OPTIMIZACIÓN ============ -->
+
+<!-- 41 -->
+<section>
+<div class="section-label">§ 8 · Optimización</div>
+<h2>Aprender es, en el fondo, minimizar</h2>
+$$\theta^\star = \arg\min_\theta \mathcal{L}(\theta)$$
+<p class="note">En palabras: la búsqueda ocurre en un espacio que puede tener millones de dimensiones, y solo se dispone de información local.</p>
+</section>
+
+<!-- 42 -->
+<section>
+<div class="section-label">§ 8 · Optimización</div>
+<h2>Se avanza en contra del gradiente</h2>
+$$\theta \leftarrow \theta - \lambda \, \nabla_\theta \mathcal{L}(\theta)$$
+<p class="note">En palabras: el gradiente indica hacia dónde la pérdida crece más rápido, así que se camina en el sentido opuesto. La tasa $\lambda$ decide cuánto.</p>
+</section>
+
+<!-- 43 -->
+<section>
+<div class="section-label">§ 8 · Optimización</div>
+<h2>Y con muchos datos se usa solo un lote por paso</h2>
+<ul>
+<li>Es el descenso de gradiente estocástico, y sus variantes modernas se llaman Momentum, RMSProp y Adam.</li>
+</ul>
+</section>
+
+<!-- 44 · SVG ciclo -->
+<section>
+<div class="section-label">§ 8 · Optimización</div>
+<h2>El entrenamiento es este ciclo, repetido</h2>
+<ul><li>Se itera hasta que las predicciones dejan de mejorar, o empiezan a empeorar.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 700 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ai3" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13.5" text-anchor="middle" fill="#222">
+    <rect x="20" y="128" width="118" height="52" rx="8" fill="#dbe9f4" stroke="#33607f" stroke-width="1.5"/>
+    <text x="79" y="152">Lote de datos</text>
+    <text x="79" y="169" font-size="12" font-style="italic">(x, y)</text>
+    <path d="M142,154 L196,154" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai3)"/>
+    <rect x="202" y="128" width="132" height="52" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.5"/>
+    <text x="268" y="152">Predicción</text>
+    <text x="268" y="169" font-size="12" font-style="italic">ŷ = h(x, θ)</text>
+    <path d="M338,154 L392,154" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai3)"/>
+    <rect x="398" y="128" width="132" height="52" rx="8" fill="#f0dce6" stroke="#8a3a63" stroke-width="1.5"/>
+    <text x="464" y="152">Pérdida</text>
+    <text x="464" y="169" font-size="12" font-style="italic">L(y, ŷ)</text>
+    <path d="M534,154 L558,154" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai3)"/>
+    <rect x="562" y="128" width="118" height="52" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="621" y="152">Gradiente</text>
+    <text x="621" y="169" font-size="12" font-style="italic">∇L(θ)</text>
+    <path d="M621,124 L621,72 L268,72 L268,124" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ai3)"/>
+    <text x="445" y="62" font-size="13">actualizar parámetros</text>
+    <text x="445" y="46" font-size="12.5" font-style="italic">θ ← θ − λ ∇L(θ)</text>
+    <text x="350" y="222" font-size="12.5" font-style="italic" fill="#555">Cada vuelta usa un lote distinto de los datos de entrenamiento</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 45 · puente -->
+<section>
+<div class="section-label">§ 8 · Optimización</div>
+<h2>Y falta la pregunta que decide si todo esto sirvió</h2>
+<ul>
+<li>Porque nada de lo anterior garantiza que el modelo funcione fuera de los datos con que se entrenó.</li>
+</ul>
+</section>
+
+<!-- ============ §9 VALIDACIÓN ============ -->
+
+<!-- 46 -->
+<section>
+<div class="section-label">§ 9 · Validación</div>
+<h2>Se reservan datos que el modelo nunca verá</h2>
+<ul>
+<li>El de <strong>entrenamiento</strong> ajusta los parámetros, el de <strong>validación</strong> elige los hiperparámetros, y el de <strong>prueba</strong> se abre una sola vez al final.</li>
+</ul>
+<p class="note">Proporciones habituales: 60/20/20 o 70/15/15.</p>
+</section>
+
+<!-- 47 -->
+<section>
+<div class="section-label">§ 9 · Validación</div>
+<h2>Y con pocos datos se rota el rol de validación</h2>
+<ul>
+<li>Cada partición hace de validación exactamente una vez, y el error final es el promedio de las $k$ rondas.</li>
+</ul>
+</section>
+
+<!-- 48 · SVG k-fold -->
+<section>
+<div class="section-label">§ 9 · Validación</div>
+<h2>Validación cruzada con cinco particiones</h2>
+<ul><li>Cada dato participa en el entrenamiento y en la validación, pero nunca a la vez.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222">
+    <g text-anchor="middle" font-size="12">
+      <text x="215" y="30">1</text><text x="315" y="30">2</text><text x="415" y="30">3</text>
+      <text x="515" y="30">4</text><text x="615" y="30">5</text>
+      <text x="690" y="30" font-style="italic">error</text>
+    </g>
+    <g>
+      <text x="24" y="58">Iter. 1</text>
+      <rect x="165" y="42" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="42" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="60" text-anchor="middle" font-style="italic">E₁</text>
+    </g>
+    <g>
+      <text x="24" y="94">Iter. 2</text>
+      <rect x="165" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="78" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="78" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="96" text-anchor="middle" font-style="italic">E₂</text>
+    </g>
+    <g>
+      <text x="24" y="130">Iter. 3</text>
+      <rect x="165" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="114" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="114" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="132" text-anchor="middle" font-style="italic">E₃</text>
+    </g>
+    <g>
+      <text x="24" y="166">Iter. 4</text>
+      <rect x="165" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="150" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="150" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="690" y="168" text-anchor="middle" font-style="italic">E₄</text>
+    </g>
+    <g>
+      <text x="24" y="202">Iter. 5</text>
+      <rect x="165" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="265" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="365" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="465" y="186" width="98" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="565" y="186" width="98" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <text x="690" y="204" text-anchor="middle" font-style="italic">E₅</text>
+    </g>
+    <line x1="655" y1="224" x2="725" y2="224" stroke="#333" stroke-width="1.2"/>
+    <text x="690" y="244" text-anchor="middle" font-style="italic" font-size="12.5">promedio</text>
+    <rect x="165" y="248" width="20" height="16" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+    <text x="195" y="261">entrenamiento</text>
+    <rect x="330" y="248" width="20" height="16" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+    <text x="360" y="261">validación</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 49 · cierre de sección -->
+<section>
+<div class="section-label">§ 9 · Validación</div>
+<h2>Cada una de estas nueve secciones es una portada</h2>
+<ul>
+<li>Detrás de cada una hay un notebook completo, y el resto del curso consiste en desplegarlas una por una.</li>
+</ul>
+</section>
+
+<!-- 50 · CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>En vez de escribir el programa, se escriben los ejemplos, y la máquina escribe el programa.</h1>
+  <p style="font-size:1em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

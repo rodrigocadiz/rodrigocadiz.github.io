@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compresión de modelos</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ===== PORTADA ===== -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Compresión de modelos</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- ===== APERTURA ===== -->
+<section>
+  <h2>Los modelos modernos tienen pesos de sobra</h2>
+  <ul>
+    <li>Millones de parámetros ayudan a entrenar.</li>
+    <li>Pero hacen el modelo grande y lento en producción.</li>
+  </ul>
+  <p class="note">Comprimir reduce tamaño, memoria y latencia sin perder (mucha) precisión.</p>
+</section>
+
+<section>
+  <h2>Tres ejes, tres técnicas</h2>
+  <ul><li>Cada técnica recorta un eje distinto.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <text x="115" y="22" text-anchor="middle" font-weight="bold" fill="#5c1a5c">Podado</text>
+    <circle cx="55" cy="60" r="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.4"/>
+    <circle cx="55" cy="100" r="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.4"/>
+    <circle cx="55" cy="140" r="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.4"/>
+    <circle cx="175" cy="80" r="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.4"/>
+    <circle cx="175" cy="120" r="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.4"/>
+    <line x1="62" y1="60" x2="168" y2="80" stroke="#7b1fa2" stroke-width="1.4"/>
+    <line x1="62" y1="100" x2="168" y2="80" stroke="#7b1fa2" stroke-width="1.4"/>
+    <line x1="62" y1="140" x2="168" y2="120" stroke="#7b1fa2" stroke-width="1.4"/>
+    <line x1="62" y1="100" x2="168" y2="120" stroke="#7b1fa2" stroke-width="1.4"/>
+    <line x1="62" y1="60" x2="168" y2="120" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
+    <line x1="62" y1="140" x2="168" y2="80" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
+    <text x="115" y="180" text-anchor="middle" font-size="11" fill="#5c1a5c">elimina pesos y conexiones</text>
+    <text x="115" y="195" text-anchor="middle" font-size="10" fill="#888">menos parámetros</text>
+    <text x="340" y="22" text-anchor="middle" font-weight="bold" fill="#663300">Cuantización</text>
+    <text x="262" y="58" text-anchor="end" font-size="10" fill="#888">float32</text>
+    <rect x="272" y="48" width="150" height="12" rx="2" fill="url(#qgrad)"/>
+    <defs><linearGradient id="qgrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffe8cc"/><stop offset="1" stop-color="#cc7700"/></linearGradient></defs>
+    <text x="262" y="120" text-anchor="end" font-size="10" fill="#888">int8</text>
+    <rect x="272" y="110" width="30" height="12" fill="#ffe8cc" stroke="#cc7700" stroke-width="1"/>
+    <rect x="302" y="110" width="30" height="12" fill="#f6c48a" stroke="#cc7700" stroke-width="1"/>
+    <rect x="332" y="110" width="30" height="12" fill="#e3a14f" stroke="#cc7700" stroke-width="1"/>
+    <rect x="362" y="110" width="30" height="12" fill="#cc7700" stroke="#cc7700" stroke-width="1"/>
+    <rect x="392" y="110" width="30" height="12" fill="#a85f00" stroke="#cc7700" stroke-width="1"/>
+    <line x1="347" y1="64" x2="347" y2="106" stroke="#663300" stroke-width="1.2" marker-end="url(#qarr)"/>
+    <defs><marker id="qarr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#663300"/></marker></defs>
+    <text x="340" y="180" text-anchor="middle" font-size="11" fill="#663300">redondea a pocos niveles</text>
+    <text x="340" y="195" text-anchor="middle" font-size="10" fill="#888">menos bits por parámetro</text>
+    <text x="565" y="22" text-anchor="middle" font-weight="bold" fill="#1a4d1a">Destilación</text>
+    <circle cx="510" cy="100" r="30" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
+    <text x="510" y="103" text-anchor="middle" font-size="10" fill="#1a4d1a">profesor</text>
+    <circle cx="620" cy="100" r="16" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
+    <text x="620" y="103" text-anchor="middle" font-size="9" fill="#1a4d1a">alumno</text>
+    <line x1="542" y1="100" x2="600" y2="100" stroke="#2d6b2d" stroke-width="1.4" marker-end="url(#darr)"/>
+    <defs><marker id="darr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2d6b2d"/></marker></defs>
+    <text x="571" y="92" text-anchor="middle" font-size="9" fill="#2d6b2d">enseña</text>
+    <text x="565" y="180" text-anchor="middle" font-size="11" fill="#1a4d1a">imita un modelo grande</text>
+    <text x="565" y="195" text-anchor="middle" font-size="10" fill="#888">menos capacidad necesaria</text>
+  </svg>
+  </div>
+</section>
+
+<!-- ===== §1 PODADO ===== -->
+<section>
+  <div class="section-label">§ 1 · Podado (Pruning)</div>
+  <h2>¿Qué pesos se pueden borrar sin perder precisión?</h2>
+  <ul>
+    <li>La red está sobre-parametrizada: muchos pesos aportan poco.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Podado (Pruning)</div>
+  <h2>Podar es optimizar con restricción de dispersión</h2>
+  $$\min_W \ \mathcal{L}(W) \quad \text{s.a.} \quad \|W\|_0 \leq k$$
+  <ul>
+    <li>$\|W\|_0$: número de pesos no nulos; $k$: presupuesto.</li>
+  </ul>
+  <p class="note">La restricción $L_0$ es combinatoria y no diferenciable.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Podado (Pruning)</div>
+  <h2>Por eso se relaja a una penalización $L_1$</h2>
+  $$\min_W \ \mathcal{L}(W) + \lambda \|W\|_1$$
+  <ul>
+    <li>La penalización $L_1$ (Lasso) empuja muchos pesos a cero.</li>
+  </ul>
+  <p class="note">Tras entrenar, esos pesos casi nulos se podan.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Podado (Pruning)</div>
+  <h2>O se mide la sensibilidad de cada peso</h2>
+  $$\Delta \mathcal{L} \approx \tfrac{1}{2}\, H_{ii}\, w_i^2$$
+  <ul>
+    <li>$H_{ii}$: segunda derivada de la pérdida respecto a $w_i$.</li>
+  </ul>
+  <p class="note">Optimal Brain Damage: se borra el peso con menor impacto en la pérdida.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Podado (Pruning)</div>
+  <h2>La hipótesis del billete de lotería</h2>
+  <ul>
+    <li>Dentro de la red hay una subred pequeña (un <em>ticket</em>).</li>
+    <li>Entrenada sola, alcanza la precisión de la red completa.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Podado (Pruning)</div>
+  <h2>Disperso vs. estructurado</h2>
+  <ul><li>Memoria vs. velocidad de inferencia.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 620 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <text x="155" y="22" text-anchor="middle" font-weight="bold" fill="#5c1a5c">No estructurado</text>
+    <text x="155" y="40" text-anchor="middle" font-size="10" fill="#888">pesos sueltos a cero · matriz dispersa</text>
+    <g>
+      <rect x="70" y="55" width="22" height="22" fill="#7b1fa2"/><rect x="94" y="55" width="22" height="22" fill="#eee"/><rect x="118" y="55" width="22" height="22" fill="#7b1fa2"/><rect x="142" y="55" width="22" height="22" fill="#eee"/><rect x="166" y="55" width="22" height="22" fill="#7b1fa2"/><rect x="190" y="55" width="22" height="22" fill="#eee"/>
+      <rect x="70" y="79" width="22" height="22" fill="#eee"/><rect x="94" y="79" width="22" height="22" fill="#7b1fa2"/><rect x="118" y="79" width="22" height="22" fill="#eee"/><rect x="142" y="79" width="22" height="22" fill="#7b1fa2"/><rect x="166" y="79" width="22" height="22" fill="#eee"/><rect x="190" y="79" width="22" height="22" fill="#7b1fa2"/>
+      <rect x="70" y="103" width="22" height="22" fill="#7b1fa2"/><rect x="94" y="103" width="22" height="22" fill="#eee"/><rect x="118" y="103" width="22" height="22" fill="#eee"/><rect x="142" y="103" width="22" height="22" fill="#7b1fa2"/><rect x="166" y="103" width="22" height="22" fill="#7b1fa2"/><rect x="190" y="103" width="22" height="22" fill="#eee"/>
+      <rect x="70" y="127" width="22" height="22" fill="#eee"/><rect x="94" y="127" width="22" height="22" fill="#7b1fa2"/><rect x="118" y="127" width="22" height="22" fill="#7b1fa2"/><rect x="142" y="127" width="22" height="22" fill="#eee"/><rect x="166" y="127" width="22" height="22" fill="#eee"/><rect x="190" y="127" width="22" height="22" fill="#7b1fa2"/>
+      <rect x="70" y="151" width="22" height="22" fill="#7b1fa2"/><rect x="94" y="151" width="22" height="22" fill="#eee"/><rect x="118" y="151" width="22" height="22" fill="#7b1fa2"/><rect x="142" y="151" width="22" height="22" fill="#eee"/><rect x="166" y="151" width="22" height="22" fill="#7b1fa2"/><rect x="190" y="151" width="22" height="22" fill="#eee"/>
+      <rect x="70" y="175" width="22" height="22" fill="#eee"/><rect x="94" y="175" width="22" height="22" fill="#7b1fa2"/><rect x="118" y="175" width="22" height="22" fill="#eee"/><rect x="142" y="175" width="22" height="22" fill="#7b1fa2"/><rect x="166" y="175" width="22" height="22" fill="#eee"/><rect x="190" y="175" width="22" height="22" fill="#7b1fa2"/>
+    </g>
+    <text x="155" y="218" text-anchor="middle" font-size="11" fill="#5c1a5c">ahorra memoria, difícil de acelerar</text>
+    <text x="455" y="22" text-anchor="middle" font-weight="bold" fill="#5c1a5c">Estructurado</text>
+    <text x="455" y="40" text-anchor="middle" font-size="10" fill="#888">columnas/filtros completos eliminados</text>
+    <g>
+      <rect x="370" y="55" width="22" height="142" fill="#7b1fa2"/>
+      <rect x="394" y="55" width="22" height="142" fill="#eee"/>
+      <rect x="418" y="55" width="22" height="142" fill="#7b1fa2"/>
+      <rect x="442" y="55" width="22" height="142" fill="#7b1fa2"/>
+      <rect x="466" y="55" width="22" height="142" fill="#eee"/>
+      <rect x="490" y="55" width="22" height="142" fill="#7b1fa2"/>
+      <g stroke="#faf7eb" stroke-width="2">
+        <line x1="370" y1="79" x2="512" y2="79"/><line x1="370" y1="103" x2="512" y2="103"/>
+        <line x1="370" y1="127" x2="512" y2="127"/><line x1="370" y1="151" x2="512" y2="151"/>
+        <line x1="370" y1="175" x2="512" y2="175"/>
+      </g>
+    </g>
+    <text x="455" y="218" text-anchor="middle" font-size="11" fill="#5c1a5c">matriz densa más pequeña, acelera</text>
+    <rect x="200" y="232" width="13" height="13" fill="#7b1fa2"/><text x="219" y="243" font-size="10" fill="#555">peso activo</text>
+    <rect x="300" y="232" width="13" height="13" fill="#eee" stroke="#ccc"/><text x="319" y="243" font-size="10" fill="#555">peso podado (cero)</text>
+  </svg>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">§ 1 · Podado (Pruning)</div>
+  <h2>En LLM se poda en un paso, sin reentrenar</h2>
+  <ul>
+    <li><strong>SparseGPT</strong>: poda 50–60% por mínimos cuadrados por capa.</li>
+    <li><strong>Wanda</strong>: poda por magnitud × norma de la activación.</li>
+  </ul>
+</section>
+
+<!-- ===== §2 CUANTIZACIÓN ===== -->
+<section>
+  <div class="section-label">§ 2 · Cuantización (Quantization)</div>
+  <h2>¿Hacen falta 32 bits por peso?</h2>
+  <ul>
+    <li>Podar quitó pesos; ahora reducimos los bits de los que quedan.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Cuantización (Quantization)</div>
+  <h2>Los modelos toleran el redondeo</h2>
+  <ul>
+    <li>Las soluciones que generalizan son estables a perturbaciones pequeñas.</li>
+  </ul>
+  <p class="note">El redondeo de la cuantización es una de esas perturbaciones.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Cuantización (Quantization)</div>
+  <h2>Cuantizar es redondear a una rejilla</h2>
+  $$q(x) = \text{round}\!\left(\frac{x}{s}\right) \cdot s$$
+  <ul>
+    <li>$s$: factor de escala que fija la resolución.</li>
+  </ul>
+  <p class="note">En palabras: de float32 a int8 — menos bits, operaciones enteras más rápidas.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Cuantización (Quantization)</div>
+  <h2>Después o durante el entrenamiento</h2>
+  <ul>
+    <li><strong>PTQ</strong>: post-entrenamiento, simple de aplicar.</li>
+    <li><strong>QAT</strong>: simula la precisión al entrenar, conserva más exactitud.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 2 · Cuantización (Quantization)</div>
+  <h2>Para LLM se baja de 8 bits</h2>
+  <ul>
+    <li><strong>GPTQ</strong> y <strong>AWQ</strong>: 4 bits protegiendo los pesos clave.</li>
+    <li><strong>NF4</strong> (QLoRA): formato de 4 bits para pesos gaussianos.</li>
+  </ul>
+</section>
+
+<!-- ===== §3 DESTILACIÓN ===== -->
+<section>
+  <div class="section-label">§ 3 · Destilación (Knowledge Distillation)</div>
+  <h2>¿Puede un modelo pequeño heredar de uno grande?</h2>
+  <ul>
+    <li>El <em>alumno</em> aprende del <em>profesor</em>, no solo de las etiquetas.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Destilación (Knowledge Distillation)</div>
+  <h2>Las probabilidades suaves esconden conocimiento</h2>
+  <ul>
+    <li>"gato 90%, lince 7%, perro 3%" revela relaciones entre clases.</li>
+  </ul>
+  <p class="note">Ese <em>conocimiento oscuro</em> (dark knowledge) no está en la etiqueta dura.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Destilación (Knowledge Distillation)</div>
+  <h2>La temperatura suaviza las probabilidades</h2>
+  $$p_T = \text{softmax}(z_T / T), \quad p_S = \text{softmax}(z_S / T)$$
+  <ul>
+    <li>$z_T, z_S$: logits del profesor y del alumno; $T$: temperatura.</li>
+  </ul>
+  <p class="note">Un $T$ alto amplifica las clases menos probables.</p>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Destilación (Knowledge Distillation)</div>
+  <h2>El alumno imita al profesor y respeta la etiqueta</h2>
+  $$\begin{aligned}
+  \mathcal{L} = \;&\alpha \cdot \text{KL}(p_T \,\|\, p_S) \\
+  &+ (1-\alpha) \cdot \text{CE}(y, \text{softmax}(z_S))
+  \end{aligned}$$
+  <p class="note">$\alpha$ pondera entre imitar al profesor (KL) y acertar la etiqueta (CE).</p>
+</section>
+
+<section>
+  <div class="section-label">§ 3 · Destilación (Knowledge Distillation)</div>
+  <h2>Se puede transferir más que los logits</h2>
+  <ul>
+    <li>También features internas, activaciones o estructuras de atención.</li>
+  </ul>
+</section>
+
+<!-- ===== §4 COMBINACIÓN ===== -->
+<section>
+  <div class="section-label">§ 4 · Combinación de técnicas</div>
+  <h2>¿Compiten las tres técnicas o se refuerzan?</h2>
+  <ul>
+    <li>Cada una actúa sobre un eje distinto de la complejidad.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Combinación de técnicas</div>
+  <h2>Tres ejes ortogonales</h2>
+  <ul>
+    <li><strong>Destilar</strong>: dimensión funcional.</li>
+    <li><strong>Podar</strong>: dimensión paramétrica.</li>
+    <li><strong>Cuantizar</strong>: resolución numérica.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Combinación de técnicas</div>
+  <h2>Destilar → podar → cuantizar</h2>
+  <ul><li>Función, luego parámetros, luego bits.</li></ul>
+  <div class="svg-holder">
+  <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+    <defs>
+      <marker id="pa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"/></marker>
+    </defs>
+    <rect x="12" y="58" width="96" height="54" rx="8" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+    <text x="60" y="82" text-anchor="middle" font-weight="bold" fill="#1a3a5c" font-size="12">Modelo</text>
+    <text x="60" y="98" text-anchor="middle" fill="#1a3a5c" font-size="12">grande</text>
+    <line x1="108" y1="85" x2="150" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#pa)"/>
+    <rect x="152" y="58" width="110" height="54" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+    <text x="207" y="80" text-anchor="middle" font-weight="bold" fill="#1a4d1a" font-size="12">Destilación</text>
+    <text x="207" y="100" text-anchor="middle" fill="#888" font-size="10">dimensión funcional</text>
+    <line x1="262" y1="85" x2="304" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#pa)"/>
+    <rect x="306" y="58" width="110" height="54" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+    <text x="361" y="80" text-anchor="middle" font-weight="bold" fill="#5c1a5c" font-size="12">Podado</text>
+    <text x="361" y="100" text-anchor="middle" fill="#888" font-size="10">dimensión paramétrica</text>
+    <line x1="416" y1="85" x2="458" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#pa)"/>
+    <rect x="460" y="58" width="120" height="54" rx="8" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+    <text x="520" y="80" text-anchor="middle" font-weight="bold" fill="#663300" font-size="12">Cuantización</text>
+    <text x="520" y="100" text-anchor="middle" fill="#888" font-size="10">resolución numérica</text>
+    <line x1="580" y1="85" x2="622" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#pa)"/>
+    <rect x="624" y="58" width="64" height="54" rx="8" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+    <text x="656" y="82" text-anchor="middle" font-weight="bold" fill="#1a3a5c" font-size="11">Modelo</text>
+    <text x="656" y="98" text-anchor="middle" font-weight="bold" fill="#1a3a5c" font-size="11">compacto</text>
+    <text x="350" y="150" text-anchor="middle" font-size="11" fill="#555" font-style="italic">primero comprimir la función, luego los parámetros, finalmente la representación numérica</text>
+  </svg>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">§ 4 · Combinación de técnicas</div>
+  <h2>El resultado: 10–50× más pequeño</h2>
+  <ul>
+    <li>Más de 95% del desempeño original.</li>
+    <li>Listo para CPU, GPU móvil o aceleradores edge.</li>
+  </ul>
+</section>
+
+<!-- ===== CIERRE ===== -->
+<section>
+<div class="close-slide">
+  <h1>Comprimir es recortar los tres ejes —parámetros, bits y capacidad— y, juntos, caben en un teléfono sin perder lo aprendido.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

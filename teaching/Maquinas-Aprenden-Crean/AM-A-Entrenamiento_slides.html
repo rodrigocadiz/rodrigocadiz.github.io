@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrenamiento — Aprendizaje de Máquina</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Entrenamiento</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- 2 · APERTURA -->
+<section>
+<h2>Ya está planteado el problema; falta resolverlo</h2>
+<ul>
+<li>A.4 dio la medida del error y A.5 el criterio, pero ambos dejan un $\arg\min$ que casi nunca tiene solución analítica.</li>
+</ul>
+</section>
+
+<!-- 3 -->
+<section>
+<h2>Entrenar es bajar por una superficie que nadie ve</h2>
+<ul>
+<li>Solo se conoce la pendiente en el punto donde uno está parado, y hay que decidir el tamaño del paso a ciegas.</li>
+</ul>
+</section>
+
+<!-- ============ §0 QUÉ ES ENTRENAR ============ -->
+
+<!-- 4 -->
+<section>
+<div class="section-label">§ 0 · Qué significa entrenar</div>
+<h2>Entrenar es resolver un problema de optimización</h2>
+$$\theta^\star = \arg\min_\theta \; J(\theta)$$
+<p class="note">En palabras: se busca el vector de parámetros que hace más pequeña la función objetivo, sobre un espacio que puede tener millones de dimensiones.</p>
+</section>
+
+<!-- 5 -->
+<section>
+<div class="section-label">§ 0 · Qué significa entrenar</div>
+<h2>Tres palabras que se usan como sinónimos y no lo son</h2>
+<ul>
+<li>La <strong>pérdida</strong> mide un ejemplo, el <strong>riesgo empírico</strong> promedia el conjunto, y la <strong>función objetivo</strong> $J$ es lo que el algoritmo minimiza.</li>
+</ul>
+</section>
+
+<!-- 6 · puente -->
+<section>
+<div class="section-label">§ 0 · Qué significa entrenar</div>
+<h2>Fijado el objetivo, el problema deja de ser conceptual</h2>
+<ul>
+<li>Pasa a ser numérico, y todo depende de cómo sea el terreno.</li>
+</ul>
+</section>
+
+<!-- ============ §1 OPTIMIZACIÓN ============ -->
+
+<!-- 7 -->
+<section>
+<div class="section-label">§ 1 · Optimización</div>
+<h2>$J$ define una superficie en alta dimensión</h2>
+<ul>
+<li>Cada punto $\theta$ tiene una altura $J(\theta)$, y entrenar es encontrar el punto más bajo sin poder ver el mapa.</li>
+</ul>
+</section>
+
+<!-- 8 -->
+<section>
+<div class="section-label">§ 1 · Optimización</div>
+<h2>Si el problema es convexo, hay un solo fondo</h2>
+<ul>
+<li>Cualquier camino cuesta abajo llega al mínimo global, y eso ocurre en regresión lineal con MSE y regularización convexa.</li>
+</ul>
+</section>
+
+<!-- 9 · SVG paisaje -->
+<section>
+<div class="section-label">§ 1 · Optimización</div>
+<h2>Pero en redes el paisaje no es convexo</h2>
+<ul><li>Un corte en una dimensión ya muestra mínimos locales; las sillas necesitan dos o más.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+    <text x="185" y="26" font-size="14" text-anchor="middle" font-weight="bold">convexo</text>
+    <line x1="45" y1="200" x2="325" y2="200" stroke="#333" stroke-width="1.3"/>
+    <path d="M55,70 C110,72 150,190 185,192 C220,190 260,72 315,70"
+          fill="none" stroke="#33607f" stroke-width="2.8"/>
+    <circle cx="185" cy="192" r="6" fill="#2f6b33"/>
+    <text x="185" y="226" font-size="12.5" text-anchor="middle" fill="#555">un único mínimo</text>
+    <text x="185" y="246" font-size="12.5" text-anchor="middle" fill="#555">cualquier descenso llega</text>
+
+    <line x1="370" y1="40" x2="370" y2="250" stroke="#ccc" stroke-width="1.2"/>
+
+    <text x="555" y="26" font-size="14" text-anchor="middle" font-weight="bold">no convexo</text>
+    <line x1="415" y1="200" x2="695" y2="200" stroke="#333" stroke-width="1.3"/>
+    <path d="M425,88 C452,150 470,120 492,150 C512,178 528,120 548,110 C568,100 585,178 610,190 C640,196 665,120 688,74"
+          fill="none" stroke="#a06a1f" stroke-width="2.8"/>
+    <circle cx="492" cy="150" r="5.5" fill="#c0653a"/>
+    <text x="492" y="176" font-size="11.5" fill="#c0653a" text-anchor="middle">mínimo local</text>
+    <circle cx="548" cy="110" r="5.5" fill="#777"/>
+    <text x="548" y="96" font-size="11.5" fill="#777" text-anchor="middle">máximo local</text>
+    <circle cx="610" cy="190" r="6" fill="#2f6b33"/>
+    <text x="610" y="216" font-size="11.5" fill="#2f6b33" text-anchor="middle">mínimo global</text>
+    <text x="555" y="240" font-size="12.5" text-anchor="middle" fill="#555">dónde se termina depende de dónde se empezó</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 10 -->
+<section>
+<div class="section-label">§ 1 · Optimización</div>
+<h2>Y aun así, en la práctica funciona</h2>
+<ul>
+<li>La optimización no garantiza el óptimo global en escenarios no convexos, pero las soluciones subóptimas suelen generalizar bien.</li>
+</ul>
+</section>
+
+<!-- 11 · puente -->
+<section>
+<div class="section-label">§ 1 · Optimización</div>
+<h2>Falta la regla para moverse por ese terreno</h2>
+<ul>
+<li>Y solo se dispone de información local.</li>
+</ul>
+</section>
+
+<!-- ============ §2 DESCENSO DE GRADIENTE ============ -->
+
+<!-- 12 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>El gradiente apunta al máximo ascenso</h2>
+<ul>
+<li>Para minimizar, entonces, se avanza exactamente en contra.</li>
+</ul>
+</section>
+
+<!-- 13 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>Y esa idea cabe en una línea</h2>
+$$\theta \;\leftarrow\; \theta - \eta \, \nabla_\theta J(\theta)$$
+<p class="note">En palabras: se corrige cada parámetro en proporción a cuánto empeora el objetivo al aumentarlo. La tasa de aprendizaje $\eta$ decide cuánto se avanza.</p>
+</section>
+
+<!-- 14 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>Elegir $\eta$ decide entre no avanzar y explotar</h2>
+<ul>
+<li>Demasiado chica y el entrenamiento se eterniza; demasiado grande y el método diverge en pocos pasos.</li>
+</ul>
+</section>
+
+<!-- 15 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>Para una cuadrática esa frontera es exacta</h2>
+$$\eta \;&lt;\; \frac{2}{L}$$
+<p class="note">En palabras: $L$ es la mayor curvatura de la superficie. Pasado ese umbral, cada paso sobrepasa el fondo y rebota más lejos de lo que venía.</p>
+</section>
+
+<!-- 16 · SVG trayectorias -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>La misma superficie, tres tasas distintas</h2>
+<ul><li>Las elipses alargadas son el cañón: la curvatura vertical supera veinte veces a la horizontal.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#222">
+    <g fill="none" stroke="#ccc" stroke-width="1">
+      <ellipse cx="130" cy="120" rx="105" ry="30"/><ellipse cx="130" cy="120" rx="70" ry="20"/><ellipse cx="130" cy="120" rx="35" ry="10"/>
+      <ellipse cx="370" cy="120" rx="105" ry="30"/><ellipse cx="370" cy="120" rx="70" ry="20"/><ellipse cx="370" cy="120" rx="35" ry="10"/>
+      <ellipse cx="610" cy="120" rx="105" ry="30"/><ellipse cx="610" cy="120" rx="70" ry="20"/><ellipse cx="610" cy="120" rx="35" ry="10"/>
+    </g>
+    <g fill="#2f6b33">
+      <circle cx="130" cy="120" r="4"/><circle cx="370" cy="120" r="4"/><circle cx="610" cy="120" r="4"/>
+    </g>
+
+    <polyline fill="none" stroke="#c0653a" stroke-width="2.2"
+      points="42,102 52,104 62,106 72,107 82,109 92,110 100,111 108,112"/>
+    <circle cx="42" cy="102" r="4.5" fill="#333"/>
+    <text x="130" y="182" font-size="13" text-anchor="middle" font-weight="bold">η muy chica</text>
+    <text x="130" y="202" font-size="12" text-anchor="middle" fill="#555">estable, pero no llega</text>
+
+    <polyline fill="none" stroke="#c0653a" stroke-width="2.2"
+      points="282,102 312,133 336,110 352,127 362,116 368,122 370,120"/>
+    <circle cx="282" cy="102" r="4.5" fill="#333"/>
+    <text x="370" y="182" font-size="13" text-anchor="middle" font-weight="bold">η adecuada</text>
+    <text x="370" y="202" font-size="12" text-anchor="middle" fill="#555">converge al fondo</text>
+
+    <polyline fill="none" stroke="#a63d3d" stroke-width="2.2"
+      points="522,102 546,146 566,86 586,160 602,70 620,172 636,58"/>
+    <circle cx="522" cy="102" r="4.5" fill="#333"/>
+    <text x="610" y="182" font-size="13" text-anchor="middle" font-weight="bold">η mayor que 2/L</text>
+    <text x="610" y="202" font-size="12" text-anchor="middle" fill="#a63d3d">diverge oscilando</text>
+
+    <text x="370" y="236" font-size="12" text-anchor="middle" fill="#555">El punto negro es el inicio; el verde, el mínimo.</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 17 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>Con muchos datos, calcular el gradiente exacto es caro</h2>
+<ul>
+<li>Cada paso del método por lotes recorre el conjunto completo antes de mover un solo parámetro.</li>
+</ul>
+</section>
+
+<!-- 18 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>El estocástico usa un solo ejemplo por paso</h2>
+<ul>
+<li>Cada actualización es baratísima y muy ruidosa, y ese ruido a veces ayuda a escapar de puntos de silla.</li>
+</ul>
+</section>
+
+<!-- 19 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>El mini-lote es el compromiso que se usa siempre</h2>
+$$g_t = \frac{1}{|B_t|}\sum_{(x,y)\in B_t} \nabla_\theta \, \ell\big(h_\theta(x), y\big)$$
+<p class="note">En palabras: promediar un subconjunto reduce la varianza del estimador sin sesgarlo, y encima aprovecha el paralelismo de la GPU.</p>
+</section>
+
+<!-- 20 -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>El momentum acumula el avance que se repite</h2>
+$$v_{t+1} = \beta\, v_t + g_t, \qquad \theta_{t+1} = \theta_t - \eta\, v_{t+1}$$
+<p class="note">En palabras: en la dirección donde el gradiente siempre apunta igual, las contribuciones se suman; donde alterna de signo, se cancelan en promedio. Es lo que permite avanzar por un cañón.</p>
+</section>
+
+<!-- 21 · puente -->
+<section>
+<div class="section-label">§ 2 · Descenso de gradiente</div>
+<h2>Pero una sola tasa para todos los parámetros es rígida</h2>
+<ul>
+<li>Si las escalas difieren mucho, la que sirve para uno es demasiado grande o demasiado chica para otro.</li>
+</ul>
+</section>
+
+<!-- ============ §3 MÉTODOS ADAPTATIVOS ============ -->
+
+<!-- 22 -->
+<section>
+<div class="section-label">§ 3 · Métodos adaptativos</div>
+<h2>La idea es dar a cada parámetro su propio paso</h2>
+<ul>
+<li>El tamaño se ajusta según el historial de gradientes de ese parámetro en particular.</li>
+</ul>
+</section>
+
+<!-- 23 -->
+<section>
+<div class="section-label">§ 3 · Métodos adaptativos</div>
+<h2>AdaGrad acumula, y por eso termina frenando</h2>
+$$s_{t+1} = s_t + g_t \odot g_t, \qquad \theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{s_{t+1}}+\varepsilon}\,\odot\, g_t$$
+<p class="note">En palabras: $\odot$ es el producto elemento a elemento. Como $s$ solo crece, la tasa efectiva decae sin posibilidad de recuperarse.</p>
+</section>
+
+<!-- 24 -->
+<section>
+<div class="section-label">§ 3 · Métodos adaptativos</div>
+<h2>RMSProp olvida el pasado lejano</h2>
+$$s_{t+1} = \rho\, s_t + (1-\rho)\, g_t \odot g_t$$
+<p class="note">En palabras: el promedio exponencial reemplaza a la suma, así que la adaptatividad se mantiene sin que la tasa muera de forma irreversible.</p>
+</section>
+
+<!-- 25 -->
+<section>
+<div class="section-label">§ 3 · Métodos adaptativos</div>
+<h2>Adam junta las dos ideas anteriores</h2>
+$$m_{t+1} = \beta_1 m_t + (1-\beta_1) g_t, \qquad v_{t+1} = \beta_2 v_t + (1-\beta_2)\, g_t \odot g_t$$
+<p class="note">En palabras: un promedio exponencial del gradiente, que es el momentum, y otro de su cuadrado, que es la adaptatividad, ambos con corrección de sesgo inicial. Es el punto de partida por defecto hoy.</p>
+</section>
+
+<!-- 26 · puente -->
+<section>
+<div class="section-label">§ 3 · Métodos adaptativos</div>
+<h2>Todo esto usa solo la primera derivada</h2>
+<ul>
+<li>Cabe preguntarse qué aportaría mirar también la curvatura.</li>
+</ul>
+</section>
+
+<!-- ============ §4 NEWTON ============ -->
+
+<!-- 27 -->
+<section>
+<div class="section-label">§ 4 · Método de Newton</div>
+<h2>Newton reescala cada dirección según su curvatura</h2>
+$$\theta \;\leftarrow\; \theta - H(\theta)^{-1} \nabla_\theta J(\theta)$$
+<p class="note">En palabras: $H$ es la matriz hessiana, la de las segundas derivadas. Donde el valle es angosto da pasos cortos y donde es plano, largos.</p>
+</section>
+
+<!-- 28 -->
+<section>
+<div class="section-label">§ 4 · Método de Newton</div>
+<h2>Cerca del mínimo converge muchísimo más rápido</h2>
+<ul>
+<li>La convergencia es cuadrática, lo que en la práctica significa un puñado de iteraciones en vez de miles.</li>
+</ul>
+</section>
+
+<!-- 29 -->
+<section>
+<div class="section-label">§ 4 · Método de Newton</div>
+<h2>Y por eso mismo casi nunca se usa en redes</h2>
+<ul>
+<li>Con un millón de parámetros, $H$ tiene un billón de entradas; formarla e invertirla es sencillamente imposible.</li>
+</ul>
+</section>
+
+<!-- 30 -->
+<section>
+<div class="section-label">§ 4 · Método de Newton</div>
+<h2>De ahí las aproximaciones cuasi-Newton</h2>
+<ul>
+<li>BFGS y L-BFGS reconstruyen una aproximación al inverso de $H$ usando gradientes sucesivos, y L-BFGS guarda solo las correcciones recientes.</li>
+</ul>
+<p class="note">El compromiso es siempre el mismo: menos iteraciones, más costo por iteración.</p>
+</section>
+
+<!-- 31 · puente -->
+<section>
+<div class="section-label">§ 4 · Método de Newton</div>
+<h2>En redes profundas, ni el gradiente es gratis</h2>
+<ul>
+<li>Calcularlo ingenuamente, parámetro por parámetro, sería tan caro como no tenerlo.</li>
+</ul>
+</section>
+
+<!-- ============ §5 RETROPROPAGACIÓN ============ -->
+
+<!-- 32 -->
+<section>
+<div class="section-label">§ 5 · Retropropagación</div>
+<h2>La regla de la cadena, aplicada hacia atrás</h2>
+<ul>
+<li>Se calculan las derivadas desde la pérdida hacia la entrada, reutilizando en cada capa lo ya computado en la siguiente.</li>
+</ul>
+</section>
+
+<!-- 33 · SVG forward/backward -->
+<section>
+<div class="section-label">§ 5 · Retropropagación</div>
+<h2>Una pasada hacia adelante y otra hacia atrás</h2>
+<ul><li>El costo total es lineal en el número de parámetros, no cuadrático.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arf" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#33607f"/>
+    </marker>
+    <marker id="arbk" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#a63d3d"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#222">
+    <rect x="30" y="98" width="110" height="54" rx="8" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="85" y="130" font-size="13.5">entrada x</text>
+    <rect x="190" y="98" width="110" height="54" rx="8" fill="#eeeeee" stroke="#555" stroke-width="1.6"/>
+    <text x="245" y="130" font-size="13.5">capa 1</text>
+    <rect x="350" y="98" width="110" height="54" rx="8" fill="#eeeeee" stroke="#555" stroke-width="1.6"/>
+    <text x="405" y="130" font-size="13.5">capa 2</text>
+    <rect x="510" y="98" width="110" height="54" rx="8" fill="#eeeeee" stroke="#555" stroke-width="1.6"/>
+    <text x="565" y="130" font-size="13.5">capa 3</text>
+    <rect x="646" y="98" width="70" height="54" rx="8" fill="#f7e9ef" stroke="#8a3a63" stroke-width="1.6"/>
+    <text x="681" y="130" font-size="13.5">J(θ)</text>
+
+    <path d="M144,110 L186,110" stroke="#33607f" stroke-width="2" fill="none" marker-end="url(#arf)"/>
+    <path d="M304,110 L346,110" stroke="#33607f" stroke-width="2" fill="none" marker-end="url(#arf)"/>
+    <path d="M464,110 L506,110" stroke="#33607f" stroke-width="2" fill="none" marker-end="url(#arf)"/>
+    <path d="M624,110 L642,110" stroke="#33607f" stroke-width="2" fill="none" marker-end="url(#arf)"/>
+    <text x="370" y="76" font-size="13" fill="#33607f">1 · hacia adelante: activaciones y pérdida</text>
+
+    <path d="M642,140 L624,140" stroke="#a63d3d" stroke-width="2" fill="none" marker-end="url(#arbk)"/>
+    <path d="M506,140 L464,140" stroke="#a63d3d" stroke-width="2" fill="none" marker-end="url(#arbk)"/>
+    <path d="M346,140 L304,140" stroke="#a63d3d" stroke-width="2" fill="none" marker-end="url(#arbk)"/>
+    <path d="M186,140 L144,140" stroke="#a63d3d" stroke-width="2" fill="none" marker-end="url(#arbk)"/>
+    <text x="370" y="180" font-size="13" fill="#a63d3d">2 · hacia atrás: derivadas por la regla de la cadena</text>
+
+    <text x="370" y="216" font-size="12.5" fill="#555">3 · actualizar los parámetros con el optimizador elegido</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 34 -->
+<section>
+<div class="section-label">§ 5 · Retropropagación</div>
+<h2>Sin este algoritmo no habría aprendizaje profundo</h2>
+<ul>
+<li>Es lo que vuelve tratable calcular millones de derivadas parciales en cada iteración.</li>
+</ul>
+<p class="note">Su desarrollo completo, con las derivadas capa por capa, está en D.3.</p>
+</section>
+
+<!-- 35 · puente -->
+<section>
+<div class="section-label">§ 5 · Retropropagación</div>
+<h2>Con el gradiente disponible, queda tocar el objetivo</h2>
+<ul>
+<li>Porque casi ningún entrenamiento real minimiza la pérdida a secas.</li>
+</ul>
+</section>
+
+<!-- ============ §6 REGULARIZACIÓN ============ -->
+
+<!-- 36 -->
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Se agrega una penalización al objetivo</h2>
+$$J(\theta) + \lambda\, r(\theta)$$
+<p class="note">En palabras: $r$ mide la complejidad del predictor y $\lambda$ decide cuánto pesa esa complejidad frente al error de ajuste.</p>
+</section>
+
+<!-- 37 -->
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Se cambia algo de sesgo por bastante menos varianza</h2>
+<ul>
+<li>El modelo deja de perseguir cada particularidad de la muestra, y suele mejorar fuera de ella.</li>
+</ul>
+</section>
+
+<!-- 38 -->
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Y además el problema se vuelve más fácil de optimizar</h2>
+$$\hat\theta_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top y$$
+<p class="note">En palabras: el término $\lambda I$ desplaza el espectro de $X^\top X$ y reduce su número de condición, lo que suaviza justamente los cañones que hacen sufrir al descenso de gradiente.</p>
+</section>
+
+<!-- 39 -->
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>$L2$ encoge los pesos y $L1$ los anula</h2>
+<ul>
+<li>La penalización $\|\theta\|_2^2$ los empuja hacia el origen sin llegar; $\|\theta\|_1$ deja muchos exactamente en cero y produce modelos esparsos.</li>
+</ul>
+</section>
+
+<!-- 40 -->
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Y hay regularizadores que no aparecen en la fórmula</h2>
+<ul>
+<li>Dropout apaga activaciones al azar, early stopping corta antes de tiempo, y el aumento de datos regulariza en el espacio de entrada.</li>
+</ul>
+<p class="note">Se llaman implícitos porque no modifican $J$, pero su efecto sobre la varianza del modelo es el mismo. Se desarrollan en D.5.</p>
+</section>
+
+<!-- 41 · puente -->
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Uno de ellos ya adelanta la última pregunta</h2>
+<ul>
+<li>¿Cuándo hay que dejar de iterar?</li>
+</ul>
+</section>
+
+<!-- ============ §7 CRITERIOS DE TÉRMINO ============ -->
+
+<!-- 42 -->
+<section>
+<div class="section-label">§ 7 · Criterios de término</div>
+<h2>El más simple es fijar un presupuesto</h2>
+<ul>
+<li>Un número máximo de épocas o de horas: garantiza reproducibilidad y evita entrenamientos interminables.</li>
+</ul>
+</section>
+
+<!-- 43 -->
+<section>
+<div class="section-label">§ 7 · Criterios de término</div>
+<h2>Otros detectan que ya nada se mueve</h2>
+$$\frac{\big|J(\theta_{t+1}) - J(\theta_t)\big|}{\max\{1, |J(\theta_t)|\}} \;&lt;\; \varepsilon_J$$
+<p class="note">En palabras: si el objetivo deja de cambiar de forma apreciable, o si la norma del gradiente se acerca a cero, se llegó a una meseta y seguir no aporta.</p>
+</section>
+
+<!-- 44 -->
+<section>
+<div class="section-label">§ 7 · Criterios de término</div>
+<h2>Pero el criterio que importa mira la validación</h2>
+<ul>
+<li>Se detiene cuando la pérdida de validación deja de mejorar durante un número de épocas llamado paciencia, y se restaura el mejor modelo visto.</li>
+</ul>
+<p class="note">Es el early stopping, y es el único de estos criterios que apunta a la generalización y no a la convergencia.</p>
+</section>
+
+<!-- 45 -->
+<section>
+<div class="section-label">§ 7 · Criterios de término</div>
+<h2>Los horarios de tasa ayudan a que todo esto ocurra limpio</h2>
+<ul>
+<li>Reducir $\eta$ cuando el objetivo entra en meseta suele activar los criterios anteriores en pocas épocas adicionales.</li>
+</ul>
+</section>
+
+<!-- 46 · cierre de sección -->
+<section>
+<div class="section-label">§ 7 · Criterios de término</div>
+<h2>Y con esto el arco de la sección A se cierra</h2>
+<ul>
+<li>Forma del predictor (A.3), medida del error (A.4), criterio de ajuste (A.5), algoritmo que lo resuelve (A.6) y árbitro que decide si sirvió (A.7).</li>
+</ul>
+</section>
+
+<!-- 47 · CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>Entrenar es bajar por una superficie que nadie ve, dando pasos cuyo tamaño hay que decidir a ciegas.</h1>
+  <p style="font-size:1em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

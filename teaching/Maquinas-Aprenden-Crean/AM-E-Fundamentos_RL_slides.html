@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentes, Entornos y Funciones de Valor</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Agentes, Entornos y Funciones de Valor</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- APERTURA -->
+<section>
+<h2>El aprendizaje reforzado rompe el supuesto de los datos estáticos</h2>
+<ul>
+<li>No hay un conjunto de respuestas correctas ni un maestro: un <strong>agente</strong> descubre por prueba y error qué hacer para alcanzar un objetivo.</li>
+</ul>
+</section>
+
+<section>
+<h2>De reconocer patrones a tomar decisiones secuenciales</h2>
+<ul>
+<li>El agente actúa, cambia el mundo y recibe una recompensa escalar; su meta es maximizar la recompensa <em>acumulada</em>, no acertar una etiqueta.</li>
+</ul>
+<p class="note">Es la teoría tras los agentes que ganan en Go y ajedrez, el control de robots y el ajuste de modelos de lenguaje por refuerzo.</p>
+</section>
+
+<!-- §1 CICLO -->
+<section>
+<div class="section-label">§ 1 · El ciclo agente-entorno</div>
+<h2>¿Cómo se formaliza "aprender actuando"?</h2>
+<ul>
+<li>La dinámica central es un bucle temporal entre dos entidades: el agente que decide y el entorno que responde.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El ciclo agente-entorno</div>
+<h2>El lazo de percepción y acción</h2>
+<ul>
+<li>En el paso $t$ el agente observa $s_t$ y elige $a_t$; el entorno transita a $s_{t+1}$ y emite una recompensa $r_{t+1}$, y el ciclo se repite.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El ciclo agente-entorno</div>
+<h2>El bucle agente-entorno</h2>
+<ul><li>El agente envía la acción $a_t$; el entorno devuelve el nuevo estado $s_{t+1}$ y la recompensa $r_{t+1}$.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 640 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="ra" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <rect x="60" y="95" width="180" height="56" rx="9" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="150" y="120" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a3a5c">Agente</text>
+  <text x="150" y="138" text-anchor="middle" font-size="11" fill="#3a6a8c">política π(a | s)</text>
+  <rect x="400" y="95" width="180" height="56" rx="9" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
+  <text x="490" y="120" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a4d1a">Entorno</text>
+  <text x="490" y="138" text-anchor="middle" font-size="11" fill="#2d6b2d">dinámica del sistema</text>
+  <path d="M240 110 C 310 70, 330 70, 400 110" fill="none" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#ra)"/>
+  <text x="320" y="66" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">acción a_t</text>
+  <path d="M400 138 C 330 178, 310 178, 240 138" fill="none" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#ra)"/>
+  <text x="320" y="196" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">estado s_{t+1}, recompensa r_{t+1}</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El ciclo agente-entorno</div>
+<h2>La hipótesis de la recompensa</h2>
+<ul>
+<li>Todo objetivo puede entenderse como maximizar el valor esperado de una suma de recompensas escalares (Sutton).</li>
+<li>Una señal mal especificada induce conductas que la maximizan al pie de la letra: <em>reward hacking</em>.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El ciclo agente-entorno</div>
+<h2>Dos distinciones de modelado</h2>
+<ul>
+<li><strong>Estado vs observación</strong>: si el agente solo percibe parte del estado, el problema es un MDP parcialmente observable (POMDP).</li>
+<li><strong>Episódica vs continua</strong>: con o sin final natural; condiciona cómo se define el retorno.</li>
+</ul>
+<p class="note">Para razonar con rigor sobre esta interacción hace falta una estructura formal. → §2</p>
+</section>
+
+<!-- §2 MDP -->
+<section>
+<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
+<h2>¿Qué estructura vuelve tratable el problema?</h2>
+<ul>
+<li>El marco estándar del RL es el proceso de decisión de Markov (MDP, <em>Markov decision process</em>).</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
+<h2>Un MDP es una tupla de cinco elementos</h2>
+$$(\mathcal{S}, \mathcal{A}, P, R, \gamma)$$
+<ul>
+<li>Estados $\mathcal{S}$, acciones $\mathcal{A}$, dinámica $P(s_{t+1}\mid s_t,a_t)$, recompensa $R$, descuento $\gamma$.</li>
+</ul>
+<p class="note">En el caso interesante, el del aprendizaje, el agente <strong>no conoce</strong> $P$ ni $R$: debe aprender de la experiencia.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
+<h2>La propiedad de Markov</h2>
+$$\Pr(s_{t+1} \mid s_t, a_t) = \Pr(s_{t+1} \mid s_1, a_1, \dots, s_t, a_t)$$
+<p class="note">En palabras: el estado actual resume todo el pasado relevante; la historia es irrelevante una vez conocido el presente. Esto habilita las recursiones de Bellman.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
+<h2>La interacción produce una trayectoria</h2>
+<ul><li>Secuencia de estados, acciones y recompensas: cada acción provoca una transición y emite una recompensa.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 700 170" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="rt" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <circle cx="70" cy="78" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="70" y="83" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">s_t</text>
+  <circle cx="270" cy="78" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="270" y="83" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a3a5c">s_{t+1}</text>
+  <circle cx="470" cy="78" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="470" y="83" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a3a5c">s_{t+2}</text>
+  <circle cx="640" cy="78" r="22" fill="#eceff1" stroke="#90a4ae" stroke-width="1.4"/>
+  <text x="640" y="84" text-anchor="middle" font-size="14" fill="#546e7a">...</text>
+  <line x1="96" y1="78" x2="242" y2="78" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rt)"/>
+  <line x1="296" y1="78" x2="442" y2="78" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rt)"/>
+  <line x1="496" y1="78" x2="616" y2="78" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rt)"/>
+  <text x="169" y="58" text-anchor="middle" font-size="12" font-weight="bold" fill="#7b1fa2">acción a_t</text>
+  <text x="169" y="102" text-anchor="middle" font-size="11" fill="#388e3c">recompensa r_{t+1}</text>
+  <text x="369" y="58" text-anchor="middle" font-size="12" font-weight="bold" fill="#7b1fa2">acción a_{t+1}</text>
+  <text x="369" y="102" text-anchor="middle" font-size="11" fill="#388e3c">recompensa r_{t+2}</text>
+  <text x="556" y="58" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#7b1fa2">a_{t+2}</text>
+  <text x="556" y="102" text-anchor="middle" font-size="11" fill="#388e3c">r_{t+3}</text>
+  <text x="350" y="148" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1a1a1a">trayectoria: (s_t, a_t, r_{t+1}), (s_{t+1}, a_{t+1}, r_{t+2}), ...</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
+<h2>Markov es un supuesto, no un hecho dado</h2>
+<ul>
+<li>Si la representación omite información relevante, deja de ser de Markov y los métodos pierden sus garantías.</li>
+</ul>
+<p class="note">Un cuadro de un videojuego no revela velocidad; en E.3 el estado apila varios cuadros para recuperarla. → §3</p>
+</section>
+
+<!-- §3 POLÍTICAS -->
+<section>
+<div class="section-label">§ 3 · Políticas y el objetivo del agente</div>
+<h2>¿Qué optimiza exactamente el agente?</h2>
+<ul>
+<li>Su comportamiento se define mediante una política, el objeto que el RL busca optimizar.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Políticas y el objetivo del agente</div>
+<h2>La política asigna acciones a estados</h2>
+$$\pi(a_t \mid s_t)$$
+<ul>
+<li>Determinista ($a_t = \pi(s_t)$) o estocástica; la aleatoriedad es el mecanismo más simple para explorar.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Políticas y el objetivo del agente</div>
+<h2>De la tabla a la aproximación de funciones</h2>
+<ul>
+<li>En problemas pequeños la política es una tabla; en problemas reales, una red neuronal con pesos ajustables.</li>
+</ul>
+<p class="note">Ese salto separa el RL tabular del RL profundo. El objetivo no es la recompensa inmediata, sino el retorno. → §4</p>
+</section>
+
+<!-- §4 RETORNO -->
+<section>
+<div class="section-label">§ 4 · Recompensas y el retorno descontado</div>
+<h2>¿Cómo sumar las recompensas a lo largo del tiempo?</h2>
+<ul>
+<li>El retorno $G_t$ es la suma acumulada y descontada de las recompensas futuras.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Recompensas y el retorno descontado</div>
+<h2>El retorno descontado</h2>
+$$G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2\, r_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^{k}\, r_{t+k+1}$$
+<p class="note">En palabras: una recompensa $k$ pasos en el futuro se pondera por $\gamma^k$, que decae con la distancia temporal.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Recompensas y el retorno descontado</div>
+<h2>El factor de descuento γ cumple tres funciones</h2>
+<ul>
+<li>Garantiza la <strong>convergencia</strong> de la suma infinita; modela la <strong>incertidumbre</strong> del futuro; expresa una <strong>preferencia temporal</strong>.</li>
+<li>El horizonte efectivo es $1/(1-\gamma)$: con $\gamma=0.99$, unos 100 pasos.</li>
+</ul>
+<p class="note">El retorno es aleatorio cada vez que se visita el mismo estado: hay que tomar su esperanza. → §5</p>
+</section>
+
+<!-- §5 FUNCIONES DE VALOR -->
+<section>
+<div class="section-label">§ 5 · Funciones de valor</div>
+<h2>¿Cómo medir qué tan bueno es un estado o una acción?</h2>
+<ul>
+<li>No por un retorno concreto, sino por el <strong>retorno esperado</strong>: de ahí las dos funciones de valor centrales.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Funciones de valor</div>
+<h2>Valor de estado: retorno esperado desde s</h2>
+$$v_\pi(s_t) = \mathbb{E}_\pi\!\left[\, G_t \mid s_t \,\right]$$
+<p class="note">En palabras: qué tan deseable es una situación bajo $\pi$. Mira el largo plazo: un estado de recompensa nula puede valer mucho si conduce a recompensas altas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Funciones de valor</div>
+<h2>Valor de acción (Q-value): empezar tomando a</h2>
+$$q_\pi(s_t, a_t) = \mathbb{E}_\pi\!\left[\, G_t \mid s_t, a_t \,\right]$$
+<p class="note">Más útil para decidir que $v$, porque compara directamente las acciones disponibles en un mismo estado. Es el objeto central de Q-Learning.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Funciones de valor</div>
+<h2>El valor del estado es el promedio de los valores de acción</h2>
+<ul><li>$v_\pi(s) = \sum_a \pi(a\mid s)\, q_\pi(s,a)$: promedio de los $q$ ponderado por la política.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 620 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="vq" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <text x="72" y="58" text-anchor="middle" font-size="12" font-style="italic" fill="#555">v(s)</text>
+  <circle cx="72" cy="112" r="30" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.7"/>
+  <text x="72" y="117" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a3a5c">s</text>
+  <line x1="102" y1="104" x2="296" y2="58" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#vq)"/>
+  <line x1="104" y1="112" x2="296" y2="120" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#vq)"/>
+  <line x1="102" y1="120" x2="296" y2="182" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#vq)"/>
+  <text x="188" y="74" text-anchor="middle" font-size="10" fill="#7b1fa2">π(a | s)</text>
+  <text x="190" y="108" text-anchor="middle" font-size="10" fill="#7b1fa2">π(a' | s)</text>
+  <text x="188" y="160" text-anchor="middle" font-size="10" fill="#7b1fa2">π(a'' | s)</text>
+  <rect x="300" y="41" width="170" height="34" rx="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="385" y="63" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5c1a5c">q(s, a)</text>
+  <rect x="300" y="103" width="170" height="34" rx="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="385" y="125" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5c1a5c">q(s, a')</text>
+  <rect x="300" y="165" width="170" height="34" rx="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="385" y="187" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5c1a5c">q(s, a'')</text>
+  <text x="555" y="117" text-anchor="middle" font-size="11" fill="#1a4d1a">valores</text>
+  <text x="555" y="132" text-anchor="middle" font-size="11" fill="#1a4d1a">de acción</text>
+  <text x="310" y="226" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1a1a1a">v(s) = Σ π(a | s) · q(s, a)   (promedio sobre la política)</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Funciones de valor</div>
+<h2>La función de ventaja: cuánto mejor que el promedio</h2>
+$$A_\pi(s, a) = q_\pi(s, a) - v_\pi(s)$$
+<p class="note">Positiva para las acciones mejores que la media. Separar valor del estado y ventaja motiva Dueling DQN y está en el corazón de los métodos actor-crítico.</p>
+</section>
+
+<!-- §6 ÓPTIMOS -->
+<section>
+<div class="section-label">§ 6 · Políticas y valores óptimos</div>
+<h2>¿Qué define la "mejor" política?</h2>
+<ul>
+<li>Para los MDP siempre existe una política óptima $\pi_*$, mejor o igual que todas las demás en todos los estados.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Políticas y valores óptimos</div>
+<h2>Las funciones de valor óptimas</h2>
+$$v_*(s_t) = \max_{\pi}\, v_\pi(s_t), \qquad q_*(s_t, a_t) = \max_{\pi}\, q_\pi(s_t, a_t)$$
+<p class="note">En palabras: el mejor retorno alcanzable desde cada estado (o estado-acción) sobre todas las políticas posibles.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Políticas y valores óptimos</div>
+<h2>Conocer q* vuelve trivial decidir</h2>
+$$\pi_*(s_t) = \arg\max_{a_t}\, q_*(s_t, a_t)$$
+<ul>
+<li>Basta con ser <strong>codicioso</strong> (<em>greedy</em>) respecto a $q_*$; y a diferencia de $v_*$, no se necesita el modelo $P$.</li>
+</ul>
+<p class="note">Por eso muchos algoritmos estiman $q_*$. La optimalidad se expresa como una ecuación recursiva. → §7</p>
+</section>
+
+<!-- §7 BELLMAN -->
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>¿Cómo se relaciona el valor de un estado con el del siguiente?</h2>
+<ul>
+<li>Las funciones de valor satisfacen relaciones <strong>recursivas</strong>: la columna vertebral de casi todos los métodos de RL.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>La ecuación de Bellman para v</h2>
+$$v_\pi(s_t) = \sum_{a_t} \pi(a_t \mid s_t)\!\left( r(s_t, a_t) + \gamma \sum_{s_{t+1}} P(s_{t+1} \mid s_t, a_t)\, v_\pi(s_{t+1}) \right)$$
+<p class="note">En palabras: el valor de un estado es la recompensa esperada al salir de él más el valor descontado del estado al que se llega.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>El valor se construye desde los sucesores</h2>
+<ul><li>Promedio, sobre acciones (política) y transiciones (entorno), de la recompensa más $\gamma\, v(s')$.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 600 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="rb" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <text x="300" y="26" text-anchor="middle" font-size="12" font-style="italic" fill="#555">v(s_t)</text>
+  <circle cx="300" cy="66" r="22" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="300" y="71" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">s_t</text>
+  <line x1="284" y1="82" x2="190" y2="126" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#rb)"/>
+  <line x1="316" y1="82" x2="410" y2="126" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#rb)"/>
+  <text x="222" y="106" text-anchor="middle" font-size="10.5" fill="#7b1fa2">π(a | s)</text>
+  <circle cx="180" cy="144" r="16" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="180" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#5c1a5c">a</text>
+  <circle cx="420" cy="144" r="16" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="420" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#5c1a5c">a'</text>
+  <line x1="170" y1="159" x2="120" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
+  <line x1="190" y1="159" x2="245" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
+  <line x1="415" y1="159" x2="360" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
+  <line x1="428" y1="159" x2="485" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
+  <text x="148" y="194" text-anchor="middle" font-size="10" fill="#388e3c">P, r</text>
+  <circle cx="115" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="115" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <circle cx="250" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="250" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <circle cx="355" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="355" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <circle cx="490" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="490" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <text x="300" y="272" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1a1a1a">v(s_t) = promedio de [ recompensa + γ · v(s') ]</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>La autoconsistencia es la idea central</h2>
+<ul>
+<li>Si un algoritmo cambia una estimación, la ecuación deja de cumplirse y fuerza a los valores vecinos a reajustarse.</li>
+</ul>
+<p class="note">Q-Learning, SARSA y las redes profundas no son más que maneras distintas de hacer cumplir Bellman desde la experiencia.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Contracción y punto fijo garantizan la convergencia</h2>
+<ul>
+<li>Con descuento, el operador de Bellman es una <strong>contracción</strong>: por el teorema de Banach converge a una solución única.</li>
+</ul>
+<p class="note">Esta propiedad asegura los métodos tabulares; su pérdida al introducir redes es la raíz de la inestabilidad de E.3. → §8</p>
+</section>
+
+<!-- §8 MAPA -->
+<section>
+<div class="section-label">§ 8 · Un mapa de los métodos de RL</div>
+<h2>¿Dónde encaja cada algoritmo?</h2>
+<ul>
+<li>Unas pocas distinciones ubican cada método del curso dentro de un panorama común.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Un mapa de los métodos de RL</div>
+<h2>Las familias del aprendizaje reforzado</h2>
+<ul><li>Basado en modelo vs libre de modelo; dentro de este, basado en valor vs en política.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 700 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="rc" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <rect x="270" y="14" width="160" height="40" rx="8" fill="#eceff1" stroke="#607d8b" stroke-width="1.5"/>
+  <text x="350" y="39" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">Aprendizaje reforzado</text>
+  <line x1="300" y1="54" x2="180" y2="84" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <line x1="400" y1="54" x2="520" y2="84" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <rect x="80" y="86" width="200" height="40" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.4"/>
+  <text x="180" y="104" text-anchor="middle" font-size="12" font-weight="bold" fill="#663300">Basado en modelo</text>
+  <text x="180" y="119" text-anchor="middle" font-size="10" fill="#885500">conoce o aprende P, R</text>
+  <rect x="420" y="86" width="200" height="40" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.4"/>
+  <text x="520" y="104" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a4d1a">Libre de modelo</text>
+  <text x="520" y="119" text-anchor="middle" font-size="10" fill="#2d6b2d">aprende solo de la experiencia</text>
+  <line x1="470" y1="126" x2="370" y2="158" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <line x1="560" y1="126" x2="600" y2="158" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <rect x="250" y="160" width="240" height="44" rx="8" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text x="370" y="179" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a3a5c">Basado en valor</text>
+  <text x="370" y="195" text-anchor="middle" font-size="9.5" fill="#3a6a8c">Q-Learning, SARSA, DQN</text>
+  <rect x="500" y="160" width="180" height="44" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="590" y="179" text-anchor="middle" font-size="12" font-weight="bold" fill="#5c1a5c">Basado en política</text>
+  <text x="590" y="195" text-anchor="middle" font-size="9.5" fill="#7a2d7a">REINFORCE, actor-crítico</text>
+  <text x="350" y="240" text-anchor="middle" font-size="11" fill="#555">Eje transversal:</text>
+  <text x="350" y="258" text-anchor="middle" font-size="11.5" font-weight="bold" font-style="italic" fill="#1a1a1a">on-policy (SARSA) vs off-policy (Q-Learning)</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Un mapa de los métodos de RL</div>
+<h2>Dónde se ubica este curso</h2>
+<ul>
+<li>E.2 y E.3 recorren la rama <strong>libre de modelo, basada en valor</strong>: Q-Learning y SARSA tabulares, luego DQN con redes.</li>
+</ul>
+<p class="note">Las ramas de política y actor-crítico (PPO, RLHF) quedan como extensión natural de estos cimientos. → §9</p>
+</section>
+
+<!-- §9 DESAFÍOS -->
+<section>
+<div class="section-label">§ 9 · Desafíos fundamentales</div>
+<h2>¿Qué hace difícil el aprendizaje reforzado?</h2>
+<ul>
+<li>Obstáculos que no existen en el aprendizaje supervisado y que reaparecen en todos los algoritmos del curso.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Desafíos fundamentales</div>
+<h2>Asignación de crédito temporal</h2>
+<ul>
+<li>La recompensa llega mucho después de la acción que la causó; hay que atribuirla a la jugada decisiva entre muchas irrelevantes.</li>
+</ul>
+<p class="note">Las funciones de valor son, en el fondo, la herramienta inventada para resolver esto.</p>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Desafíos fundamentales</div>
+<h2>Exploración frente a explotación</h2>
+<ul>
+<li>Quien solo explota se estanca en óptimos locales; quien solo explora nunca capitaliza lo aprendido.</li>
+</ul>
+<p class="note">Ningún esquema fijo lo resuelve; todo algoritmo adopta una política de exploración, como la ε-greedy de E.2.</p>
+</section>
+
+<section>
+<div class="section-label">§ 9 · Desafíos fundamentales</div>
+<h2>Recompensas escasas y datos no estacionarios</h2>
+<ul>
+<li>A veces hay que encadenar miles de acciones antes de una sola recompensa; y los entornos son estocásticos.</li>
+<li>El agente genera sus propios datos correlacionados: un blanco móvil que se agrava con redes neuronales.</li>
+</ul>
+<p class="note">Estos retos motivan las técnicas de estabilización de E.3. → E.2</p>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+<h1>El valor de un estado es la recompensa que espero más el valor de a dónde voy; todo el RL es hacer cumplir esa autoconsistencia de Bellman.</h1>
+<div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

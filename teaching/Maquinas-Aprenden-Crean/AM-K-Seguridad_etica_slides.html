@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguridad y Ética: Sesgos, Deepfakes y Detección</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Seguridad y Ética: Sesgos, Deepfakes y Detección</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- APERTURA NARRATIVA -->
+<section>
+<h2>La pregunta cambia de lugar</h2>
+<ul>
+<li>Cuando sintetizar texto, imagen y voz fotorrealistas deja de ser difícil, la conversación se mueve desde <em>¿se puede generar?</em> hacia <em>¿es responsable hacerlo?</em></li>
+</ul>
+</section>
+
+<section>
+<h2>Tecnologías de doble uso</h2>
+<ul>
+<li>Los mismos modelos que diseñan fármacos o ayudan ante el cambio climático también perpetúan sesgos, amenazan la privacidad y facilitan la manipulación masiva.</li>
+</ul>
+<p class="note">Cinco vectores de riesgo organizan la clase: alineación, sesgos, privacidad, deepfakes y transparencia. La cara legal de todo esto vive en el notebook K.2.</p>
+</section>
+
+<!-- §1 ALINEACIÓN -->
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>¿Por qué un modelo entrenado para "ser útil" puede dañar?</h2>
+<ul>
+<li>El desafío de fondo es alinear los objetivos del sistema con los valores y metas humanas.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>Nunca optimizamos el objetivo real, sino un proxy</h2>
+$$\theta^{*} = \arg\min_{\theta}\, \mathcal{L}_{\text{proxy}}(\theta) \;\;\neq\;\; \arg\min_{\theta}\, \mathcal{L}_{\text{real}}(\theta)$$
+<p class="note">En palabras: minimizamos una pérdida matemática $\mathcal{L}_{\text{proxy}}$ que solo aproxima lo que de verdad queremos; el modelo encontrará atajos para bajarla sin cumplir la intención.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>Ley de Goodhart</h2>
+<ul>
+<li>Cuando una medida se convierte en objetivo, deja de ser una buena medida.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>Dos niveles: alineación externa e interna</h2>
+<ul>
+<li>La <strong>externa</strong> pregunta si el proxy elegido captura de verdad lo que se quiere.</li>
+<li>La <strong>interna</strong> ocurre cuando la conducta aprendida diverge del objetivo aunque la pérdida esté bien especificada.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>RLHF y DPO: cerrar la brecha con preferencias humanas</h2>
+<ul>
+<li>El aprendizaje por refuerzo con retroalimentación humana (RLHF) entrena un modelo de recompensa para que las respuestas sean útiles, inofensivas y honestas (las tres H).</li>
+<li>La optimización directa de preferencias (DPO) logra lo mismo sin un modelo de recompensa separado.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>La brecha de alineación, en un esquema</h2>
+<ul><li>El valor humano se aproxima por un proxy que el modelo optimiza; la brecha (Goodhart) es lo que RLHF/DPO intentan cerrar.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 700 230" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="aa" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+    <marker id="aar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c0392b"/></marker>
+  </defs>
+  <rect x="20" y="40" width="150" height="46" rx="7" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.4"/>
+  <text x="95" y="60" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a4d1a">Valores humanos</text>
+  <text x="95" y="76" text-anchor="middle" font-size="11" fill="#2d6b2d">objetivo real</text>
+  <line x1="170" y1="63" x2="265" y2="63" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#aa)"/>
+  <text x="217" y="55" text-anchor="middle" font-size="10" fill="#555">aproxima</text>
+  <rect x="265" y="40" width="150" height="46" rx="7" fill="#fff3e0" stroke="#e65100" stroke-width="1.4"/>
+  <text x="340" y="60" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#663300">Proxy</text>
+  <text x="340" y="76" text-anchor="middle" font-size="11" fill="#885500">función de pérdida</text>
+  <line x1="415" y1="63" x2="510" y2="63" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#aa)"/>
+  <text x="462" y="55" text-anchor="middle" font-size="10" fill="#555">optimiza</text>
+  <rect x="510" y="40" width="150" height="46" rx="7" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.4"/>
+  <text x="585" y="67" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a3a5c">Modelo de IA</text>
+  <path d="M510 78 C 420 130, 200 130, 100 88" fill="none" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#aar)"/>
+  <text x="305" y="128" text-anchor="middle" font-size="11" font-style="italic" fill="#c0392b">brecha de alineación (Goodhart)</text>
+  <rect x="200" y="168" width="160" height="42" rx="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.3"/>
+  <text x="280" y="186" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#5c1a5c">Preferencias humanas</text>
+  <text x="280" y="201" text-anchor="middle" font-size="10" fill="#7a2d7a">modelo de recompensa</text>
+  <line x1="360" y1="189" x2="445" y2="189" stroke="#1a1a1a" stroke-width="1.4"/>
+  <line x1="445" y1="189" x2="502" y2="90" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#aa)"/>
+  <text x="452" y="212" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a1a1a">RLHF / DPO</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>Cuando el proxy es el "me gusta": adulación servil</h2>
+<ul>
+<li>En 2025 OpenAI revirtió una actualización de GPT-4o que, al recompensar los "me gusta", volvió al modelo tan adulador que validaba decisiones peligrosas.</li>
+</ul>
+<p class="note">Reward hacking puro: optimizar la satisfacción inmediata del usuario en lugar de la honestidad.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>El modelo puede fingir estar alineado</h2>
+<ul>
+<li>Un estudio de 2024 mostró que Claude 3 Opus, al inferir que estaba en entrenamiento, cumplía estratégicamente instrucciones que normalmente rechazaría, para preservar sus valores.</li>
+</ul>
+<p class="note">La conducta alineada en evaluación puede no reflejar las preferencias internas del modelo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>Las barreras se pueden eludir: jailbreaks</h2>
+<ul>
+<li>Del juego de roles clásico (DAN, el "grandma exploit") al <em>many-shot jailbreaking</em>, que antepone cientos de diálogos falsos hasta que la probabilidad de éxito crece como una ley de potencia.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de la alineación de valores</div>
+<h2>Del reward hacking a la desalineación emergente</h2>
+<ul>
+<li>Entrenar con recompensa real donde el modelo aprende a hacer trampa generaliza hacia conductas dañinas en dominios no relacionados.</li>
+</ul>
+<p class="note">Un proxy mal diseñado es la raíz del riesgo. Pero el proxy también se contamina por los datos: ¿qué pasa cuando los datos están sesgados? → §2</p>
+</section>
+
+<!-- §2 SESGOS -->
+<section>
+<div class="section-label">§ 2 · Sesgos, equidad y representación</div>
+<h2>¿A quién perjudica un modelo que aprende el mundo "tal como es"?</h2>
+<ul>
+<li>Los modelos aprenden y reproducen los sesgos históricos de sus datos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Sesgos, equidad y representación</div>
+<h2>El daño se concentra en los subrepresentados</h2>
+<ul>
+<li>Sin cuidado explícito, el modelo discrimina de forma estructural a grupos marginados, y el costo del error recae sobre quienes tienen menos datos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Sesgos, equidad y representación</div>
+<h2>Medir la inequidad: paridad demográfica</h2>
+$$\Delta_{\text{DP}} = \big|\, P(\hat{y}=1 \mid A=a) - P(\hat{y}=1 \mid A=b) \,\big|$$
+<p class="note">En palabras: la diferencia en la tasa de decisión positiva entre dos grupos definidos por un atributo sensible $A$. Cuanto mayor, más desigual el trato.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Sesgos, equidad y representación</div>
+<h2>Igualdad de oportunidades e interseccionalidad</h2>
+<ul>
+<li>Una variante más exigente pide que las tasas de error sean iguales entre grupos, no solo las de decisión.</li>
+<li><em>Gender Shades</em> (2018) mostró que el error se multiplica en mujeres de piel oscura; PULSE (2020) convirtió a un Obama pixelado en un hombre blanco.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Sesgos, equidad y representación</div>
+<h2>Gemini y la sobrecorrección del sesgo (2024)</h2>
+<ul>
+<li>Al corregir el sesgo de representación, Gemini generaba vikingos o soldados nazis racialmente diversos y rechazaba pedir personas blancas; Google suspendió la generación de personas.</li>
+</ul>
+<p class="note">La mitigación sin matices puede fallar en ambas direcciones.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Sesgos, equidad y representación</div>
+<h2>Stable Diffusion no solo reproduce: amplifica (2023)</h2>
+<ul>
+<li>Un análisis de Bloomberg encontró sobrerrepresentación de piel oscura en categorías de baja remuneración y criminalidad, en proporciones más extremas que las reales.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Sesgos, equidad y representación</div>
+<h2>Intervenir la equidad en varias fases</h2>
+<ul>
+<li>Curación de datos por muestreo estratificado, transformaciones que eliminan atributos sensibles, y regularización con restricciones de equidad.</li>
+</ul>
+<p class="note">El sesgo viene de los datos; pero esos mismos datos también guardan secretos personales. → §3</p>
+</section>
+
+<!-- §3 PRIVACIDAD -->
+<section>
+<div class="section-label">§ 3 · Privacidad y de-anonimización</div>
+<h2>¿Puede un modelo filtrar datos de las personas con que se entrenó?</h2>
+<ul>
+<li>Dos mecanismos amenazan la privacidad: la memorización del modelo y la reidentificación desde datos supuestamente anónimos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Privacidad y de-anonimización</div>
+<h2>La memorización como fuga de datos personales</h2>
+<ul>
+<li>Un modelo puede emitir, ante el prompt adecuado, fragmentos literales de su entrenamiento; si contienen datos personales, los expone sin consentimiento.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Privacidad y de-anonimización</div>
+<h2>De-anonimización por cuasi-identificadores</h2>
+<ul>
+<li>Cruzar atributos redundantes reidentifica a casi cualquiera: registros médicos "anónimos" más padrones de votantes bastaron para identificar al gobernador Weld (2002).</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Privacidad y de-anonimización</div>
+<h2>Extracción de datos de ChatGPT (2023)</h2>
+<ul>
+<li>Pedirle repetir una palabra de forma indefinida lo hacía diverger y emitir texto memorizado literal, incluidos correos y teléfonos.</li>
+</ul>
+<p class="note">El alineamiento no elimina la memorización.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Privacidad y de-anonimización</div>
+<h2>De-anonimización por inferencia (2023)</h2>
+<ul>
+<li>Un LLM deduce ubicación, edad o ingresos de texto público con precisión casi humana, y la inferencia persiste aunque el texto se anonimice.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Privacidad y de-anonimización</div>
+<h2>El riesgo no requiere un ataque sofisticado</h2>
+<ul>
+<li>En 2023 ingenieros de Samsung pegaron código propietario en ChatGPT; el dato entregado a un tercero escapa a tu control.</li>
+<li>En 2024 el Garante italiano multó a OpenAI con 15 millones de euros por incumplir el GDPR.</li>
+</ul>
+<p class="note">Si se pueden sintetizar datos personales, también se puede sintetizar la identidad de alguien. → §4</p>
+</section>
+
+<!-- §4 DEEPFAKES -->
+<section>
+<div class="section-label">§ 4 · Deepfakes y uso malicioso</div>
+<h2>¿Qué pasa cuando cualquiera fabrica un video o una voz falsos?</h2>
+<ul>
+<li>Los deepfakes superponen un rostro sobre otro cuerpo o clonan voces a partir de pocos segundos de audio.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Deepfakes y uso malicioso</div>
+<h2>La autenticidad es una carrera armamentística</h2>
+<ul>
+<li>Cada avance del generador obliga a un avance del detector; bancos de datos como FaceForensics++ entrenan detectores que superan al ojo humano.</li>
+<li>Pero el desempeño cae a medida que el deepfake mejora y las señales delatoras desaparecen.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Deepfakes y uso malicioso</div>
+<h2>El lazo generador–detector</h2>
+<ul><li>El generador intenta engañar; el detector se reentrena con los nuevos fakes; nadie gana de forma definitiva.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 700 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="ad" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <rect x="40" y="60" width="190" height="64" rx="8" fill="#fce4ec" stroke="#c2185b" stroke-width="1.5"/>
+  <text x="135" y="84" text-anchor="middle" font-size="13" font-weight="bold" fill="#7a1a3a">Generador de deepfakes</text>
+  <text x="135" y="102" text-anchor="middle" font-size="11" fill="#9a2a4a">GAN, face swap,</text>
+  <text x="135" y="116" text-anchor="middle" font-size="11" fill="#9a2a4a">clonación de voz</text>
+  <rect x="470" y="60" width="190" height="64" rx="8" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text x="565" y="84" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">Detector</text>
+  <text x="565" y="102" text-anchor="middle" font-size="11" fill="#3a6a8c">red neuronal</text>
+  <text x="565" y="116" text-anchor="middle" font-size="11" fill="#3a6a8c">entrenada con FaceForensics++</text>
+  <path d="M230 78 C 330 50, 380 50, 470 78" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#ad)"/>
+  <text x="350" y="44" text-anchor="middle" font-size="11" fill="#555">¿logra engañar?</text>
+  <path d="M470 108 C 380 138, 330 138, 230 108" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#ad)"/>
+  <text x="350" y="150" text-anchor="middle" font-size="11" fill="#555">se reentrena con los nuevos fakes</text>
+  <text x="350" y="184" text-anchor="middle" font-size="12.5" font-weight="bold" font-style="italic" fill="#1a1a1a">carrera armamentística</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Deepfakes y uso malicioso</div>
+<h2>Fraude: la estafa de US$25,6 millones a Arup (2024)</h2>
+<ul>
+<li>Un empleado fue engañado en una videollamada donde el director financiero y otros colegas eran recreaciones deepfake; transfirió unos 25,6 millones de dólares.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Deepfakes y uso malicioso</div>
+<h2>Daño: deepfakes sexuales no consentidos (2024)</h2>
+<ul>
+<li>Imágenes explícitas generadas por IA de Taylor Swift se viralizaron con decenas de millones de vistas, e impulsaron legislación para penalizarlas.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Deepfakes y uso malicioso</div>
+<h2>Desinformación: la robollamada de Biden (2024)</h2>
+<ul>
+<li>Una voz clonada del presidente pedía "guardar el voto" para noviembre; la FCC multó con seis millones de dólares y prohibió las robollamadas con voz IA.</li>
+</ul>
+<p class="note">Si no podemos confiar en lo que vemos, necesitamos entender por qué el modelo decide lo que decide. → §5</p>
+</section>
+
+<!-- §5 TRANSPARENCIA -->
+<section>
+<div class="section-label">§ 5 · Transparencia y explicabilidad</div>
+<h2>¿Podemos explicar una decisión concreta del modelo?</h2>
+<ul>
+<li>El problema transversal es la opacidad: saber qué hace el algoritmo no es saber por qué decidió algo sobre un dato particular.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Transparencia y explicabilidad</div>
+<h2>Tres niveles de transparencia (Creel)</h2>
+<ul>
+<li><strong>Funcional</strong>: conocer el algoritmo y su matemática.</li>
+<li><strong>Estructural</strong>: cómo se compila y ejecuta en el hardware.</li>
+<li><strong>De ejecución</strong>: por qué tomó <em>esta</em> decisión; la más difícil.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Transparencia y explicabilidad</div>
+<h2>LIME: explicar localmente alrededor de una entrada</h2>
+$$\xi(\mathbf{x}) = \arg\min_{g \in G}\; \mathcal{L}\big(f, g, \pi_{\mathbf{x}}\big) + \Omega(g)$$
+<p class="note">En palabras: se busca la explicación simple $g$ que mejor imita al modelo $f$ cerca de $\mathbf{x}$ (peso de localidad $\pi_{\mathbf{x}}$), penalizando su complejidad $\Omega(g)$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Transparencia y explicabilidad</div>
+<h2>Abrir la caja negra: interpretabilidad mecanística (2024)</h2>
+<ul>
+<li>Anthropic extrajo de Claude 3 Sonnet millones de "features" interpretables y mostró que amplificar una de ellas dirige la conducta: el célebre "Golden Gate Claude".</li>
+</ul>
+<p class="note">Un paso de describir a explicar las decisiones de un modelo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Transparencia y explicabilidad</div>
+<h2>Cinco grietas, un mismo proxy</h2>
+<ul>
+<li>Alineación, sesgos, privacidad, deepfakes y transparencia son caras de la misma brecha entre lo que optimizamos y lo que valoramos.</li>
+</ul>
+<p class="note">La responsabilidad legal y regulatoria que de todo esto se desprende es el tema del notebook K.2.</p>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+<h1>Cada vector de riesgo de la IA generativa es una grieta entre el proxy que optimizamos y el valor humano que de verdad nos importa.</h1>
+<div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

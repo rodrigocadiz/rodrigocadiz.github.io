@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelos generativos vs. discriminativos</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Modelos generativos<br>vs. discriminativos</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- 2 · APERTURA -->
+<section>
+<h2>Dos estudiantes pueden aprobar el mismo examen</h2>
+<ul>
+<li>Uno repasó los exámenes anteriores buscando patrones en las preguntas; el otro estudió la materia.</li>
+</ul>
+</section>
+
+<!-- 3 -->
+<section>
+<h2>Y la diferencia solo aparece cuando se les pide otra cosa</h2>
+<ul>
+<li>El segundo podría escribir un examen nuevo; el primero, no.</li>
+</ul>
+</section>
+
+<!-- 4 -->
+<section>
+<h2>En modelos, esa diferencia tiene una definición precisa</h2>
+<ul>
+<li>Y no está en lo que el modelo predice, sino en qué distribución aprendió para poder predecirlo.</li>
+</ul>
+</section>
+
+<!-- ============ §1 LA DISTINCIÓN ============ -->
+
+<!-- 5 -->
+<section>
+<div class="section-label">§ 1 · La distinción fundamental</div>
+<h2>Todo parte de una identidad de la probabilidad</h2>
+$$p(x, y) = p(y \mid x)\,p(x) = p(x \mid y)\,p(y)$$
+<p class="note">En palabras: la distribución conjunta de datos y etiquetas admite dos factorizaciones equivalentes. Nada distingue matemáticamente a una de la otra.</p>
+</section>
+
+<!-- 6 -->
+<section>
+<div class="section-label">§ 1 · La distinción fundamental</div>
+<h2>Pero cada enfoque elige una y se compromete</h2>
+<ul>
+<li>El <strong>discriminativo</strong> aprende $p(y \mid x)$ y nada más; el <strong>generativo</strong> aprende $p(x \mid y)$ y $p(y)$.</li>
+</ul>
+</section>
+
+<!-- 7 · SVG dos caminos -->
+<section>
+<div class="section-label">§ 1 · La distinción fundamental</div>
+<h2>Dos caminos desde los mismos datos</h2>
+<ul><li>El de la derecha aprende más de lo que la tarea exige, y eso le sale gratis después.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 720 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ag1" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#222">
+    <rect x="272" y="18" width="176" height="46" rx="8" fill="#eeeeee" stroke="#555" stroke-width="1.6"/>
+    <text x="360" y="40" font-size="13.5" font-weight="bold">Datos (x, y)</text>
+    <text x="360" y="57" font-size="11.5" font-style="italic">distribución conjunta p(x, y)</text>
+
+    <path d="M300,68 L170,104" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ag1)"/>
+    <path d="M420,68 L550,104" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ag1)"/>
+
+    <rect x="40" y="110" width="264" height="150" rx="10" fill="#dbe9f4" stroke="#33607f" stroke-width="1.8"/>
+    <text x="172" y="134" font-size="14" font-weight="bold">Discriminativo</text>
+    <text x="172" y="158" font-size="12.5" font-style="italic">aprende p(y | x)</text>
+    <line x1="66" y1="172" x2="278" y2="172" stroke="#33607f" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="172" y="192" font-size="11.5">solo la frontera de decisión</text>
+    <text x="172" y="212" font-size="11.5">nunca modela p(x)</text>
+    <text x="172" y="234" font-size="11.5" fill="#555">reg. logística · SVM · árboles</text>
+    <text x="172" y="252" font-size="11.5" fill="#555">redes de clasificación</text>
+
+    <rect x="416" y="110" width="264" height="150" rx="10" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.8"/>
+    <text x="548" y="134" font-size="14" font-weight="bold">Generativo</text>
+    <text x="548" y="158" font-size="12.5" font-style="italic">aprende p(x | y) y p(y)</text>
+    <line x1="442" y1="172" x2="654" y2="172" stroke="#2f6b33" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="548" y="192" font-size="11.5">clasifica vía Bayes</text>
+    <text x="548" y="212" font-size="11.5">además: genera y detecta anomalías</text>
+    <text x="548" y="234" font-size="11.5" fill="#555">GDA · Naive Bayes · VAE</text>
+    <text x="548" y="252" font-size="11.5" fill="#555">difusión · GAN</text>
+
+    <text x="360" y="290" font-size="12" fill="#555">Ambos resuelven la clasificación; solo uno puede hacer algo más.</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 8 -->
+<section>
+<div class="section-label">§ 1 · La distinción fundamental</div>
+<h2>No modelar $p(x)$ es una decisión, no un olvido</h2>
+<ul>
+<li>Estimar la distribución de los datos en alta dimensión es el problema difícil, y el discriminativo lo esquiva a propósito.</li>
+</ul>
+</section>
+
+<!-- 9 · puente -->
+<section>
+<div class="section-label">§ 1 · La distinción fundamental</div>
+<h2>Conviene recorrer qué implica cada camino</h2>
+<ul>
+<li>Empezando por el más directo.</li>
+</ul>
+</section>
+
+<!-- ============ §2 DISCRIMINATIVOS ============ -->
+
+<!-- 10 -->
+<section>
+<div class="section-label">§ 2 · Modelos discriminativos</div>
+<h2>Van directo a lo único que la tarea pide</h2>
+$$\hat\theta = \arg\min_\theta \sum_{i=1}^{n} \mathcal{L}\big(y^{(i)},\, p_\theta(y \mid x^{(i)})\big)$$
+<p class="note">En palabras: se minimiza el riesgo empírico sobre la predicción de la etiqueta, exactamente el marco de A.5, sin ninguna referencia a cómo se distribuyen las entradas.</p>
+</section>
+
+<!-- 11 -->
+<section>
+<div class="section-label">§ 2 · Modelos discriminativos</div>
+<h2>Y con eso ahorran el problema más difícil</h2>
+<ul>
+<li>Toda la capacidad del modelo se destina a la frontera, y ninguna a describir un espacio de entrada que puede tener miles de dimensiones.</li>
+</ul>
+</section>
+
+<!-- 12 -->
+<section>
+<div class="section-label">§ 2 · Modelos discriminativos</div>
+<h2>Por eso tienden a menor sesgo asintótico</h2>
+<ul>
+<li>Con suficientes datos se aproximan mejor a la verdadera $p(y \mid x)$, sobre todo cuando los supuestos de un modelo generativo serían falsos.</li>
+</ul>
+</section>
+
+<!-- 13 -->
+<section>
+<div class="section-label">§ 2 · Modelos discriminativos</div>
+<h2>Y son casi todo lo que se usa para clasificar</h2>
+<ul>
+<li>Regresión logística, máquinas de vectores soporte, árboles y bosques aleatorios, y las redes profundas de clasificación.</li>
+</ul>
+</section>
+
+<!-- 14 · puente -->
+<section>
+<div class="section-label">§ 2 · Modelos discriminativos</div>
+<h2>Pero renunciar a $p(x)$ se paga</h2>
+<ul>
+<li>Y la factura solo llega cuando se le pide al modelo algo distinto de clasificar.</li>
+</ul>
+</section>
+
+<!-- ============ §3 GENERATIVOS ============ -->
+
+<!-- 15 -->
+<section>
+<div class="section-label">§ 3 · Modelos generativos</div>
+<h2>El enfoque generativo es más ambicioso</h2>
+$$p_\theta(x, y) = p_\theta(x \mid y)\, p_\theta(y)$$
+<p class="note">En palabras: en vez de aprender dónde separar, aprende cómo se ven los datos de cada clase y con qué frecuencia aparece cada clase.</p>
+</section>
+
+<!-- 16 -->
+<section>
+<div class="section-label">§ 3 · Modelos generativos</div>
+<h2>Se ajusta maximizando la verosimilitud conjunta</h2>
+$$\hat\theta = \arg\max_\theta \sum_{i=1}^{n} \Big[\log p_\theta(x^{(i)} \mid y^{(i)}) + \log p_\theta(y^{(i)})\Big]$$
+<p class="note">En palabras: los dos términos se estiman por separado, lo que en modelos clásicos se reduce a contar frecuencias y estimar medias y covarianzas.</p>
+</section>
+
+<!-- 17 -->
+<section>
+<div class="section-label">§ 3 · Modelos generativos</div>
+<h2>Y eso desbloquea cosas que no son exactitud</h2>
+<ul>
+<li>Muestrear ejemplos nuevos, medir si una observación es rara, imputar características faltantes y decidir qué datos conviene etiquetar.</li>
+</ul>
+<p class="note">Ninguna de esas cuatro capacidades mejora la clasificación. Son otra cosa, y es la razón de ser de la sección G del curso.</p>
+</section>
+
+<!-- 18 -->
+<section>
+<div class="section-label">§ 3 · Modelos generativos</div>
+<h2>Los clásicos hacen supuestos muy explícitos</h2>
+<ul>
+<li>El análisis discriminante gaussiano supone $p(x \mid y) = \mathcal{N}(\mu_y, \Sigma)$; Naive Bayes supone que las características son independientes dada la clase.</li>
+</ul>
+</section>
+
+<!-- 19 -->
+<section>
+<div class="section-label">§ 3 · Modelos generativos</div>
+<h2>Y los profundos aprenden esa distribución</h2>
+<ul>
+<li>Los autoencoders variacionales, las redes adversarias y los modelos de difusión operan sobre imágenes, audio y video, sin suponer ninguna forma cerrada.</li>
+</ul>
+</section>
+
+<!-- 20 · puente -->
+<section>
+<div class="section-label">§ 3 · Modelos generativos</div>
+<h2>Pero aprendió $p(x \mid y)$, y la tarea pedía $p(y \mid x)$</h2>
+<ul>
+<li>Falta el paso que convierte a este modelo en un clasificador.</li>
+</ul>
+</section>
+
+<!-- ============ §4 CLASIFICACIÓN BAYESIANA ============ -->
+
+<!-- 21 -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>Bayes hace exactamente esa conversión</h2>
+$$p(y \mid x) = \frac{p(x \mid y)\,p(y)}{p(x)}$$
+<p class="note">En palabras: combina lo que el modelo sabe de cada clase con la frecuencia previa de esa clase, y normaliza.</p>
+</section>
+
+<!-- 22 -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>Y el denominador se puede descartar</h2>
+$$\hat y = \arg\max_y \; p(x \mid y)\, p(y)$$
+<p class="note">En palabras: $p(x)$ es la misma para todas las clases, así que no cambia cuál gana la comparación. Solo normaliza para que las probabilidades sumen uno.</p>
+</section>
+
+<!-- 23 -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>El prior es solo la frecuencia de cada clase</h2>
+<ul>
+<li>Si el 90% de los correos son legítimos, entonces $p(\text{spam}) = 0.1$ antes de mirar una sola palabra del correo.</li>
+</ul>
+<p class="note">En la práctica se estima contando qué fracción de los ejemplos de entrenamiento pertenece a cada clase.</p>
+</section>
+
+<!-- 24 -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>Y el teorema de Bayes NO supone independencia</h2>
+<ul>
+<li>Es una identidad matemática válida para cualquier par de variables aleatorias, relacionadas o no.</li>
+</ul>
+<p class="note">La independencia es un supuesto adicional que agrega Naive Bayes, y de ahí viene su nombre. Confundir ambas cosas es el error más común de esta sección.</p>
+</section>
+
+<!-- 25 -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>En la práctica se trabaja con logaritmos</h2>
+$$\hat y = \arg\max_y \; \big[\log p(x \mid y) + \log p(y)\big]$$
+<p class="note">En palabras: multiplicar muchas probabilidades pequeñas desborda hacia cero, y sumar sus logaritmos no. Es el mismo truco de A.5.</p>
+</section>
+
+<!-- 26 -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>Y los supuestos deciden la forma de la frontera</h2>
+<ul>
+<li>No es un detalle de implementación: la geometría del clasificador queda determinada por lo que se supuso sobre $p(x \mid y)$.</li>
+</ul>
+</section>
+
+<!-- 27 · SVG fronteras -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>Misma covarianza da recta; distinta da curva</h2>
+<ul><li>Las elipses son curvas de igual densidad de $p(x \mid y)$ para cada clase.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+    <text x="185" y="26" font-size="14" text-anchor="middle" font-weight="bold">covarianza compartida</text>
+    <g fill="none" stroke="#33607f" stroke-width="1.6">
+      <ellipse cx="108" cy="150" rx="62" ry="34" transform="rotate(-20 108 150)"/>
+      <ellipse cx="108" cy="150" rx="34" ry="18" transform="rotate(-20 108 150)"/>
+    </g>
+    <g fill="none" stroke="#c0653a" stroke-width="1.6">
+      <ellipse cx="262" cy="106" rx="62" ry="34" transform="rotate(-20 262 106)"/>
+      <ellipse cx="262" cy="106" rx="34" ry="18" transform="rotate(-20 262 106)"/>
+    </g>
+    <circle cx="108" cy="150" r="4" fill="#33607f"/>
+    <circle cx="262" cy="106" r="4" fill="#c0653a"/>
+    <line x1="126" y1="222" x2="248" y2="36" stroke="#2f6b33" stroke-width="2.8" stroke-dasharray="7,4"/>
+    <text x="185" y="250" font-size="13" text-anchor="middle" fill="#2f6b33">frontera lineal</text>
+
+    <line x1="370" y1="40" x2="370" y2="240" stroke="#ccc" stroke-width="1.2"/>
+
+    <text x="555" y="26" font-size="14" text-anchor="middle" font-weight="bold">covarianzas distintas</text>
+    <g fill="none" stroke="#33607f" stroke-width="1.6">
+      <ellipse cx="478" cy="150" rx="66" ry="30" transform="rotate(-15 478 150)"/>
+      <ellipse cx="478" cy="150" rx="36" ry="16" transform="rotate(-15 478 150)"/>
+    </g>
+    <g fill="none" stroke="#c0653a" stroke-width="1.6">
+      <ellipse cx="622" cy="118" rx="34" ry="62" transform="rotate(10 622 118)"/>
+      <ellipse cx="622" cy="118" rx="18" ry="34" transform="rotate(10 622 118)"/>
+    </g>
+    <circle cx="478" cy="150" r="4" fill="#33607f"/>
+    <circle cx="622" cy="118" r="4" fill="#c0653a"/>
+    <path d="M602,36 C548,92 548,196 608,236" fill="none" stroke="#2f6b33" stroke-width="2.8" stroke-dasharray="7,4"/>
+    <text x="555" y="250" font-size="13" text-anchor="middle" fill="#2f6b33">frontera cuadrática</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 28 -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>Y Naive Bayes también da frontera lineal</h2>
+<ul>
+<li>La misma geometría que la regresión logística, pero obtenida por un camino distinto y con supuestos completamente distintos.</li>
+</ul>
+</section>
+
+<!-- 29 · puente -->
+<section>
+<div class="section-label">§ 4 · Clasificación bayesiana</div>
+<h2>Con ambos capaces de clasificar, cabe compararlos</h2>
+<ul>
+<li>Y la comparación no tiene un ganador único.</li>
+</ul>
+</section>
+
+<!-- ============ §5 COMPARACIÓN ============ -->
+
+<!-- 30 -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>Los supuestos fuertes cortan en dos direcciones</h2>
+<ul>
+<li>Son una restricción cuando sobran datos y un regalo cuando faltan.</li>
+</ul>
+</section>
+
+<!-- 31 -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>Si los supuestos son falsos, el generativo paga sesgo</h2>
+<ul>
+<li>La frontera queda deformada por la forma funcional impuesta, y ningún volumen de datos la corrige.</li>
+</ul>
+</section>
+
+<!-- 32 -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>Pero con pocos datos esos supuestos estabilizan</h2>
+<ul>
+<li>Funcionan como regularización implícita: Naive Bayes con $d$ características binarias requiere del orden de $d$ parámetros, estimados de forma independiente.</li>
+</ul>
+</section>
+
+<!-- 33 -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>Ng y Jordan lo precisaron en 2002</h2>
+<ul>
+<li>La regresión logística alcanza menor error asintótico, pero Naive Bayes llega a su propio óptimo con muchísimos menos ejemplos.</li>
+</ul>
+</section>
+
+<!-- 34 · SVG Ng-Jordan -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>Las dos curvas se cruzan</h2>
+<ul><li>Esquema cualitativo del resultado, no datos de un experimento concreto.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+    <line x1="70" y1="212" x2="600" y2="212" stroke="#333" stroke-width="1.3"/>
+    <line x1="70" y1="212" x2="70" y2="34" stroke="#333" stroke-width="1.3"/>
+    <text x="335" y="240" font-size="13" text-anchor="middle" font-style="italic" fill="#555">número de ejemplos de entrenamiento n</text>
+    <text x="52" y="120" font-size="13" text-anchor="middle" font-style="italic" fill="#555" transform="rotate(-90 52 120)">error</text>
+
+    <path d="M84,52 C126,116 176,144 250,150 C350,153 460,153 594,153"
+          fill="none" stroke="#c0653a" stroke-width="2.8"/>
+    <path d="M84,42 C150,88 200,118 280,140 C380,166 480,186 594,196"
+          fill="none" stroke="#33607f" stroke-width="2.8"/>
+
+    <circle cx="322" cy="151" r="5" fill="#2f6b33"/>
+    <line x1="322" y1="151" x2="322" y2="212" stroke="#2f6b33" stroke-width="1.2" stroke-dasharray="3,3"/>
+    <text x="352" y="176" font-size="12" text-anchor="start" fill="#2f6b33">cruce</text>
+
+    <line x1="614" y1="153" x2="646" y2="153" stroke="#c0653a" stroke-width="2.8"/>
+    <text x="654" y="158" font-size="13" text-anchor="start">Naive Bayes</text>
+    <line x1="614" y1="196" x2="646" y2="196" stroke="#33607f" stroke-width="2.8"/>
+    <text x="654" y="201" font-size="13" text-anchor="start">Reg. logística</text>
+
+    <text x="186" y="72" font-size="12" fill="#555">con pocos datos,</text>
+    <text x="186" y="90" font-size="12" fill="#555">gana el generativo</text>
+    <text x="486" y="96" font-size="12" fill="#555">con muchos datos,</text>
+    <text x="486" y="114" font-size="12" fill="#555">gana el discriminativo</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 35 -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>Y dónde ocurre el cruce depende de la dimensión</h2>
+<ul>
+<li>La regresión logística necesita del orden de $O(d)$ ejemplos para acercarse a su óptimo; Naive Bayes alcanza el suyo con del orden de $O(\log d)$.</li>
+</ul>
+</section>
+
+<!-- 36 · puente -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>Pero hay cosas que no dependen de cuántos datos haya</h2>
+<ul>
+<li>Un modelo sin $p(x)$ no puede hacerlas nunca.</li>
+</ul>
+</section>
+
+<!-- ============ §6 CAPACIDADES GENERATIVAS ============ -->
+
+<!-- 37 -->
+<section>
+<div class="section-label">§ 6 · Capacidades generativas</div>
+<h2>Se pueden muestrear ejemplos de la clase que se quiera</h2>
+$$x_{\text{nuevo}} \sim p_\theta(x \mid y = k)$$
+<p class="note">En palabras: en el caso gaussiano se muestrea de $\mathcal{N}(\hat\mu_k, \hat\Sigma_k)$. Esta misma operación, en espacios de altísima dimensión, es lo que hacen los modelos de la sección G.</p>
+</section>
+
+<!-- 38 -->
+<section>
+<div class="section-label">§ 6 · Capacidades generativas</div>
+<h2>Se puede medir cuán rara es una observación</h2>
+$$p(x) = \sum_{y} p(x \mid y)\, p(y)$$
+<p class="note">En palabras: al marginalizar sobre las clases queda la densidad de los datos. Una muestra con $p(x)$ muy baja está lejos de todo lo que el modelo vio.</p>
+</section>
+
+<!-- 39 -->
+<section>
+<div class="section-label">§ 6 · Capacidades generativas</div>
+<h2>Y eso permite decir "no sé"</h2>
+<ul>
+<li>Detectar entradas fuera de distribución y rechazar la predicción en vez de entregar una respuesta con confianza injustificada.</li>
+</ul>
+<p class="note">Un modelo discriminativo clasificará una radiografía de un perro como si fuera de un humano, sin ninguna señal de alarma, porque nunca aprendió qué aspecto tienen sus datos.</p>
+</section>
+
+<!-- 40 -->
+<section>
+<div class="section-label">§ 6 · Capacidades generativas</div>
+<h2>Y pedir etiquetas justo donde más falta hacen</h2>
+<ul>
+<li>Cuando etiquetar es caro, como en anotaciones médicas, se solicitan las de los puntos donde $p(x)$ es baja, que son los más informativos.</li>
+</ul>
+</section>
+
+<!-- 41 -->
+<section>
+<div class="section-label">§ 6 · Capacidades generativas</div>
+<h2>Hoy la línea entre ambos es difusa</h2>
+<ul>
+<li>Los modelos de lenguaje son generativos que, con ajuste fino, se convierten en discriminadores excelentes.</li>
+</ul>
+</section>
+
+<!-- 42 · cierre de sección -->
+<section>
+<div class="section-label">§ 6 · Capacidades generativas</div>
+<h2>Esto cierra la sección A y abre la sección G</h2>
+<ul>
+<li>La expresión "IA generativa" nombra exactamente esta distinción: modelos que aprendieron $p(x)$ y por eso pueden producir datos, no solo etiquetarlos.</li>
+</ul>
+</section>
+
+<!-- 43 · CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>La pregunta no es qué predice el modelo, sino qué distribución aprendió para poder predecirlo.</h1>
+  <p style="font-size:1em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

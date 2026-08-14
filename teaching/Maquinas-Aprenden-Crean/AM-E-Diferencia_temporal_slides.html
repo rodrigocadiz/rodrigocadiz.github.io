@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diferencia Temporal, Q-Learning y SARSA</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Diferencia Temporal, Q-Learning y SARSA</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- APERTURA -->
+<section>
+<h2>Falta el ingrediente práctico</h2>
+<ul>
+<li>E.1 dio el objetivo (estimar valores y derivar la política) y la relación recursiva (Bellman); falta cómo estimar esos valores sin conocer el modelo, solo desde la experiencia.</li>
+</ul>
+</section>
+
+<section>
+<h2>Entre dos extremos: DP y Monte Carlo</h2>
+<ul>
+<li>La programación dinámica resuelve Bellman exacto, pero exige conocer $P$ y $R$.</li>
+<li>Monte Carlo aprende sin modelo, pero espera al final del episodio y tiene alta varianza.</li>
+</ul>
+<p class="note">La diferencia temporal (TD) combina lo mejor de ambos: sin modelo y sin esperar al final.</p>
+</section>
+
+<!-- §1 ERROR TD -->
+<section>
+<div class="section-label">§ 1 · El error de diferencia temporal</div>
+<h2>¿Cómo aprender de un paso sin esperar el final del episodio?</h2>
+<ul>
+<li>La idea: corregir la creencia actual comparándola con lo que se observa un instante después.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El error de diferencia temporal</div>
+<h2>El error de diferencia temporal</h2>
+$$\delta_t = \underbrace{r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1})}_{\text{objetivo TD}} \; - \; \underbrace{q(s_t, a_t)}_{\text{estimación actual}}$$
+<p class="note">En palabras: cuánto se desvía la estimación actual de un objetivo formado con la recompensa real más el valor estimado del paso siguiente. Se actualiza con $q \leftarrow q + \alpha\,\delta_t$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El error de diferencia temporal</div>
+<h2>Bootstrapping: estimar a partir de una estimación</h2>
+<ul>
+<li>El objetivo usa la <strong>propia estimación</strong> $q(s_{t+1}, a_{t+1})$, no el retorno real hasta el final.</li>
+</ul>
+<p class="note">Es lo que permite actualizar en cada paso, pero también lo que introduce sesgo: el objetivo es solo tan bueno como la estimación en que se apoya.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El error de diferencia temporal</div>
+<h2>Tres familias de respaldo</h2>
+<ul>
+<li><strong>DP</strong>: esperanza completa sobre todos los sucesores, pero necesita el modelo.</li>
+<li><strong>Monte Carlo</strong>: trayectoria completa, insesgado pero de alta varianza.</li>
+<li><strong>TD</strong>: un paso muestreado más la estimación del resto; baja varianza, algo de sesgo.</li>
+</ul>
+<p class="note">Primero usemos TD para evaluar una política fija. → §2</p>
+</section>
+
+<!-- §2 TD(0) -->
+<section>
+<div class="section-label">§ 2 · Predicción con TD(0)</div>
+<h2>¿Cuánto vale seguir una política dada?</h2>
+<ul>
+<li>El problema de <strong>predicción</strong>: estimar $v_\pi$ de una política fija, antes de buscar la óptima.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Predicción con TD(0)</div>
+<h2>La regla de actualización de TD(0)</h2>
+$$v(s_t) \leftarrow v(s_t) + \alpha \left( r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t) \right)$$
+<p class="note">En palabras: empuja el valor de un estado hacia la recompensa inmediata más el valor del sucesor. $\alpha$ es la tasa de aprendizaje.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Predicción con TD(0)</div>
+<h2>El valor gotea hacia atrás por la cadena de estados</h2>
+<ul>
+<li>Episodio tras episodio, la información de las recompensas se filtra hacia atrás hasta que toda la función de valor es consistente con Bellman.</li>
+</ul>
+<p class="note">De evaluar a mejorar: para el control se trabaja con valores de acción $q$. → §3</p>
+</section>
+
+<!-- §3 SARSA -->
+<section>
+<div class="section-label">§ 3 · SARSA: aprendizaje on-policy</div>
+<h2>¿Y si aprendo sobre la misma política que uso para explorar?</h2>
+<ul>
+<li>SARSA es <strong>on-policy</strong>: evalúa y mejora la política que está usando.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · SARSA: aprendizaje on-policy</div>
+<h2>La regla de SARSA</h2>
+$$q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \left( r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1}) - q(s_t, a_t) \right)$$
+<p class="note">El nombre describe la tupla que necesita: estado, acción, recompensa, estado siguiente y la <em>siguiente acción</em> $a_{t+1}$ elegida según la política actual.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · SARSA: aprendizaje on-policy</div>
+<h2>SARSA aprende valores conscientes del riesgo</h2>
+<ul>
+<li>Usa la acción que <strong>efectivamente tomará</strong>, incluida su componente exploratoria, así que el riesgo de explorar queda reflejado en las estimaciones.</li>
+</ul>
+<p class="note">Expected SARSA reduce la varianza usando la esperanza sobre la política en vez de una sola acción muestreada. → §4</p>
+</section>
+
+<!-- §4 Q-LEARNING -->
+<section>
+<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
+<h2>¿Puedo aprender lo óptimo explorando subóptimamente?</h2>
+<ul>
+<li>Q-Learning (Watkins, 1989) es <strong>off-policy</strong>: aprende la política óptima mientras se mueve con otra más exploratoria.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
+<h2>La regla de Q-Learning</h2>
+$$q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \left( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a) - q(s_t, a_t) \right)$$
+<p class="note">Reemplaza la acción tomada por el <strong>máximo</strong> sobre las acciones del estado siguiente: exactamente el de la optimalidad de Bellman, lo que lleva a $q_*$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
+<h2>Política de comportamiento y política objetivo</h2>
+<ul>
+<li>La <strong>de comportamiento</strong> genera los datos (ε-greedy); la <strong>objetivo</strong> es la que se aprende (codiciosa respecto a $q$).</li>
+</ul>
+<p class="note">Aprender sobre una política mientras se sigue otra es lo que más adelante permite reutilizar experiencia con un búfer de repetición.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
+<h2>SARSA y Q-Learning difieren en el estado siguiente</h2>
+<ul><li>SARSA usa la acción que la política elige; Q-Learning, la mejor acción posible.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 660 220" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="td" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <text x="165" y="24" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">SARSA (on-policy)</text>
+  <circle cx="60" cy="80" r="20" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text x="60" y="84" text-anchor="middle" font-size="11" fill="#1a3a5c">s,a</text>
+  <line x1="80" y1="80" x2="135" y2="80" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#td)"/>
+  <text x="107" y="70" text-anchor="middle" font-size="10" fill="#388e3c">r</text>
+  <circle cx="160" cy="80" r="20" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="160" y="84" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <line x1="170" y1="98" x2="200" y2="140" stroke="#7b1fa2" stroke-width="1.6" marker-end="url(#td)"/>
+  <circle cx="210" cy="158" r="18" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.6"/>
+  <text x="210" y="162" text-anchor="middle" font-size="10.5" fill="#5c1a5c">a' ~ π</text>
+  <text x="165" y="205" text-anchor="middle" font-size="10.5" font-style="italic" fill="#5c1a5c">usa la acción que la política elige</text>
+  <line x1="335" y1="30" x2="335" y2="200" stroke="#ccc" stroke-width="1" stroke-dasharray="4,4"/>
+  <text x="500" y="24" text-anchor="middle" font-size="13" font-weight="bold" fill="#7a1a1a">Q-Learning (off-policy)</text>
+  <circle cx="395" cy="80" r="20" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text x="395" y="84" text-anchor="middle" font-size="11" fill="#1a3a5c">s,a</text>
+  <line x1="415" y1="80" x2="470" y2="80" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#td)"/>
+  <text x="442" y="70" text-anchor="middle" font-size="10" fill="#388e3c">r</text>
+  <circle cx="495" cy="80" r="20" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="495" y="84" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <line x1="513" y1="92" x2="545" y2="140" stroke="#c0392b" stroke-width="1.6" marker-end="url(#td)"/>
+  <circle cx="555" cy="158" r="20" fill="#fdecea" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="555" y="162" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#7a1a1a">max a</text>
+  <text x="500" y="205" text-anchor="middle" font-size="10.5" font-style="italic" fill="#7a1a1a">usa la mejor acción posible</text>
+</svg>
+</div>
+</section>
+
+<!-- §5 EXPLORACIÓN -->
+<section>
+<div class="section-label">§ 5 · Exploración: políticas ε-greedy y alternativas</div>
+<h2>¿Cómo se decide entre explotar y explorar?</h2>
+<ul>
+<li>SARSA depende de que la política explore; incluso Q-Learning necesita visitar todos los pares estado-acción.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Exploración: políticas ε-greedy y alternativas</div>
+<h2>La política ε-greedy</h2>
+<ul>
+<li>Con probabilidad $\varepsilon$ una acción aleatoria; con $1-\varepsilon$ la de mayor valor conocido.</li>
+</ul>
+<p class="note">Simple y eficaz, pero trata por igual a todas las acciones no codiciosas, sin distinguir una mala de una solo ligeramente peor.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Exploración: políticas ε-greedy y alternativas</div>
+<h2>Decrecer ε y la condición GLIE</h2>
+<ul>
+<li>Un $\varepsilon$ fijo nunca deja de explorar; decrecerlo permite converger a la política codiciosa.</li>
+<li>GLIE: explorar infinitas veces cada par, pero volverse codicioso en el límite.</li>
+</ul>
+<p class="note">Alternativas: exploración softmax (Boltzmann) e inicialización optimista. El contraste on/off-policy produce conductas distintas ante el riesgo. → §6</p>
+</section>
+
+<!-- §6 SARSA VS Q -->
+<section>
+<div class="section-label">§ 6 · SARSA frente a Q-Learning</div>
+<h2>¿Por qué importa la diferencia en la práctica?</h2>
+<ul>
+<li>Q-Learning asume que en el siguiente paso actuará perfecto; SARSA usa la acción que realmente tomará.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · SARSA frente a Q-Learning</div>
+<h2>SARSA toma la ruta segura; Q-Learning camina por el borde</h2>
+<ul>
+<li>Si la ruta óptima pasa junto a un precipicio, SARSA sabe que su propia ε-greedy puede hacerlo caer, y prefiere un camino más seguro.</li>
+<li>Q-Learning ignora el riesgo de sus acciones aleatorias y aprende a caminar por el borde.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · SARSA frente a Q-Learning</div>
+<h2>¿Cuál elegir?</h2>
+<ul>
+<li>Q-Learning aprende lo óptimo y, por ser off-policy, es la base del Deep RL; SARSA da políticas más prudentes durante el aprendizaje.</li>
+</ul>
+<p class="note">Si $\varepsilon \to 0$ de forma apropiada, ambos convergen a la misma política óptima. Ambos son casos de un espectro más amplio. → §7</p>
+</section>
+
+<!-- §7 N PASOS -->
+<section>
+<div class="section-label">§ 7 · Entre TD y Monte Carlo: métodos de n pasos</div>
+<h2>¿Hay algo entre un paso y el episodio completo?</h2>
+<ul>
+<li>TD(0) respalda con un paso real más una estimación; Monte Carlo, con la trayectoria completa. Entre ambos hay un espectro.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Entre TD y Monte Carlo: métodos de n pasos</div>
+<h2>Retornos de n pasos</h2>
+$$r_{t+1} + \gamma\, r_{t+2} + \cdots + \gamma^{n-1} r_{t+n} + \gamma^{n}\, v(s_{t+n})$$
+<p class="note">Con $n=1$ se recupera TD(0); con $n$ todo el episodio, Monte Carlo. Los valores intermedios suelen rendir mejor que cualquiera de los extremos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Entre TD y Monte Carlo: métodos de n pasos</div>
+<h2>TD(λ) y trazas de elegibilidad</h2>
+<ul>
+<li>En vez de un único $n$, promedia todos los horizontes con pesos que decaen según $\lambda \in [0,1]$.</li>
+<li>Las trazas de elegibilidad reparten el error TD entre los estados visitados recientemente.</li>
+</ul>
+<p class="note">¿Bajo qué condiciones convergen todos estos métodos? → §8</p>
+</section>
+
+<!-- §8 CONVERGENCIA -->
+<section>
+<div class="section-label">§ 8 · Convergencia</div>
+<h2>¿Cuándo está garantizado que funcionen?</h2>
+<ul>
+<li>Las actualizaciones son <strong>mapeos de contracción</strong> en el espacio de valores: convergen a los valores óptimos bajo ciertas condiciones.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Convergencia</div>
+<h2>Las condiciones de Robbins-Monro</h2>
+$$\sum_t \alpha_t = \infty, \qquad \sum_t \alpha_t^2 &lt; \infty$$
+<ul>
+<li>Y visitar <strong>infinitas veces</strong> cada par estado-acción.</li>
+</ul>
+<p class="note">En palabras: la tasa debe permitir mover los valores lo necesario, pero también promediar y eliminar el ruido de las muestras.</p>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Convergencia</div>
+<h2>Toda la teoría descansa sobre la exploración</h2>
+<ul>
+<li>Sin visitar todo par estado-acción, regiones enteras quedan sin estimar y las garantías se derrumban.</li>
+</ul>
+<p class="note">Todo se sostiene mientras los estados quepan en una tabla. Cuando son demasiados, hay que aproximar con una red. → E.3</p>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+<h1>Actualizar una estimación con otra un paso después permite aprender sin modelo; quién provee esa estimación separa a SARSA de Q-Learning.</h1>
+<div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

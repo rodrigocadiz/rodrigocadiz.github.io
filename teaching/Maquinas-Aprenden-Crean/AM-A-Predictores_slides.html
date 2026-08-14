@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predictores — Aprendizaje de Máquina</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Predictores</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- 2 · APERTURA -->
+<section>
+<h2>Ya sabemos que aprender es ajustar una función</h2>
+<ul>
+<li>Falta la pregunta previa a todo ajuste: <strong>qué forma</strong> puede tener esa función.</li>
+</ul>
+<p class="note">Este notebook es el catálogo de esas formas posibles.</p>
+</section>
+
+<!-- 3 -->
+<section>
+<h2>Y las formas se ordenan en un solo eje</h2>
+<ul>
+<li>En un extremo, el predictor trae su forma decidida de antemano y solo ajusta unos pocos números; en el otro, la infiere entera de los datos.</li>
+</ul>
+</section>
+
+<!-- 4 · SVG taxonomía -->
+<section>
+<div class="section-label">§ 0 · Panorama</div>
+<h2>El eje que ordena todas las familias</h2>
+<ul><li>De izquierda a derecha: menos forma impuesta, más forma aprendida.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle" fill="#222">
+    <line x1="60" y1="212" x2="700" y2="212" stroke="#333" stroke-width="1.4"/>
+    <path d="M700,212 L692,208 L692,216 z" fill="#333"/>
+    <text x="130" y="236" font-size="13" font-style="italic" fill="#555">forma funcional fija</text>
+    <text x="620" y="236" font-size="13" font-style="italic" fill="#555">forma aprendida de los datos</text>
+
+    <rect x="46" y="56" width="130" height="60" rx="8" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="111" y="80" font-size="14">Lineal / afín</text>
+    <text x="111" y="100" font-size="12.5" font-style="italic">θᵀx</text>
+    <line x1="111" y1="120" x2="111" y2="206" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <rect x="192" y="56" width="130" height="60" rx="8" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="257" y="80" font-size="14">Polinomial</text>
+    <text x="257" y="100" font-size="12.5" font-style="italic">θᵀφ(u)</text>
+    <line x1="257" y1="120" x2="257" y2="206" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <rect x="338" y="56" width="130" height="60" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6"/>
+    <text x="403" y="80" font-size="14">Vecinos (k-NN)</text>
+    <text x="403" y="100" font-size="12.5" font-style="italic">promedio local</text>
+    <line x1="403" y1="120" x2="403" y2="206" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <rect x="478" y="56" width="130" height="60" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6"/>
+    <text x="543" y="80" font-size="14">Árboles</text>
+    <text x="543" y="100" font-size="12.5" font-style="italic">particiones</text>
+    <line x1="543" y1="120" x2="543" y2="206" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <rect x="626" y="56" width="104" height="60" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.6"/>
+    <text x="678" y="80" font-size="14">Redes</text>
+    <text x="678" y="100" font-size="12" font-style="italic">capas anidadas</text>
+    <line x1="678" y1="120" x2="678" y2="206" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <text x="180" y="152" font-size="12.5" fill="#555">pocos parámetros, interpretables</text>
+    <text x="560" y="152" font-size="12.5" fill="#555">muchos parámetros, opacos</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- ============ §1 LINEALES Y AFINES ============ -->
+
+<!-- 5 · apertura de sección -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>¿Cuál es la forma más simple posible?</h2>
+<ul>
+<li>La respuesta más económica: ponderar cada característica por un número y sumar.</li>
+</ul>
+</section>
+
+<!-- 6 -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>Un predictor lineal es un producto interno</h2>
+$$\hat y = h_\theta(x) = \theta^T x = \theta_1 x_1 + \cdots + \theta_d x_d$$
+<p class="note">En palabras: la predicción es una suma ponderada de las características, y los pesos son los parámetros que se aprenden.</p>
+</section>
+
+<!-- 7 -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>Cada coeficiente se lee como una tasa de cambio</h2>
+<ul>
+<li>$\theta_i$ es cuánto se mueve la predicción cuando $x_i$ sube en una unidad, con todo lo demás fijo.</li>
+<li>Si $\theta_i = 0$, esa característica simplemente no participa.</li>
+</ul>
+</section>
+
+<!-- 8 -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>La norma de $\theta$ acota cuánto puede moverse la predicción</h2>
+$$|h(x) - h(\tilde{x})| \;\le\; \|\theta\|_2 \, \|x - \tilde{x}\|_2$$
+<p class="note">En palabras: dos entradas parecidas no pueden dar predicciones muy distintas si $\|\theta\|_2$ es pequeño.</p>
+</section>
+
+<!-- 9 -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>De ahí sale la idea de regularizar</h2>
+<ul>
+<li>Penalizar $\|\theta\|_2$ durante el ajuste es, literalmente, comprarle estabilidad al predictor.</li>
+</ul>
+<p class="note">La técnica completa se desarrolla en D.5, Regularización.</p>
+</section>
+
+<!-- 10 -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>Pero $\theta^T x$ obliga a pasar por el origen</h2>
+<ul>
+<li>Si todas las características valen cero, la predicción vale cero, y casi nunca es lo que se quiere.</li>
+</ul>
+</section>
+
+<!-- 11 -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>El truco es una característica que siempre vale 1</h2>
+$$h(x) = \theta^T x = \theta_1 + \theta_2 x_2 + \cdots + \theta_d x_d$$
+<p class="note">Con $x_1 = 1$ el producto interno absorbe el término constante $\theta_1$, llamado sesgo o desplazamiento. La función es ahora afín, no lineal, pero el álgebra no cambia.</p>
+</section>
+
+<!-- 12 · SVG lineal vs afín -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>Lineal pasa por el origen; afín se desplaza</h2>
+<ul><li>El sesgo $\theta_1$ sube o baja la recta entera sin cambiar su pendiente.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" fill="#222">
+    <line x1="60" y1="215" x2="330" y2="215" stroke="#333" stroke-width="1.4"/>
+    <line x1="60" y1="215" x2="60" y2="40" stroke="#333" stroke-width="1.4"/>
+    <text x="195" y="245" font-size="14" text-anchor="middle">estrictamente lineal</text>
+    <line x1="60" y1="215" x2="310" y2="70" stroke="#33607f" stroke-width="3"/>
+    <circle cx="60" cy="215" r="5" fill="#33607f"/>
+    <text x="104" y="188" font-size="13" fill="#33607f">pasa por (0,0)</text>
+    <text x="44" y="36" font-size="13" text-anchor="middle" font-style="italic">ŷ</text>
+
+    <line x1="420" y1="215" x2="690" y2="215" stroke="#333" stroke-width="1.4"/>
+    <line x1="420" y1="215" x2="420" y2="40" stroke="#333" stroke-width="1.4"/>
+    <text x="555" y="245" font-size="14" text-anchor="middle">afín</text>
+    <line x1="420" y1="160" x2="670" y2="55" stroke="#a06a1f" stroke-width="3"/>
+    <line x1="420" y1="215" x2="670" y2="110" stroke="#bbb" stroke-width="2" stroke-dasharray="5,4"/>
+    <circle cx="420" cy="160" r="5" fill="#a06a1f"/>
+    <line x1="404" y1="160" x2="404" y2="215" stroke="#a06a1f" stroke-width="2"/>
+    <text x="386" y="192" font-size="14" fill="#a06a1f" text-anchor="middle" font-style="italic">θ₁</text>
+    <text x="588" y="106" font-size="13" fill="#a06a1f" text-anchor="middle">misma pendiente</text>
+    <text x="404" y="36" font-size="13" text-anchor="middle" font-style="italic">ŷ</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 13 · puente -->
+<section>
+<div class="section-label">§ 1 · Predictores lineales y afines</div>
+<h2>La forma es rígida en las características crudas</h2>
+<ul>
+<li>Pero nada obliga a alimentar el modelo con las características crudas.</li>
+</ul>
+</section>
+
+<!-- ============ §2 POLINOMIALES ============ -->
+
+<!-- 14 · apertura -->
+<section>
+<div class="section-label">§ 2 · Predictores polinomiales</div>
+<h2>¿Se puede ser no lineal sin dejar de ser lineal?</h2>
+<ul>
+<li>La pregunta suena contradictoria, y la salida está en distinguir <em>respecto de qué</em> se es lineal.</li>
+</ul>
+</section>
+
+<!-- 15 -->
+<section>
+<div class="section-label">§ 2 · Predictores polinomiales</div>
+<h2>Se curva el dato, no el modelo</h2>
+$$\hat y = h(u) = \theta^T \phi(u)$$
+<p class="note">En palabras: el mapeo $\phi$ expande la entrada cruda $u$ a un vector de características, y sobre ese vector el predictor sigue siendo un producto interno.</p>
+</section>
+
+<!-- 16 · SVG expansión -->
+<section>
+<div class="section-label">§ 2 · Predictores polinomiales</div>
+<h2>$\phi$ expande el espacio; $\theta$ sigue siendo lineal</h2>
+<ul><li>La no linealidad ocurre antes del predictor, no dentro de él.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arp" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle" fill="#222">
+    <rect x="26" y="86" width="126" height="64" rx="8" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="89" y="112" font-size="14">Entrada</text>
+    <text x="89" y="134" font-size="13" font-style="italic">u ∈ ℝ</text>
+
+    <path d="M156,118 L226,118" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arp)"/>
+    <text x="191" y="106" font-size="14" font-style="italic">φ</text>
+    <text x="191" y="140" font-size="11.5" fill="#555">no lineal</text>
+
+    <rect x="232" y="66" width="196" height="104" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6"/>
+    <text x="330" y="92" font-size="14">Características</text>
+    <text x="330" y="118" font-size="13" font-style="italic">(1, u, u², …, u^{d-1})</text>
+    <text x="330" y="146" font-size="11.5" fill="#555">dimensión d</text>
+
+    <path d="M432,118 L502,118" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arp)"/>
+    <text x="467" y="106" font-size="14" font-style="italic">θᵀ·</text>
+    <text x="467" y="140" font-size="11.5" fill="#555">lineal</text>
+
+    <rect x="508" y="86" width="206" height="64" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.6"/>
+    <text x="611" y="112" font-size="14">Predicción</text>
+    <text x="611" y="134" font-size="13" font-style="italic">polinomio de grado d−1 en u</text>
+
+    <text x="370" y="212" font-size="13" font-style="italic" fill="#555">Lineal en θ · Curvo en u</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 17 -->
+<section>
+<div class="section-label">§ 2 · Predictores polinomiales</div>
+<h2>Con potencias sucesivas aparece el polinomio</h2>
+$$\hat y = \theta_1 + \theta_2 u + \theta_3 u^2 + \cdots + \theta_d u^{\,d-1}$$
+<p class="note">Es un polinomio de grado $d-1$ en $u$, pero sigue siendo un predictor lineal en $\theta$: se ajusta con la misma maquinaria de la sección anterior.</p>
+</section>
+
+<!-- 18 -->
+<section>
+<div class="section-label">§ 2 · Predictores polinomiales</div>
+<h2>El grado no se aprende: se elige</h2>
+<ul>
+<li>Los coeficientes $\theta$ salen del ajuste, pero el grado se fija antes y controla directamente la complejidad.</li>
+</ul>
+<p class="note">Es un hiperparámetro. Elegirlo mal produce subajuste o sobreajuste, y decidirlo es tarea de A.7, Validación.</p>
+</section>
+
+<!-- 19 · puente -->
+<section>
+<div class="section-label">§ 2 · Predictores polinomiales</div>
+<h2>Pero un coeficiente afecta todo el dominio</h2>
+<ul>
+<li>Mover $\theta_3$ cambia la curva en todas partes a la vez; la forma sigue siendo global.</li>
+</ul>
+</section>
+
+<!-- ============ §3 VECINO MÁS CERCANO ============ -->
+
+<!-- 20 · apertura -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>¿Y si la predicción se decidiera solo con lo cercano?</h2>
+<ul>
+<li>La idea es abandonar toda forma global y responder mirando únicamente los ejemplos parecidos.</li>
+</ul>
+</section>
+
+<!-- 21 -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>El 1-NN copia la respuesta del más parecido</h2>
+$$\hat y = h(x) = y_i, \qquad i = \arg\min_j \|x - x_j\|_2$$
+<p class="note">En palabras: se busca el ejemplo de entrenamiento más cercano y se devuelve su etiqueta, sin ajustar ningún parámetro.</p>
+</section>
+
+<!-- 22 -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>Los parámetros son el conjunto de datos entero</h2>
+<ul>
+<li>No hay fase de entrenamiento: basta con guardar los datos.</li>
+<li>El costo se paga íntegro en la predicción, que debe buscar entre todos.</li>
+</ul>
+</section>
+
+<!-- 23 -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>Con un solo vecino se copia también el ruido</h2>
+<ul>
+<li>Promediar los $k$ más cercanos suaviza la respuesta.</li>
+</ul>
+$$\hat y = h(x) = \frac{1}{k} \sum_{j=1}^{k} y_{i_j}$$
+</section>
+
+<!-- 24 · SVG k-NN -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>$k$ fija el radio del promedio</h2>
+<ul><li>Con $k$ chico manda el ruido local; con $k$ grande la predicción se aplana.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" fill="#222">
+    <circle cx="250" cy="140" r="106" fill="#fbe6c8" fill-opacity="0.45" stroke="#a06a1f" stroke-width="1.8" stroke-dasharray="6,4"/>
+    <circle cx="250" cy="140" r="46" fill="#dbe9f4" fill-opacity="0.7" stroke="#33607f" stroke-width="1.8"/>
+    <g fill="#666">
+      <circle cx="212" cy="118" r="6"/><circle cx="276" cy="160" r="6"/>
+      <circle cx="240" cy="176" r="6"/><circle cx="290" cy="112" r="6"/>
+      <circle cx="186" cy="186" r="6"/><circle cx="326" cy="184" r="6"/>
+      <circle cx="180" cy="88" r="6"/><circle cx="322" cy="72" r="6"/>
+      <circle cx="150" cy="146" r="6"/><circle cx="344" cy="132" r="6"/>
+      <circle cx="106" cy="196" r="6"/><circle cx="392" cy="96" r="6"/>
+    </g>
+    <path d="M250,128 l10,18 l-20,0 z" fill="#c0392b"/>
+    <circle cx="250" cy="140" r="4" fill="#c0392b"/>
+    <text x="250" y="264" font-size="14" text-anchor="middle" font-style="italic">espacio de características</text>
+
+    <rect x="470" y="76" width="20" height="20" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="502" y="92" font-size="15">k = 3 · promedio ajustado</text>
+    <rect x="470" y="122" width="20" height="20" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6" stroke-dasharray="4,3"/>
+    <text x="502" y="138" font-size="15">k = 10 · promedio suave</text>
+    <path d="M472,164 l10,18 l-20,0 z" fill="#c0392b"/>
+    <text x="502" y="184" font-size="15">punto a predecir</text>
+    <text x="470" y="222" font-size="14" fill="#555">k es un hiperparámetro:</text>
+    <text x="470" y="244" font-size="14" fill="#555">se elige por validación</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 25 -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>Cortar en $k$ es abrupto: mejor ponderar por distancia</h2>
+$$\hat y = \sum_{i=1}^{n} w_i \, y_i, \qquad w_i = \frac{\exp\!\left(-\|x - x_i\|_2^2 / \rho^2\right)}{\sum_{j=1}^{n} \exp\!\left(-\|x - x_j\|_2^2 / \rho^2\right)}$$
+<p class="note">En palabras: participan todos los datos, pero los cercanos pesan mucho más; $\rho$ decide qué tan rápido decae esa influencia.</p>
+</section>
+
+<!-- 26 -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>Esos pesos son un softmax</h2>
+<ul>
+<li>La misma expresión reaparecerá en clasificación multiclase y, más adelante, en los mecanismos de atención.</li>
+</ul>
+<p class="note">$\rho$ pequeño concentra el peso en el más cercano y recupera el 1-NN; $\rho$ grande reparte y tiende al promedio global.</p>
+</section>
+
+<!-- 27 · puente -->
+<section>
+<div class="section-label">§ 3 · Vecino más cercano</div>
+<h2>Las regiones quedan definidas, pero nadie puede describirlas</h2>
+<ul>
+<li>La distancia dibuja fronteras implícitas que no se pueden explicar con palabras.</li>
+</ul>
+</section>
+
+<!-- ============ §4 ÁRBOLES ============ -->
+
+<!-- 28 · apertura -->
+<section>
+<div class="section-label">§ 4 · Predictores basados en árboles</div>
+<h2>¿Y si las regiones se declararan explícitamente?</h2>
+<ul>
+<li>Se busca un predictor cuya lógica pueda leerse y explicarse a un tercero.</li>
+</ul>
+</section>
+
+<!-- 29 -->
+<section>
+<div class="section-label">§ 4 · Predictores basados en árboles</div>
+<h2>Cada nodo es una pregunta sobre una característica</h2>
+$$x_i \le t$$
+<p class="note">En palabras: se compara una característica contra un umbral y, según la respuesta, el dato baja por la rama izquierda o la derecha hasta llegar a una hoja.</p>
+</section>
+
+<!-- 30 · SVG árbol -->
+<section>
+<div class="section-label">§ 4 · Predictores basados en árboles</div>
+<h2>El árbol y la partición son lo mismo</h2>
+<ul><li>Cada camino raíz-hoja del árbol es un rectángulo del espacio de características.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" fill="#222" text-anchor="middle">
+    <rect x="120" y="30" width="112" height="34" rx="6" fill="#eee" stroke="#555" stroke-width="1.4"/>
+    <text x="176" y="53" font-size="14" font-style="italic">x₁ ≤ 5 ?</text>
+    <line x1="150" y1="64" x2="90" y2="106" stroke="#333" stroke-width="1.4"/>
+    <text x="106" y="86" font-size="12" fill="#555">sí</text>
+    <line x1="204" y1="64" x2="264" y2="106" stroke="#333" stroke-width="1.4"/>
+    <text x="252" y="86" font-size="12" fill="#555">no</text>
+
+    <rect x="34" y="106" width="112" height="34" rx="6" fill="#eee" stroke="#555" stroke-width="1.4"/>
+    <text x="90" y="129" font-size="14" font-style="italic">x₂ ≤ 4 ?</text>
+    <rect x="212" y="106" width="104" height="34" rx="6" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.6"/>
+    <text x="264" y="129" font-size="14">C</text>
+
+    <line x1="66" y1="140" x2="62" y2="182" stroke="#333" stroke-width="1.4"/>
+    <line x1="118" y1="140" x2="172" y2="182" stroke="#333" stroke-width="1.4"/>
+    <rect x="16" y="182" width="92" height="34" rx="6" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="62" y="205" font-size="14">A</text>
+    <rect x="126" y="182" width="92" height="34" rx="6" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6"/>
+    <text x="172" y="205" font-size="14">B</text>
+    <text x="120" y="256" font-size="13" font-style="italic" fill="#555">el árbol</text>
+
+    <line x1="420" y1="230" x2="700" y2="230" stroke="#333" stroke-width="1.4"/>
+    <line x1="420" y1="230" x2="420" y2="30" stroke="#333" stroke-width="1.4"/>
+    <rect x="420" y="130" width="112" height="100" fill="#dbe9f4" stroke="#33607f" stroke-width="1.4"/>
+    <text x="476" y="186" font-size="16">A</text>
+    <rect x="420" y="30" width="112" height="100" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.4"/>
+    <text x="476" y="86" font-size="16">B</text>
+    <rect x="532" y="30" width="168" height="200" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.4"/>
+    <text x="616" y="136" font-size="16">C</text>
+    <text x="532" y="252" font-size="13" font-style="italic">x₁ = 5</text>
+    <text x="404" y="130" font-size="13" font-style="italic" text-anchor="end">x₂ = 4</text>
+    <text x="560" y="272" font-size="13" font-style="italic" fill="#555">la partición del espacio</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 31 -->
+<section>
+<div class="section-label">§ 4 · Predictores basados en árboles</div>
+<h2>Aquí la estructura misma es un parámetro</h2>
+<ul>
+<li>$\theta$ ya no es solo un vector de números: incluye qué divisiones se hacen, en qué orden y con qué umbrales.</li>
+</ul>
+</section>
+
+<!-- 32 · puente -->
+<section>
+<div class="section-label">§ 4 · Predictores basados en árboles</div>
+<h2>Todas estas familias comparten un supuesto</h2>
+<ul>
+<li>Alguien decidió a mano qué características alimentan el modelo.</li>
+</ul>
+</section>
+
+<!-- ============ §5 REDES NEURONALES ============ -->
+
+<!-- 33 · apertura -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>¿Puede el predictor inventar sus propias características?</h2>
+<ul>
+<li>La apuesta es que el mapeo $\phi$, que hasta ahora se diseñaba, se aprenda junto con todo lo demás.</li>
+</ul>
+</section>
+
+<!-- 34 -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>Una red es una composición de capas</h2>
+$$\hat y = h_3\big(h_2(h_1(x))\big)$$
+<p class="note">En palabras: la salida de cada capa es la entrada de la siguiente, y cada una produce una representación un poco más abstracta que la anterior.</p>
+</section>
+
+<!-- 35 · SVG red -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>Cada capa transforma la representación anterior</h2>
+<ul><li>Las capas intermedias son las características que la red se fabrica sola.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" fill="#222" text-anchor="middle">
+    <g fill="#dbe9f4" stroke="#33607f" stroke-width="1.6">
+      <circle cx="80" cy="76" r="17"/><circle cx="80" cy="130" r="17"/><circle cx="80" cy="184" r="17"/>
+    </g>
+    <text x="80" y="228" font-size="14">entrada x</text>
+
+    <g fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6">
+      <circle cx="270" cy="50" r="17"/><circle cx="270" cy="104" r="17"/>
+      <circle cx="270" cy="158" r="17"/><circle cx="270" cy="212" r="17"/>
+    </g>
+    <text x="270" y="248" font-size="14">z₁ = capa oculta</text>
+
+    <g fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.6">
+      <circle cx="460" cy="76" r="17"/><circle cx="460" cy="130" r="17"/><circle cx="460" cy="184" r="17"/>
+    </g>
+    <text x="460" y="228" font-size="14">z₂ = capa oculta</text>
+
+    <g fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.6">
+      <circle cx="650" cy="130" r="17"/>
+    </g>
+    <text x="650" y="182" font-size="14">salida ŷ</text>
+
+    <g stroke="#bbb" stroke-width="0.9">
+      <line x1="97" y1="76" x2="253" y2="50"/><line x1="97" y1="76" x2="253" y2="104"/>
+      <line x1="97" y1="76" x2="253" y2="158"/><line x1="97" y1="76" x2="253" y2="212"/>
+      <line x1="97" y1="130" x2="253" y2="50"/><line x1="97" y1="130" x2="253" y2="104"/>
+      <line x1="97" y1="130" x2="253" y2="158"/><line x1="97" y1="130" x2="253" y2="212"/>
+      <line x1="97" y1="184" x2="253" y2="50"/><line x1="97" y1="184" x2="253" y2="104"/>
+      <line x1="97" y1="184" x2="253" y2="158"/><line x1="97" y1="184" x2="253" y2="212"/>
+      <line x1="287" y1="50" x2="443" y2="76"/><line x1="287" y1="50" x2="443" y2="130"/>
+      <line x1="287" y1="50" x2="443" y2="184"/>
+      <line x1="287" y1="104" x2="443" y2="76"/><line x1="287" y1="104" x2="443" y2="130"/>
+      <line x1="287" y1="104" x2="443" y2="184"/>
+      <line x1="287" y1="158" x2="443" y2="76"/><line x1="287" y1="158" x2="443" y2="130"/>
+      <line x1="287" y1="158" x2="443" y2="184"/>
+      <line x1="287" y1="212" x2="443" y2="76"/><line x1="287" y1="212" x2="443" y2="130"/>
+      <line x1="287" y1="212" x2="443" y2="184"/>
+      <line x1="477" y1="76" x2="633" y2="130"/><line x1="477" y1="130" x2="633" y2="130"/>
+      <line x1="477" y1="184" x2="633" y2="130"/>
+    </g>
+    <text x="175" y="26" font-size="13" font-style="italic" fill="#555">afín + no lineal</text>
+    <text x="365" y="26" font-size="13" font-style="italic" fill="#555">afín + no lineal</text>
+    <text x="556" y="26" font-size="13" font-style="italic" fill="#555">afín</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 36 -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>Cada capa es una transformación afín más una no linealidad</h2>
+$$h_i(z_{i-1}) = g\!\left(\theta_i^T \begin{bmatrix} 1 \\ z_{i-1}\end{bmatrix}\right)$$
+<p class="note">En palabras: primero se hace exactamente lo mismo que en la sección 1, un producto interno con sesgo, y después se aplica $g$ elemento a elemento.</p>
+</section>
+
+<!-- 37 -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>Sin esa no linealidad, toda la pila colapsa</h2>
+<ul>
+<li>Si $g$ fuera lineal, componer diez capas daría exactamente una función afín: diez capas y una capa serían el mismo modelo.</li>
+</ul>
+<p class="note">La no linealidad es lo único que hace que la profundidad signifique algo.</p>
+</section>
+
+<!-- 38 -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>Las activaciones habituales son pocas y simples</h2>
+<ul>
+<li>ReLU (Rectified Linear Unit), $g(a) = \max(0,a)$; sigmoide, $g(a) = e^a/(1+e^a)$; y tangente hiperbólica, $g(a)=\tanh(a)$.</li>
+</ul>
+</section>
+
+<!-- 39 -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>La profundidad construye una jerarquía</h2>
+<ul>
+<li>Las primeras capas capturan estructura local y las últimas, conceptos completos; con más de tres capas se habla de aprendizaje profundo.</li>
+</ul>
+</section>
+
+<!-- 40 -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>La ingeniería automática de características tiene precio</h2>
+<ul>
+<li>Muchos datos, mucho cómputo, y un modelo que ya no se puede leer como se leía un árbol.</li>
+</ul>
+</section>
+
+<!-- 41 · cierre de sección -->
+<section>
+<div class="section-label">§ 5 · Redes neuronales</div>
+<h2>Con esto el catálogo está completo</h2>
+<ul>
+<li>Pero ninguna de estas familias sabe todavía qué significa predecir bien.</li>
+</ul>
+<p class="note">Falta la medida del error (A.4, Pérdidas) y el criterio para ajustar $\theta$ (A.5, Riesgo empírico y verosimilitud).</p>
+</section>
+
+<!-- 42 · CIERRE -->
+<section>
+<div class="close-slide">
+  <h1>Todo predictor decide cuánta de su forma trae puesta de antemano y cuánta la aprende de los datos.</h1>
+  <p style="font-size:1em; color:var(--ink-soft); margin-top:2em;">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></p>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

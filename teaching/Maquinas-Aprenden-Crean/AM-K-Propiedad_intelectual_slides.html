@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propiedad Intelectual y Regulación de la IA Generativa</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- PORTADA -->
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Propiedad Intelectual y Regulación de la IA Generativa</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<!-- APERTURA NARRATIVA -->
+<section>
+<h2>De lo técnico a lo legal</h2>
+<ul>
+<li>Cuando los modelos generan obras indistinguibles de las humanas, la pregunta deja de ser <em>cómo</em> se entrena y pasa a ser <em>quién es dueño</em> de los datos y del resultado, y <em>quién responde</em> por su uso.</li>
+</ul>
+</section>
+
+<section>
+<h2>Una discusión legal anclada en una propiedad técnica</h2>
+<ul>
+<li>Todo el debate descansa sobre algo medible: el modelo <strong>memoriza</strong>, luego puede reproducir; y la <strong>detección estadística</strong> permite autenticar lo que produce.</li>
+</ul>
+<p class="note">Cuatro frentes: propiedad de los datos, autoría del contenido, regulación y autenticación.</p>
+</section>
+
+<!-- §1 PI Y DATOS -->
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>¿Es legal entrenar con obras protegidas sacadas de la web?</h2>
+<ul>
+<li>Los modelos fundacionales se entrenan con corpus masivos que incluyen una enorme cantidad de material con derechos de autor.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>¿Uso transformador o infracción?</h2>
+<ul>
+<li>La pregunta de fondo es si entrenar con una obra protegida es un uso justo (<em>fair use</em>) permitido, o una copia no autorizada.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>El problema de la memorización</h2>
+<ul>
+<li>Un modelo puede emitir extractos literales de libros o recrear imágenes casi idénticas a las de su entrenamiento.</li>
+<li>El riesgo crece con la <strong>duplicación</strong> del ejemplo, la <strong>escala</strong> del modelo y la <strong>longitud</strong> del contexto.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>Del corpus protegido a la salida literal</h2>
+<ul><li>Una obra con copyright en el corpus puede reaparecer, casi literal, ante un prompt dirigido.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 680 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+  <defs>
+    <marker id="arm" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"/></marker>
+  </defs>
+  <rect x="20" y="65" width="135" height="70" rx="8" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="87" y="90" text-anchor="middle" fill="#1a3a5c" font-weight="bold">Corpus web</text>
+  <text x="87" y="112" text-anchor="middle" fill="#b03030" font-weight="bold" font-size="16">© © ©</text>
+  <rect x="205" y="72" width="120" height="56" rx="8" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="265" y="96" text-anchor="middle" fill="#663300" font-weight="bold">Entrenamiento</text>
+  <text x="265" y="113" text-anchor="middle" fill="#885500" font-size="11">memoriza copias</text>
+  <rect x="375" y="72" width="110" height="56" rx="8" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+  <text x="430" y="104" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Modelo</text>
+  <rect x="535" y="65" width="125" height="70" rx="8" fill="#fff" stroke="#cc4444" stroke-width="2"/>
+  <text x="597" y="90" text-anchor="middle" fill="#7a1a1a" font-weight="bold">Salida</text>
+  <text x="597" y="112" text-anchor="middle" fill="#b03030" font-size="11">fragmento © literal</text>
+  <line x1="155" y1="100" x2="205" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arm)"/>
+  <line x1="325" y1="100" x2="375" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arm)"/>
+  <line x1="485" y1="100" x2="535" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arm)"/>
+  <line x1="430" y1="158" x2="430" y2="128" stroke="#888" stroke-width="1.2" marker-end="url(#arm)"/>
+  <text x="430" y="176" text-anchor="middle" fill="#888" font-size="11">prompt dirigido</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>¿Plagio o investigación?</h2>
+<ul>
+<li>Tomar ideas de una sola fuente es plagio; integrarlas desde cien es investigación. Un modelo integra a escala masiva, y la ley deberá redefinir atribución y novedad.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>The New York Times contra OpenAI (2023)</h2>
+<ul>
+<li>El diario mostró a ChatGPT reproduciendo texto casi literal de sus artículos; el tribunal rechazó desestimar los cargos centrales de infracción.</li>
+</ul>
+<p class="note">El litigio emblemático del sector mediático contra el entrenamiento sin licencia.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>Anthropic: el acuerdo récord de US$1.500 millones (2025)</h2>
+<ul>
+<li>Entrenar con libros comprados fue fair use, pero descargar millones de libros pirateados no; el acuerdo separa el uso del modelo de la legalidad de obtener los datos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>Un fair use dividido (2025)</h2>
+<ul>
+<li><em>Kadrey v. Meta</em>: entrenar Llama con libros, "altamente transformativo".</li>
+<li><em>Thomson Reuters v. Ross</em>: fair use rechazado por copiar para un producto competidor.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Propiedad intelectual y datos de entrenamiento</div>
+<h2>Getty contra Stability: los pesos no son una copia (RU, 2025)</h2>
+<ul>
+<li>El Tribunal Superior británico sostuvo que los pesos del modelo no constituyen una copia de las imágenes; la jurisdicción cambia radicalmente el resultado.</li>
+</ul>
+<p class="note">Si el modelo crea algo nuevo, ¿de quién es esa obra? → §2</p>
+</section>
+
+<!-- §2 AUTORÍA -->
+<section>
+<div class="section-label">§ 2 · Autoría y propiedad del contenido generado</div>
+<h2>¿Quién es el autor de una obra hecha por IA?</h2>
+<ul>
+<li>El debate parte por algo más básico: ¿es siquiera <em>elegible</em> para protección una obra generada por IA?</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Autoría y propiedad del contenido generado</div>
+<h2>El criterio: el aporte creativo humano</h2>
+<ul>
+<li>La protección recae sobre la curaduría, la edición y la disposición humanas, no sobre el contenido que el modelo produce de forma autónoma a partir de un prompt.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Autoría y propiedad del contenido generado</div>
+<h2>El caso Zarya: qué se protege y qué no</h2>
+<ul><li>Se protegen el texto y la selección y disposición; las imágenes generadas por la IA quedan fuera.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 680 230" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+  <defs>
+    <marker id="ara" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"/></marker>
+  </defs>
+  <rect x="250" y="22" width="180" height="46" rx="8" fill="#e7e0f5" stroke="#7755aa" stroke-width="1.6"/>
+  <text x="340" y="42" text-anchor="middle" fill="#3a2a5c" font-weight="bold">Obra creada con IA</text>
+  <text x="340" y="59" text-anchor="middle" fill="#5a4a7c" font-size="11">Zarya of the Dawn</text>
+  <line x1="300" y1="68" x2="170" y2="110" stroke="#555" stroke-width="1.4" marker-end="url(#ara)"/>
+  <rect x="35" y="115" width="270" height="50" rx="8" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+  <text x="170" y="135" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Texto, selección y disposición</text>
+  <text x="170" y="153" text-anchor="middle" fill="#2d6b2d" font-size="11">aporte creativo humano</text>
+  <text x="170" y="195" text-anchor="middle" fill="#1a4d1a" font-weight="bold" font-size="15">✓ Protegido</text>
+  <line x1="380" y1="68" x2="510" y2="110" stroke="#555" stroke-width="1.4" marker-end="url(#ara)"/>
+  <rect x="375" y="115" width="270" height="50" rx="8" fill="#fbeaea" stroke="#cc4444" stroke-width="1.5"/>
+  <text x="510" y="135" text-anchor="middle" fill="#7a1a1a" font-weight="bold">Imágenes generadas por la IA</text>
+  <text x="510" y="153" text-anchor="middle" fill="#a33" font-size="11">producción autónoma</text>
+  <text x="510" y="195" text-anchor="middle" fill="#7a1a1a" font-weight="bold" font-size="15">✗ No protegido</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Autoría y propiedad del contenido generado</div>
+<h2>La Copyright Office fija criterio (2025)</h2>
+<ul>
+<li>El material puramente generado por IA no es registrable, y los prompts, por elaborados que sean, no dan control creativo suficiente para constituir autoría.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Autoría y propiedad del contenido generado</div>
+<h2>Thaler y DABUS: se exige un autor humano (2025)</h2>
+<ul>
+<li>Los tribunales rechazaron registrar una obra cuyo autor declarado era una IA; la Corte Suprema declinó revisar el caso.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Autoría y propiedad del contenido generado</div>
+<h2>Théâtre D'opéra Spatial: el premio y el registro negado</h2>
+<ul>
+<li>La imagen de Jason Allen ganó un concurso de arte, pero la Copyright Office le negó el registro pese a cientos de prompts; el litigio prueba si eso basta como autoría.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Autoría y propiedad del contenido generado</div>
+<h2>El contraste chino: Li contra Liu (2023)</h2>
+<ul>
+<li>El Tribunal de Internet de Beijing sí otorgó copyright al usuario, por su selección de prompts y parámetros: sobre la misma tecnología, una jurisdicción protege y otra niega.</li>
+</ul>
+<p class="note">Si las leyes nacionales difieren tanto, ¿cómo está regulando el mundo? → §3</p>
+</section>
+
+<!-- §3 REGULACIÓN -->
+<section>
+<div class="section-label">§ 3 · Marcos regulatorios globales</div>
+<h2>¿Cómo ponen los gobiernos límites a la IA generativa?</h2>
+<ul>
+<li>Ante la desinformación, los sesgos y el uso indebido, surgen las primeras legislaciones con barreras éticas y de seguridad.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Marcos regulatorios globales</div>
+<h2>Dos enfoques que marcan la pauta</h2>
+<ul>
+<li>Uno clasifica el <strong>riesgo</strong> (Unión Europea); otro combina <strong>órdenes ejecutivas y leyes sectoriales</strong> (Estados Unidos).</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Marcos regulatorios globales</div>
+<h2>La Ley de IA europea como pirámide de riesgo</h2>
+<ul><li>De la base permitida a la cúspide prohibida: riesgo mínimo, limitado, alto e inaceptable.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 680 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="13">
+  <polygon points="285,28 395,28 460,83 220,83" fill="#cc4444" opacity="0.85"/>
+  <text x="340" y="60" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">Inaceptable: prohibido</text>
+  <polygon points="220,83 460,83 525,138 155,138" fill="#e8893a" opacity="0.85"/>
+  <text x="340" y="116" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">Alto riesgo: requisitos estrictos</text>
+  <polygon points="155,138 525,138 590,193 90,193" fill="#e8c33a" opacity="0.9"/>
+  <text x="340" y="171" text-anchor="middle" fill="#5c4a00" font-weight="bold" font-size="12">Riesgo limitado: transparencia</text>
+  <polygon points="90,193 590,193 655,248 25,248" fill="#5fae5f" opacity="0.85"/>
+  <text x="340" y="226" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">Riesgo mínimo: uso libre</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Marcos regulatorios globales</div>
+<h2>UE: el AI Act entra en vigor por fases</h2>
+<ul>
+<li>Vigente desde 2024, con prohibiciones desde 2025 y obligaciones para modelos de propósito general; en 2026 un paquete de simplificación retrasó parte del alto riesgo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Marcos regulatorios globales</div>
+<h2>EE.UU.: un péndulo que se mueve con la política</h2>
+<ul>
+<li>La orden ejecutiva de Biden (2023), que exigía reportar pruebas de seguridad, fue derogada por Trump (2025) en favor de un enfoque desregulador.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Marcos regulatorios globales</div>
+<h2>Leyes específicas: voz clonada y modelos frontera</h2>
+<ul>
+<li>La <em>ELVIS Act</em> de Tennessee (2024) protege la voz frente a la clonación; la SB 53 de California (2025) impone transparencia y reporte de incidentes a los modelos de frontera.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Marcos regulatorios globales</div>
+<h2>China: etiquetado obligatorio del contenido sintético (2025)</h2>
+<ul>
+<li>Todo contenido IA difundido públicamente debe llevar etiquetas explícitas e implícitas, uno de los regímenes de divulgación más estrictos.</li>
+</ul>
+<p class="note">La ley exige divulgar el contenido IA: ¿cómo se hace eso técnicamente? → §4</p>
+</section>
+
+<!-- §4 AUTENTICACIÓN -->
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>¿Cómo certificamos si algo fue generado por IA o es auténtico?</h2>
+<ul>
+<li>Es inviable diseñar un modelo que <em>nunca</em> genere contenido ilegal: la combinatoria de salidas es demasiado vasta.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>Detectar, no prevenir</h2>
+<ul>
+<li>La estrategia realista no es la prevención total en el modelo, sino la detección y autenticación del contenido una vez producido.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>La marca de agua estadística</h2>
+<ul>
+<li>La generación se sesga de forma imperceptible hacia un subconjunto pseudoaleatorio de tokens, y un detector que conoce la regla confirma el origen sintético con una prueba estadística, sin acceso al modelo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>Procedencia: la firma viaja con el archivo</h2>
+<ul><li>La firma criptográfica se origina en la captura y se preserva, verificable, hasta la publicación.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 700 190" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="12">
+  <defs>
+    <marker id="arc" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"/></marker>
+  </defs>
+  <rect x="15" y="70" width="140" height="60" rx="8" fill="#d4e8f7" stroke="#5599cc" stroke-width="1.5"/>
+  <text x="85" y="92" text-anchor="middle" fill="#1a3a5c" font-weight="bold">Captura</text>
+  <text x="85" y="108" text-anchor="middle" fill="#3a6a8c" font-size="11">cámara Leica</text>
+  <text x="85" y="122" text-anchor="middle" fill="#885500" font-size="11">firma 🔒 hardware</text>
+  <rect x="195" y="70" width="140" height="60" rx="8" fill="#ffe8cc" stroke="#cc7700" stroke-width="1.5"/>
+  <text x="265" y="92" text-anchor="middle" fill="#663300" font-weight="bold">Edición</text>
+  <text x="265" y="112" text-anchor="middle" fill="#885500" font-size="11">manifiesto firmado</text>
+  <rect x="375" y="70" width="140" height="60" rx="8" fill="#e7e0f5" stroke="#7755aa" stroke-width="1.5"/>
+  <text x="445" y="92" text-anchor="middle" fill="#3a2a5c" font-weight="bold">Publicación</text>
+  <text x="445" y="112" text-anchor="middle" fill="#5a4a7c" font-size="11">credencial adjunta</text>
+  <rect x="555" y="70" width="130" height="60" rx="8" fill="#eef7ee" stroke="#339933" stroke-width="1.5"/>
+  <text x="620" y="92" text-anchor="middle" fill="#1a4d1a" font-weight="bold">Verificación</text>
+  <text x="620" y="112" text-anchor="middle" fill="#2d6b2d" font-size="11">C2PA ✓ / ✗</text>
+  <line x1="155" y1="100" x2="195" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arc)"/>
+  <line x1="335" y1="100" x2="375" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arc)"/>
+  <line x1="515" y1="100" x2="555" y2="100" stroke="#555" stroke-width="1.5" marker-end="url(#arc)"/>
+  <text x="350" y="40" text-anchor="middle" fill="#888" font-size="11" font-style="italic">la firma criptográfica se preserva a lo largo de toda la cadena</text>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>SynthID: marca de agua a gran escala (2024)</h2>
+<ul>
+<li>Google DeepMind marca texto, imagen, audio y video de sus modelos resistiendo recortes y compresión; ya superó los diez mil millones de piezas marcadas.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>C2PA en hardware y defensa en capas</h2>
+<ul>
+<li>De la Leica M11-P a teléfonos Samsung y Pixel, la procedencia llega al hardware; como los metadatos se borran, OpenAI combina C2PA con la marca durable SynthID.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>Etiquetado en las plataformas (2024-2025)</h2>
+<ul>
+<li>Meta, TikTok y YouTube etiquetan el contenido IA apoyándose en C2PA; la autenticación se traslada al punto de consumo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Autenticación y marcas de agua</div>
+<h2>Ninguna marca de agua es infalible</h2>
+<ul>
+<li>Hay ataques que las eliminan e incluso las <em>falsifican</em>; por eso el NIST recomienda una defensa en profundidad que combine marca de agua, procedencia y etiquetado.</li>
+</ul>
+</section>
+
+<!-- CIERRE -->
+<section>
+<div class="close-slide">
+<h1>Una propiedad medible, que el modelo memoriza y que se puede detectar, sostiene toda la arquitectura legal de la IA generativa.</h1>
+<div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>
