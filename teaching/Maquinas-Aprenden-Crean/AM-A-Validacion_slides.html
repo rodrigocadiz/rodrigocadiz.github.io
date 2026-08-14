@@ -247,6 +247,50 @@ $$\text{MAE} = \frac{1}{n}\sum_{i=1}^n |\hat y_i - y_i|$$
 <p class="note">Va asociado a sesgo alto: el error persistiría incluso con infinitos datos de entrenamiento.</p>
 </section>
 
+<!-- 13b · SVG subajuste / buen ajuste / sobreajuste -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Las dos fallas, sobre el mismo conjunto de 25 puntos</h2>
+<ul><li>El grado 1 subajusta; el 5 sigue la curva real; el 14 persigue el ruido.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 285" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222">
+    <line x1="70" y1="254" x2="512" y2="254" stroke="#333" stroke-width="1.2"/>
+    <line x1="70" y1="254" x2="70" y2="36" stroke="#333" stroke-width="1.2"/>
+    <text x="291" y="278" text-anchor="middle" font-style="italic" fill="#555">u</text>
+    <text x="50" y="42" text-anchor="middle" font-style="italic" fill="#555">y</text>
+    <circle cx="82.1" cy="191.6" r="4.5" fill="#888"/><circle cx="101.9" cy="181.5" r="4.5" fill="#888"/><circle cx="106.6" cy="180.7" r="4.5" fill="#888"/><circle cx="158.5" cy="148.6" r="4.5" fill="#888"/><circle cx="159.4" cy="148.2" r="4.5" fill="#888"/><circle cx="169.4" cy="156.3" r="4.5" fill="#888"/><circle cx="174.4" cy="150.5" r="4.5" fill="#888"/><circle cx="185.3" cy="141.5" r="4.5" fill="#888"/><circle cx="196.6" cy="137.2" r="4.5" fill="#888"/><circle cx="200.4" cy="127.0" r="4.5" fill="#888"/><circle cx="249.1" cy="163.1" r="4.5" fill="#888"/><circle cx="257.7" cy="156.0" r="4.5" fill="#888"/><circle cx="261.6" cy="166.1" r="4.5" fill="#888"/><circle cx="288.5" cy="174.0" r="4.5" fill="#888"/><circle cx="294.4" cy="187.5" r="4.5" fill="#888"/><circle cx="308.3" cy="210.3" r="4.5" fill="#888"/><circle cx="323.3" cy="177.8" r="4.5" fill="#888"/><circle cx="382.8" cy="190.9" r="4.5" fill="#888"/><circle cx="383.5" cy="193.5" r="4.5" fill="#888"/><circle cx="411.7" cy="168.9" r="4.5" fill="#888"/><circle cx="426.2" cy="149.9" r="4.5" fill="#888"/><circle cx="459.1" cy="139.2" r="4.5" fill="#888"/><circle cx="461.2" cy="121.5" r="4.5" fill="#888"/><circle cx="490.8" cy="118.4" r="4.5" fill="#888"/><circle cx="494.7" cy="95.3" r="4.5" fill="#888"/>
+    <polyline fill="none" stroke="#888" stroke-width="2.2" stroke-dasharray="3,4" points="70.0,195.7 74.8,192.1 79.7,188.6 84.5,185.0 89.3,181.6 94.2,178.2 99.0,174.9 103.8,171.7 108.7,168.7 113.5,165.7 118.3,163.0 123.1,160.4 128.0,158.0 132.8,155.8 137.6,153.8 142.5,152.0 147.3,150.4 152.1,149.1 157.0,148.0 161.8,147.1 166.6,146.5 171.5,146.1 176.3,146.0 181.1,146.0 186.0,146.3 190.8,146.8 195.6,147.6 200.4,148.5 205.3,149.6 210.1,151.0 214.9,152.4 219.8,154.1 224.6,155.8 229.4,157.7 234.3,159.8 239.1,161.9 243.9,164.0 248.8,166.3 253.6,168.5 258.4,170.8 263.3,173.1 268.1,175.3 272.9,177.5 277.8,179.7 282.6,181.7 287.4,183.7 292.2,185.6 297.1,187.3 301.9,188.9 306.7,190.3 311.6,191.6 316.4,192.6 321.2,193.5 326.1,194.2 330.9,194.6 335.7,194.9 340.6,194.8 345.4,194.6 350.2,194.1 355.1,193.4 359.9,192.5 364.7,191.3 369.6,189.9 374.4,188.2 379.2,186.4 384.0,184.3 388.9,182.1 393.7,179.6 398.5,176.9 403.4,174.1 408.2,171.2 413.0,168.1 417.9,164.8 422.7,161.5 427.5,158.1 432.4,154.6 437.2,151.1 442.0,147.5 446.9,143.9 451.7,140.4 456.5,136.8 461.3,133.3 466.2,129.9 471.0,126.5 475.8,123.3 480.7,120.1 485.5,117.1 490.3,114.2 495.2,111.5 500.0,109.0"/>
+    <polyline fill="none" stroke="#c0653a" stroke-width="3" points="70.0,173.7 74.8,173.4 79.7,173.0 84.5,172.7 89.3,172.4 94.2,172.0 99.0,171.7 103.8,171.3 108.7,171.0 113.5,170.7 118.3,170.3 123.1,170.0 128.0,169.7 132.8,169.3 137.6,169.0 142.5,168.7 147.3,168.3 152.1,168.0 157.0,167.6 161.8,167.3 166.6,167.0 171.5,166.6 176.3,166.3 181.1,166.0 186.0,165.6 190.8,165.3 195.6,165.0 200.4,164.6 205.3,164.3 210.1,164.0 214.9,163.6 219.8,163.3 224.6,162.9 229.4,162.6 234.3,162.3 239.1,161.9 243.9,161.6 248.8,161.3 253.6,160.9 258.4,160.6 263.3,160.3 268.1,159.9 272.9,159.6 277.8,159.2 282.6,158.9 287.4,158.6 292.2,158.2 297.1,157.9 301.9,157.6 306.7,157.2 311.6,156.9 316.4,156.6 321.2,156.2 326.1,155.9 330.9,155.6 335.7,155.2 340.6,154.9 345.4,154.5 350.2,154.2 355.1,153.9 359.9,153.5 364.7,153.2 369.6,152.9 374.4,152.5 379.2,152.2 384.0,151.9 388.9,151.5 393.7,151.2 398.5,150.8 403.4,150.5 408.2,150.2 413.0,149.8 417.9,149.5 422.7,149.2 427.5,148.8 432.4,148.5 437.2,148.2 442.0,147.8 446.9,147.5 451.7,147.2 456.5,146.8 461.3,146.5 466.2,146.1 471.0,145.8 475.8,145.5 480.7,145.1 485.5,144.8 490.3,144.5 495.2,144.1 500.0,143.8"/>
+    <polyline fill="none" stroke="#2f6b33" stroke-width="3" points="70.0,192.7 74.8,192.7 79.7,192.1 84.5,190.9 89.3,189.2 94.2,187.1 99.0,184.6 103.8,181.9 108.7,179.0 113.5,176.0 118.3,172.9 123.1,169.7 128.0,166.6 132.8,163.5 137.6,160.5 142.5,157.7 147.3,155.0 152.1,152.5 157.0,150.3 161.8,148.2 166.6,146.5 171.5,144.9 176.3,143.7 181.1,142.8 186.0,142.1 190.8,141.7 195.6,141.6 200.4,141.8 205.3,142.3 210.1,143.0 214.9,144.0 219.8,145.3 224.6,146.8 229.4,148.5 234.3,150.4 239.1,152.5 243.9,154.7 248.8,157.1 253.6,159.6 258.4,162.2 263.3,164.9 268.1,167.6 272.9,170.4 277.8,173.1 282.6,175.9 287.4,178.5 292.2,181.2 297.1,183.7 301.9,186.1 306.7,188.3 311.6,190.4 316.4,192.3 321.2,194.0 326.1,195.5 330.9,196.7 335.7,197.7 340.6,198.4 345.4,198.7 350.2,198.8 355.1,198.6 359.9,198.0 364.7,197.1 369.6,195.9 374.4,194.3 379.2,192.4 384.0,190.2 388.9,187.6 393.7,184.7 398.5,181.6 403.4,178.1 408.2,174.4 413.0,170.4 417.9,166.2 422.7,161.8 427.5,157.3 432.4,152.6 437.2,147.9 442.0,143.1 446.9,138.4 451.7,133.7 456.5,129.2 461.3,124.9 466.2,120.9 471.0,117.3 475.8,114.0 480.7,111.3 485.5,109.2 490.3,107.8 495.2,107.3 500.0,107.6"/>
+    <polyline fill="none" stroke="#33607f" stroke-width="2.8" stroke-dasharray="9,5" points="70.0,198.0 74.8,195.7 79.7,193.4 84.5,190.9 89.3,188.3 94.2,185.7 99.0,183.1 103.8,180.6 108.7,178.0 113.5,175.6 118.3,173.2 123.1,170.8 128.0,168.5 132.8,166.3 137.6,164.0 142.5,161.7 147.3,159.4 152.1,157.0 157.0,154.5 161.8,152.0 166.6,149.5 171.5,147.0 176.3,144.5 181.1,142.2 186.0,140.0 190.8,138.1 195.6,136.5 200.4,135.4 205.3,134.7 210.1,134.5 214.9,134.9 219.8,135.9 224.6,137.5 229.4,139.8 234.3,142.5 239.1,145.8 243.9,149.6 248.8,153.6 253.6,157.9 258.4,162.3 263.3,166.7 268.1,171.0 272.9,175.0 277.8,178.7 282.6,181.9 287.4,184.6 292.2,186.8 297.1,188.5 301.9,189.6 306.7,190.2 311.6,190.4 316.4,190.2 321.2,189.8 326.1,189.3 330.9,188.8 335.7,188.3 340.6,188.0 345.4,187.9 350.2,188.0 355.1,188.5 359.9,189.1 364.7,189.8 369.6,190.5 374.4,191.0 379.2,191.2 384.0,190.9 388.9,189.8 393.7,187.8 398.5,184.8 403.4,180.7 408.2,175.5 413.0,169.3 417.9,162.4 422.7,155.0 427.5,147.6 432.4,140.5 437.2,134.4 442.0,129.7 446.9,126.9 451.7,126.3 456.5,127.8 461.3,131.2 466.2,135.8 471.0,140.5 475.8,143.5 480.7,142.6 485.5,135.5 490.3,119.6 495.2,92.7 500.0,54.1"/>
+    <g font-size="14">
+      <line x1="545" y1="60" x2="585" y2="60" stroke="#888" stroke-width="2.2" stroke-dasharray="3,4"/>
+      <text x="595" y="65">función real</text>
+      <circle cx="565" cy="92" r="4.5" fill="#888"/>
+      <text x="595" y="97">datos observados</text>
+      <line x1="545" y1="124" x2="585" y2="124" stroke="#c0653a" stroke-width="3"/>
+      <text x="595" y="129">grado 1</text>
+      <line x1="545" y1="156" x2="585" y2="156" stroke="#2f6b33" stroke-width="3"/>
+      <text x="595" y="161">grado 5</text>
+      <line x1="545" y1="188" x2="585" y2="188" stroke="#33607f" stroke-width="2.8" stroke-dasharray="9,5"/>
+      <text x="595" y="193">grado 14</text>
+    </g>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 13c -->
+<section>
+<div class="section-label">§ 2 · Generalización</div>
+<h2>Y el error de ajuste no distingue cuál es cuál</h2>
+<ul>
+<li>Medido sobre esos mismos 25 puntos baja siempre: 0.703, luego 0.233, luego 0.191, así que premiaría al grado 14.</li>
+<li>Medido contra la función real describe una U: 0.626, luego 0.174, luego 0.296.</li>
+</ul>
+</section>
+
 <!-- 14 -->
 <section>
 <div class="section-label">§ 2 · Generalización</div>
@@ -550,9 +594,155 @@ $$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{valida
 <!-- 30 -->
 <section>
 <div class="section-label">§ 4 · Validación cruzada</div>
-<h2>Leave-one-out lleva la idea al extremo</h2>
+<h2>¿Y si se lleva la partición hasta su límite?</h2>
 <ul>
-<li>Cada observación es su propia partición de validación: $k = n$, con $n$ entrenamientos completos y un costo que rara vez compensa.</li>
+<li>Cada partición contiene un solo dato: $k = n$. Es lo que se llama leave-one-out, dejar uno fuera.</li>
+</ul>
+</section>
+
+<!-- 30b · SVG leave-one-out -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Se entrena $n$ veces, cada una sin un dato distinto</h2>
+<ul><li>El predictor de la iteración $i$ nunca vio el punto con que se le evalúa.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 740 285" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222">
+    <g text-anchor="middle" font-size="11.5">
+      <text x="171" y="30">1</text><text x="215" y="30">2</text><text x="259" y="30">3</text><text x="303" y="30">4</text><text x="347" y="30">5</text><text x="391" y="30">6</text><text x="435" y="30">7</text><text x="479" y="30">8</text><text x="523" y="30">9</text><text x="567" y="30">10</text>
+      <text x="640" y="30" font-style="italic" font-size="13">error</text>
+    </g>
+    <g>
+      <text x="24" y="60" font-size="13">Iter. 1</text>
+      <rect x="150" y="42" width="42" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="194" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="238" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="282" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="326" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="370" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="414" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="458" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="502" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="546" y="42" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="640" y="60" text-anchor="middle" font-style="italic">e₁</text>
+    </g>
+    <g>
+      <text x="24" y="96" font-size="13">Iter. 2</text>
+      <rect x="150" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="194" y="78" width="42" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="238" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="282" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="326" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="370" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="414" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="458" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="502" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="546" y="78" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="640" y="96" text-anchor="middle" font-style="italic">e₂</text>
+    </g>
+    <g>
+      <text x="24" y="132" font-size="13">Iter. 3</text>
+      <rect x="150" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="194" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="238" y="114" width="42" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <rect x="282" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="326" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="370" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="414" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="458" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="502" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="546" y="114" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <text x="640" y="132" text-anchor="middle" font-style="italic">e₃</text>
+    </g>
+    <text x="370" y="156" text-anchor="middle" font-size="30" fill="#666">⋮</text>
+    <text x="640" y="156" text-anchor="middle" font-size="30" fill="#666">⋮</text>
+    <g>
+      <text x="24" y="180" font-size="13">Iter. n</text>
+      <rect x="150" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="194" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="238" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="282" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="326" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="370" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="414" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="458" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="502" y="162" width="42" height="26" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+      <rect x="546" y="162" width="42" height="26" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+      <text x="640" y="180" text-anchor="middle" font-style="italic">eₙ</text>
+    </g>
+    <line x1="600" y1="206" x2="680" y2="206" stroke="#333" stroke-width="1.2"/>
+    <text x="640" y="226" text-anchor="middle" font-style="italic" font-size="12.5">promedio</text>
+    <rect x="150" y="238" width="20" height="16" fill="#dbe9f4" stroke="#333" stroke-width="1"/>
+    <text x="180" y="251" font-size="13">entrenamiento: n − 1 datos</text>
+    <rect x="400" y="238" width="20" height="16" fill="#f0c8a0" stroke="#333" stroke-width="1"/>
+    <text x="430" y="251" font-size="13">validación: 1 dato</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<!-- 30c -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>El error es el promedio de esas $n$ mediciones</h2>
+$$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n} L\left(y_i,\, h^{(-i)}(x_i)\right)$$
+<p class="note">En palabras: $h^{(-i)}$ es el predictor ajustado sin la observación $i$, y $L$ la pérdida elegida. Cada término se mide sobre un único punto, de modo que ninguno por separado estima nada: solo el promedio lo hace.</p>
+</section>
+
+<!-- 30d -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Se gana sesgo bajo: cada modelo entrena con $n-1$ de $n$</h2>
+<ul>
+<li>Es casi exactamente el conjunto con que se entrenará el modelo final, así que la estimación no lo castiga por haber visto menos datos.</li>
+</ul>
+</section>
+
+<!-- 30e -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Pero se paga primero en costo</h2>
+<ul>
+<li>Son $n$ ajustes completos del modelo: con $n=200$ es irrelevante, con $n=10^6$ y una red profunda es impracticable.</li>
+</ul>
+</section>
+
+<!-- 35b -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Y después en varianza, que es lo menos evidente</h2>
+<ul>
+<li>Los $n$ conjuntos de entrenamiento difieren en un solo dato, así que los $n$ predictores son casi idénticos y sus errores están correlacionados.</li>
+</ul>
+<p class="note">Promediar cantidades correlacionadas reduce el ruido mucho menos que promediar cantidades independientes: el resultado no es tan estable como sugerirían sus $n$ términos.</p>
+</section>
+
+<!-- 30f -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Por eso se reserva para conjuntos pequeños</h2>
+<ul>
+<li>Cuando apartar un quinto de los datos es un lujo que no se puede costear; con datos abundantes $k=5$ o $k=10$ entrega lo mismo por una fracción del costo.</li>
+</ul>
+</section>
+
+<!-- 30g -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Para mínimos cuadrados existe un atajo exacto</h2>
+<ul>
+<li>$\hat{y}_i$ es la predicción del modelo entrenado con todos los datos; $H_{ii}$ mide cuánto influye la observación $i$ sobre su propia predicción.</li>
+</ul>
+$$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 - H_{ii}}\right)^2$$
+<p class="note">En palabras: si esa influencia es alta, el residuo se amplifica, que es justo lo que pasaría al quitar el punto del entrenamiento.</p>
+</section>
+
+<!-- 38b -->
+<section>
+<div class="section-label">§ 4 · Validación cruzada</div>
+<h2>Un solo ajuste entrega los $n$ errores</h2>
+<ul>
+<li>El costo de leave-one-out cae al de entrenar una vez, pero la identidad vale únicamente para modelos lineales en los parámetros ajustados por mínimos cuadrados.</li>
 </ul>
 </section>
 

@@ -149,6 +149,7 @@ p.note {
 <ul>
 <li>Y esa traducción no es un trámite previo: decide qué relaciones podrá ver el modelo y cuáles le quedarán invisibles para siempre.</li>
 </ul>
+<p class="note">Aquí $d$ es el número de características que se decide medir de cada objeto, y cada una ocupa una coordenada del vector. Una casa descrita por metros cuadrados, número de baños y año de construcción vive en $\mathbb{R}^3$.</p>
 </section>
 
 <!-- ============ §0 EL MAPEO ============ -->
@@ -323,9 +324,33 @@ $$z(u) = \frac{u - \mu_u}{\sigma_u}$$
 <!-- 14 -->
 <section>
 <div class="section-label">§ 1 · Estandarización de características</div>
-<h2>Con variables que abarcan órdenes de magnitud, el logaritmo</h2>
+<h2>Hay variables que abarcan órdenes de magnitud</h2>
+<ul>
+<li>Visitas a un sitio, ingresos, capitalización bursátil: unos pocos valores enormes aplastan a todo el resto.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estandarización de características</div>
+<h2>El logaritmo convierte razones en diferencias</h2>
+$$\log a - \log b = \log \frac{a}{b}$$
+<p class="note">En palabras: dos pares de valores que están en la misma proporción quedan a la misma distancia, sin importar su magnitud. Es toda la razón por la que la transformación funciona.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estandarización de características</div>
+<h2>Un aumento del 10% mide lo mismo arriba que abajo</h2>
+<ul>
+<li>De 20 a 22 visitas y de 1000 a 1100 son el mismo $\log 1.1$, aunque en absoluto uno sea 2 y el otro 100.</li>
+</ul>
+<p class="note">Un modelo lineal sobre el logaritmo es, entonces, un modelo que responde a cambios porcentuales y no a cambios absolutos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estandarización de características</div>
+<h2>Y el $+1$ no es cosmético</h2>
 $$\phi(u) = \log(1+u)$$
-<p class="note">En palabras: comprime las diferencias absolutas y resalta las relativas, de modo que pasar de 20 a 22 visitas pesa lo mismo que pasar de 1000 a 1100.</p>
+<p class="note">$\log 0$ no existe y tiende a $-\infty$, pero cero es un valor legítimo: una página puede tener cero visitas. Con el desplazamiento, $u=0$ va a $\log 1 = 0$. Además $\log(1+u) \approx u$ para $u$ pequeño, así que la parte baja del rango casi no se distorsiona y solo se comprime la cola larga, que era el problema.</p>
 </section>
 
 <!-- 15 -->
@@ -485,9 +510,9 @@ $$\phi(u) = (1, u, u^2, \ldots, u^{d-1})$$
 <!-- 26 -->
 <section>
 <div class="section-label">§ 3 · Generación automática</div>
-<h2>PCA lo resuelve de forma lineal</h2>
+<h2>El análisis de componentes principales lo resuelve linealmente</h2>
 <ul>
-<li>Busca las combinaciones lineales de las características originales que concentran la mayor varianza, y descarta el resto.</li>
+<li>El PCA busca las combinaciones lineales de las características originales que concentran la mayor varianza, y descarta el resto.</li>
 </ul>
 <p class="note">Es también una técnica de reducción de dimensionalidad, y se desarrolla completa más adelante en el curso.</p>
 </section>

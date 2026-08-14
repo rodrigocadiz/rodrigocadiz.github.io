@@ -173,7 +173,7 @@ $$p(\theta \mid D) = \frac{p(D \mid \theta)\,p(\theta)}{p(D)}$$
 <section>
 <div class="section-label">§ 1 · Fundamentos probabilísticos</div>
 <h2>Prior, verosimilitud y posterior</h2>
-<ul><li>Este trío parece decorativo ahora, y va a reaparecer al final de la clase.</li></ul>
+<ul><li>Este trío parece decorativo ahora, y va a reaparecer más adelante convertido en la justificación de la regularización.</li></ul>
 <div class="svg-holder">
 <svg viewBox="0 0 740 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -355,31 +355,31 @@ $$\hat{\theta}_{\text{MLE}} = \arg\min_\theta \frac{1}{n}\sum_{i=1}^{n} \underbr
 <h2>ERM es el marco; MLE es un caso particular</h2>
 <ul><li>La log-verosimilitud negativa (NLL) es la puerta por la que un criterio se vuelve el otro.</li></ul>
 <div class="svg-holder">
-<svg viewBox="0 0 740 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 740 292" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
   <g font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#222">
-    <rect x="24" y="34" width="692" height="212" rx="12" fill="#eef3f8" stroke="#33607f" stroke-width="1.8"/>
-    <text x="370" y="58" font-size="15" font-weight="bold">ERM: minimizar la pérdida promedio</text>
-    <text x="370" y="78" font-size="12" font-style="italic" fill="#555">cualquier pérdida ℓ, con o sin modelo probabilístico detrás</text>
+    <rect x="24" y="30" width="692" height="234" rx="12" fill="#eef3f8" stroke="#33607f" stroke-width="1.8"/>
+    <text x="370" y="56" font-size="15" font-weight="bold">ERM: minimizar la pérdida promedio</text>
+    <text x="370" y="76" font-size="12" font-style="italic" fill="#555">cualquier pérdida ℓ, con o sin modelo probabilístico detrás</text>
 
-    <rect x="56" y="100" width="188" height="82" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
-    <text x="150" y="126" font-size="13">Pérdida hinge</text>
-    <text x="150" y="146" font-size="12" font-style="italic">max(0, 1 − y f(x))</text>
-    <text x="150" y="168" font-size="11.5" fill="#555">SVM · sin verosimilitud</text>
+    <rect x="52" y="98" width="192" height="98" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="148" y="122" font-size="13" font-weight="bold">Pérdida hinge</text>
+    <text x="148" y="145" font-size="12" font-style="italic">max(0, 1 − y · f(x))</text>
+    <text x="148" y="174" font-size="11.5" fill="#555">vectores soporte · sin verosimilitud</text>
 
-    <rect x="274" y="100" width="192" height="82" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="2"/>
-    <text x="370" y="120" font-size="13" font-weight="bold">Pérdida = NLL</text>
-    <text x="370" y="135" font-size="10.5" fill="#555">log-verosimilitud negativa</text>
-    <text x="370" y="151" font-size="12" font-style="italic">−log p(y | x; θ)</text>
-    <text x="370" y="166" font-size="12.5" font-weight="bold" fill="#2f6b33">aquí ERM = MLE</text>
+    <rect x="274" y="98" width="192" height="98" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="2"/>
+    <text x="370" y="122" font-size="13" font-weight="bold">Pérdida = NLL</text>
+    <text x="370" y="140" font-size="11" fill="#555">log-verosimilitud negativa</text>
+    <text x="370" y="159" font-size="12" font-style="italic">−log p(y | x; θ)</text>
+    <text x="370" y="181" font-size="12.5" font-weight="bold" fill="#2f6b33">aquí ERM = MLE</text>
 
-    <rect x="496" y="100" width="188" height="82" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
-    <text x="590" y="126" font-size="13">Pérdida cuadrática</text>
-    <text x="590" y="146" font-size="12" font-style="italic">(ŷ − y)²</text>
-    <text x="590" y="168" font-size="11.5" fill="#555">= MLE solo si el ruido</text>
-    <text x="590" y="182" font-size="11.5" fill="#555">es gaussiano</text>
+    <rect x="496" y="98" width="192" height="98" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="592" y="122" font-size="13" font-weight="bold">Pérdida cuadrática</text>
+    <text x="592" y="145" font-size="12" font-style="italic">(ŷ − y)²</text>
+    <text x="592" y="168" font-size="11.5" fill="#555">= MLE solo si el ruido</text>
+    <text x="592" y="184" font-size="11.5" fill="#555">es gaussiano</text>
 
-    <text x="370" y="212" font-size="13" fill="#555">Toda MLE es una ERM. La recíproca es falsa: hay pérdidas</text>
-    <text x="370" y="232" font-size="13" fill="#555">que no provienen de ninguna verosimilitud.</text>
+    <text x="370" y="224" font-size="13" fill="#555">Toda MLE es una ERM. La recíproca es falsa: hay pérdidas</text>
+    <text x="370" y="246" font-size="13" fill="#555">que no provienen de ninguna verosimilitud.</text>
   </g>
 </svg>
 </div>
@@ -455,10 +455,48 @@ $$J(\theta) = \frac{1}{n}\sum_{i=1}^{n} \ell_{\text{NLL}}\big(h_\theta(x^{(i)}),
 <section>
 <div class="section-label">§ 5 · Regularización y MAP</div>
 <h2>Es maximizar el posterior en vez de la verosimilitud</h2>
+$$\hat\theta_{\text{MAP}} = \arg\max_\theta \; p(\theta \mid D) = \arg\max_\theta \; p(D \mid \theta)\, p(\theta)$$
+<p class="note">En palabras: se aplica Bayes y se descarta $p(D)$, que no depende de $\theta$ y por lo tanto no cambia cuál gana. El estimador resultante se llama máximo a posteriori, o MAP.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización y MAP</div>
+<h2>Y al pasar a logaritmos aparece la penalización</h2>
+$$\hat\theta_{\text{MAP}} = \arg\min_\theta \Big[\underbrace{-\log p(D \mid \theta)}_{\text{suma de NLL}} \;\underbrace{-\log p(\theta)}_{\text{penalización}}\Big]$$
+<p class="note">En palabras: el primer término es la suma de las pérdidas sobre los datos, es decir $n$ veces el riesgo empírico. El segundo no depende de los datos en absoluto y aparece de la nada, salvo que venga del prior.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización y MAP</div>
+<h2>El regularizador <em>es</em> el logaritmo negativo del prior</h2>
+$$n\,\lambda\, r(\theta) = -\log p(\theta) + \text{const}$$
+<p class="note">No se le parece ni lo aproxima: es esa cantidad, salvo una constante que no mueve el mínimo. Basta comparar la expresión anterior con la función objetivo regularizada.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización y MAP</div>
+<h2>De ahí salen las dos penalizaciones conocidas</h2>
 <ul>
-<li>El estimador resultante se llama máximo a posteriori, o MAP, y el regularizador cumple exactamente el papel del prior.</li>
+<li>Un prior gaussiano, $p(\theta) \propto e^{-\|\theta\|_2^2/2\tau^2}$, tiene logaritmo negativo $\|\theta\|_2^2/2\tau^2$: es exactamente $L2$.</li>
 </ul>
-<p class="note">Aquel trío de la primera sección reaparece: penalizar es declarar una creencia previa sobre cómo deberían verse los parámetros.</p>
+<p class="note">La varianza $\tau^2$ del prior y la intensidad $\lambda$ son la misma perilla vista de dos maneras, con $\lambda = 1/(2n\tau^2)$. Creer que los parámetros son pequeños es penalizar que sean grandes.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización y MAP</div>
+<h2>Y el prior de Laplace da $L1$</h2>
+<ul>
+<li>Con $p(\theta) \propto e^{-\|\theta\|_1/b}$, el logaritmo negativo es $\|\theta\|_1/b$, con $\lambda = 1/(nb)$.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización y MAP</div>
+<h2>Sin creencias previas, MAP se reduce a MLE</h2>
+<ul>
+<li>Si el prior es uniforme, $-\log p(\theta)$ es constante, la penalización desaparece y queda máxima verosimilitud pura.</li>
+</ul>
+<p class="note">Poner $\lambda = 0$ y declarar que no se cree nada sobre $\theta$ antes de ver los datos son la misma afirmación.</p>
 </section>
 
 <!-- 31 · SVG prior-regularizador -->
