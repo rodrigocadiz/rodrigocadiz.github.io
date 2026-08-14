@@ -173,7 +173,7 @@ $$p(\theta \mid D) = \frac{p(D \mid \theta)\,p(\theta)}{p(D)}$$
 <section>
 <div class="section-label">§ 1 · Fundamentos probabilísticos</div>
 <h2>Prior, verosimilitud y posterior</h2>
-<ul><li>Este trío parece decorativo ahora y resulta ser el final del notebook.</li></ul>
+<ul><li>Este trío parece decorativo ahora, y va a reaparecer al final de la clase.</li></ul>
 <div class="svg-holder">
 <svg viewBox="0 0 740 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -236,7 +236,7 @@ $$p(\theta \mid D) = \frac{p(D \mid \theta)\,p(\theta)}{p(D)}$$
 <div class="section-label">§ 2 · Riesgo empírico</div>
 <h2>Se promedia la pérdida sobre los datos disponibles</h2>
 $$\mathcal{R}_{\text{emp}}(\theta) = \frac{1}{n}\sum_{i=1}^{n} \ell\big(h_\theta(x^{(i)}), y^{(i)}\big)$$
-<p class="note">En palabras: cada ejemplo aporta su error y el riesgo es el promedio; $\ell$ es cualquiera de las pérdidas de A.4.</p>
+<p class="note">En palabras: cada ejemplo aporta su error y el riesgo es el promedio; $\ell$ es cualquiera de las funciones de pérdida ya vistas.</p>
 </section>
 
 <!-- 10 -->
@@ -261,7 +261,7 @@ $$\hat{\theta}_{\text{ERM}} = \arg\min_\theta \; \mathcal{R}_{\text{emp}}(\theta
 <div class="section-label">§ 2 · Riesgo empírico</div>
 <h2>Lo único que sostiene ese reemplazo es la ley de los grandes números</h2>
 <ul>
-<li>El promedio empírico converge al riesgo verdadero cuando $n$ crece, pero con $n$ finito la brecha es real y es exactamente el problema de A.7.</li>
+<li>El promedio empírico converge al riesgo verdadero cuando $n$ crece, pero con $n$ finito la brecha es real, y es exactamente el problema de la generalización.</li>
 </ul>
 </section>
 
@@ -283,6 +283,7 @@ $$\hat{\theta}_{\text{ERM}} = \arg\min_\theta \; \mathcal{R}_{\text{emp}}(\theta
 <ul>
 <li>Si el modelo asigna probabilidades, se puede preguntar cuál $\theta$ vuelve más creíbles los datos que efectivamente se observaron.</li>
 </ul>
+<p class="note">Es la <strong>estimación de máxima verosimilitud</strong>, o MLE por su sigla en inglés, <em>maximum likelihood estimation</em>.</p>
 </section>
 
 <!-- 15 -->
@@ -298,7 +299,7 @@ $$\mathcal{L}(\theta) = \prod_{i=1}^{n} p_\theta\big(y^{(i)} \mid x^{(i)}\big)$$
 <div class="section-label">§ 3 · Verosimilitud</div>
 <h2>Y ese producto solo es válido bajo independencia</h2>
 <ul>
-<li>Factorizar la probabilidad conjunta exige suponer que las observaciones no se informan entre sí, algo que en series de tiempo es falso (F.1).</li>
+<li>Factorizar la probabilidad conjunta exige suponer que las observaciones no se informan entre sí, algo que en series de tiempo es falso.</li>
 </ul>
 </section>
 
@@ -315,6 +316,7 @@ $$\log \mathcal{L}(\theta) = \sum_{i=1}^{n} \log p_\theta\big(y^{(i)} \mid x^{(i
 <div class="section-label">§ 3 · Verosimilitud</div>
 <h2>Maximizar es lo mismo que minimizar el negativo</h2>
 $$\hat{\theta}_{\text{MLE}} = \arg\min_\theta \frac{1}{n}\sum_{i=1}^{n} \underbrace{\Big(-\log p_\theta(y^{(i)} \mid x^{(i)})\Big)}_{\ell_{\text{NLL}}}$$
+<p class="note">La cantidad subrayada es la <strong>log-verosimilitud negativa</strong>, o NLL por su sigla en inglés, <em>negative log-likelihood</em>: el logaritmo de la probabilidad que el modelo le asigna al dato observado, con el signo cambiado.</p>
 </section>
 
 <!-- 19 -->
@@ -324,7 +326,7 @@ $$\hat{\theta}_{\text{MLE}} = \arg\min_\theta \frac{1}{n}\sum_{i=1}^{n} \underbr
 <ul>
 <li>Un promedio de una cantidad que depende de cada ejemplo, minimizado sobre $\theta$: la misma forma de la sección anterior.</li>
 </ul>
-<p class="note">La cantidad promediada tiene nombre propio: log-verosimilitud negativa, o NLL por sus siglas en inglés.</p>
+<p class="note">Cuanto menos probable considera el modelo lo que efectivamente ocurrió, mayor es la NLL de ese dato. Por eso funciona como una pérdida.</p>
 </section>
 
 <!-- 20 · puente -->
@@ -351,7 +353,7 @@ $$\hat{\theta}_{\text{MLE}} = \arg\min_\theta \frac{1}{n}\sum_{i=1}^{n} \underbr
 <section>
 <div class="section-label">§ 4 · ERM frente a MLE</div>
 <h2>ERM es el marco; MLE es un caso particular</h2>
-<ul><li>La pérdida NLL es la puerta por la que un criterio se vuelve el otro.</li></ul>
+<ul><li>La log-verosimilitud negativa (NLL) es la puerta por la que un criterio se vuelve el otro.</li></ul>
 <div class="svg-holder">
 <svg viewBox="0 0 740 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
   <g font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#222">
@@ -365,8 +367,9 @@ $$\hat{\theta}_{\text{MLE}} = \arg\min_\theta \frac{1}{n}\sum_{i=1}^{n} \underbr
     <text x="150" y="168" font-size="11.5" fill="#555">SVM · sin verosimilitud</text>
 
     <rect x="274" y="100" width="192" height="82" rx="8" fill="#d9ecd9" stroke="#2f6b33" stroke-width="2"/>
-    <text x="370" y="122" font-size="13" font-weight="bold">Pérdida = NLL</text>
-    <text x="370" y="142" font-size="12" font-style="italic">−log p(y | x; θ)</text>
+    <text x="370" y="120" font-size="13" font-weight="bold">Pérdida = NLL</text>
+    <text x="370" y="135" font-size="10.5" fill="#555">log-verosimilitud negativa</text>
+    <text x="370" y="151" font-size="12" font-style="italic">−log p(y | x; θ)</text>
     <text x="370" y="166" font-size="12.5" font-weight="bold" fill="#2f6b33">aquí ERM = MLE</text>
 
     <rect x="496" y="100" width="188" height="82" rx="8" fill="#fbe6c8" stroke="#a06a1f" stroke-width="1.5"/>
@@ -512,7 +515,7 @@ $$J(\theta) = \frac{1}{n}\sum_{i=1}^{n} \ell_{\text{NLL}}\big(h_\theta(x^{(i)}),
 <div class="section-label">§ 5 · Regularización y MAP</div>
 <h2>Con ERM, MLE y MAP el criterio queda cerrado</h2>
 <ul>
-<li>Lo que falta es el algoritmo que efectivamente resuelve ese $\arg\min$, y eso es A.6.</li>
+<li>Lo que falta es el algoritmo que efectivamente resuelve ese $\arg\min$.</li>
 </ul>
 </section>
 

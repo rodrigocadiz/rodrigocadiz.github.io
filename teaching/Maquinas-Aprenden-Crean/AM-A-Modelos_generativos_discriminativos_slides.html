@@ -247,7 +247,7 @@ $$p(x, y) = p(y \mid x)\,p(x) = p(x \mid y)\,p(y)$$
 <div class="section-label">§ 2 · Modelos discriminativos</div>
 <h2>Van directo a lo único que la tarea pide</h2>
 $$\hat\theta = \arg\min_\theta \sum_{i=1}^{n} \mathcal{L}\big(y^{(i)},\, p_\theta(y \mid x^{(i)})\big)$$
-<p class="note">En palabras: se minimiza el riesgo empírico sobre la predicción de la etiqueta, exactamente el marco de A.5, sin ninguna referencia a cómo se distribuyen las entradas.</p>
+<p class="note">En palabras: se minimiza el riesgo empírico sobre la predicción de la etiqueta, exactamente el marco del riesgo empírico, sin ninguna referencia a cómo se distribuyen las entradas.</p>
 </section>
 
 <!-- 11 -->
@@ -311,7 +311,7 @@ $$\hat\theta = \arg\max_\theta \sum_{i=1}^{n} \Big[\log p_\theta(x^{(i)} \mid y^
 <ul>
 <li>Muestrear ejemplos nuevos, medir si una observación es rara, imputar características faltantes y decidir qué datos conviene etiquetar.</li>
 </ul>
-<p class="note">Ninguna de esas cuatro capacidades mejora la clasificación. Son otra cosa, y es la razón de ser de la sección G del curso.</p>
+<p class="note">Ninguna de esas cuatro capacidades mejora la clasificación. Son otra cosa, y son la razón de ser de todo el bloque de modelos generativos profundos.</p>
 </section>
 
 <!-- 18 -->
@@ -384,7 +384,7 @@ $$\hat y = \arg\max_y \; p(x \mid y)\, p(y)$$
 <div class="section-label">§ 4 · Clasificación bayesiana</div>
 <h2>En la práctica se trabaja con logaritmos</h2>
 $$\hat y = \arg\max_y \; \big[\log p(x \mid y) + \log p(y)\big]$$
-<p class="note">En palabras: multiplicar muchas probabilidades pequeñas desborda hacia cero, y sumar sus logaritmos no. Es el mismo truco de A.5.</p>
+<p class="note">En palabras: multiplicar muchas probabilidades pequeñas desborda hacia cero, y sumar sus logaritmos no. Es el mismo truco de la log-verosimilitud.</p>
 </section>
 
 <!-- 26 -->
@@ -555,7 +555,7 @@ $$\hat y = \arg\max_y \; \big[\log p(x \mid y) + \log p(y)\big]$$
 <div class="section-label">§ 6 · Capacidades generativas</div>
 <h2>Se pueden muestrear ejemplos de la clase que se quiera</h2>
 $$x_{\text{nuevo}} \sim p_\theta(x \mid y = k)$$
-<p class="note">En palabras: en el caso gaussiano se muestrea de $\mathcal{N}(\hat\mu_k, \hat\Sigma_k)$. Esta misma operación, en espacios de altísima dimensión, es lo que hacen los modelos de la sección G.</p>
+<p class="note">En palabras: en el caso gaussiano se muestrea de $\mathcal{N}(\hat\mu_k, \hat\Sigma_k)$. Esta misma operación, en espacios de altísima dimensión, es lo que hacen los modelos generativos profundos.</p>
 </section>
 
 <!-- 38 -->
@@ -597,7 +597,7 @@ $$p(x) = \sum_{y} p(x \mid y)\, p(y)$$
 <!-- 42 · cierre de sección -->
 <section>
 <div class="section-label">§ 6 · Capacidades generativas</div>
-<h2>Esto cierra la sección A y abre la sección G</h2>
+<h2>Esto cierra los fundamentos y abre los modelos generativos</h2>
 <ul>
 <li>La expresión "IA generativa" nombra exactamente esta distinción: modelos que aprendieron $p(x)$ y por eso pueden producir datos, no solo etiquetarlos.</li>
 </ul>

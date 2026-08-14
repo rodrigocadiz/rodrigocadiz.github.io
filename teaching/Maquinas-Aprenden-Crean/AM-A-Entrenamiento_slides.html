@@ -139,7 +139,7 @@ p.note {
 <section>
 <h2>Ya está planteado el problema; falta resolverlo</h2>
 <ul>
-<li>A.4 dio la medida del error y A.5 el criterio, pero ambos dejan un $\arg\min$ que casi nunca tiene solución analítica.</li>
+<li>Ya están la medida del error y el criterio de ajuste, pero ambos dejan un $\arg\min$ que casi nunca tiene solución analítica.</li>
 </ul>
 </section>
 
@@ -525,7 +525,7 @@ $$\theta \;\leftarrow\; \theta - H(\theta)^{-1} \nabla_\theta J(\theta)$$
 <ul>
 <li>Es lo que vuelve tratable calcular millones de derivadas parciales en cada iteración.</li>
 </ul>
-<p class="note">Su desarrollo completo, con las derivadas capa por capa, está en D.3.</p>
+<p class="note">Su desarrollo completo, con las derivadas capa por capa, se ve al estudiar redes neuronales.</p>
 </section>
 
 <!-- 35 · puente -->
@@ -580,7 +580,7 @@ $$\hat\theta_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top y$$
 <ul>
 <li>Dropout apaga activaciones al azar, early stopping corta antes de tiempo, y el aumento de datos regulariza en el espacio de entrada.</li>
 </ul>
-<p class="note">Se llaman implícitos porque no modifican $J$, pero su efecto sobre la varianza del modelo es el mismo. Se desarrollan en D.5.</p>
+<p class="note">Se llaman implícitos porque no modifican $J$, pero su efecto sobre la varianza del modelo es el mismo. Se desarrollan al tratar la regularización en redes.</p>
 </section>
 
 <!-- 41 · puente -->
@@ -633,9 +633,9 @@ $$\frac{\big|J(\theta_{t+1}) - J(\theta_t)\big|}{\max\{1, |J(\theta_t)|\}} \;&lt
 <!-- 46 · cierre de sección -->
 <section>
 <div class="section-label">§ 7 · Criterios de término</div>
-<h2>Y con esto el arco de la sección A se cierra</h2>
+<h2>Y con esto el planteo del aprendizaje queda completo</h2>
 <ul>
-<li>Forma del predictor (A.3), medida del error (A.4), criterio de ajuste (A.5), algoritmo que lo resuelve (A.6) y árbitro que decide si sirvió (A.7).</li>
+<li>Forma del predictor, medida del error, criterio de ajuste, algoritmo que lo resuelve y árbitro que decide si sirvió.</li>
 </ul>
 </section>
 

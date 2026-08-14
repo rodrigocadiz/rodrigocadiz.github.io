@@ -243,7 +243,7 @@ $$x = \phi(u) \in \mathbb{R}^d, \qquad y = \psi(v) \in \mathbb{R}^m$$
 <ul>
 <li>Word2vec lleva cada palabra a $\mathbb{R}^{300}$; una red preentrenada como VGG16 lleva una imagen a $\mathbb{R}^{4096}$.</li>
 </ul>
-<p class="note">Es decir, el mapeo puede ser él mismo el resultado de otro aprendizaje. La idea reaparece en D.7 y en F.3.</p>
+<p class="note">Es decir, el mapeo puede ser él mismo el resultado de otro aprendizaje. La idea reaparece al estudiar redes convolucionales y mecanismos de atención.</p>
 </section>
 
 <!-- 10 · puente -->
@@ -459,7 +459,7 @@ $$\phi(u) = \log(1+u)$$
 <div class="section-label">§ 2 · Mapeos vectoriales</div>
 <h2>Y $\phi$ no solo traduce: también fabrica no linealidad</h2>
 $$\phi(u) = (1, u, u^2, \ldots, u^{d-1})$$
-<p class="note">En palabras: expandir una variable en sus potencias convierte un predictor lineal en un polinomio, que es exactamente el mecanismo que se explota en A.3.</p>
+<p class="note">En palabras: expandir una variable en sus potencias convierte un predictor lineal en un polinomio, que es exactamente el mecanismo de los predictores polinomiales.</p>
 </section>
 
 <!-- 24 · puente -->
@@ -489,7 +489,7 @@ $$\phi(u) = (1, u, u^2, \ldots, u^{d-1})$$
 <ul>
 <li>Busca las combinaciones lineales de las características originales que concentran la mayor varianza, y descarta el resto.</li>
 </ul>
-<p class="note">Es también una técnica de reducción de dimensionalidad, y se desarrolla completa en C.3.</p>
+<p class="note">Es también una técnica de reducción de dimensionalidad, y se desarrolla completa más adelante en el curso.</p>
 </section>
 
 <!-- 27 -->
@@ -567,7 +567,7 @@ $$\phi(u) = (1, u, u^2, \ldots, u^{d-1})$$
 <div class="section-label">§ 3 · Generación automática</div>
 <h2>El vector que sale de aquí es todo lo que el modelo verá</h2>
 <ul>
-<li>Con él construido, quedan dos preguntas: qué forma darle al predictor (A.3) y con qué medir su error (A.4).</li>
+<li>Con él construido, quedan dos preguntas: qué forma darle al predictor y con qué medir su error.</li>
 </ul>
 </section>
 
