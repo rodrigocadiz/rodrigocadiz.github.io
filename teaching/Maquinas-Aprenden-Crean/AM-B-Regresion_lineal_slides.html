@@ -409,6 +409,38 @@ $$\arg\max_\theta \; \mathcal{L}(\theta) \;=\; \arg\max_\theta \; \ell(\theta) \
 
 <section>
 <div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Conviene comprobarlo cambiando el supuesto</h2>
+$$p(\varepsilon) = \frac{1}{2b}\,e^{-|\varepsilon|/b}$$
+<p class="note">La densidad de Laplace en lugar de la gaussiana. Mismos cuatro pasos, mismo tipo de argumento. Si la cadena es real, la pérdida que salga al final tiene que ser otra.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Y sale el error absoluto</h2>
+$$\ell(\theta) = -n\log(2b) - \frac{1}{b}\sum_{i=1}^n \big|\,y^{(i)} - \theta^\top x^{(i)}\,\big|$$
+<p class="note">El primer término vuelve a ser constante en $\theta$, así que maximizar la verosimilitud es minimizar la suma de valores absolutos. La cuadrática no era la única posible: era la consecuencia de un supuesto.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>La cuadrática estima la media; la absoluta, la mediana</h2>
+<ul>
+<li>Minimizar cuadrados sobre un conjunto de números da su media. Minimizar valores absolutos da su mediana.</li>
+</ul>
+<p class="note">De ahí sale la robustez, y no de una propiedad vaga de la fórmula: la mediana no se mueve si el dato más grande se duplica, la media sí. Mínimos cuadrados modela $\mathbb{E}[y \mid x]$; la pérdida absoluta, la mediana condicional.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Lo que se paga es la fórmula cerrada</h2>
+<ul>
+<li>El valor absoluto no es diferenciable en cero: no hay ecuaciones normales y hay que resolver por programación lineal o iterando.</li>
+</ul>
+<p class="note">Tampoco es un modelo lineal generalizado. En $|y - \theta^\top x|$ el quiebre se desplaza junto con el parámetro, así que $y$ y $\theta$ no se separan y la Laplace, como familia de localización, queda fuera de la familia exponencial.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
 <h2>Con el criterio justificado, queda encontrar su mínimo</h2>
 <ul>
 <li>Y aquí ocurre algo excepcional: se puede hacer de una sola vez.</li>

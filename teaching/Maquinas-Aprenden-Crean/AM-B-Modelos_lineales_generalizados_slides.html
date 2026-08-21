@@ -173,11 +173,39 @@ ul.piezas.valores li + li { margin-top: 0.45em; }
 </section>
 
 <section>
+<h2>Nelder y Wedderburn, 1972</h2>
+<ul>
+<li>Mostraron que la regresión lineal, la logística y la de Poisson, que se enseñaban y se justificaban por separado, eran el mismo objeto con distinta distribución de salida.</li>
+</ul>
+<p class="note">Los mínimos cuadrados suponen respuesta normal y varianza constante, y eso falla para conteos, proporciones y salidas binarias. La salida histórica había sido inventar un método por caso. Resultó que no hacía falta: un solo algoritmo los ajusta todos.</p>
+</section>
+
+<section>
 <div class="section-label">§ 1 · La familia exponencial</div>
 <h2>¿Qué comparten la gaussiana, la Bernoulli y la de Poisson?</h2>
 <ul>
 <li>Describen fenómenos distintos, un valor continuo, un sí o no y un conteo. Y sin embargo se dejan escribir con un mismo molde.</li>
 </ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La familia exponencial</div>
+<h2>El truco es escribirlas en logaritmo</h2>
+$$\begin{aligned}
+\log p(y;\phi)    &= y\,\textcolor{#b8842b}{\log\tfrac{\phi}{1-\phi}} &&+ \log(1-\phi) && \\[2pt]
+\log p(y;\mu)     &= y\,\textcolor{#b8842b}{\mu}                      &&- \tfrac{\mu^2}{2}  &&- \tfrac{y^2}{2} - \tfrac{1}{2}\log 2\pi \\[2pt]
+\log p(y;\lambda) &= y\,\textcolor{#b8842b}{\log\lambda}              &&- \lambda           &&- \log y!
+\end{aligned}$$
+<p class="note">Bernoulli, gaussiana y Poisson: tres fenómenos sin nada en común, escritos de la única forma que deja ver su parecido. Las columnas se alinean solas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La familia exponencial</div>
+<h2>En las tres, $y$ toca al parámetro por un solo lugar</h2>
+<ul>
+<li>Un término con solo $y$, un término con solo el parámetro, y entre medio un único producto: $y$ multiplicada por una transformación del parámetro.</li>
+</ul>
+<p class="note">El logit, la media, el logaritmo de la tasa. Si ese producto es el único punto de contacto, esa transformación es el único canal por el que los datos pueden influir. Todo lo demás es contabilidad.</p>
 </section>
 
 <section>
@@ -309,7 +337,7 @@ $$h_\theta(x) = \mathbb{E}[T(y) \mid x]$$
 <div class="section-label">§ 3 · Las tres suposiciones</div>
 <h2>Tercera: el parámetro natural es lineal en las entradas</h2>
 $$\eta = \theta^\top x$$
-<p class="note">En palabras: esta no es una suposición probabilística sino una decisión de diseño. Es lo que hace que el modelo sea aprendible con las herramientas conocidas.</p>
+<p class="note">En palabras: esta no es una suposición probabilística sino una decisión de diseño. Pero no es arbitraria: recae sobre $\eta$, que es el único canal por el que los datos tocan la distribución. Modelar linealmente cualquier otra cosa sería elegir mal dónde poner la linealidad.</p>
 </section>
 
 <section>

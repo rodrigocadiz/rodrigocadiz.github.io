@@ -477,6 +477,33 @@ $$\theta := \theta - H^{-1} \nabla_\theta \ell(\theta)$$
 
 <section>
 <div class="section-label">§ 4 · Optimización</div>
+<h2>Pero la frontera no se mueve: solo crece la confianza</h2>
+<ul>
+<li>La frontera $\theta^\top x = 0$ depende solo de la <em>dirección</em> de $\theta$. Multiplicarlo por dos la deja exactamente donde estaba.</li>
+</ul>
+<p class="note">Lo que sí cambia al escalar es la sigmoide, que empuja las probabilidades hacia 0 y hacia 1. La dirección se estabiliza rápido y es la longitud la que se va a infinito. El modelo dice: estoy seguro, y siempre puedo estarlo más.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>En una dimensión es la pendiente la que se dispara</h2>
+<ul>
+<li>El intercepto fija dónde la probabilidad cruza $0.5$; la pendiente controla lo abrupto de la transición. La sigmoide degenera en un escalón.</li>
+</ul>
+<p class="note">No confundirlo con la saturación de las colas: la sigmoide tiende a 0 y a 1 en $\pm\infty$ siempre, con cualquier pendiente. Lo que cambia es que la casi-certeza se alcanza cada vez más cerca de la frontera.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>El síntoma es reconocible</h2>
+<ul>
+<li>Coeficientes en los cientos o los miles, creciendo todos en proporción fija entre sí, y errores estándar absurdos.</li>
+</ul>
+<p class="note">Cuando eso aparece, la explicación habitual no es un error de implementación sino que los datos son separables o casi.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
 <h2>Lo que viene resuelve ese problema de paso</h2>
 <ul>
 <li>Basta con penalizar exactamente lo que estaba creciendo.</li>
