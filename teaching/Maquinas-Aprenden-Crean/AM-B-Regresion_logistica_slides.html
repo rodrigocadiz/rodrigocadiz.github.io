@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regresión logística</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
+.viz { width:100%; margin-top:0.3em; }
+.viz .ctrl { display:flex; gap:1.6em; align-items:center; justify-content:center;
+  font-size:0.95em; color:var(--ink-soft); margin-bottom:0.45em; flex-wrap:wrap; }
+.viz .ctrl label { display:flex; gap:0.5em; align-items:center; white-space:nowrap; }
+.viz input[type=range] { width:11em; height:1.1em; accent-color:var(--pluto-blue); vertical-align:middle; }
+.viz input[type=checkbox] { accent-color:var(--pluto-blue); width:1.2em; height:1.2em; }
+.viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:2.6em; }
+.viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
+.viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft);
+  font-variant-numeric:tabular-nums; margin-top:0.35em; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Regresión logística</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Ahora la salida no es un número sino una clase</h2>
+<ul>
+<li>Enfermo o sano, fraude o transacción legítima, correo deseado o basura.</li>
+</ul>
+</section>
+
+<section>
+<h2>El cambio parece menor y rompe la maquinaria</h2>
+<ul>
+<li>El predictor lineal recorre toda la recta real. Una probabilidad vive en el intervalo $(0,1)$. Igualarlos directamente no tiene sentido.</li>
+</ul>
+<p class="note">Arreglar ese desajuste obliga a cambiar dos piezas, la transformación de la salida y la pérdida. Todo el resto se conserva.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis y sigmoide</div>
+<h2>¿Qué debería entregar el modelo?</h2>
+<ul>
+<li>Podría responder directamente la clase. Conviene más que responda con qué probabilidad cree que es cada una.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis y sigmoide</div>
+<h2>Una probabilidad admite grados, una clase no</h2>
+<ul>
+<li>Declarar "positivo" no distingue entre un caso al borde y uno inequívoco; declarar 0.51 frente a 0.99 sí.</li>
+</ul>
+<p class="note">Además, el umbral que convierte la probabilidad en decisión puede moverse después según lo que cueste cada tipo de error.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis y sigmoide</div>
+<h2>La sigmoide comprime la recta real en el intervalo (0,1)</h2>
+$$h_\theta(x) = g(\theta^\top x) = \frac{1}{1 + e^{-\theta^\top x}}, \qquad g(z) = \frac{1}{1+e^{-z}}$$
+<p class="note">En palabras: se calcula el mismo puntaje lineal de siempre y se lo pasa por una función que lo aplasta contra 0 o contra 1 sin llegar nunca a ninguno de los dos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis y sigmoide</div>
+<h2>Y esa salida se lee como probabilidad</h2>
+$$p(y=1 \mid x;\theta) = h_\theta(x)$$
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis y sigmoide</div>
+<h2>Con una sola característica, $\theta$ tiene dos componentes</h2>
+$$\theta^\top x = \theta_0 x_0 + \theta_1 x_1 = \theta_0 + \theta_1 x \qquad (x_0 = 1)$$
+<p class="note">El mismo convenio de la regresión lineal: $x_0=1$ mete el intercepto dentro del producto. Así que hay dos parámetros que ajustar, no uno.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis y sigmoide</div>
+<h2>Qué hace cada parámetro sobre la curva</h2>
+<div class="viz" data-viz="sig">
+  <div class="ctrl">
+    <label>θ₀ <input type="range" name="t0" min="-6" max="6" step="0.2" value="0"><span class="val">0.0</span></label>
+    <label>θ₁ <input type="range" name="t1" min="0.2" max="6" step="0.2" value="1.0"><span class="val">1.0</span></label>
+  </div>
+  <canvas data-ratio="0.34"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis y sigmoide</div>
+<h2>Pero la sigmoide todavía parece sacada de un sombrero</h2>
+<ul>
+<li>Hay infinitas curvas en forma de S. ¿Por qué exactamente esta?</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>No se eligió: se deduce de un supuesto</h2>
+<ul>
+<li>El mismo movimiento de la regresión lineal, donde el supuesto de ruido gaussiano fijaba la pérdida.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>Se supone que la etiqueta es Bernoulli</h2>
+$$y \mid x; \theta \;\sim\; \text{Bernoulli}(\phi)$$
+<p class="note">En palabras: una variable que solo toma los valores 0 y 1, con probabilidades $1-\phi$ y $\phi$. Es la distribución natural para una respuesta binaria.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>El problema es que las escalas no calzan</h2>
+<ul>
+<li>$\theta^\top x$ recorre $(-\infty, +\infty)$ y $\phi$ vive en $(0,1)$. Basta un $x$ grande para obtener una probabilidad mayor que uno.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>La transformación no hay que adivinarla</h2>
+<ul>
+<li>$\phi$ está encerrada entre dos barreras, el techo en 1 y el piso en 0. Se quitan de a una.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>Primer paso: la razón de probabilidades quita el techo</h2>
+$$\text{odds}(\phi) = \frac{\phi}{1-\phi} \;\in\; (0, \infty)$$
+<p class="note">No es un invento para este problema: es como se expresan las apuestas desde siempre, "paga 3 a 1", y como se reportan riesgos en epidemiología. Cuántas veces más probable es el éxito que el fracaso. Al acercarse $\phi$ a uno el denominador se achica sin límite, y el techo desaparece.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>Segundo paso: el logaritmo quita el piso</h2>
+$$\log\!\left(\frac{\phi}{1-\phi}\right) = \theta^\top x$$
+<p class="note">El logaritmo lleva $(0,\infty)$ sobre toda la recta real. Cada paso elimina exactamente una de las dos cotas, y la composición, llamada logit, es la transformación mínima que hace calzar las escalas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>Y al despejar aparece la sigmoide</h2>
+$$\phi = \frac{1}{1 + e^{-\theta^\top x}} = h_\theta(x)$$
+<p class="note">En palabras: la sigmoide es la función inversa del logit. No era una elección de diseño sino la consecuencia inevitable de haber supuesto Bernoulli.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>Pero hay infinitas biyecciones de (0,1) en la recta real</h2>
+<ul>
+<li>La inversa de la normal acumulada, por ejemplo, da el modelo probit, y compitió históricamente con esta.</li>
+</ul>
+<p class="note">Entonces la pregunta no es si el logit sirve, sino por qué se prefiere.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>La razón de fondo: un modelo lineal suma</h2>
+$$\frac{p(y=1 \mid x)}{p(y=0 \mid x)} = \frac{p(y=1)}{p(y=0)} \cdot \frac{p(x \mid y=1)}{p(x \mid y=0)}$$
+<p class="note">Bayes en forma de razón: la evidencia se multiplica. Al tomar logaritmo el producto se vuelve suma, y el log-odds posterior es el previo más lo que aporta la evidencia.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>El log-odds es la escala donde sumar significa algo</h2>
+<ul>
+<li>Sumar probabilidades se sale del intervalo. Sumar log-odds es exactamente lo que prescribe la probabilidad.</li>
+</ul>
+<p class="note">Y $\theta^\top x$ es una suma de aportes, uno por característica. El logit no es la transformación que casualmente llega a $\mathbb{R}$: es la que vuelve legítima la suma. Se agregan dos razones más: la simetría, porque intercambiar las clases solo cambia el signo, y que resulta ser el parámetro natural de la Bernoulli.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>Y de regalo, los coeficientes se vuelven legibles</h2>
+$$\text{odds}(x_j + 1) = e^{\theta_j} \cdot \text{odds}(x_j)$$
+<p class="note">Es el <em>odds ratio</em> que se reporta en estudios clínicos. Un coeficiente de 0.7 significa $e^{0.7}\approx 2$: esa característica duplica las chances. Por eso la regresión logística sigue siendo el modelo por omisión donde interpretar importa tanto como predecir.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>De la recta real al intervalo (0,1), y de ahí a una clase</h2>
+<ul>
+<li>El modelo aprende hasta la probabilidad; el umbral es una decisión posterior.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 190" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-b2a" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#333"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" text-anchor="middle" fill="#222">
+    <rect x="20" y="88" width="160" height="62" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="100" y="112" font-size="12.5" font-weight="bold">Entrada</text>
+    <text x="100" y="132" font-size="11.5" fill="#444">x ∈ ℝᵈ</text>
+    <rect x="205" y="88" width="160" height="62" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="285" y="112" font-size="12.5" font-weight="bold">Puntaje lineal</text>
+    <text x="285" y="132" font-size="11.5" fill="#444">z = θᵀx ∈ (−∞, +∞)</text>
+    <rect x="390" y="88" width="160" height="62" rx="7" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="470" y="112" font-size="12.5" font-weight="bold">Probabilidad</text>
+    <text x="470" y="132" font-size="11.5" fill="#444">φ = σ(z) ∈ (0, 1)</text>
+    <rect x="575" y="88" width="160" height="62" rx="7" fill="#e8f2e8" stroke="#2f6b33" stroke-width="1.5"/>
+    <text x="655" y="112" font-size="12.5" font-weight="bold">Decisión</text>
+    <text x="655" y="132" font-size="11.5" fill="#444">ŷ ∈ {0, 1}</text>
+    <path d="M180,119 L205,119" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b2a)"/>
+    <text x="192" y="72" font-size="10.5" font-style="italic" fill="#666">aplicar θ</text>
+    <path d="M365,119 L390,119" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b2a)"/>
+    <text x="377" y="72" font-size="10.5" font-style="italic" fill="#666">aplicar la sigmoide</text>
+    <text x="377" y="84" font-size="10.5" font-style="italic" fill="#666">σ(z) = 1/(1+e⁻ᶻ)</text>
+    <path d="M550,119 L575,119" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b2a)"/>
+    <text x="562" y="72" font-size="10.5" font-style="italic" fill="#666">comparar con</text>
+    <text x="562" y="84" font-size="10.5" font-style="italic" fill="#666">un umbral</text>
+    <line x1="20" y1="166" x2="550" y2="166" stroke="#2f6b33" stroke-width="1.2" stroke-dasharray="5,4"/>
+    <text x="285" y="182" font-size="11.5" font-style="italic" fill="#2f6b33">lo que el modelo aprende</text>
+    <text x="655" y="182" font-size="11.5" font-style="italic" fill="#a06a1f">elección del usuario</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · De dónde sale la sigmoide</div>
+<h2>Con la hipótesis deducida, falta el criterio de ajuste</h2>
+<ul>
+<li>¿Qué función hay que minimizar para elegir $\theta$?</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>¿Sirve también aquí la pérdida cuadrática?</h2>
+<ul>
+<li>No. Su justificación era el ruido gaussiano, y aquí la salida es binaria.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>Se repite el argumento con la distribución correcta</h2>
+$$\mathcal{L}(\theta) = \prod_{i=1}^n p(y^{(i)} \mid x^{(i)};\theta)$$
+<p class="note">En palabras: la probabilidad conjunta de haber observado estas etiquetas, vista como función de $\theta$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>El logaritmo entrega la entropía cruzada</h2>
+$$\ell(\theta) = \sum_{i=1}^n \Big[y^{(i)} \log h_\theta(x^{(i)}) + (1-y^{(i)}) \log(1-h_\theta(x^{(i)}))\Big]$$
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>Uno de los dos términos siempre se anula</h2>
+<ul>
+<li>Si $y=1$ sobrevive $\log h_\theta(x)$; si $y=0$ sobrevive $\log(1-h_\theta(x))$.</li>
+</ul>
+<p class="note">En palabras: cada ejemplo aporta el logaritmo de la probabilidad que el modelo asignó a su clase verdadera. Nada más.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>Y el logaritmo es lo que castiga la confianza equivocada</h2>
+<ul>
+<li>Asignar 0.01 a la clase correcta cuesta $-\log 0.01 \approx 4.6$; asignar 0.0001 cuesta 9.2. La penalización no tiene cota.</li>
+</ul>
+<p class="note">Equivocarse es caro; equivocarse con seguridad es ruinoso. Es exactamente lo que se quiere de un modelo que reporta probabilidades.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>La pérdida de un ejemplo es ese mismo logaritmo</h2>
+$$\ell_{\text{log}}(x, y) = -\log p(y \mid x;\theta)$$
+<p class="note">Lo que la slide anterior describía en palabras, escrito como definición: la pérdida de un ejemplo es el logaritmo, cambiado de signo, de la probabilidad que el modelo le dio a su clase verdadera.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>Y el riesgo empírico es entonces el promedio de esas pérdidas</h2>
+$$\mathcal{R}_{\text{emp}}(\theta) = \frac{1}{n}\sum_{i=1}^n \ell_{\text{log}}(x^{(i)}, y^{(i)}) = -\frac{1}{n}\sum_{i=1}^n \log p(y^{(i)} \mid x^{(i)};\theta) = -\frac{\ell(\theta)}{n}$$
+<p class="note">La última igualdad es la definición de $\ell(\theta)$ de dos slides atrás. El $-\ell(\theta)/n$ no se postula: sale de sumar las pérdidas y reconocer la log-verosimilitud.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>Minimizar el riesgo y maximizar la verosimilitud coinciden</h2>
+$$\arg\max_\theta \ \ell(\theta) \;=\; \arg\min_\theta \ \mathcal{R}_{\text{emp}}(\theta)$$
+<p class="note">Las dos operaciones que los separan son inofensivas: el signo convierte un máximo en un mínimo, y $1/n$ es una constante positiva que reescala sin mover el óptimo. Dividir por $n$ ni siquiera es necesario; se usa el promedio para que el riesgo sea comparable entre conjuntos de distinto tamaño.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Entropía cruzada</div>
+<h2>Definido el objetivo, hay que minimizarlo</h2>
+<ul>
+<li>Y aquí termina la analogía con la regresión lineal.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>¿Se puede igualar el gradiente a cero?</h2>
+<ul>
+<li>Se puede escribir la ecuación, pero es no lineal en $\theta$ y no tiene solución cerrada.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>El gradiente tiene, eso sí, una forma familiar</h2>
+$$\theta := \theta + \alpha \,\big(y^{(i)} - h_\theta(x^{(i)})\big) \, x^{(i)}$$
+<p class="note">En palabras: la misma regla que en regresión lineal, con $h_\theta$ distinta. El término $(y - h_\theta(x))$ es el error, y multiplicarlo por $x$ reparte la corrección entre los coeficientes.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>A cambio, el problema es convexo</h2>
+<ul>
+<li>No existen mínimos locales: cualquier mínimo que encuentre el optimizador es el óptimo global.</li>
+</ul>
+<p class="note">Es una diferencia de fondo con las redes neuronales, donde el punto alcanzado depende de la inicialización. Aquí no depende de nada.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>Newton-Raphson aprovecha además la curvatura</h2>
+$$\theta := \theta - H^{-1} \nabla_\theta \ell(\theta)$$
+<p class="note">En palabras: $H$ es la matriz de segundas derivadas. Converge en unas pocas iteraciones, pero cada una cuesta resolver un sistema de tamaño $(d+1) \times (d+1)$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>Con pocas características compensa; con muchas, no</h2>
+<ul>
+<li>Es el método por defecto de las librerías estadísticas, donde recibe el nombre de Fisher scoring. Con miles de características el costo cúbico lo descarta.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>Y hay un caso donde el mínimo sencillamente no existe</h2>
+<ul>
+<li>Si las dos clases son linealmente separables, escalar $\theta$ por un factor mayor que uno siempre reduce la pérdida.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>La sigmoide se vuelve más abrupta y el riesgo tiende a cero</h2>
+<ul>
+<li>Sin alcanzarlo nunca. La norma de $\theta$ diverge y el algoritmo no se detiene.</li>
+</ul>
+<p class="note">Es un caso patológico real, no una curiosidad teórica: aparece cada vez que hay más características que ejemplos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Optimización</div>
+<h2>Lo que viene resuelve ese problema de paso</h2>
+<ul>
+<li>Basta con penalizar exactamente lo que estaba creciendo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización</div>
+<h2>Se penaliza la magnitud de los parámetros</h2>
+$$J(\theta) = \mathcal{R}_{\text{emp}}(\theta) + \lambda \, r(\theta)$$
+<p class="note">En palabras: idéntico a la regresión lineal. Cambió la hipótesis y cambió la pérdida, pero el modo de controlar la complejidad es el mismo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización</div>
+<h2>Y con eso el caso separable deja de divergir</h2>
+<ul>
+<li>El término $\lambda\|\theta\|^2$ crece cuando la norma crece, así que en algún punto deja de convenir seguir escalando.</li>
+</ul>
+<p class="note">La regularización no es solo un remedio contra el sobreajuste: aquí es lo que garantiza que el problema tenga solución.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularización</div>
+<h2>Resuelto el caso binario, queda el general</h2>
+<ul>
+<li>¿Qué pasa cuando hay diez clases y no dos?</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Softmax</div>
+<h2>Un vector de parámetros por clase</h2>
+<ul>
+<li>En lugar de un solo $\theta$, ahora hay $\theta_1, \dots, \theta_k$, y cada uno produce un puntaje para su clase.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Softmax</div>
+<h2>Exponenciar y normalizar convierte puntajes en probabilidades</h2>
+$$p(y=i \mid x;\theta) = \frac{\exp(\theta_i^\top x)}{\sum_{j=1}^k \exp(\theta_j^\top x)}$$
+<p class="note">En palabras: la exponencial vuelve positivos todos los puntajes y el denominador los obliga a sumar uno. El resultado es un vector de probabilidades.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Softmax</div>
+<h2>De puntajes a probabilidades en dos pasos</h2>
+<ul><li>La exponencial amplifica las diferencias: 1.5 puntos de ventaja se vuelven un factor $e^{1.5} \approx 4.5$.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-sm" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#333"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <text x="175" y="34" font-size="13" font-weight="bold">puntajes</text>
+    <text x="175" y="52" font-size="11.5" font-style="italic" fill="#666">zᵢ = θᵢᵀx</text>
+    <rect x="120" y="72" width="110" height="36" rx="5" fill="#eef3f8" stroke="#33607f" stroke-width="1.4"/>
+    <text x="175" y="96" font-size="13">2.0</text>
+    <text x="110" y="96" font-size="11" text-anchor="end" fill="#777">clase 1</text>
+    <rect x="120" y="116" width="110" height="36" rx="5" fill="#eef3f8" stroke="#33607f" stroke-width="1.4"/>
+    <text x="175" y="140" font-size="13">0.5</text>
+    <text x="110" y="140" font-size="11" text-anchor="end" fill="#777">clase 2</text>
+    <rect x="120" y="160" width="110" height="36" rx="5" fill="#eef3f8" stroke="#33607f" stroke-width="1.4"/>
+    <text x="175" y="184" font-size="13">−1.0</text>
+    <text x="110" y="184" font-size="11" text-anchor="end" fill="#777">clase 3</text>
+    <text x="405" y="34" font-size="13" font-weight="bold">exponencial</text>
+    <text x="405" y="52" font-size="11.5" font-style="italic" fill="#666">exp(zᵢ)</text>
+    <rect x="350" y="72" width="110" height="36" rx="5" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.4"/>
+    <text x="405" y="96" font-size="13">7.39</text>
+    <rect x="350" y="116" width="110" height="36" rx="5" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.4"/>
+    <text x="405" y="140" font-size="13">1.65</text>
+    <rect x="350" y="160" width="110" height="36" rx="5" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.4"/>
+    <text x="405" y="184" font-size="13">0.37</text>
+    <text x="635" y="34" font-size="13" font-weight="bold">normalizado</text>
+    <text x="635" y="52" font-size="11.5" font-style="italic" fill="#666">exp(zᵢ) / Σⱼ exp(zⱼ)</text>
+    <rect x="580" y="72" width="110" height="36" rx="5" fill="#e8f2e8" stroke="#2f6b33" stroke-width="1.4"/>
+    <text x="635" y="96" font-size="13">0.79</text>
+    <rect x="580" y="116" width="110" height="36" rx="5" fill="#e8f2e8" stroke="#2f6b33" stroke-width="1.4"/>
+    <text x="635" y="140" font-size="13">0.17</text>
+    <rect x="580" y="160" width="110" height="36" rx="5" fill="#e8f2e8" stroke="#2f6b33" stroke-width="1.4"/>
+    <text x="635" y="184" font-size="13">0.04</text>
+    <path d="M235,130 L335,130" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ar-sm)"/>
+    <text x="285" y="120" font-size="11" font-style="italic" fill="#666">exponenciar</text>
+    <path d="M465,130 L565,130" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#ar-sm)"/>
+    <text x="515" y="120" font-size="11" font-style="italic" fill="#666">dividir por la suma</text>
+    <text x="635" y="228" font-size="11.5" font-style="italic" fill="#2f6b33">suman exactamente 1</text>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Softmax</div>
+<h2>La pérdida se extiende sin cambiar de idea</h2>
+$$\mathcal{R}_{\text{emp}}(\theta) = -\frac{1}{n}\sum_{i=1}^n \sum_{c=1}^k \mathbf{1}\{y^{(i)}=c\} \, \log p(y=c \mid x^{(i)};\theta)$$
+<p class="note">En palabras: el indicador selecciona la clase verdadera de cada ejemplo, así que la suma interna deja un solo término. Sigue siendo el logaritmo de la probabilidad asignada a la clase correcta.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Softmax</div>
+<h2>Con dos clases se reduce exactamente a la sigmoide</h2>
+<ul>
+<li>Softmax no es un modelo distinto sino el mismo, escrito para un número cualquiera de clases.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Softmax</div>
+<h2>Con el modelo entrenado, falta saber si es bueno</h2>
+<ul>
+<li>Y contar aciertos resulta ser una idea peor de lo que parece.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>¿Basta con la fracción de aciertos?</h2>
+<ul>
+<li>Si el 99% de los casos son negativos, responder siempre "negativo" da 99% de exactitud sin haber aprendido nada.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Toda la información cabe en cuatro números</h2>
+<ul>
+<li>Verdaderos positivos, falsos positivos, falsos negativos y verdaderos negativos. Las métricas son razones entre ellos.</li>
+</ul>
+<p class="note">Cuál clase se llama positiva es una convención, pero no es inocua: invertirla intercambia falsos positivos con falsos negativos y cambia casi todo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Precisión lee una columna, recall lee una fila</h2>
+<ul>
+<li>De lo que declaré positivo, ¿cuánto acerté? De lo que era positivo, ¿cuánto detecté?</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+    <text x="255" y="74" font-size="12" text-anchor="middle" font-style="italic" fill="#555">predice positivo</text>
+    <text x="385" y="74" font-size="12" text-anchor="middle" font-style="italic" fill="#555">predice negativo</text>
+    <text x="176" y="126" font-size="12" text-anchor="end" font-style="italic" fill="#555">es positivo</text>
+    <text x="176" y="190" font-size="12" text-anchor="end" font-style="italic" fill="#555">es negativo</text>
+    <rect x="190" y="90" width="130" height="64" fill="#d9ead9" stroke="#333" stroke-width="1.2"/>
+    <text x="255" y="117" font-size="15" font-weight="bold" text-anchor="middle">VP</text>
+    <text x="255" y="132" font-size="10.5" text-anchor="middle" fill="#555">verdaderos</text>
+    <text x="255" y="144" font-size="10.5" text-anchor="middle" fill="#555">positivos</text>
+    <rect x="320" y="90" width="130" height="64" fill="#f6e2e2" stroke="#333" stroke-width="1.2"/>
+    <text x="385" y="117" font-size="15" font-weight="bold" text-anchor="middle">FN</text>
+    <text x="385" y="132" font-size="10.5" text-anchor="middle" fill="#555">falsos</text>
+    <text x="385" y="144" font-size="10.5" text-anchor="middle" fill="#555">negativos</text>
+    <rect x="190" y="154" width="130" height="64" fill="#f6e2e2" stroke="#333" stroke-width="1.2"/>
+    <text x="255" y="181" font-size="15" font-weight="bold" text-anchor="middle">FP</text>
+    <text x="255" y="196" font-size="10.5" text-anchor="middle" fill="#555">falsos</text>
+    <text x="255" y="208" font-size="10.5" text-anchor="middle" fill="#555">positivos</text>
+    <rect x="320" y="154" width="130" height="64" fill="#d9ead9" stroke="#333" stroke-width="1.2"/>
+    <text x="385" y="181" font-size="15" font-weight="bold" text-anchor="middle">VN</text>
+    <text x="385" y="196" font-size="10.5" text-anchor="middle" fill="#555">verdaderos</text>
+    <text x="385" y="208" font-size="10.5" text-anchor="middle" fill="#555">negativos</text>
+    <rect x="186" y="86" width="138" height="136" fill="none" stroke="#33607f" stroke-width="3"/>
+    <rect x="186" y="86" width="268" height="72" fill="none" stroke="#c0653a" stroke-width="3" stroke-dasharray="8,4"/>
+    <line x1="482" y1="112" x2="516" y2="112" stroke="#33607f" stroke-width="3"/>
+    <text x="528" y="108" font-size="13" font-weight="bold" fill="#33607f">precisión</text>
+    <text x="528" y="126" font-size="12" fill="#444">VP / (VP + FP)</text>
+    <text x="528" y="143" font-size="10.5" font-style="italic" fill="#666">de lo declarado positivo, ¿cuánto acerté?</text>
+    <line x1="482" y1="182" x2="516" y2="182" stroke="#c0653a" stroke-width="3" stroke-dasharray="8,4"/>
+    <text x="528" y="178" font-size="13" font-weight="bold" fill="#c0653a">recall</text>
+    <text x="528" y="196" font-size="12" fill="#444">VP / (VP + FN)</text>
+    <text x="528" y="213" font-size="10.5" font-style="italic" fill="#666">de lo que era positivo, ¿cuánto detecté?</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Y el umbral las mueve en sentidos opuestos</h2>
+<ul>
+<li>Bajarlo declara más positivos: sube el recall y baja la precisión. Subirlo hace lo contrario.</li>
+</ul>
+<p class="note">En el extremo, declarar todo positivo da un recall perfecto y precisión pésima. Ninguna de las dos describe el modelo: describen un punto de operación.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>F1 las resume castigando el desequilibrio</h2>
+$$F_1 = 2 \cdot \frac{\text{precisión} \cdot \text{recall}}{\text{precisión} + \text{recall}}$$
+<p class="note">En palabras: es la media armónica, no la aritmética. Con precisión 1.0 y recall 0.02, la aritmética daría 0.51 y la armónica da 0.04, que refleja mucho mejor lo inútil que es ese modelo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>La curva ROC recorre todos los umbrales a la vez</h2>
+<ul>
+<li>Grafica la tasa de verdaderos positivos contra la de falsos positivos a medida que el umbral se desliza.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Se construye ordenando las muestras, no barriendo umbrales</h2>
+<ul>
+<li>Se ordenan por puntaje de mayor a menor y se avanza una muestra por paso: hacia arriba si es positiva, hacia la derecha si es negativa.</li>
+</ul>
+<p class="note">Por eso una ROC empírica es una escalera y no una curva suave: con 120 positivos cada peldaño mide 1/120 de alto, y con 200 negativos, 1/200 de ancho. Un modelo que ordena bien pone todos los positivos primero y sube antes de empezar a moverse a la derecha.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>La diagonal es el modelo que no sabe nada</h2>
+<ul>
+<li>Puntajes al azar mezclan positivos y negativos de forma pareja: por cada paso hacia arriba, uno hacia la derecha.</li>
+</ul>
+<p class="note">Toda curva por encima de la diagonal ordena mejor que el azar. La esquina superior izquierda es el modelo perfecto: detecta todos los positivos sin una sola falsa alarma.</p>
+</section>
+
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>El área bajo esa escalera se llama AUC</h2>
+$$\text{AUC} = \mathbb{P}\big(\hat p(x^{+}) > \hat p(x^{-})\big)$$
+<p class="note">No es una analogía: el área de la escalera es exactamente esa probabilidad. Cada peldaño hacia arriba se dibuja sobre todos los negativos ya dejados atrás, de modo que sumar el área es contar pares positivo-negativo bien ordenados y dividir por el total de pares.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Cómo se lee el número</h2>
+<ul>
+<li>1.0 es ordenamiento perfecto, 0.5 es azar, y por debajo de 0.5 el modelo ordena al revés, que no es lo mismo que ser inútil.</li>
+</ul>
+<p class="note">Un AUC de 0.2 es un modelo que sabe mucho, con el signo cambiado: invertir sus puntajes da 0.8. El caso realmente inservible es el 0.5. Un AUC de 0.905 significa que ante un positivo y un negativo tomados al azar, el modelo le da mayor puntaje al positivo en el 90.5% de los casos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Mide el ordenamiento, no el punto de operación</h2>
+<ul>
+<li>Es lo único que el entrenamiento efectivamente determinó. Mover el umbral desplaza el punto sobre la curva sin cambiar la curva.</li>
+</ul>
+<p class="note">Por eso conviene reportarlo junto con la matriz de confusión del umbral que se va a usar: el AUC dice si el modelo separa las clases, no si la decisión que se tomará con él es buena.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Y con clases muy desbalanceadas se vuelve optimista</h2>
+<ul>
+<li>La tasa de falsos positivos divide por todos los negativos. Si son abrumadora mayoría, miles de falsas alarmas casi no la mueven.</li>
+</ul>
+<p class="note">Con una prevalencia del 1% se puede tener un AUC de 0.95 y una precisión del 10% en el punto de operación, o sea nueve alarmas falsas por acierto. En ese régimen la curva informativa es la de precisión contra recall.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Un modelo, y el umbral moviéndose sobre la curva</h2>
+<div class="viz" data-viz="umb">
+  <div class="ctrl">
+    <label>umbral <input type="range" name="u" min="0.05" max="0.95" step="0.01" value="0.50"><span class="val">0.50</span></label>
+  </div>
+  <canvas data-ratio="0.36"></canvas>
+  <div class="lect"></div>
+</div>
+<p class="note">320 muestras, 120 positivas. Los peldaños de la derecha son las muestras individuales. La precisión, a la izquierda, se vuelve errática cerca del extremo derecho por una razón real: con umbral 0.95 solo 19 muestras superan el corte y con 0.99 quedan 3, así que se calcula sobre un denominador diminuto y una sola muestra la mueve varios puntos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Métricas</div>
+<h2>Pero un AUC alto no garantiza probabilidades creíbles</h2>
+<ul>
+<li>Ordenar bien y estar bien calibrado son cosas distintas: de los casos a los que el modelo asigna 0.7, debería resultar positivo el 70%.</li>
+</ul>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>La sigmoide y la entropía cruzada no se eligieron por convenientes: ambas se deducen de suponer que la etiqueta es Bernoulli.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+<script>
+// ======== infraestructura de visualizaciones interactivas ========
+const VIZ = {};                       // registro: nombre -> función de dibujo
+function vizColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const oscuro = matchMedia('(prefers-color-scheme: dark)').matches
+                 && document.documentElement.dataset.theme !== 'light'
+                 || document.documentElement.dataset.theme === 'dark';
+  return { fondo: oscuro ? '#2a2928' : '#ffffff',
+           eje:   oscuro ? '#6b6b6b' : '#bbbbbb',
+           texto: oscuro ? '#c9c9c9' : '#444444',
+           dato:  oscuro ? 'rgba(170,170,170,.55)' : 'rgba(110,110,110,.5)',
+           azul:  oscuro ? '#8ab4d4' : '#33607f',
+           verde: '#2f6b33', naranjo: '#c0653a', gris: oscuro ? '#888' : '#999' };
+}
+function vizSetup(cv) {                       // canvas nítido en pantallas HiDPI
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 900, h = Math.round(w * (+cv.dataset.ratio || 0.42));
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  return { g, w, h, C: vizColors() };
+}
+function vizEjes(g, w, h, m, C, xlab, ylab) {
+  g.strokeStyle = C.eje; g.lineWidth = 1.2;
+  g.beginPath(); g.moveTo(m.i, h - m.b); g.lineTo(w - m.d, h - m.b);
+  g.moveTo(m.i, h - m.b); g.lineTo(m.i, m.t); g.stroke();
+  g.fillStyle = C.texto; g.font = '17px Helvetica, Arial'; g.textAlign = 'center';
+  g.fillText(xlab, (m.i + w - m.d) / 2, h - 4);
+  g.save(); g.translate(12, (m.t + h - m.b) / 2); g.rotate(-Math.PI / 2);
+  g.fillText(ylab, 0, 0); g.restore();
+}
+function vizRedraw(root) {
+  (root || document).querySelectorAll('.viz[data-viz]').forEach(el => {
+    const f = VIZ[el.dataset.viz]; if (f) f(el);
+  });
+}
+function vizInit() {
+  document.querySelectorAll('.viz[data-viz]').forEach(el => {
+    if (el.dataset.listo) return;
+    el.dataset.listo = '1';
+    const f = () => { const d = VIZ[el.dataset.viz]; if (d) d(el); };
+    el.addEventListener('input', f);
+    el.addEventListener('change', f);
+  });
+  vizRedraw();
+}
+// el bloque corre despues de Reveal.initialize, asi que no se depende del evento ready
+vizInit();
+requestAnimationFrame(vizInit);
+setTimeout(vizInit, 250);
+if (window.Reveal && Reveal.on) {
+  Reveal.on('ready', e => vizRedraw(e.currentSlide));
+  Reveal.on('slidechanged', e => vizRedraw(e.currentSlide));
+}
+window.addEventListener('resize', () => vizRedraw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => vizRedraw());
+</script>
+<script>
+const SC=[0.27948,0.47823,0.2791,0.00746,0.04169,0.06265,0.00338,0.08539,0.00787,0.17154,0.04694,0.1832,0.15427,0.0394,0.09121,0.10179,0.00988,0.02169,0.00431,0.05672,0.03242,0.0617,0.09402,0.64598,0.33326,0.44777,0.10212,0.05377,0.01471,0.00376,0.29197,0.09735,0.47252,0.62095,0.01469,0.00376,0.02865,0.91774,0.02693,0.094,0.01164,0.00554,0.14212,0.59307,0.11635,0.32508,0.67447,0.11369,0.14784,0.19416,0.04552,0.10186,0.81179,0.00483,0.12734,0.02043,0.59284,0.10472,0.11643,0.27092,0.16881,0.27084,0.0213,0.86603,0.10788,0.31593,0.00173,0.26575,0.61588,0.50977,0.14221,0.04985,0.08312,0.22206,0.03878,0.20738,0.19782,0.05169,0.49,0.01362,0.25617,0.32226,0.17533,0.03493,0.2742,0.63975,0.22488,0.06019,0.85229,0.00497,0.05067,0.34607,0.19132,0.29989,0.00797,0.22063,0.3112,0.00433,0.13255,0.01066,0.24811,0.11651,0.00519,0.28947,0.27229,0.74936,0.17351,0.02397,0.00595,0.1451,0.06071,0.04527,0.12537,0.72103,0.06636,0.00607,0.95135,0.01181,0.07605,0.22615,0.05417,0.70555,0.17678,0.11794,0.17361,0.00392,0.00574,0.46761,0.0276,0.03315,0.1495,0.0144,0.07964,0.02818,0.13156,0.00276,0.47569,0.02162,0.55119,0.04643,0.01242,0.01099,0.02533,0.09178,0.04435,0.32932,0.00066,0.06623,0.05083,0.1017,0.07234,0.27096,0.07324,0.4214,0.6508,0.08159,0.01908,0.00814,0.6747,0.13341,0.01181,0.14527,0.52212,0.4979,0.06209,0.01099,0.22254,0.02884,0.0055,0.16625,0.05222,0.92416,0.1935,0.04747,0.00229,0.00195,0.06097,0.41515,0.01376,0.01127,0.08676,0.44883,0.01713,0.98209,0.00283,0.49832,0.06198,0.31193,0.14178,0.32094,0.20615,0.02983,0.07283,0.33962,0.01639,0.42973,0.39206,0.02318,0.03769,0.07677,0.6489,0.3782,0.61584,0.78635,0.82673,0.83207,0.98115,0.31448,0.9242,0.54775,0.97074,0.71392,0.53425,0.56311,0.40346,0.01688,0.50574,0.74215,0.84887,0.89834,0.76607,0.3419,0.68891,0.65355,0.98341,0.76601,0.86372,0.52678,0.13227,0.53465,0.25426,0.40586,0.7702,0.49722,0.01275,0.94893,0.71319,0.89456,0.60637,0.98333,0.93322,0.8047,0.82408,0.24054,0.94877,0.94802,0.92248,0.89147,0.41805,0.87049,0.91069,0.92754,0.77935,0.90416,0.33724,0.73803,0.19985,0.54739,0.23701,0.56646,0.9997,0.42351,0.77981,0.92499,0.81351,0.95815,0.16203,0.86999,0.6471,0.96162,0.49784,0.32469,0.95322,0.97692,0.60257,0.55825,0.98169,0.9616,0.59566,0.70458,0.85098,0.54652,0.21356,0.4847,0.80233,0.63571,0.98634,0.9015,0.67736,0.51985,0.77751,0.77895,0.51565,0.64701,0.88117,0.67298,0.8803,0.97523,0.84543,0.59717,0.63766,0.97125,0.93385,0.64343,0.55961,0.96993,0.86052,0.64424,0.62467,0.91392,0.51067,0.57442,0.99832,0.66137,0.51528,0.46927,0.21269,0.99731,0.34136,0.04153];const YL=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+const SIG = z => 1/(1+Math.exp(-z));
+
+// ======== la sigmoide: que hacen theta0 y theta1 ========
+VIZ.sig = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const t0 = +el.querySelector('[name=t0]').value, t1 = +el.querySelector('[name=t1]').value;
+  el.querySelectorAll('.val')[0].textContent = t0.toFixed(1);
+  el.querySelectorAll('.val')[1].textContent = t1.toFixed(1);
+
+  const m={i:56,d:22,t:16,b:40}, X0=-6, X1=6;
+  const px=v=>m.i+(v-X0)/(X1-X0)*(w-m.i-m.d), py=v=>h-m.b-v*(h-m.b-m.t);
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  g.strokeStyle=C.eje; g.lineWidth=1.2; g.setLineDash([5,5]);
+  g.beginPath(); g.moveTo(m.i,py(0.5)); g.lineTo(w-m.d,py(0.5)); g.stroke(); g.setLineDash([]);
+  g.beginPath(); g.moveTo(m.i,h-m.b); g.lineTo(w-m.d,h-m.b);
+  g.moveTo(m.i,h-m.b); g.lineTo(m.i,m.t); g.stroke();
+  g.fillStyle=C.texto; g.font='15px Helvetica, Arial'; g.textAlign='right';
+  g.fillText('1.0',m.i-8,py(1)+5); g.fillText('0.5',m.i-8,py(0.5)+5); g.fillText('0',m.i-8,py(0)+5);
+  // la frontera: donde theta0 + theta1*x = 0
+  if (Math.abs(t1) > 1e-6) {
+    const xf = -t0/t1;
+    if (xf > X0 && xf < X1) {
+      g.strokeStyle=C.verde; g.lineWidth=2; g.setLineDash([6,5]);
+      g.beginPath(); g.moveTo(px(xf),h-m.b); g.lineTo(px(xf),m.t); g.stroke(); g.setLineDash([]);
+      g.fillStyle=C.verde; g.font='14px Helvetica, Arial'; g.textAlign='center';
+      g.fillText('frontera', px(xf), m.t+14);
+    }
+  }
+  g.strokeStyle=C.azul; g.lineWidth=3.6; g.beginPath();
+  for (let k=0;k<=260;k++){ const x=X0+k*(X1-X0)/260, p=SIG(t0+t1*x);
+    k?g.lineTo(px(x),py(p)):g.moveTo(px(x),py(p)); }
+  g.stroke();
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('x',(m.i+w-m.d)/2,h-8);
+  g.save(); g.translate(16,(m.t+h-m.b)/2); g.rotate(-Math.PI/2);
+  g.fillText('p(y=1 | x)',0,0); g.restore();
+  el.querySelector('.lect').innerHTML =
+    `θ₀ = ${t0.toFixed(1)}, θ₁ = ${t1.toFixed(1)} &nbsp;·&nbsp; la frontera está en x = ${(-t0/t1).toFixed(2)}` +
+    ` &nbsp;·&nbsp; θ₁ controla la pendiente, θ₀ desplaza la curva`;
+};
+
+// ======== el umbral: precision, recall y ROC ========
+function conteo(t) {
+  let VP=0,FP=0,FN=0,VN=0;
+  for (let i=0;i<SC.length;i++){ const p = SC[i]>=t;
+    if (p && YL[i]===1) VP++; else if (p) FP++; else if (YL[i]===1) FN++; else VN++; }
+  return {VP,FP,FN,VN};
+}
+const prec = t => { const c=conteo(t); return (c.VP+c.FP)===0 ? 1 : c.VP/(c.VP+c.FP); };
+const exh  = t => { const c=conteo(t); return c.VP/(c.VP+c.FN); };
+const tfp  = t => { const c=conteo(t); return c.FP/(c.FP+c.VN); };
+
+// ROC exacta: se ordenan los puntajes de mayor a menor y se avanza una muestra por paso,
+// hacia arriba si es positiva y hacia la derecha si es negativa. La escalera resultante
+// tiene un vértice por muestra y su área coincide con el estadístico de Mann-Whitney.
+const ROC = (() => {
+  const P = YL.reduce((a,b)=>a+b, 0), N = YL.length - P;
+  const orden = SC.map((s,i)=>i).sort((a,b)=>SC[b]-SC[a]);
+  const pts = [[0,0]];
+  let tp=0, fp=0;
+  for (const i of orden) { YL[i]===1 ? tp++ : fp++; pts.push([fp/N, tp/P]); }
+  let a = 0;
+  for (let k=1;k<pts.length;k++) a += (pts[k][0]-pts[k-1][0])*(pts[k][1]+pts[k-1][1])/2;
+  return {pts, auc:a};
+})();
+VIZ.umb = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const u = +el.querySelector('[name=u]').value;
+  el.querySelector('.val').textContent = u.toFixed(2);
+
+  // panel izquierdo: las dos metricas contra el umbral
+  const W1=Math.round(w*0.50), m={i:46,d:16,t:22,b:38};
+  const ax=v=>m.i+v*(W1-m.i-m.d), ay=v=>h-m.b-v*(h-m.b-m.t);
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(m.i,h-m.b); g.lineTo(W1-m.d,h-m.b);
+  g.moveTo(m.i,h-m.b); g.lineTo(m.i,m.t); g.stroke();
+  const curva=(f,col)=>{ g.strokeStyle=col; g.lineWidth=3; g.beginPath();
+    for(let k=0;k<=100;k++){ const t=0.005+k*0.99/100; k?g.lineTo(ax(t),ay(f(t))):g.moveTo(ax(t),ay(f(t))); }
+    g.stroke(); };
+  curva(prec,C.azul); curva(exh,C.naranjo);
+  g.strokeStyle=C.verde; g.lineWidth=2; g.setLineDash([6,5]);
+  g.beginPath(); g.moveTo(ax(u),h-m.b); g.lineTo(ax(u),m.t); g.stroke(); g.setLineDash([]);
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('umbral',(m.i+W1)/2,h-8);
+  g.font='14px Helvetica, Arial';
+  g.fillStyle=C.azul; g.textAlign='left'; g.fillText('precisión', m.i+8, m.t+6);
+  g.fillStyle=C.naranjo; g.fillText('recall', m.i+8, m.t+24);
+
+  // panel derecho: ROC con el punto de operacion
+  const X0=Math.round(w*0.58), md={d:16,t:22,b:38};
+  const rx=v=>X0+v*(w-X0-md.d), ry=v=>h-md.b-v*(h-md.b-md.t);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(X0,h-md.b); g.lineTo(w-md.d,h-md.b);
+  g.moveTo(X0,h-md.b); g.lineTo(X0,md.t); g.stroke();
+  g.setLineDash([5,5]); g.strokeStyle=C.gris; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(rx(0),ry(0)); g.lineTo(rx(1),ry(1)); g.stroke(); g.setLineDash([]);
+  const {pts, auc} = ROC;
+  g.strokeStyle=C.azul; g.lineWidth=3; g.beginPath();
+  pts.forEach(([a,b],k)=>k?g.lineTo(rx(a),ry(b)):g.moveTo(rx(a),ry(b))); g.stroke();
+  g.fillStyle=C.verde; g.beginPath(); g.arc(rx(tfp(u)),ry(exh(u)),8,0,7); g.fill();
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('tasa de falsos positivos',(X0+w-md.d)/2,h-8);
+  g.font='15px Helvetica, Arial'; g.fillText('AUC = '+auc.toFixed(3),(X0+w-md.d)/2,md.t-4);
+
+  const c=conteo(u);
+  el.querySelector('.lect').innerHTML =
+    `umbral ${u.toFixed(2)} &nbsp;·&nbsp; precisión ${prec(u).toFixed(3)} &nbsp;·&nbsp; recall ${exh(u).toFixed(3)}` +
+    ` &nbsp;·&nbsp; VP ${c.VP} · FP ${c.FP} · FN ${c.FN} &nbsp;·&nbsp; el AUC no cambia`;
+};
+</script>
+
+</body>
+</html>

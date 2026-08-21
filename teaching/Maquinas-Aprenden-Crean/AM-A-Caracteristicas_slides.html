@@ -168,7 +168,7 @@ p.note {
 <div class="section-label">§ 0 · El mapeo de características</div>
 <h2>Dos funciones hacen toda la traducción</h2>
 $$x = \phi(u) \in \mathbb{R}^d, \qquad y = \psi(v) \in \mathbb{R}^m$$
-<p class="note">En palabras: $\phi$ mapea la entrada cruda a un vector de características y $\psi$ hace lo propio con la salida; a partir de ahí todo el resto del curso opera sobre $(x,y)$.</p>
+<p class="note">En palabras: $\phi$ mapea la entrada cruda a un vector de características y $\psi$ hace lo propio con la salida; a partir de ahí el algoritmo de aprendizaje opera solo sobre $(x,y)$ y nunca vuelve a mirar el dato crudo.</p>
 </section>
 
 <!-- 6 · SVG cadena -->
@@ -514,7 +514,7 @@ $$\phi(u) = (1, u, u^2, \ldots, u^{d-1})$$
 <ul>
 <li>El PCA busca las combinaciones lineales de las características originales que concentran la mayor varianza, y descarta el resto.</li>
 </ul>
-<p class="note">Es también una técnica de reducción de dimensionalidad, y se desarrolla completa más adelante en el curso.</p>
+<p class="note">Es también una técnica de reducción de dimensionalidad, y como tal admite un tratamiento propio y más extenso.</p>
 </section>
 
 <!-- 27 -->

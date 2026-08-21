@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Máquinas de vectores soporte</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Máquinas de vectores soporte</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Si dos clases son separables, hay infinitos hiperplanos que las separan</h2>
+<ul>
+<li>Todos aciertan en el conjunto de entrenamiento. La pregunta es cuál elegir.</li>
+</ul>
+</section>
+
+<section>
+<h2>Este método responde con un criterio geométrico</h2>
+<ul>
+<li>El mejor es el que deja el mayor espacio libre a ambos lados.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Márgenes</div>
+<h2>La distancia a la frontera es una medida de confianza</h2>
+<ul>
+<li>Un punto lejos del hiperplano se clasifica con seguridad; uno pegado a la frontera cambia de clase con la menor perturbación.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Márgenes</div>
+<h2>Dos convenciones nuevas antes de seguir</h2>
+<ul>
+<li>Las etiquetas son $y \in \{-1, +1\}$ y el sesgo se escribe aparte: $w^\top x + b$ en lugar de $\theta^\top x$.</li>
+</ul>
+<p class="note">No es capricho. Con etiquetas $\pm 1$ el margen se escribe como un solo producto $y \cdot (w^\top x + b)$, cuyo signo dice si la clasificación es correcta. Es la notación de toda la literatura del tema.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Márgenes</div>
+<h2>El margen funcional depende de la escala</h2>
+$$\hat{\gamma}^{(i)} = y^{(i)}\big(w^\top x^{(i)} + b\big)$$
+<p class="note">En palabras: positivo si el punto está bien clasificado, y más grande cuanto más confiada la decisión. El problema es que multiplicar $w$ y $b$ por diez lo multiplica por diez sin mover la frontera.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Márgenes</div>
+<h2>El margen geométrico no</h2>
+$$\gamma^{(i)} = y^{(i)}\,\frac{w^\top x^{(i)} + b}{\|w\|}$$
+<p class="note">En palabras: es la distancia euclidiana real del punto al hiperplano. Al dividir por la norma, la medida deja de depender de cómo se escalaron los parámetros.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Márgenes</div>
+<h2>Y el criterio queda enunciado</h2>
+<ul>
+<li>Elegir el hiperplano que maximiza el mínimo margen geométrico sobre todos los puntos de entrenamiento.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El problema de optimización</div>
+<h2>Maximizar el margen equivale a minimizar la norma</h2>
+<ul>
+<li>Fijando la escala de modo que los puntos más cercanos tengan margen funcional 1, el margen geométrico resulta ser $1/\|w\|$.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El problema de optimización</div>
+<h2>Y así queda un problema cuadrático con restricciones lineales</h2>
+$$\min_{w,b} \; \tfrac{1}{2}\|w\|^2 \quad \text{sujeto a} \quad y^{(i)}\big(w^\top x^{(i)} + b\big) \geq 1 \;\; \forall i$$
+<p class="note">En palabras: el objetivo es convexo y las restricciones lineales, de modo que hay un único óptimo global y algoritmos eficientes para encontrarlo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El problema de optimización</div>
+<h2>La franja vacía y los puntos que la tocan</h2>
+<ul>
+<li>Los vectores soporte son los únicos que determinan dónde queda la frontera.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-a" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L8,2.5 z" fill="#2f6b33"/></marker>
+  <marker id="ar-b" markerWidth="8" markerHeight="8" refX="1" refY="2.5" orient="auto"><path d="M8,0 L8,5 L0,2.5 z" fill="#2f6b33"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+    <rect x="270" y="48" width="96" height="212" fill="#f7f2d8"/>
+    <line x1="318" y1="42" x2="318" y2="266" stroke="#111" stroke-width="3"/>
+    <line x1="270" y1="42" x2="270" y2="266" stroke="#777" stroke-width="1.8" stroke-dasharray="7,5"/>
+    <line x1="366" y1="42" x2="366" y2="266" stroke="#777" stroke-width="1.8" stroke-dasharray="7,5"/>
+    <circle cx="174" cy="225" r="6" fill="#33607f"/>
+    <circle cx="133" cy="210" r="6" fill="#33607f"/>
+    <circle cx="160" cy="137" r="6" fill="#33607f"/>
+    <circle cx="246" cy="161" r="6" fill="#33607f"/>
+    <circle cx="168" cy="194" r="6" fill="#33607f"/>
+    <circle cx="215" cy="150" r="6" fill="#33607f"/>
+    <circle cx="194" cy="96" r="6" fill="#33607f"/>
+    <circle cx="155" cy="127" r="6" fill="#33607f"/>
+    <circle cx="117" cy="65" r="6" fill="#33607f"/>
+    <circle cx="105" cy="138" r="6" fill="#33607f"/>
+    <circle cx="163" cy="133" r="6" fill="#33607f"/>
+    <circle cx="173" cy="75" r="6" fill="#33607f"/>
+    <circle cx="485" cy="248" r="6" fill="#c0653a"/>
+    <circle cx="514" cy="217" r="6" fill="#c0653a"/>
+    <circle cx="496" cy="174" r="6" fill="#c0653a"/>
+    <circle cx="497" cy="152" r="6" fill="#c0653a"/>
+    <circle cx="442" cy="102" r="6" fill="#c0653a"/>
+    <circle cx="425" cy="172" r="6" fill="#c0653a"/>
+    <circle cx="497" cy="248" r="6" fill="#c0653a"/>
+    <circle cx="495" cy="175" r="6" fill="#c0653a"/>
+    <circle cx="501" cy="158" r="6" fill="#c0653a"/>
+    <circle cx="398" cy="221" r="6" fill="#c0653a"/>
+    <circle cx="456" cy="172" r="6" fill="#c0653a"/>
+    <circle cx="464" cy="248" r="6" fill="#c0653a"/>
+    <circle cx="270" cy="92" r="11" fill="#2f6b33" opacity="0.3"/>
+    <circle cx="270" cy="92" r="6" fill="#33607f"/>
+    <circle cx="270" cy="208" r="11" fill="#2f6b33" opacity="0.3"/>
+    <circle cx="270" cy="208" r="6" fill="#33607f"/>
+    <circle cx="366" cy="124" r="11" fill="#2f6b33" opacity="0.3"/>
+    <circle cx="366" cy="124" r="6" fill="#c0653a"/>
+    <circle cx="366" cy="232" r="11" fill="#2f6b33" opacity="0.3"/>
+    <circle cx="366" cy="232" r="6" fill="#c0653a"/>
+    <path d="M272,174 L364,174" stroke="#2f6b33" stroke-width="1.8" fill="none" marker-end="url(#ar-a)" marker-start="url(#ar-b)"/>
+    <text x="318" y="163" font-size="13" text-anchor="middle" fill="#2f6b33" font-weight="bold">2 / ‖w‖</text>
+    <text x="170" y="288" font-size="12.5" text-anchor="middle" fill="#444">clase −1</text>
+    <text x="470" y="288" font-size="12.5" text-anchor="middle" fill="#444">clase +1</text>
+    <line x1="540" y1="70" x2="574" y2="70" stroke="#111" stroke-width="3"/>
+    <text x="584" y="75" font-size="12.5">wᵀx + b = 0</text>
+    <text x="584" y="92" font-size="11" fill="#666">la frontera de decisión</text>
+    <line x1="540" y1="122" x2="574" y2="122" stroke="#777" stroke-width="1.8" stroke-dasharray="7,5"/>
+    <text x="584" y="127" font-size="12.5">wᵀx + b = ±1</text>
+    <text x="584" y="144" font-size="11" fill="#666">los bordes del margen</text>
+    <circle cx="557" cy="176" r="9" fill="#2f6b33" opacity="0.3"/>
+    <circle cx="557" cy="176" r="5" fill="#777"/>
+    <text x="584" y="180" font-size="12.5">vectores soporte</text>
+    <text x="584" y="197" font-size="11" fill="#666">los únicos que determinan</text>
+    <text x="584" y="211" font-size="11" fill="#666">dónde queda la frontera</text>
+    <text x="540" y="248" font-size="11.5" font-style="italic" fill="#666">Maximizar el margen equivale</text>
+    <text x="540" y="264" font-size="11.5" font-style="italic" fill="#666">a minimizar ‖w‖.</text>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El problema de optimización</div>
+<h2>Mover cualquier otro punto no cambia nada</h2>
+<ul>
+<li>Se puede desplazar, o borrar, un ejemplo lejano y la solución es idéntica. Solo cuentan los que están sobre el margen.</li>
+</ul>
+<p class="note">De ahí el nombre del método, y también su eficiencia en predicción: el modelo final depende de un subconjunto pequeño de los datos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El problema de optimización</div>
+<h2>Pero la formulación exige que los datos sean separables</h2>
+<ul>
+<li>Si un solo punto está del lado equivocado, el problema no tiene solución. Los datos reales rara vez cooperan.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>Se permite violar el margen, con un costo</h2>
+$$\min_{w,b,\xi} \; \tfrac{1}{2}\|w\|^2 + C\sum_i \xi_i \quad \text{sujeto a} \quad y^{(i)}\big(w^\top x^{(i)} + b\big) \geq 1 - \xi_i, \;\; \xi_i \geq 0$$
+<p class="note">En palabras: cada $\xi_i$ mide cuánto se sale el punto $i$ de donde debería estar, y $C$ decide cuán caro es eso.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>Y aquí aparece algo que no es una casualidad</h2>
+<ul>
+<li>En el óptimo, cada holgura toma el menor valor compatible con su restricción.</li>
+</ul>
+$$\xi_i = \max\!\big(0,\; 1 - y^{(i)}(w^\top x^{(i)} + b)\big)$$
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>Eso es exactamente la pérdida hinge</h2>
+<ul>
+<li>Las variables de holgura no eran un artificio del optimizador: son el valor de una función de pérdida.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>De modo que el problema es riesgo empírico regularizado</h2>
+$$J(w,b) = \tfrac{1}{2}\|w\|^2 \;+\; C\sum_{i=1}^n \max\!\big(0,\, 1 - y^{(i)}(w^\top x^{(i)} + b)\big)$$
+<p class="note">En palabras: la estructura habitual del riesgo empírico regularizado, un término que ajusta y otro que penaliza la complejidad. La máquina de vectores soporte es pérdida hinge con regularización $L_2$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>Cuidado con $C$: se mueve al revés que $\lambda$</h2>
+<ul>
+<li>Antes el hiperparámetro multiplicaba la regularización; aquí multiplica la pérdida. La correspondencia es $C \propto 1/\lambda$.</li>
+</ul>
+<p class="note">Un $\lambda$ grande regulariza mucho. Un $C$ grande regulariza poco y fuerza a clasificar bien casi todos los puntos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>Lo que $C$ decide, medido</h2>
+<ul>
+<li>Con $C = 0.01$ el margen mide 3.43 y hay 53 vectores soporte; con $C = 10$ mide 0.97 y quedan 6.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>Y lo que no cambia</h2>
+<ul>
+<li>Los errores de clasificación son los mismos en ambos casos. $C$ no decide cuántos errores se cometen sino cuánta seguridad se exige a los aciertos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Margen suave</div>
+<h2>Por qué la hinge y no la logística</h2>
+<ul>
+<li>La hinge se anula exactamente cuando el margen supera 1; la logística nunca llega a cero.</li>
+</ul>
+<p class="note">Por eso los puntos bien clasificados y lejanos no aportan nada al objetivo, y por eso la solución depende solo de los vectores soporte. La logística, en cambio, sigue recibiendo un empujón de todos los datos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>Queda un límite serio: la frontera es un hiperplano</h2>
+<ul>
+<li>Muchos problemas no admiten ninguna separación lineal en el espacio original.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>La idea es mapear a un espacio donde sí la haya</h2>
+<ul>
+<li>Un hiperplano en el espacio transformado se ve como una frontera curva de vuelta en el original.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 285" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-ph" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#333"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <text x="150" y="52" font-size="13" font-weight="bold">Espacio original</text>
+    <text x="150" y="70" font-size="11.5" font-style="italic" fill="#666">ninguna recta separa las clases</text>
+    <circle cx="133" cy="173" r="5" fill="#c0653a"/>
+    <circle cx="126" cy="173" r="5" fill="#c0653a"/>
+    <circle cx="123" cy="167" r="5" fill="#c0653a"/>
+    <circle cx="122" cy="166" r="5" fill="#c0653a"/>
+    <circle cx="129" cy="146" r="5" fill="#c0653a"/>
+    <circle cx="141" cy="194" r="5" fill="#c0653a"/>
+    <circle cx="178" cy="186" r="5" fill="#c0653a"/>
+    <circle cx="171" cy="174" r="5" fill="#c0653a"/>
+    <circle cx="188" cy="164" r="5" fill="#c0653a"/>
+    <circle cx="129" cy="149" r="5" fill="#c0653a"/>
+    <circle cx="170" cy="199" r="5" fill="#c0653a"/>
+    <circle cx="179" cy="179" r="5" fill="#c0653a"/>
+    <circle cx="161" cy="196" r="5" fill="#c0653a"/>
+    <circle cx="70" cy="186" r="5" fill="#33607f"/>
+    <circle cx="71" cy="199" r="5" fill="#33607f"/>
+    <circle cx="104" cy="112" r="5" fill="#33607f"/>
+    <circle cx="74" cy="168" r="5" fill="#33607f"/>
+    <circle cx="137" cy="240" r="5" fill="#33607f"/>
+    <circle cx="243" cy="167" r="5" fill="#33607f"/>
+    <circle cx="129" cy="91" r="5" fill="#33607f"/>
+    <circle cx="118" cy="242" r="5" fill="#33607f"/>
+    <circle cx="228" cy="205" r="5" fill="#33607f"/>
+    <circle cx="157" cy="99" r="5" fill="#33607f"/>
+    <circle cx="83" cy="226" r="5" fill="#33607f"/>
+    <circle cx="227" cy="147" r="5" fill="#33607f"/>
+    <circle cx="170" cy="245" r="5" fill="#33607f"/>
+    <circle cx="201" cy="136" r="5" fill="#33607f"/>
+    <circle cx="83" cy="218" r="5" fill="#33607f"/>
+    <circle cx="214" cy="200" r="5" fill="#33607f"/>
+    <circle cx="141" cy="239" r="5" fill="#33607f"/>
+    <path d="M296,168 L392,168" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#ar-ph)"/>
+    <text x="344" y="154" font-size="12.5" font-style="italic" fill="#444">φ(x)</text>
+    <text x="344" y="188" font-size="11" font-style="italic" fill="#666">agrega ‖x‖²</text>
+    <text x="602" y="52" font-size="13" font-weight="bold">Espacio transformado</text>
+    <text x="602" y="70" font-size="11.5" font-style="italic" fill="#666">un hiperplano basta</text>
+    <line x1="470" y1="248" x2="470" y2="86" stroke="#333" stroke-width="1.2"/>
+    <line x1="470" y1="248" x2="736" y2="248" stroke="#333" stroke-width="1.2"/>
+    <text x="605" y="266" font-size="11" fill="#666">‖x‖</text>
+    <text x="482" y="96" font-size="11" fill="#666" text-anchor="start">‖x‖²</text>
+    <circle cx="521" cy="238" r="5" fill="#c0653a"/>
+    <circle cx="541" cy="232" r="5" fill="#c0653a"/>
+    <circle cx="545" cy="230" r="5" fill="#c0653a"/>
+    <circle cx="548" cy="229" r="5" fill="#c0653a"/>
+    <circle cx="555" cy="226" r="5" fill="#c0653a"/>
+    <circle cx="547" cy="230" r="5" fill="#c0653a"/>
+    <circle cx="561" cy="223" r="5" fill="#c0653a"/>
+    <circle cx="532" cy="235" r="5" fill="#c0653a"/>
+    <circle cx="574" cy="216" r="5" fill="#c0653a"/>
+    <circle cx="548" cy="229" r="5" fill="#c0653a"/>
+    <circle cx="571" cy="218" r="5" fill="#c0653a"/>
+    <circle cx="555" cy="226" r="5" fill="#c0653a"/>
+    <circle cx="553" cy="227" r="5" fill="#c0653a"/>
+    <circle cx="682" cy="117" r="5" fill="#33607f"/>
+    <circle cx="690" cy="108" r="5" fill="#33607f"/>
+    <circle cx="660" cy="143" r="5" fill="#33607f"/>
+    <circle cx="668" cy="134" r="5" fill="#33607f"/>
+    <circle cx="662" cy="142" r="5" fill="#33607f"/>
+    <circle cx="712" cy="78" r="5" fill="#33607f"/>
+    <circle cx="677" cy="124" r="5" fill="#33607f"/>
+    <circle cx="680" cy="120" r="5" fill="#33607f"/>
+    <circle cx="692" cy="104" r="5" fill="#33607f"/>
+    <circle cx="651" cy="154" r="5" fill="#33607f"/>
+    <circle cx="698" cy="97" r="5" fill="#33607f"/>
+    <circle cx="678" cy="122" r="5" fill="#33607f"/>
+    <circle cx="678" cy="123" r="5" fill="#33607f"/>
+    <circle cx="630" cy="174" r="5" fill="#33607f"/>
+    <circle cx="687" cy="111" r="5" fill="#33607f"/>
+    <circle cx="657" cy="146" r="5" fill="#33607f"/>
+    <circle cx="656" cy="148" r="5" fill="#33607f"/>
+    <path d="M474,214 L734,214" stroke="#111" stroke-width="2.6" fill="none"/>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>Y parece inútil, porque ese espacio puede ser enorme</h2>
+<ul>
+<li>Calcular $\phi(x)$ explícitamente es impracticable si tiene millones de dimensiones, o infinitas.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>Salvo por una propiedad de la solución</h2>
+$$w = \sum_{i=1}^n \alpha_i y^{(i)} \phi(x^{(i)})$$
+<p class="note">En palabras: al resolver el problema por su formulación dual, el vector de pesos óptimo resulta ser una combinación de los propios ejemplos de entrenamiento, con coeficientes $\alpha_i$ que se anulan salvo para los vectores soporte.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>Y al sustituirla, $\phi$ desaparece</h2>
+$$f(x) = \sum_{i=1}^n \alpha_i y^{(i)} \big\langle \phi(x^{(i)}), \phi(x) \big\rangle + b$$
+<p class="note">En palabras: ni el ajuste ni la predicción usan $\phi(x)$ por separado. Solo aparecen productos internos entre pares de puntos transformados.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>Basta entonces con una función que entregue ese producto</h2>
+$$K(x, z) = \big\langle \phi(x), \phi(z) \big\rangle$$
+<p class="note">En palabras: ese es el truco del kernel, y por eso funciona. No es que se evite calcular $\phi$ por astucia: la solución nunca lo necesitó.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>Dos kernels de uso corriente</h2>
+<ul>
+<li>El polinomial $(x^\top z + c)^k$, que incorpora las interacciones hasta grado $k$; y el gaussiano $\exp(-\gamma\|x-z\|^2)$, que corresponde a un espacio de dimensión infinita.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El truco del kernel</div>
+<h2>No cualquier función sirve</h2>
+<ul>
+<li>$K$ es un kernel válido si la matriz $[K(x^{(i)}, x^{(j)})]$ es semidefinida positiva para cualquier conjunto de puntos. Es la condición de Mercer.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Lo que se paga</div>
+<h2>La predicción cuesta un kernel por vector soporte</h2>
+<ul>
+<li>Y el número de vectores soporte crece con el tamaño del conjunto de entrenamiento.</li>
+</ul>
+<p class="note">Un modelo con kernel sobre millones de ejemplos puede terminar siendo más lento de evaluar que la red neuronal que pretendía reemplazar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Lo que se paga</div>
+<h2>$\gamma$ es un segundo mando de complejidad</h2>
+<ul>
+<li>Con $\gamma$ grande el kernel se vuelve muy local y la frontera rodea puntos individuales.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Lo que se paga</div>
+<h2>Y el número de vectores soporte lo delata</h2>
+<ul>
+<li>Con $\gamma = 0.5$, 19 de 120 puntos son vectores soporte; con $\gamma = 5$, son 95.</li>
+</ul>
+<p class="note">La cantidad de vectores soporte es un indicador barato de la complejidad efectiva del modelo: cuando casi todos los puntos son necesarios, el modelo está memorizando.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Lo que se paga</div>
+<h2>$C$ y $\gamma$ se eligen juntos, no por separado</h2>
+<ul>
+<li>Ambos controlan lo mismo desde ángulos distintos, y la búsqueda sobre la grilla de los dos es parte del procedimiento estándar.</li>
+</ul>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>El margen convierte "separar las clases" en un problema de optimización con solución única, y el dual, al depender solo de productos internos, abre la puerta a fronteras no lineales sin costo adicional.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

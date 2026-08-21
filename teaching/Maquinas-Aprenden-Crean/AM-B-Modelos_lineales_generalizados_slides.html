@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelos lineales generalizados</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+/* ecuación destacada con su leyenda de piezas */
+.destacada .katex-display { font-size: 2.2em; margin: 0.7em 0 0.5em 0; }
+ul.piezas { list-style: none; padding-left: 1.2em; margin-top: 0.4em; }
+ul.piezas li { font-size: 1.5em; color: var(--ink-soft); }
+ul.piezas li + li { margin-top: 0.3em; }
+ul.piezas .pieza { display: inline-block; min-width: 3.4em; }
+/* variante donde la parte derecha es el valor identificado, no una glosa */
+ul.piezas.valores li { color: var(--ink); }
+ul.piezas.valores li + li { margin-top: 0.45em; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
+.viz { width:100%; margin-top:0.3em; }
+.viz .ctrl { display:flex; gap:1.6em; align-items:center; justify-content:center;
+  font-size:0.95em; color:var(--ink-soft); margin-bottom:0.45em; flex-wrap:wrap; }
+.viz .ctrl label { display:flex; gap:0.5em; align-items:center; white-space:nowrap; }
+.viz input[type=range] { width:11em; height:1.1em; accent-color:var(--pluto-blue); vertical-align:middle; }
+.viz input[type=checkbox] { accent-color:var(--pluto-blue); width:1.2em; height:1.2em; }
+.viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:2.6em; }
+.viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
+.viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft);
+  font-variant-numeric:tabular-nums; margin-top:0.35em; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Modelos lineales generalizados</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Dos modelos derivados por separado salieron sospechosamente parecidos</h2>
+<ul>
+<li>Misma hipótesis lineal por dentro, misma forma del gradiente, mismo argumento de verosimilitud.</li>
+</ul>
+</section>
+
+<section>
+<h2>Ese parecido no es una coincidencia</h2>
+<ul>
+<li>Hay un marco que contiene a los dos como casos particulares, y que además genera modelos para salidas que ninguno de ellos cubre.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La familia exponencial</div>
+<h2>¿Qué comparten la gaussiana, la Bernoulli y la de Poisson?</h2>
+<ul>
+<li>Describen fenómenos distintos, un valor continuo, un sí o no y un conteo. Y sin embargo se dejan escribir con un mismo molde.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La familia exponencial</div>
+<h2>Un molde con cuatro piezas</h2>
+<ul>
+<li>Lo que cambia entre distribuciones son esas cuatro funciones. La estructura no cambia.</li>
+</ul>
+<div class="destacada">
+$$p(y;\eta) = \textcolor{#4e8cb8}{b(y)}\,\exp\big(\,\textcolor{#b8842b}{\eta}^\top \textcolor{#3f8f4c}{T(y)} - \textcolor{#c0648c}{a(\eta)}\,\big)$$
+</div>
+<ul class="piezas">
+<li><span class="pieza" style="color:#4e8cb8">$b(y)$</span> depende solo de la salida</li>
+<li><span class="pieza" style="color:#b8842b">$\eta$</span> parámetro natural, el que se modela</li>
+<li><span class="pieza" style="color:#3f8f4c">$T(y)$</span> estadística suficiente, casi siempre $y$</li>
+<li><span class="pieza" style="color:#c0648c">$a(\eta)$</span> normalizador, hace que integre a 1</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La familia exponencial</div>
+<h2>La pieza que importa es el parámetro natural</h2>
+<ul>
+<li>Es el que va a conectarse con las entradas. Las otras tres se determinan una vez elegida la distribución.</li>
+</ul>
+<p class="note">La familia incluye también la exponencial, la gamma, la beta y la de Dirichlet, entre muchas otras.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La familia exponencial</div>
+<h2>Y el normalizador esconde la media</h2>
+$$\int b(y)\,e^{\eta^\top T(y)}\,dy = e^{a(\eta)} \quad\Longrightarrow\quad \textcolor{#c0648c}{a'(\eta)} = \mathbb{E}[T(y)]$$
+<p class="note">En palabras: la densidad integra a uno sea cual sea $\eta$; al derivar esa identidad respecto de $\eta$ cae la media. No hay que salir del molde para encontrarla, es la derivada de la pieza que lo normaliza. Todo lo que viene después se apoya en esta línea.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La familia exponencial</div>
+<h2>Conviene comprobarlo antes de creerlo</h2>
+<ul>
+<li>Tres casos concretos bastan para ver que el molde no es una generalidad vacía.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Tres verificaciones</div>
+<h2>La Bernoulli, reescrita</h2>
+$$p(y;\phi) = \phi^y (1-\phi)^{1-y} = \exp\!\Big(y\log\tfrac{\phi}{1-\phi} + \log(1-\phi)\Big)$$
+<ul class="piezas valores">
+<li><span class="pieza" style="color:#4e8cb8">$b(y)$</span> $= 1$</li>
+<li><span class="pieza" style="color:#b8842b">$\eta$</span> $= \log\dfrac{\phi}{1-\phi}$</li>
+<li><span class="pieza" style="color:#3f8f4c">$T(y)$</span> $= y$</li>
+<li><span class="pieza" style="color:#c0648c">$a(\eta)$</span> $= -\log(1-\phi) = \log(1+e^{\eta})$</li>
+</ul>
+<p class="note">En palabras: la misma distribución de siempre, reordenada hasta que calce con el molde. No se cambió nada, solo la forma de escribirla.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Tres verificaciones</div>
+<h2>Y el parámetro natural resulta ser el logit</h2>
+$$\eta = \log\!\left(\frac{\phi}{1-\phi}\right)$$
+<p class="note">En palabras: la transformación que en la regresión logística hubo que buscar para arreglar el desajuste de escalas ya estaba ahí, dentro de la forma canónica de la Bernoulli.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Tres verificaciones</div>
+<h2>Invertirlo devuelve la sigmoide</h2>
+$$\phi = \frac{1}{1+e^{-\eta}}$$
+<p class="note">En palabras: la sigmoide nunca fue una elección de diseño. Es lo que se obtiene al despejar el parámetro natural de la Bernoulli, y nada más.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Tres verificaciones</div>
+<h2>La gaussiana da un resultado igual de revelador</h2>
+$$p(y;\mu) = \left(\tfrac{1}{\sqrt{2\pi}}e^{-y^2/2}\right)\exp\!\left(\mu y - \tfrac{\mu^2}{2}\right)$$
+<ul class="piezas valores">
+<li><span class="pieza" style="color:#4e8cb8">$b(y)$</span> $= \dfrac{1}{\sqrt{2\pi}}e^{-y^2/2}$</li>
+<li><span class="pieza" style="color:#b8842b">$\eta$</span> $= \mu$</li>
+<li><span class="pieza" style="color:#3f8f4c">$T(y)$</span> $= y$</li>
+<li><span class="pieza" style="color:#c0648c">$a(\eta)$</span> $= \dfrac{\mu^2}{2} = \dfrac{\eta^2}{2}$</li>
+</ul>
+<p class="note">En palabras: el parámetro natural es directamente la media. Por eso la regresión lineal no necesita transformar nada y usa la identidad.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Tres verificaciones</div>
+<h2>Y la de Poisson entrega un modelo nuevo</h2>
+$$p(y;\lambda) = \frac{\lambda^y e^{-\lambda}}{y!} = \frac{1}{y!}\exp\!\big(y\log\lambda - \lambda\big)$$
+<ul class="piezas valores">
+<li><span class="pieza" style="color:#4e8cb8">$b(y)$</span> $= \dfrac{1}{y!}$</li>
+<li><span class="pieza" style="color:#b8842b">$\eta$</span> $= \log\lambda$</li>
+<li><span class="pieza" style="color:#3f8f4c">$T(y)$</span> $= y$</li>
+<li><span class="pieza" style="color:#c0648c">$a(\eta)$</span> $= \lambda = e^{\eta}$</li>
+</ul>
+<p class="note">En palabras: el mismo procedimiento, aplicado a una tercera distribución. Aquí no hay un modelo previo que recuperar, y aun así el marco entrega uno.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Tres verificaciones</div>
+<h2>Las tres transformaciones eran la misma operación</h2>
+<ul>
+<li>Invertir el parámetro natural. Aplicada a la Bernoulli da la sigmoide; a la gaussiana, la identidad; a la de Poisson, la exponencial.</li>
+</ul>
+<p class="note">En palabras: esa inversión es exactamente $a'$, la derivada del normalizador. Por eso las tres salieron distintas sin que hubiera que elegir nada: cada distribución trae su propia $a$, y con ella su transformación.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Tres verificaciones</div>
+<h2>Falta el puente hacia el aprendizaje</h2>
+<ul>
+<li>Una distribución todavía no es un modelo entrenable. Hacen falta tres cosas más.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Las tres suposiciones</div>
+<h2>Primera: la salida viene de la familia exponencial</h2>
+$$y \mid x; \theta \;\sim\; \text{FamiliaExponencial}(\eta)$$
+<p class="note">En palabras: es la decisión de modelado que hay que tomar mirando los datos. ¿La salida es continua, binaria, un conteo? De esa respuesta cuelga todo lo demás.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Las tres suposiciones</div>
+<h2>Segunda: el modelo predice la media</h2>
+$$h_\theta(x) = \mathbb{E}[T(y) \mid x]$$
+<p class="note">En palabras: no se predice la salida concreta sino el valor esperado de la estadística suficiente, que en casi todos los casos prácticos es la propia $y$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Las tres suposiciones</div>
+<h2>Tercera: el parámetro natural es lineal en las entradas</h2>
+$$\eta = \theta^\top x$$
+<p class="note">En palabras: esta no es una suposición probabilística sino una decisión de diseño. Es lo que hace que el modelo sea aprendible con las herramientas conocidas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Las tres suposiciones</div>
+<h2>Y es también la frontera del marco</h2>
+<ul>
+<li>Todo lo que rompa esa linealidad queda fuera, empezando por las redes neuronales, y por eso requieren maquinaria propia.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Las tres suposiciones</div>
+<h2>Con las tres, todo lo demás queda fijado</h2>
+<ul>
+<li>Elegida la distribución, no queda nada por inventar: el enlace y la hipótesis salen solos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Casos especiales</div>
+<h2>Un solo esquema, con una pieza intercambiable</h2>
+<ul>
+<li>Lo único que cambia entre modelos es la función que convierte el parámetro natural en la media.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 130" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-b3" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#333"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" text-anchor="middle" fill="#222">
+    <rect x="20" y="34" width="160" height="62" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="100" y="58" font-size="12.5" font-weight="bold">Entrada</text>
+    <text x="100" y="78" font-size="11.5" fill="#444">x ∈ ℝᵈ</text>
+    <rect x="205" y="34" width="160" height="62" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="285" y="58" font-size="12.5" font-weight="bold">Parámetro natural</text>
+    <text x="285" y="78" font-size="11.5" fill="#444">η = θᵀx</text>
+    <rect x="390" y="34" width="160" height="62" rx="7" fill="#fdf1e2" stroke="#a06a1f" stroke-width="3"/>
+    <text x="470" y="58" font-size="12.5" font-weight="bold">Media de la salida</text>
+    <text x="470" y="78" font-size="11.5" fill="#444">μ = g⁻¹(η)</text>
+    <rect x="575" y="34" width="160" height="62" rx="7" fill="#e8f2e8" stroke="#2f6b33" stroke-width="1.5"/>
+    <text x="655" y="58" font-size="12.5" font-weight="bold">Distribución</text>
+    <text x="655" y="78" font-size="11.5" fill="#444">y ~ Fam. exponencial(η)</text>
+    <path d="M180,65 L205,65" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b3)"/>
+    <text x="192" y="18" font-size="10.5" font-style="italic" fill="#666">única parte lineal</text>
+    <path d="M365,65 L390,65" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b3)"/>
+    <text x="377" y="18" font-size="10.5" font-style="italic" fill="#666">invertir el enlace</text>
+    <path d="M550,65 L575,65" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b3)"/>
+    <text x="562" y="18" font-size="10.5" font-style="italic" fill="#666">la media determina</text>
+    <text x="562" y="30" font-size="10.5" font-style="italic" fill="#666">la distribución</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Casos especiales</div>
+<h2>Cuatro distribuciones, cuatro modelos conocidos</h2>
+<ul>
+<li>Las dos primeras filas son la regresión lineal y la logística, que suelen derivarse por separado.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+    <rect x="30" y="24" width="700" height="36" fill="#dbe9f4" stroke="#333" stroke-width="1.2"/>
+    <text x="95" y="47" font-size="12.5" font-weight="bold" text-anchor="middle">Distribución</text>
+    <text x="217" y="47" font-size="12.5" font-weight="bold" text-anchor="middle">Salida</text>
+    <text x="355" y="47" font-size="12.5" font-weight="bold" text-anchor="middle">Parámetro natural</text>
+    <text x="487" y="47" font-size="12.5" font-weight="bold" text-anchor="middle">Enlace</text>
+    <text x="635" y="47" font-size="12.5" font-weight="bold" text-anchor="middle">Modelo resultante</text>
+    <rect x="30" y="60" width="700" height="40" fill="#ffffff" stroke="#333" stroke-width="1.1"/>
+    <text x="95" y="85" font-size="12" text-anchor="middle" fill="#333">Gaussiana</text>
+    <text x="217" y="85" font-size="12" text-anchor="middle" fill="#333">continua</text>
+    <text x="355" y="85" font-size="12" text-anchor="middle" fill="#333">η = μ</text>
+    <text x="487" y="85" font-size="12" text-anchor="middle" fill="#333">identidad</text>
+    <text x="635" y="85" font-size="12" text-anchor="middle" fill="#333">regresión lineal</text>
+    <rect x="30" y="100" width="700" height="40" fill="#ffffff" stroke="#333" stroke-width="1.1"/>
+    <text x="95" y="125" font-size="12" text-anchor="middle" fill="#333">Bernoulli</text>
+    <text x="217" y="125" font-size="12" text-anchor="middle" fill="#333">binaria</text>
+    <text x="355" y="125" font-size="12" text-anchor="middle" fill="#333">η = log(φ/(1−φ))</text>
+    <text x="487" y="125" font-size="12" text-anchor="middle" fill="#333">logit</text>
+    <text x="635" y="125" font-size="12" text-anchor="middle" fill="#333">regresión logística</text>
+    <rect x="30" y="140" width="700" height="40" fill="#ffffff" stroke="#333" stroke-width="1.1"/>
+    <text x="95" y="165" font-size="12" text-anchor="middle" fill="#333">Multinomial</text>
+    <text x="217" y="165" font-size="12" text-anchor="middle" fill="#333">multiclase</text>
+    <text x="355" y="165" font-size="12" text-anchor="middle" fill="#333">ηᵢ = θᵢᵀx</text>
+    <text x="487" y="165" font-size="12" text-anchor="middle" fill="#333">logit multiclase</text>
+    <text x="635" y="165" font-size="12" text-anchor="middle" fill="#333">regresión softmax</text>
+    <rect x="30" y="180" width="700" height="40" fill="#fdf1e2" stroke="#333" stroke-width="1.1"/>
+    <text x="95" y="205" font-size="12" text-anchor="middle" fill="#a06a1f">Poisson</text>
+    <text x="217" y="205" font-size="12" text-anchor="middle" fill="#a06a1f">conteos 0,1,2,…</text>
+    <text x="355" y="205" font-size="12" text-anchor="middle" fill="#a06a1f">η = log λ</text>
+    <text x="487" y="205" font-size="12" text-anchor="middle" fill="#a06a1f">logaritmo</text>
+    <text x="635" y="205" font-size="12" text-anchor="middle" fill="#a06a1f">regresión de Poisson</text>
+    <line x1="160" y1="24" x2="160" y2="220" stroke="#333" stroke-width="1.1"/>
+    <line x1="275" y1="24" x2="275" y2="220" stroke="#333" stroke-width="1.1"/>
+    <line x1="435" y1="24" x2="435" y2="220" stroke="#333" stroke-width="1.1"/>
+    <line x1="540" y1="24" x2="540" y2="220" stroke="#333" stroke-width="1.1"/>
+    <text x="380" y="236" font-size="11.5" text-anchor="middle" font-style="italic" fill="#a06a1f">La última fila es la que no aparece en ningún otro capítulo.</text>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Casos especiales</div>
+<h2>La cuarta fila es la que justifica el adjetivo</h2>
+<ul>
+<li>Cuando la salida es un conteo, un entero no negativo sin cota, ni la gaussiana ni la Bernoulli sirven.</li>
+</ul>
+<p class="note">La gaussiana asigna probabilidad positiva a valores negativos, y la Bernoulli solo admite dos valores. La de Poisson es la distribución natural del problema.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Casos especiales</div>
+<h2>Su enlace es el logaritmo, y su hipótesis una exponencial</h2>
+$$h_\theta(x) = \mathbb{E}[y \mid x] = \lambda = e^{\theta^\top x}$$
+<p class="note">En palabras: la exponencial garantiza por construcción que la predicción sea positiva, como corresponde a un conteo. Ningún ajuste posterior hace falta.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Casos especiales</div>
+<h2>Y el modelo es lineal en el logaritmo de la media</h2>
+<ul>
+<li>Aumentar una característica en una unidad <em>multiplica</em> la predicción por una constante, en lugar de sumarle una cantidad fija.</li>
+</ul>
+<p class="note">Es el modelo estándar para número de llegadas, de fallas o de eventos por unidad de tiempo, donde el efecto de un factor es naturalmente proporcional.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Casos especiales</div>
+<h2>Elegir el enlace es elegir la distribución</h2>
+<div class="viz" data-viz="enl">
+  <div class="ctrl">
+    <label><input type="radio" name="enl" value="log" checked> logaritmo · Poisson</label>
+    <label><input type="radio" name="enl" value="identidad"> identidad · gaussiana</label>
+    <label><input type="radio" name="enl" value="logit"> logit · Bernoulli</label>
+  </div>
+  <canvas data-ratio="0.32"></canvas>
+  <div class="lect"></div>
+</div>
+<p class="note">El enlace no es una pieza aparte: $g^{-1} = a'$. Cambiar de botón no es probar otra curva sobre los mismos datos, es suponer que los conteos vienen de otra distribución. Las dos alternativas fallan porque la distribución está mal, no porque la curva no calce.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Casos especiales</div>
+<h2>Y ahora se cobra todo lo anterior</h2>
+<ul>
+<li>¿Hay que derivar el entrenamiento otra vez para cada fila de la tabla?</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>La verosimilitud se escribe una sola vez</h2>
+$$\ell(\theta) = \sum_{i=1}^n \log p(y^{(i)} \mid x^{(i)}; \theta)$$
+<p class="note">En palabras: vale para toda la familia, porque todas las distribuciones comparten el molde. No hay una versión para cada caso.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>La log-verosimilitud, en la forma canónica</h2>
+$$\ell(\theta) = \sum_{i=1}^n \Big[\log b(y^{(i)}) + \eta^{(i)} y^{(i)} - a(\eta^{(i)})\Big], \qquad \eta^{(i)} = \theta^\top x^{(i)}$$
+<p class="note">En palabras: se reemplaza la densidad por el molde de la familia exponencial, con $T(y)=y$. El primer término no depende de $\theta$ y desaparece al derivar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Al derivar aparece la derivada del normalizador</h2>
+$$\frac{\partial \ell}{\partial \theta} = \sum_{i=1}^n \Big[y^{(i)} - a'(\eta^{(i)})\Big]\, x^{(i)}$$
+<p class="note">En palabras: por regla de la cadena, y como $\eta = \theta^\top x$, cada término trae un factor $\partial \eta / \partial \theta = x$. Todo el problema se reduce ahora a saber qué es $a'(\eta)$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Y esa derivada resulta ser la media</h2>
+<ul>
+<li>La densidad integra a uno para todo $\eta$; al derivar esa identidad respecto de $\eta$ se obtiene</li>
+</ul>
+$$a'(\eta) = \mathbb{E}[y \mid x] = h_\theta(x)$$
+<p class="note">En palabras: el normalizador no es un accesorio administrativo. Su derivada es exactamente la media de la distribución, que es justo lo que el modelo predice según la segunda suposición.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Y sustituyendo queda el gradiente</h2>
+$$\nabla_\theta \ell(\theta) = \sum_{i=1}^n \big(y^{(i)} - h_\theta(x^{(i)})\big)\, x^{(i)}$$
+<p class="note">En palabras: error por entrada, sumado sobre los ejemplos. La derivación no usó en ningún momento cuál distribución era, así que vale para las cuatro filas de la tabla; lo único que cambia entre ellas es qué función es $h_\theta$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Lo único que cambia es qué función es $h_\theta$</h2>
+<ul>
+<li>La identidad, la sigmoide o la exponencial. La regla de actualización que parecía coincidencia era una consecuencia de la estructura común.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>La regresión lineal es la excepción, no la regla</h2>
+<ul>
+<li>Solo ahí igualar el gradiente a cero produce un sistema lineal. En el resto la ecuación es no lineal y hay que iterar.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Dos métodos, el mismo compromiso de siempre</h2>
+$$\theta := \theta + \alpha \nabla_\theta \ell(\theta) \qquad\text{o}\qquad \theta := \theta - H^{-1}\nabla_\theta \ell(\theta)$$
+<p class="note">En palabras: gradiente o Newton. Aplicado a la log-verosimilitud de un GLM, Newton se llama Fisher scoring y es el método por defecto de las librerías estadísticas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Y la regularización se añade igual que siempre</h2>
+$$J(\theta) = -\frac{1}{n}\ell(\theta) + \lambda \, r(\theta)$$
+<p class="note">En palabras: el primer término es el riesgo empírico con la log-verosimilitud negativa como pérdida. La equivalencia entre maximizar verosimilitud y minimizar riesgo empírico vale para toda la familia.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Lo que se gana es no volver a derivar nada</h2>
+<ul>
+<li>Frente a una salida de un tipo nuevo, basta identificar su distribución en la familia y leer el enlace correspondiente.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · La receta única</div>
+<h2>Lo que se paga es una restricción real</h2>
+<ul>
+<li>El parámetro natural debe ser lineal en las entradas. Levantar esa restricción es el paso siguiente, y cuesta todas las garantías.</li>
+</ul>
+<p class="note">Sin ella se pierden la convexidad, la unicidad del óptimo y la interpretación directa de los coeficientes.</p>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>Elegir la distribución de la salida fija automáticamente todo lo demás: el enlace, la hipótesis y la forma del gradiente.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+<script>
+// ======== infraestructura de visualizaciones interactivas ========
+const VIZ = {};                       // registro: nombre -> función de dibujo
+function vizColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const oscuro = matchMedia('(prefers-color-scheme: dark)').matches
+                 && document.documentElement.dataset.theme !== 'light'
+                 || document.documentElement.dataset.theme === 'dark';
+  return { fondo: oscuro ? '#2a2928' : '#ffffff',
+           eje:   oscuro ? '#6b6b6b' : '#bbbbbb',
+           texto: oscuro ? '#c9c9c9' : '#444444',
+           dato:  oscuro ? 'rgba(170,170,170,.55)' : 'rgba(110,110,110,.5)',
+           azul:  oscuro ? '#8ab4d4' : '#33607f',
+           verde: '#2f6b33', naranjo: '#c0653a', gris: oscuro ? '#888' : '#999' };
+}
+function vizSetup(cv) {                       // canvas nítido en pantallas HiDPI
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 900, h = Math.round(w * (+cv.dataset.ratio || 0.42));
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  return { g, w, h, C: vizColors() };
+}
+function vizEjes(g, w, h, m, C, xlab, ylab) {
+  g.strokeStyle = C.eje; g.lineWidth = 1.2;
+  g.beginPath(); g.moveTo(m.i, h - m.b); g.lineTo(w - m.d, h - m.b);
+  g.moveTo(m.i, h - m.b); g.lineTo(m.i, m.t); g.stroke();
+  g.fillStyle = C.texto; g.font = '17px Helvetica, Arial'; g.textAlign = 'center';
+  g.fillText(xlab, (m.i + w - m.d) / 2, h - 4);
+  g.save(); g.translate(12, (m.t + h - m.b) / 2); g.rotate(-Math.PI / 2);
+  g.fillText(ylab, 0, 0); g.restore();
+}
+function vizRedraw(root) {
+  (root || document).querySelectorAll('.viz[data-viz]').forEach(el => {
+    const f = VIZ[el.dataset.viz]; if (f) f(el);
+  });
+}
+function vizInit() {
+  document.querySelectorAll('.viz[data-viz]').forEach(el => {
+    if (el.dataset.listo) return;
+    el.dataset.listo = '1';
+    const f = () => { const d = VIZ[el.dataset.viz]; if (d) d(el); };
+    el.addEventListener('input', f);
+    el.addEventListener('change', f);
+  });
+  vizRedraw();
+}
+// el bloque corre despues de Reveal.initialize, asi que no se depende del evento ready
+vizInit();
+requestAnimationFrame(vizInit);
+setTimeout(vizInit, 250);
+if (window.Reveal && Reveal.on) {
+  Reveal.on('ready', e => vizRedraw(e.currentSlide));
+  Reveal.on('slidechanged', e => vizRedraw(e.currentSlide));
+}
+window.addEventListener('resize', () => vizRedraw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => vizRedraw());
+</script>
+<script>
+// ======== la misma nube de conteos, con tres funciones de enlace ========
+function mulb(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const RG = mulb(21); const PX=[], PY=[];
+for (let i=0;i<120;i++){
+  const x = i*4/119; PX.push(x);
+  const lam = Math.exp(0.35+0.55*x);            // media verdadera del proceso
+  let k=0, p=1, L=Math.exp(-lam);               // muestreo de Poisson
+  do { p *= RG(); k++; } while (p > L);
+  PY.push(k-1);
+}
+function ajustaGLM(enlace) {
+  // Newton sobre la log-verosimilitud; para la identidad basta minimos cuadrados
+  const n=PX.length; let b=0,a=0;
+  if (enlace==='identidad') {
+    let s1=0,s2=0,t0=0,t1=0;
+    for(let i=0;i<n;i++){s1+=PX[i];s2+=PX[i]*PX[i];t0+=PY[i];t1+=PX[i]*PY[i];}
+    const det=n*s2-s1*s1; return [(s2*t0-s1*t1)/det,(n*t1-s1*t0)/det];
+  }
+  const g = enlace==='log' ? (z=>Math.exp(z)) : (z=>1/(1+Math.exp(-z)));
+  for (let it=0; it<40; it++) {
+    let H00=0,H01=0,H11=0,g0=0,g1=0;
+    for (let i=0;i<n;i++){
+      const z=b+a*PX[i], mu=g(z);
+      const wgt = enlace==='log' ? mu : mu*(1-mu);
+      const r = PY[i]-mu;
+      g0+=r; g1+=r*PX[i];
+      H00+=wgt; H01+=wgt*PX[i]; H11+=wgt*PX[i]*PX[i];
+    }
+    const det=H00*H11-H01*H01; if (Math.abs(det)<1e-12) break;
+    b += ( H11*g0 - H01*g1)/det;
+    a += (-H01*g0 + H00*g1)/det;
+  }
+  return [b,a];
+}
+VIZ.enl = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const enlace = el.querySelector('[name=enl]:checked').value;
+  const m={i:52,d:20,t:16,b:40};
+  const px=v=>m.i+v/4*(w-m.i-m.d), py=v=>h-m.b-(v+2)/24*(h-m.b-m.t);
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(m.i,h-m.b); g.lineTo(w-m.d,h-m.b);
+  g.moveTo(m.i,h-m.b); g.lineTo(m.i,m.t); g.stroke();
+  g.setLineDash([5,5]); g.strokeStyle=C.eje;
+  g.beginPath(); g.moveTo(m.i,py(0)); g.lineTo(w-m.d,py(0)); g.stroke(); g.setLineDash([]);
+  g.fillStyle=C.dato;
+  for (let i=0;i<PX.length;i++){ g.beginPath(); g.arc(px(PX[i]),py(PY[i]),3.4,0,7); g.fill(); }
+  // media verdadera
+  g.strokeStyle=C.gris; g.lineWidth=2; g.setLineDash([7,6]); g.beginPath();
+  for (let k=0;k<=120;k++){ const x=k*4/120, v=Math.exp(0.35+0.55*x);
+    k?g.lineTo(px(x),py(v)):g.moveTo(px(x),py(v)); }
+  g.stroke(); g.setLineDash([]);
+  const [b,a]=ajustaGLM(enlace);
+  const inv = enlace==='log' ? (z=>Math.exp(z))
+            : enlace==='logit' ? (z=>1/(1+Math.exp(-z))) : (z=>z);
+  g.strokeStyle = enlace==='log'?C.verde : enlace==='logit'?C.azul : C.naranjo;
+  g.lineWidth=3.6; g.beginPath();
+  for (let k=0;k<=160;k++){ const x=k*4/160, v=inv(b+a*x);
+    k?g.lineTo(px(x),py(v)):g.moveTo(px(x),py(v)); }
+  g.stroke();
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('x',(m.i+w-m.d)/2,h-8);
+  g.save(); g.translate(16,(m.t+h-m.b)/2); g.rotate(-Math.PI/2);
+  g.fillText('y  (conteo)',0,0); g.restore();
+  let neg=0; for (let k=0;k<=160;k++){ if (inv(b+a*k*4/160) < 0) neg++; }
+  const dic = enlace==='log'
+    ? 'la exponencial garantiza predicciones positivas y sigue la media verdadera'
+    : enlace==='identidad'
+    ? 'la recta predice conteos negativos cerca del origen, que son imposibles'
+    : 'la sigmoide satura en 1: no puede representar conteos mayores que uno';
+  const dist = enlace==='log' ? 'Poisson' : enlace==='identidad' ? 'gaussiana' : 'Bernoulli';
+  const anu = enlace==='log' ? "a′(η) = exp(η)" : enlace==='identidad' ? "a′(η) = η" : "a′(η) = σ(η)";
+  el.querySelector('.lect').innerHTML =
+    `<b>${dist}</b> &nbsp;·&nbsp; ${anu} &nbsp;·&nbsp; θ = [${b.toFixed(3)}, ${a.toFixed(3)}] &nbsp;·&nbsp; ${dic}`;
+};
+</script>
+
+</body>
+</html>

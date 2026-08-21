@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regresión lineal</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+
+/* --- visualizaciones interactivas --- */
+.viz { width:100%; margin-top:0.3em; }
+.viz .ctrl { display:flex; gap:1.6em; align-items:center; justify-content:center;
+  font-size:0.95em; color:var(--ink-soft); margin-bottom:0.45em; flex-wrap:wrap; }
+.viz .ctrl label { display:flex; gap:0.5em; align-items:center; white-space:nowrap; }
+.viz input[type=range] { width:11em; height:1.1em; accent-color:var(--pluto-blue); vertical-align:middle; }
+.viz input[type=checkbox] { accent-color:var(--pluto-blue); width:1.2em; height:1.2em; }
+.viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:2.6em; }
+.viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
+.viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft);
+  font-variant-numeric:tabular-nums; margin-top:0.35em; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Regresión lineal</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>El modelo más simple que relaciona entradas y salida</h2>
+<ul>
+<li>Predecir un número continuo a partir de varias mediciones, suponiendo que la relación entre ambos es una recta.</li>
+</ul>
+</section>
+
+<section>
+<h2>Y también el último con solución exacta</h2>
+<ul>
+<li>De aquí en adelante todo se resuelve iterando. Aquí el óptimo se obtiene resolviendo un sistema de ecuaciones.</li>
+</ul>
+<p class="note">Por eso conviene mirarlo despacio: deja a la vista todo lo que después queda escondido detrás de un optimizador.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis lineal</div>
+<h2>¿Cuál es la función más simple que se puede proponer?</h2>
+<ul>
+<li>Una suma ponderada de las características, con un término independiente que fija la altura.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis lineal</div>
+<h2>Un peso por característica, más un intercepto</h2>
+$$h_\theta(x) = \theta_0 + \theta_1 x_1 + \cdots + \theta_d x_d$$
+<p class="note">En palabras: cada $\theta_j$ dice cuánto cambia la predicción si la característica $j$ aumenta en una unidad y las demás quedan fijas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis lineal</div>
+<h2>El intercepto deja de ser un caso aparte</h2>
+<ul>
+<li>Agregando una característica constante $x_0 = 1$, el término independiente entra como un peso más.</li>
+</ul>
+$$h_\theta(x) = \theta^\top x, \qquad \theta, x \in \mathbb{R}^{d+1}$$
+<p class="note">En palabras: toda la hipótesis colapsa en un producto punto. Es la convención que permite escribir todo lo que sigue en forma matricial.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Hipótesis lineal</div>
+<h2>Queda propuesta la forma, falta el criterio</h2>
+<ul>
+<li>Hay infinitos vectores $\theta$. Elegir uno exige decir primero qué significa que una recta ajuste mejor que otra.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>¿Qué significa que una recta ajuste mejor?</h2>
+<ul>
+<li>Hace falta un número que resuma, en un solo valor, cuán lejos quedan las predicciones de las observaciones.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>Se promedia la pérdida sobre los datos vistos</h2>
+$$\mathcal{R}_{\text{emp}}(\theta) = \frac{1}{2n} \sum_{i=1}^n \big(h_\theta(x^{(i)}) - y^{(i)}\big)^2$$
+<p class="note">En palabras: el promedio de los errores al cuadrado. El factor $1/2$ es conveniencia algebraica, cancela el $2$ que aparece al derivar y no mueve el mínimo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>Los errores se miden en vertical, no en perpendicular</h2>
+<div class="viz" data-viz="vp">
+  <canvas data-ratio="0.34"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>Lo que el criterio suma son estos segmentos, al cuadrado</h2>
+<div class="viz" data-viz="res">
+  <div class="ctrl">
+    <label>pendiente <input type="range" name="pend" min="1.2" max="2.8" step="0.02" value="1.60"><span class="val">1.60</span></label>
+  </div>
+  <canvas data-ratio="0.36"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>¿Y por qué esa curva es una parábola?</h2>
+<ul>
+<li>No es una casualidad del ejemplo ni una aproximación: es exactamente una parábola, y el motivo está en la forma del residuo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>El residuo es afín en el parámetro</h2>
+$$r_i(\theta) = \theta^\top x^{(i)} - y^{(i)}$$
+<p class="note">En palabras: mirado como función de $\theta$, con los datos fijos, $r_i$ es una recta. El dato $x^{(i)}$ hace de coeficiente y $-y^{(i)}$ de término independiente.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>Y el cuadrado de una función afín es una cuadrática</h2>
+<ul>
+<li>Cada término $r_i^2$ es un polinomio de grado 2 en $\theta$, y una suma de polinomios de grado 2 sigue siendo de grado 2.</li>
+</ul>
+<p class="note">Ahí termina el argumento. Con un solo parámetro libre el resultado es una parábola; con $d$ parámetros, un paraboloide.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>Escrita explícitamente, con el intercepto ya óptimo</h2>
+$$\mathcal{R}_{\text{emp}}(a) \;=\; a^2\underbrace{\textstyle\sum_i (x_i-\bar{x})^2}_{1411.4} \;-\; 2a\underbrace{\textstyle\sum_i (x_i-\bar{x})(y_i-\bar{y})}_{2875.0} \;+\; \underbrace{\textstyle\sum_i (y_i-\bar{y})^2}_{6015.4}$$
+<p class="note">En palabras: los tres coeficientes son sumas fijas que dependen solo de los datos. Ajustar un polinomio de grado 2 a la curva del gráfico anterior devuelve exactamente estos números, con un error de $3 \times 10^{-12}$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>El coeficiente principal es positivo, y eso lo decide todo</h2>
+<ul>
+<li>$\sum_i (x_i-\bar{x})^2 > 0$ salvo que todos los datos tengan el mismo $x$, así que la parábola abre hacia arriba.</li>
+</ul>
+<p class="note">Una parábola que abre hacia arriba tiene un único mínimo, sin mínimos locales donde quedarse atrapado. Su vértice está en $a = 2.037$, que es exactamente la pendiente de mínimos cuadrados.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>Y de ahí sale que exista una fórmula cerrada</h2>
+<ul>
+<li>Derivar una función cuadrática da una función lineal, y una ecuación lineal se resuelve de frente.</li>
+</ul>
+<p class="note">Esa es la razón de fondo por la que este modelo tiene solución analítica y casi ningún otro la tiene: cambiar la pérdida o el predictor rompe la forma cuadrática, y con ella la ecuación lineal.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Riesgo empírico</div>
+<h2>Pero nadie ha justificado el cuadrado</h2>
+<ul>
+<li>¿Por qué al cuadrado y no en valor absoluto, o a la cuarta potencia? La respuesta no es de conveniencia.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>La pérdida se deduce de un supuesto sobre el ruido</h2>
+<ul>
+<li>Basta con escribir explícitamente cómo se supone que se generaron los datos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>El supuesto: una recta más ruido</h2>
+$$y^{(i)} = \theta^\top x^{(i)} + \epsilon^{(i)}, \qquad \epsilon^{(i)} \sim \mathcal{N}(0,\sigma^2)$$
+<p class="note">En palabras: la parte determinista es la predicción del modelo; $\epsilon$ recoge todo lo demás, mediciones imprecisas, factores omitidos y azar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Cada observación pasa a tener una probabilidad</h2>
+<ul>
+<li>Si el ruido es gaussiano, la salida también lo es, centrada en la predicción del modelo.</li>
+</ul>
+$$y^{(i)} \mid x^{(i)}; \theta \;\sim\; \mathcal{N}(\theta^\top x^{(i)}, \sigma^2)$$
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>La verosimilitud mide qué tan plausibles son los datos</h2>
+$$\mathcal{L}(\theta) = \prod_{i=1}^n p(y^{(i)} \mid x^{(i)}; \theta)$$
+<p class="note">En palabras: la probabilidad conjunta de haber observado exactamente estos datos, vista como función de $\theta$. El producto vale porque las observaciones se suponen independientes.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>El logaritmo convierte el producto en suma</h2>
+$$\ell(\theta) = -\frac{n}{2}\log(2\pi\sigma^2) - \frac{1}{2\sigma^2}\sum_{i=1}^n \big(y^{(i)} - \theta^\top x^{(i)}\big)^2$$
+<p class="note">En palabras: el primer término no depende de $\theta$ y es irrelevante para la optimización. El segundo es, salvo constantes, la suma de errores al cuadrado con signo cambiado.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>La cadena completa, en tres pasos de álgebra</h2>
+$$\ell(\theta) = \log \prod_{i=1}^n \frac{1}{\sqrt{2\pi\sigma^2}} \exp\!\left(-\frac{(y^{(i)} - \theta^\top x^{(i)})^2}{2\sigma^2}\right)$$
+$$= \sum_{i=1}^n \left[-\log\sqrt{2\pi\sigma^2} \;-\; \frac{(y^{(i)} - \theta^\top x^{(i)})^2}{2\sigma^2}\right]$$
+$$= \underbrace{-\tfrac{n}{2}\log(2\pi\sigma^2)}_{\text{constante en }\theta} \;-\; \frac{1}{2\sigma^2}\sum_{i=1}^n \big(y^{(i)} - \theta^\top x^{(i)}\big)^2$$
+<p class="note">Maximizar esto respecto de $\theta$ es minimizar la suma de la derecha, porque el primer término no depende de $\theta$ y $1/2\sigma^2$ es una constante positiva. De ahí sale el error cuadrático, y de ninguna otra parte.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Maximizar la verosimilitud es minimizar los cuadrados</h2>
+<ul>
+<li>Son el mismo problema escrito de dos maneras. La pérdida cuadrática no fue una elección: estaba implícita en el supuesto gaussiano.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>De un supuesto sobre el ruido a un criterio de ajuste</h2>
+<ul><li>El $\theta$ que maximiza la verosimilitud es el mismo que minimiza la suma de cuadrados.</li></ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 168" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-b1" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#333"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" text-anchor="middle" fill="#222">
+    <rect x="20" y="24" width="160" height="82" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="100" y="46" font-size="12.5" font-weight="bold">Supuesto sobre los datos</text>
+    <text x="100" y="68" font-size="11.5" fill="#444">y⁽ⁱ⁾ = θᵀx⁽ⁱ⁾ + ε⁽ⁱ⁾</text>
+    <text x="100" y="85" font-size="11.5" fill="#444">ε⁽ⁱ⁾ ~ 𝒩(0, σ²)</text>
+    <rect x="205" y="24" width="160" height="82" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="285" y="46" font-size="12.5" font-weight="bold">Verosimilitud</text>
+    <text x="285" y="68" font-size="11.5" fill="#444">ℒ(θ) = ∏ᵢ p(y⁽ⁱ⁾|x⁽ⁱ⁾;θ)</text>
+    <text x="285" y="85" font-size="11.5" fill="#444">producto de gaussianas</text>
+    <rect x="390" y="24" width="160" height="82" rx="7" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="470" y="46" font-size="12.5" font-weight="bold">Log-verosimilitud</text>
+    <text x="470" y="68" font-size="11.5" fill="#444">ℓ(θ) = −(1/2σ²) Σᵢ rᵢ²</text>
+    <text x="470" y="85" font-size="11.5" fill="#444">+ constante en θ</text>
+    <rect x="575" y="24" width="160" height="82" rx="7" fill="#e8f2e8" stroke="#2f6b33" stroke-width="1.5"/>
+    <text x="655" y="46" font-size="12.5" font-weight="bold">Mínimos cuadrados</text>
+    <text x="655" y="68" font-size="11.5" fill="#444">min Σᵢ rᵢ²</text>
+    <text x="655" y="85" font-size="11.5" fill="#444">con rᵢ = y⁽ⁱ⁾ − θᵀx⁽ⁱ⁾</text>
+    <path d="M180,65 L203,65" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b1)"/>
+    <text x="202" y="128" font-size="10.5" font-style="italic" fill="#666">independencia</text>
+    <text x="202" y="142" font-size="10.5" font-style="italic" fill="#666">de los ejemplos</text>
+    <path d="M365,65 L388,65" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b1)"/>
+    <text x="387" y="128" font-size="10.5" font-style="italic" fill="#666">tomar</text>
+    <text x="387" y="142" font-size="10.5" font-style="italic" fill="#666">logaritmo</text>
+    <path d="M550,65 L573,65" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#ar-b1)"/>
+    <text x="572" y="128" font-size="10.5" font-style="italic" fill="#666">descartar constantes</text>
+    <text x="572" y="142" font-size="10.5" font-style="italic" fill="#666">y cambiar de signo</text>
+  </g>
+</svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Lo mismo, escrito con símbolos</h2>
+$$\arg\max_\theta \; \mathcal{L}(\theta) \;=\; \arg\max_\theta \; \ell(\theta) \;=\; \arg\min_\theta \; \sum_i r_i^2$$
+<p class="note">En palabras: los <em>valores</em> de las tres funciones son completamente distintos, y no tiene sentido compararlos. Lo que coincide es el $\theta$ donde cada una alcanza su óptimo, que es lo único que se busca.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>La implicación recíproca es la que conviene retener</h2>
+<ul>
+<li>Usar la cuadrática equivale a declarar que los errores son gaussianos, y la gaussiana considera casi imposible una desviación grande.</li>
+</ul>
+<p class="note">Por eso un solo valor atípico arrastra el ajuste: bajo el modelo resulta tan improbable que el optimizador prefiere deformar la recta antes que aceptarlo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Y explica de dónde salen las pérdidas robustas</h2>
+<ul>
+<li>Suponer ruido con colas pesadas, que admite desviaciones grandes sin escandalizarse, conduce a la pérdida absoluta o a la de Huber.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Justificación probabilística</div>
+<h2>Con el criterio justificado, queda encontrar su mínimo</h2>
+<ul>
+<li>Y aquí ocurre algo excepcional: se puede hacer de una sola vez.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>¿Se puede resolver sin iterar?</h2>
+<ul>
+<li>El riesgo es una función cuadrática de $\theta$. Su gradiente es lineal, y una ecuación lineal se resuelve de frente.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>Todo el conjunto de datos cabe en una matriz</h2>
+<ul>
+<li>La matriz de diseño $X \in \mathbb{R}^{n \times (d+1)}$ apila un ejemplo por fila; $\vec{y} \in \mathbb{R}^n$ reúne las salidas.</li>
+</ul>
+$$\mathcal{R}_{\text{emp}}(\theta) = \frac{1}{2n}(X\theta - \vec{y})^\top (X\theta - \vec{y})$$
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>Al expandir el producto quedan tres términos</h2>
+$$\mathcal{R}_{\text{emp}}(\theta) = \frac{1}{2n}\Big( \underbrace{\theta^\top X^\top X \theta}_{\text{cuadrático en }\theta} \;-\; \underbrace{2\,\vec{y}^\top X \theta}_{\text{lineal en }\theta} \;+\; \underbrace{\vec{y}^\top \vec{y}}_{\text{constante}} \Big)$$
+<p class="note">En palabras: es la versión matricial de lo que ya se vio con una sola pendiente. Un término de grado 2, uno de grado 1 y uno que no depende de $\theta$ y por lo tanto desaparecerá al derivar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>Derivar eso requiere solo dos identidades</h2>
+$$\nabla_\theta \big(\theta^\top A \theta\big) = 2A\theta \quad (A \text{ simétrica}), \qquad \nabla_\theta \big(b^\top \theta\big) = b$$
+<p class="note">La primera exige que $A$ sea simétrica, condición que $X^\top X$ cumple siempre, ya que $(X^\top X)^\top = X^\top X$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>Aplicándolas término a término</h2>
+$$\nabla_\theta \mathcal{R}_{\text{emp}}(\theta) = \frac{1}{2n}\Big( 2X^\top X \theta \;-\; 2X^\top \vec{y} \;+\; 0 \Big) = \frac{1}{n}\Big( X^\top X \theta - X^\top \vec{y} \Big)$$
+<p class="note">En palabras: el primer término usa la identidad con $A = X^\top X$; el segundo, la identidad lineal con $b = X^\top \vec{y}$, ya que $\vec{y}^\top X \theta = (X^\top \vec{y})^\top \theta$; el tercero se anula por ser constante.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>El gradiente se anula en un sistema lineal</h2>
+$$X^\top X \theta = X^\top \vec{y}$$
+<p class="note">En palabras: son las ecuaciones normales. El factor $1/n$ se cancela al igualar a cero, así que no aparece.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>Y con eso, la solución en forma cerrada</h2>
+$$\theta^\star = (X^\top X)^{-1} X^\top \vec{y}$$
+<p class="note">En palabras: basta una factorización para obtener el óptimo exacto. Es una de las pocas familias de modelos donde esto ocurre.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>Pero en la práctica nadie invierte esa matriz</h2>
+<ul>
+<li>Formar $X^\top X$ eleva al cuadrado el número de condición: una matriz apenas mal condicionada se vuelve severamente mal condicionada.</li>
+</ul>
+<p class="note">Las librerías numéricas factorizan directamente $X$ mediante QR o valores singulares, sin construir $X^\top X$ ni invertir nada.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Ecuaciones normales</div>
+<h2>Si existe una fórmula, ¿por qué enseñar el descenso de gradiente?</h2>
+<ul>
+<li>La respuesta está en el costo, y aparece apenas crece el número de características.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>La solución cerrada tiene un costo cúbico</h2>
+<ul>
+<li>Construir y factorizar la matriz cuesta del orden de $nd^2 + d^3$ operaciones; cada paso de descenso de gradiente cuesta del orden de $nd$.</li>
+</ul>
+<p class="note">Con decenas de características la fórmula es instantánea y no hay razón para iterar. Con decenas de miles, el término $d^3$ la vuelve impracticable.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>La regla de actualización</h2>
+$$\theta := \theta - \alpha \, \nabla_\theta \mathcal{R}_{\text{emp}}(\theta), \qquad \nabla_\theta \mathcal{R}_{\text{emp}} = \frac{1}{n} X^\top (X\theta - \vec{y})$$
+<p class="note">En palabras: moverse en contra del gradiente. El paso $\alpha$ debe ser lo bastante pequeño para no divergir. Esta es la forma que conviene implementar, y la que se usa enseguida para el análisis de condicionamiento.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>La misma regla, escrita muestra por muestra</h2>
+$$\nabla_\theta \mathcal{R}_{\text{emp}}(\theta) = \frac{1}{n} X^\top (X\theta - \vec{y}) = \frac{1}{n} \sum_{i=1}^{n} \big( h_\theta(x^{(i)}) - y^{(i)} \big) \, x^{(i)}$$
+<p class="note">El producto con $X^\top$ no es más que la suma sobre las filas: la componente $i$ de $X\theta - \vec{y}$ es el residuo del ejemplo $i$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>Y así la actualización se lee sola</h2>
+$$\theta := \theta + \alpha \, \big( y^{(i)} - h_\theta(x^{(i)}) \big) \, x^{(i)}$$
+<p class="note">El error del ejemplo, multiplicado por $x^{(i)}$, reparte la corrección entre los coeficientes según cuánto participó cada característica. Conviene fijar esta forma: reaparece idéntica en regresión logística, con la sigmoide en lugar de $h_\theta(x)=\theta^\top x$, y el marco de los modelos lineales generalizados explica por qué.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>Lo que gobierna la velocidad no es el paso</h2>
+<ul>
+<li>Es el número de condición del Hessiano: la razón entre su mayor y su menor valor propio.</li>
+</ul>
+<p class="note">Esto vale para cualquier problema de optimización, no solo para este modelo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>Lo propio de aquí es que el análisis sea exacto</h2>
+<ul>
+<li>En un problema no cuadrático el Hessiano cambia con $\theta$, y las curvas de nivel solo son elipses cerca del óptimo.</li>
+<li>Aquí el Hessiano es $X^\top X / n$: constante, conocido, y las elipses valen en todo el plano.</li>
+</ul>
+<p class="note">De ahí se sigue lo que importa en la práctica: como el Hessiano se construye con la matriz de diseño, el condicionamiento lo fija la escala de las características y se puede cambiar antes de entrenar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>Curvas de nivel alargadas hacen zigzaguear al gradiente</h2>
+<div class="viz" data-viz="cond">
+  <div class="ctrl">
+    <label>pasos <input type="range" name="it" min="0" max="80" step="1" value="24"><span class="val">24</span></label>
+    <label>paso <input type="range" name="a" min="0.2" max="2.1" step="0.05" value="1.90"><span class="val">1.90</span></label>
+    <label><input type="checkbox" name="e"> estandarizar x</label>
+  </div>
+  <canvas data-ratio="0.36"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>Estandarizar es eficiencia, no cosmética</h2>
+<ul>
+<li>Restar la media y dividir por la desviación estándar lleva el número de condición de 146 a 1.01, y la convergencia de 624 épocas a una.</li>
+</ul>
+<p class="note">Ambas versiones convergen al mismo lugar. Estandarizar no cambia el modelo ni su solución, solo el camino que recorre el optimizador.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>El mismo ajuste, con y sin estandarizar</h2>
+<div class="viz" data-viz="gd">
+  <div class="ctrl">
+    <label>épocas <input type="range" name="ep" min="0" max="200" step="2" value="20"><span class="val">20</span></label>
+    <label><input type="checkbox" name="std" checked> estandarizar x</label>
+  </div>
+  <canvas data-ratio="0.40"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
+<h2>Ajustar bien los datos vistos no era el objetivo</h2>
+<ul>
+<li>El objetivo es predecir bien los que no se han visto, y para eso el criterio de hasta aquí resulta insuficiente.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>¿Cómo se evita que el modelo persiga el ruido?</h2>
+<ul>
+<li>Penalizando la magnitud de los parámetros, de modo que ajustar mejor tenga un precio.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>El objetivo pasa a tener dos términos</h2>
+$$J(\theta) = \mathcal{R}_{\text{emp}}(\theta) + \lambda \, r(\theta)$$
+<p class="note">En palabras: el primero premia ajustar los datos, el segundo castiga los parámetros grandes. $\lambda$ decide cuánto pesa cada uno.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Dos penalizaciones, dos comportamientos</h2>
+<ul>
+<li>Ridge usa $r(\theta) = \|\theta\|_2^2$ y encoge todos los coeficientes; lasso usa $r(\theta) = \|\theta\|_1$ y anula algunos exactamente.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Ridge conserva la solución cerrada</h2>
+$$\theta^\star_{\text{ridge}} = (X^\top X + \lambda' I)^{-1} X^\top \vec{y}$$
+<p class="note">En palabras: sumar $\lambda' I$ desplaza hacia arriba todos los valores propios, lo que vuelve invertible la matriz aunque fuera singular. Ese fue el motivo original de ridge: arreglar el condicionamiento.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Lasso la pierde, y ese es justamente su precio</h2>
+<ul>
+<li>El valor absoluto no es diferenciable en cero, así que no hay fórmula y hay que iterar.</li>
+</ul>
+<p class="note">Esa misma esquina en cero es la que permite que la solución caiga exactamente sobre él: lo que cuesta el algoritmo es lo que produce la selección de variables.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>El problema tiene dos centros, y ahí está toda la tensión</h2>
+<ul>
+<li>El riesgo empírico tira hacia la solución sin penalizar; la penalización tira hacia el origen.</li>
+</ul>
+<p class="note">Por eso las curvas de nivel están centradas donde el ajuste querría estar, y la región donde la penalización querría estar. La solución vive en el punto de compromiso entre ambos, y $\lambda$ decide cuánto pesa cada uno.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>La forma de la región es lo que distingue ridge de lasso</h2>
+<ul><li>Las curvas de nivel se centran en la solución sin penalizar; la región, en el origen. La solución es donde la curva más baja alcanza a tocar la región.</li></ul>
+<div class="viz" data-viz="reg">
+  <div class="ctrl">
+    <label>λ <input type="range" name="lam" min="0" max="1.6" step="0.02" value="0.30"><span class="val">0.30</span></label>
+    <label><input type="checkbox" name="tipo"> usar lasso en vez de ridge</label>
+  </div>
+  <canvas data-ratio="0.36"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Un tercer coeficiente que no debería existir</h2>
+<ul>
+<li>A los datos se les agrega una característica $x_2$ generada al azar, sin ninguna relación con $y$: su coeficiente verdadero es exactamente cero.</li>
+</ul>
+<p class="note">Con muchos datos el ajuste sin penalizar ya la descarta sola. Con pocos datos o mucho ruido le asigna un valor apreciable, y ahí se ve qué hace cada penalización.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Qué le hace cada penalización a los coeficientes</h2>
+<div class="viz" data-viz="efe">
+  <div class="ctrl">
+    <label>λ <input type="range" name="l" min="0" max="3" step="0.05" value="0"><span class="val">0.00</span></label>
+    <label>n <input type="range" name="n" min="15" max="200" step="5" value="25"><span class="val">25</span></label>
+    <label>ruido <input type="range" name="s" min="0.5" max="6" step="0.5" value="1.0"><span class="val">1.0</span></label>
+    <label><input type="checkbox" name="tp"> lasso</label>
+  </div>
+  <canvas data-ratio="0.34"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Lambda no se aprende junto con los parámetros</h2>
+<ul>
+<li>Si se eligiera minimizando el mismo riesgo empírico, el óptimo sería siempre cero. Su valor se fija comparando el error sobre datos que el ajuste no vio.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización</div>
+<h2>Y el intercepto queda fuera de la penalización</h2>
+<ul>
+<li>Penalizarlo haría que la solución dependiera del origen elegido para medir $y$: desplazar todas las salidas en una constante cambiaría el modelo.</li>
+</ul>
+<p class="note">Los demás coeficientes sí se penalizan, y por eso conviene que las características estén en escalas comparables antes de aplicarla.</p>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>Elegir la pérdida cuadrática no es una preferencia estética: es afirmar que el ruido es gaussiano, y esa afirmación fija todo lo demás.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+
+<script>
+// ======== infraestructura de visualizaciones interactivas ========
+const VIZ = {};                       // registro: nombre -> función de dibujo
+function vizColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const oscuro = matchMedia('(prefers-color-scheme: dark)').matches
+                 && document.documentElement.dataset.theme !== 'light'
+                 || document.documentElement.dataset.theme === 'dark';
+  return { fondo: oscuro ? '#2a2928' : '#ffffff',
+           eje:   oscuro ? '#6b6b6b' : '#bbbbbb',
+           texto: oscuro ? '#c9c9c9' : '#444444',
+           dato:  oscuro ? 'rgba(170,170,170,.55)' : 'rgba(110,110,110,.5)',
+           azul:  oscuro ? '#8ab4d4' : '#33607f',
+           verde: '#2f6b33', naranjo: '#c0653a', gris: oscuro ? '#888' : '#999' };
+}
+function vizSetup(cv) {                       // canvas nítido en pantallas HiDPI
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 900, h = Math.round(w * (+cv.dataset.ratio || 0.42));
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  return { g, w, h, C: vizColors() };
+}
+function vizEjes(g, w, h, m, C, xlab, ylab) {
+  g.strokeStyle = C.eje; g.lineWidth = 1.2;
+  g.beginPath(); g.moveTo(m.i, h - m.b); g.lineTo(w - m.d, h - m.b);
+  g.moveTo(m.i, h - m.b); g.lineTo(m.i, m.t); g.stroke();
+  g.fillStyle = C.texto; g.font = '17px Helvetica, Arial'; g.textAlign = 'center';
+  g.fillText(xlab, (m.i + w - m.d) / 2, h - 4);
+  g.save(); g.translate(12, (m.t + h - m.b) / 2); g.rotate(-Math.PI / 2);
+  g.fillText(ylab, 0, 0); g.restore();
+}
+function vizRedraw(root) {
+  (root || document).querySelectorAll('.viz[data-viz]').forEach(el => {
+    const f = VIZ[el.dataset.viz]; if (f) f(el);
+  });
+}
+function vizInit() {
+  document.querySelectorAll('.viz[data-viz]').forEach(el => {
+    if (el.dataset.listo) return;
+    el.dataset.listo = '1';
+    const f = () => { const d = VIZ[el.dataset.viz]; if (d) d(el); };
+    el.addEventListener('input', f);
+    el.addEventListener('change', f);
+  });
+  vizRedraw();
+}
+// el bloque corre despues de Reveal.initialize, asi que no se depende del evento ready
+vizInit();
+requestAnimationFrame(vizInit);
+setTimeout(vizInit, 250);
+if (window.Reveal && Reveal.on) {
+  Reveal.on('ready', e => vizRedraw(e.currentSlide));
+  Reveal.on('slidechanged', e => vizRedraw(e.currentSlide));
+}
+window.addEventListener('resize', () => vizRedraw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => vizRedraw());
+</script>
+
+<script>
+const XD=[1.7357,3.2166,2.5859,1.6644,5.2702,4.8302,3.9066,8.0276,9.8076,0.9443,5.4476,4.3391,2.1123,1.8343,3.4751,6.2265,0.2698,9.7864,9.8931,0.553,6.3498,8.3734,6.5996,8.1202,8.9584,5.8021,5.0444,0.7266,8.2307,3.5042,0.9159,9.3548,8.8649,5.4293,3.3608,2.5826,5.0284,0.4248,4.0222,6.6202,8.5281,1.6353,9.9831,2.0827,0.9502,9.886,5.1126,3.5146,9.8723,8.4921,3.4295,7.4422,2.0948,3.0847,2.5142,2.6315,7.543,9.7808,9.9854,0.161,6.9858,9.7772,2.2421,6.9823,7.6927,5.3046,4.7198,9.8081,1.4235,7.2671,9.3985,9.9876,4.5275,0.6044,5.0402,8.403,9.3317,8.2682,1.3389,5.1151,1.8256,7.5763,6.2918,1.2016,2.4958,2.8186,8.2884,3.6934,3.108,1.9909,5.3,0.0072,9.5628,1.9808,9.0232,6.2445,4.0037,7.7402,2.8024,0.3697,9.3729,7.3239,0.4848,6.9996,1.1733,6.3857,9.5777,8.1722,8.0205,6.5851,6.4777,2.2013,7.279,3.8578,8.794,9.4197,3.3698,7.573,9.7893,6.517,8.9554,2.6599,3.1646,9.8497,1.3733,2.3452,0.5132,1.914,3.958,4.1539,7.135,1.9188,3.0193,8.3546,9.2328,5.1524,4.2275,7.1817,7.5212,2.5817,0.9678,1.6842,6.803,6.8816,7.2198,3.7235,0.3019,0.7933,6.6376,4.9206];const YD=[6.2553,10.0137,7.2931,5.8182,14.7657,12.6085,11.2676,19.7672,21.1617,3.8313,14.8125,10.9849,6.4897,7.3177,8.1392,16.3468,3.3643,23.536,24.1834,2.0742,16.3791,21.6378,16.1481,19.0899,22.342,15.1991,13.8914,4.2345,18.5876,11.7515,3.8673,20.3458,21.4839,13.4264,8.9802,8.735,12.8384,3.3737,11.9337,17.458,21.0076,5.5031,21.5096,7.6581,5.0022,24.1621,12.9327,11.2833,21.2282,22.0228,9.9343,17.3778,6.4553,9.1634,8.1178,8.8513,16.6578,21.8752,23.0096,2.9844,17.063,23.3268,7.3442,17.4892,19.0586,12.3772,11.3292,21.8964,7.1475,18.7685,23.7865,23.0077,12.9647,6.4222,12.8757,19.5531,20.7806,19.2227,4.2755,14.3778,7.8306,18.7374,16.3869,6.4672,8.5234,6.7844,15.7933,10.0398,9.1769,4.6865,13.7834,2.5698,21.8426,7.4494,21.2964,16.6275,10.9271,17.5471,8.6268,5.3762,22.7109,17.0998,5.5833,17.836,6.2915,15.5438,22.6733,19.7288,17.2682,17.4196,15.8548,6.2018,17.392,11.0797,21.3409,21.2565,8.9268,18.0309,24.3536,17.5383,20.7839,8.4356,9.8665,22.9468,6.1188,6.0141,1.9378,6.6818,10.2252,10.8857,16.9474,6.4881,7.871,20.3724,23.682,13.4069,12.5845,18.8293,18.5207,6.0176,6.4673,6.7012,17.3529,17.6,16.9313,9.3655,5.4456,4.1238,16.1099,13.5614];
+const MX=5.186845, SX=3.077743;
+function normales(xs, ys) {                       // ecuaciones normales 2x2
+  const n = xs.length; let s1=0,s2=0,t0=0,t1=0;
+  for (let i=0;i<n;i++){s1+=xs[i];s2+=xs[i]*xs[i];t0+=ys[i];t1+=xs[i]*ys[i];}
+  const det = n*s2 - s1*s1;
+  return [(s2*t0 - s1*t1)/det, (n*t1 - s1*t0)/det];
+}
+function descenso(xs, ys, pasos) {                // paso mayor estable: 1/lambda_max
+  const n = xs.length; let s1=0,s2=0;
+  for (let i=0;i<n;i++){s1+=xs[i];s2+=xs[i]*xs[i];}
+  const tr=n+s2, dt=n*s2-s1*s1, lmax=(tr+Math.sqrt(Math.max(tr*tr-4*dt,0)))/2, eta=1/lmax;
+  let b=0,w=0;
+  for (let t=0;t<pasos;t++){ let g0=0,g1=0;
+    for (let i=0;i<n;i++){ const r=b+w*xs[i]-ys[i]; g0+=r; g1+=r*xs[i]; }
+    b-=eta*g0; w-=eta*g1; }
+  return [b,w];
+}
+VIZ.gd = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const ep = +el.querySelector('[name=ep]').value;
+  const std = el.querySelector('[name=std]').checked;
+  el.querySelector('.val').textContent = ep;
+
+  const xs = std ? XD.map(v => (v-MX)/SX) : XD;
+  let [b,a] = descenso(xs, YD, ep);
+  if (std) { b = b - a*MX/SX; a = a/SX; }
+  const [bo,ao] = normales(XD, YD);
+  const err = 100*Math.hypot(b-bo, a-ao)/Math.hypot(bo,ao);
+
+  const m = {i:46,d:18,t:12,b:38};
+  const px = v => m.i + v/10*(w-m.i-m.d), py = v => h-m.b - (v+2)/29*(h-m.b-m.t);
+  g.fillStyle = C.fondo; g.fillRect(0,0,w,h);
+  vizEjes(g,w,h,m,C,'x','y');
+  g.fillStyle = C.dato;
+  for (let i=0;i<XD.length;i++){ g.beginPath(); g.arc(px(XD[i]),py(YD[i]),3.2,0,7); g.fill(); }
+  const recta=(b,a,col,dash,lw)=>{ g.save(); g.setLineDash(dash); g.strokeStyle=col; g.lineWidth=lw;
+    g.beginPath(); g.moveTo(px(0),py(b)); g.lineTo(px(10),py(b+10*a)); g.stroke(); g.restore(); };
+  recta(bo,ao,C.gris,[7,6],2.2);
+  recta(b,a, std?C.verde:C.naranjo, [], 3.4);
+  el.querySelector('.lect').innerHTML =
+    `&theta; = [${b.toFixed(3)}, ${a.toFixed(3)}] &nbsp;·&nbsp; exacta [${bo.toFixed(3)}, ${ao.toFixed(3)}] &nbsp;·&nbsp; error ${err.toFixed(1)}%`;
+};
+</script>
+<script>
+// ======== residuos: que suma exactamente el error cuadratico medio ========
+VIZ.res = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const a = +el.querySelector('[name=pend]').value;      // pendiente elegida a mano
+  el.querySelector('.val').textContent = a.toFixed(2);
+
+  // con la pendiente fija, el intercepto optimo es la media de los residuos
+  const n = XD.length; let b = 0;
+  for (let i=0;i<n;i++) b += YD[i] - a*XD[i];
+  b /= n;
+  let S = 0; for (let i=0;i<n;i++){ const r = b + a*XD[i] - YD[i]; S += r*r; }
+
+  // panel izquierdo: datos, recta y residuos verticales
+  const mI={i:44,d:12,t:12,b:36}, W1=Math.round(w*0.58);
+  const px=v=>mI.i+v/10*(W1-mI.i-mI.d), py=v=>h-mI.b-(v+2)/29*(h-mI.b-mI.t);
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(mI.i,h-mI.b); g.lineTo(W1-mI.d,h-mI.b);
+  g.moveTo(mI.i,h-mI.b); g.lineTo(mI.i,mI.t); g.stroke();
+  g.strokeStyle=C.naranjo; g.lineWidth=1.1; g.globalAlpha=.55;
+  for (let i=0;i<n;i++){ g.beginPath(); g.moveTo(px(XD[i]),py(YD[i]));
+                         g.lineTo(px(XD[i]),py(b+a*XD[i])); g.stroke(); }
+  g.globalAlpha=1; g.fillStyle=C.dato;
+  for (let i=0;i<n;i++){ g.beginPath(); g.arc(px(XD[i]),py(YD[i]),3,0,7); g.fill(); }
+  g.strokeStyle=C.azul; g.lineWidth=3.2;
+  g.beginPath(); g.moveTo(px(0),py(b)); g.lineTo(px(10),py(b+10*a)); g.stroke();
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('x',(mI.i+W1)/2,h-8);
+
+  // panel derecho: la suma de cuadrados como funcion de la pendiente
+  const X0=W1+40, mD={d:14,t:24,b:36};
+  const qx=v=>X0+(v-1.2)/1.6*(w-X0-mD.d);
+  let Smin=Infinity, Smax=0; const curva=[];
+  for (let k=0;k<=120;k++){
+    const aa=1.2+k*1.6/120; let bb=0;
+    for (let i=0;i<n;i++) bb += YD[i]-aa*XD[i]; bb/=n;
+    let ss=0; for (let i=0;i<n;i++){ const r=bb+aa*XD[i]-YD[i]; ss+=r*r; }
+    curva.push([aa,ss]); if(ss<Smin)Smin=ss; if(ss>Smax)Smax=ss;
+  }
+  const qy=v=>h-mD.b-(v-Smin)/(Smax-Smin)*(h-mD.b-mD.t);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(X0,h-mD.b); g.lineTo(w-mD.d,h-mD.b);
+  g.moveTo(X0,h-mD.b); g.lineTo(X0,mD.t); g.stroke();
+  g.strokeStyle=C.verde; g.lineWidth=3;
+  g.beginPath(); curva.forEach(([aa,ss],k)=>k?g.lineTo(qx(aa),qy(ss)):g.moveTo(qx(aa),qy(ss))); g.stroke();
+  g.fillStyle=C.naranjo; g.beginPath(); g.arc(qx(a),qy(S),7,0,7); g.fill();
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('pendiente',(X0+w-mD.d)/2,h-8);
+  g.font='15px Helvetica, Arial'; g.fillText('suma de residuos al cuadrado', (X0+w-mD.d)/2, 16);
+
+  el.querySelector('.lect').innerHTML =
+    `pendiente ${a.toFixed(2)} &nbsp;·&nbsp; &Sigma;r&sup2; = ${S.toFixed(1)} &nbsp;·&nbsp; mínimo en 2.04 con &Sigma;r&sup2; = ${Smin.toFixed(1)}`;
+};
+</script>
+<script>
+// ======== ridge y lasso: por que uno encoge y el otro anula ========
+// Con diseño ortonormal (XᵀX = I) ambas soluciones son exactas:
+//   ridge: θ/(1+λ)      lasso: signo(θ)·max(|θ|−λ, 0)
+const TOLS = [1.65, 0.70];
+VIZ.reg = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const lam = +el.querySelector('[name=lam]').value;
+  const lasso = el.querySelector('[name=tipo]').checked;
+  el.querySelector('.val').textContent = lam.toFixed(2);
+
+  const sol = lasso
+    ? TOLS.map(t => Math.sign(t)*Math.max(Math.abs(t)-lam, 0))
+    : TOLS.map(t => t/(1+lam));
+  const t = lasso ? Math.abs(sol[0])+Math.abs(sol[1]) : Math.hypot(sol[0],sol[1]);
+
+  // ---- panel izquierdo: plano de parámetros, con escala igual en ambos ejes ----
+  const W1=Math.round(w*0.50), m={i:38,d:16,t:14,b:38}, R=2.15;
+  const lado = Math.min(W1-m.i-m.d, h-m.t-m.b);
+  const ox = m.i + (W1-m.i-m.d-lado)/2, oy = m.t + (h-m.t-m.b-lado)/2;
+  const esc = lado/(2*R);                       // mismos px por unidad en x e y
+  const cxp = v => ox + (v+R)*esc;
+  const cyp = v => oy + lado - (v+R)*esc;
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(ox,cyp(0)); g.lineTo(ox+lado,cyp(0));
+  g.moveTo(cxp(0),oy); g.lineTo(cxp(0),oy+lado); g.stroke();
+  // curvas de nivel de la suma de cuadrados: círculos centrados en la solución sin penalizar
+  g.strokeStyle=C.gris; g.lineWidth=1.1; g.globalAlpha=.5;
+  for (const r of [0.3,0.6,0.9,1.2,1.5]) {
+    g.beginPath();
+    for (let k=0;k<=72;k++){ const th=k/72*2*Math.PI, X=TOLS[0]+r*Math.cos(th), Y=TOLS[1]+r*Math.sin(th);
+      k?g.lineTo(cxp(X),cyp(Y)):g.moveTo(cxp(X),cyp(Y)); }
+    g.closePath(); g.stroke();
+  }
+  g.globalAlpha=1;
+  // se dibujan ambas regiones: la activa marcada y la otra atenuada, para que
+  // el contraste entre el círculo y el rombo esté a la vista sin cambiar el control
+  const otra = lasso ? TOLS.map(v=>v/(1+lam)) : TOLS.map(v=>Math.sign(v)*Math.max(Math.abs(v)-lam,0));
+  const t_otra = lasso ? Math.hypot(otra[0],otra[1]) : Math.abs(otra[0])+Math.abs(otra[1]);
+  const rombo = (r) => { g.moveTo(cxp(r),cyp(0)); g.lineTo(cxp(0),cyp(r));
+                         g.lineTo(cxp(-r),cyp(0)); g.lineTo(cxp(0),cyp(-r)); g.closePath(); };
+  const circulo = (r) => { for (let k=0;k<=72;k++){ const th=k/72*2*Math.PI;
+    k?g.lineTo(cxp(r*Math.cos(th)),cyp(r*Math.sin(th))):g.moveTo(cxp(r*Math.cos(th)),cyp(r*Math.sin(th))); } g.closePath(); };
+  // primero la inactiva
+  g.save(); g.globalAlpha=.35; g.setLineDash([6,5]);
+  g.strokeStyle=lasso?C.azul:C.naranjo; g.lineWidth=2; g.beginPath();
+  lasso ? circulo(t_otra) : rombo(t_otra); g.stroke();
+  g.fillStyle=lasso?C.azul:C.naranjo;
+  g.beginPath(); g.arc(cxp(otra[0]),cyp(otra[1]),5,0,7); g.fill(); g.restore();
+  // y encima la activa
+  g.strokeStyle=lasso?C.naranjo:C.azul; g.lineWidth=3; g.beginPath();
+  lasso ? rombo(t) : circulo(t); g.stroke();
+  // la curva de nivel que efectivamente toca la región: ahí está la tangencia
+  const rt = Math.hypot(TOLS[0]-sol[0], TOLS[1]-sol[1]);
+  g.strokeStyle=C.verde; g.lineWidth=2.4; g.beginPath();
+  for (let k=0;k<=72;k++){ const th=k/72*2*Math.PI, X=TOLS[0]+rt*Math.cos(th), Y=TOLS[1]+rt*Math.sin(th);
+    k?g.lineTo(cxp(X),cyp(Y)):g.moveTo(cxp(X),cyp(Y)); }
+  g.closePath(); g.stroke();
+  g.fillStyle=C.gris; g.beginPath(); g.arc(cxp(TOLS[0]),cyp(TOLS[1]),5,0,7); g.fill();
+  g.fillStyle=C.texto; g.font='13px Helvetica, Arial'; g.textAlign='left';
+  g.fillText('sin penalizar', cxp(TOLS[0])+9, cyp(TOLS[1])-7);
+  g.fillStyle=lasso?C.naranjo:C.azul; g.beginPath(); g.arc(cxp(sol[0]),cyp(sol[1]),8,0,7); g.fill();
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('θ₁', ox+lado/2, oy+lado+26);
+  g.save(); g.translate(ox-22, oy+lado/2); g.rotate(-Math.PI/2); g.fillText('θ₂',0,0); g.restore();
+  // leyenda: qué es cada familia de curvas
+  const leyY=oy+6; g.textAlign='left'; g.font='12.5px Helvetica, Arial';
+  g.strokeStyle=C.gris; g.lineWidth=1.4; g.globalAlpha=.7;
+  g.beginPath(); g.moveTo(ox+4,leyY); g.lineTo(ox+26,leyY); g.stroke(); g.globalAlpha=1;
+  g.fillStyle=C.texto; g.fillText('curvas de nivel del riesgo empírico', ox+32, leyY+4);
+  g.strokeStyle=C.verde; g.lineWidth=2.4;
+  g.beginPath(); g.moveTo(ox+4,leyY+20); g.lineTo(ox+26,leyY+20); g.stroke();
+  g.fillText('la que toca la región: ahí está la solución', ox+32, leyY+24);
+  g.strokeStyle=lasso?C.naranjo:C.azul; g.lineWidth=2.6;
+  g.beginPath(); g.moveTo(ox+4,leyY+40); g.lineTo(ox+26,leyY+40); g.stroke();
+  g.fillText(lasso?'‖θ‖₁ ≤ t : el rombo':'‖θ‖₂ ≤ t : el círculo', ox+32, leyY+44);
+
+  // ---- panel derecho: trayectoria de los coeficientes ----
+  const X0=Math.round(w*0.56), md={d:14,t:26,b:38};
+  const lx=v=>X0+v/1.8*(w-X0-md.d), ly=v=>h-md.b-v/1.9*(h-md.b-md.t);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(X0,h-md.b); g.lineTo(w-md.d,h-md.b);
+  g.moveTo(X0,h-md.b); g.lineTo(X0,md.t); g.stroke();
+  for (let j=0;j<2;j++){
+    g.strokeStyle=j?C.verde:(lasso?C.naranjo:C.azul); g.lineWidth=3; g.beginPath();
+    for (let k=0;k<=90;k++){
+      const L=k*1.8/90;
+      const v = lasso ? Math.sign(TOLS[j])*Math.max(Math.abs(TOLS[j])-L,0) : TOLS[j]/(1+L);
+      k?g.lineTo(lx(L),ly(v)):g.moveTo(lx(L),ly(v));
+    }
+    g.stroke();
+    g.fillStyle=j?C.verde:(lasso?C.naranjo:C.azul);
+    g.beginPath(); g.arc(lx(lam),ly(sol[j]),6,0,7); g.fill();
+  }
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('λ',(X0+w-md.d)/2,h-8);
+  g.font='15px Helvetica, Arial'; g.fillText('valor de cada coeficiente',(X0+w-md.d)/2,17);
+
+  const cero = sol.some(v => v === 0);
+  el.querySelector('.lect').innerHTML =
+    `<b>${lasso?'lasso, rombo':'ridge, círculo'}</b>: θ = [${sol[0].toFixed(3)}, ${sol[1].toFixed(3)}]` +
+    (cero ? ' &nbsp;·&nbsp; <b>un coeficiente es exactamente cero</b>' : ' &nbsp;·&nbsp; ambos encogen, ninguno se anula') +
+    ` &nbsp;&nbsp;|&nbsp;&nbsp; ${lasso?'ridge':'lasso'} en línea punteada: θ = [${otra[0].toFixed(3)}, ${otra[1].toFixed(3)}]`;
+};
+</script>
+<script>
+// ======== vertical contra perpendicular: dos criterios, dos rectas ========
+const VP_X=[0.6,1.1,1.7,2.0,2.6,3.1,3.5,4.0,4.6,5.0,5.5,6.1,6.6,7.2,7.7,8.3];
+const VP_Y=[2.4,1.5,3.3,2.2,3.9,2.8,4.6,3.4,5.3,4.1,5.9,4.7,6.6,5.4,7.3,6.0];
+VIZ.vp = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const n=VP_X.length;
+  const mx=VP_X.reduce((a,b)=>a+b,0)/n, my=VP_Y.reduce((a,b)=>a+b,0)/n;
+  // mínimos cuadrados ordinarios: minimiza distancias verticales
+  let sxy=0,sxx=0,syy=0;
+  for(let i=0;i<n;i++){ const dx=VP_X[i]-mx, dy=VP_Y[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
+  const aV=sxy/sxx, bV=my-aV*mx;
+  // mínimos cuadrados totales: minimiza distancias perpendiculares
+  // (dirección del primer componente principal de los datos centrados)
+  const th=0.5*Math.atan2(2*sxy, sxx-syy);
+  const aP=Math.tan(th), bP=my-aP*mx;
+
+  const pan=(x0,x1,a,b,perp,tit,col)=>{
+    const m={i:26,d:16,t:30,b:34};
+    const X0=x0+m.i, X1=x1-m.d;
+    // misma cantidad de píxeles por unidad en ambos ejes: sin eso los segmentos
+    // perpendiculares no se ven perpendiculares y el gráfico enseñaría lo contrario
+    const esc=(X1-X0)/9, alto=h-m.b-m.t, rangoY=alto/esc, y0=4.4-rangoY/2;
+    const px=v=>X0+v*esc, py=v=>h-m.b-(v-y0)*esc;
+    g.strokeStyle=C.eje; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(X0,h-m.b); g.lineTo(X1,h-m.b);
+    g.moveTo(X0,h-m.b); g.lineTo(X0,m.t); g.stroke();
+    // los segmentos que cada criterio suma
+    g.strokeStyle=C.naranjo; g.lineWidth=2; g.globalAlpha=.85;
+    for(let i=0;i<n;i++){
+      const X=VP_X[i], Y=VP_Y[i];
+      let Xp, Yp;
+      if(!perp){ Xp=X; Yp=a*X+b; }
+      else { const t=(X + a*(Y-b))/(1+a*a); Xp=t; Yp=a*t+b; }
+      g.beginPath(); g.moveTo(px(X),py(Y)); g.lineTo(px(Xp),py(Yp)); g.stroke();
+    }
+    g.globalAlpha=1;
+    g.strokeStyle=col; g.lineWidth=3.4;
+    g.beginPath(); g.moveTo(px(0),py(b)); g.lineTo(px(9),py(a*9+b)); g.stroke();
+    g.fillStyle=C.dato;
+    for(let i=0;i<n;i++){ g.beginPath(); g.arc(px(VP_X[i]),py(VP_Y[i]),4.6,0,7); g.fill(); }
+    g.fillStyle=C.texto; g.font='bold 17px Helvetica, Arial'; g.textAlign='center';
+    g.fillText(tit,(X0+X1)/2,20);
+    g.font='15px Helvetica, Arial';
+    g.fillText(perp?'distancia geométrica al punto':'error de predicción de y',(X0+X1)/2,h-8);
+  };
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  pan(0, w/2-10, aV, bV, false, 'vertical', C.azul);
+  g.strokeStyle=C.eje; g.lineWidth=1; g.globalAlpha=.5;
+  g.beginPath(); g.moveTo(w/2,26); g.lineTo(w/2,h-26); g.stroke(); g.globalAlpha=1;
+  pan(w/2+10, w, aP, bP, true, 'perpendicular', C.verde);
+  el.querySelector('.lect').innerHTML =
+    `pendiente ajustada: vertical ${aV.toFixed(3)} &nbsp;·&nbsp; perpendicular ${aP.toFixed(3)}` +
+    ` &nbsp;·&nbsp; criterios distintos, rectas distintas`;
+};
+</script>
+<script>
+// ======== curvas de nivel reales y trayectoria real del descenso ========
+function eig2(a,b,c){                       // descomposición de [[a,b],[b,c]]
+  const tr=a+c, det=a*c-b*b, d=Math.sqrt(Math.max(tr*tr-4*det,0));
+  const l1=(tr-d)/2, l2=(tr+d)/2;
+  let v1,v2;
+  if (Math.abs(b) > 1e-12) { v1=[b, l1-a]; v2=[b, l2-a]; }
+  else { v1=[1,0]; v2=[0,1]; }
+  const n1=Math.hypot(v1[0],v1[1]), n2=Math.hypot(v2[0],v2[1]);
+  return {l1, l2, v1:[v1[0]/n1, v1[1]/n1], v2:[v2[0]/n2, v2[1]/n2]};
+}
+VIZ.cond = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const pasos = +el.querySelector('[name=it]').value;
+  const std = el.querySelector('[name=e]').checked;
+  el.querySelector('.val').textContent = pasos;
+
+  const n=XD.length;
+  const xs = std ? XD.map(v=>(v-MX)/SX) : XD;
+  // Hessiano del riesgo empírico y solución exacta
+  let s1=0,s2=0,t0=0,t1=0;
+  for (let i=0;i<n;i++){ s1+=xs[i]; s2+=xs[i]*xs[i]; t0+=YD[i]; t1+=xs[i]*YD[i]; }
+  const H=[1, s1/n, s2/n];                 // [[H00,H01],[H01,H11]]
+  const det=H[0]*H[2]-H[1]*H[1];
+  const opt=[(H[2]*t0/n - H[1]*t1/n)/det, (H[0]*t1/n - H[1]*t0/n)/det];
+  const E=eig2(H[0],H[1],H[2]);
+  const cond=E.l2/E.l1;
+
+  // trayectoria: gradiente = H(θ − θ*); el paso se expresa como múltiplo de 1/λmax,
+  // que es donde aparece el zigzag: por sobre 2/λmax el método diverge
+  const mult=+el.querySelector('[name=a]').value;
+  el.querySelectorAll('.val')[1].textContent = mult.toFixed(2);
+  const alfa=mult/E.l2;
+  const ini=[opt[0] + 2.3*E.v1[0]/Math.sqrt(E.l1) + 1.6*E.v2[0]/Math.sqrt(E.l2),
+             opt[1] + 2.3*E.v1[1]/Math.sqrt(E.l1) + 1.6*E.v2[1]/Math.sqrt(E.l2)];
+  const cam=[ini.slice()];
+  let th=ini.slice();
+  for (let k=0;k<pasos;k++){
+    const d0=th[0]-opt[0], d1=th[1]-opt[1];
+    th=[th[0]-alfa*(H[0]*d0+H[1]*d1), th[1]-alfa*(H[1]*d0+H[2]*d1)];
+    cam.push(th.slice());
+  }
+
+  // vista: encuadra la elipse mayor con la misma escala en ambos ejes
+  const rmax=2.6;
+  let ex=0, ey=0;
+  for (let k=0;k<64;k++){ const t=k/64*2*Math.PI;
+    const px=rmax*(Math.cos(t)*E.v1[0]/Math.sqrt(E.l1) + Math.sin(t)*E.v2[0]/Math.sqrt(E.l2));
+    const py=rmax*(Math.cos(t)*E.v1[1]/Math.sqrt(E.l1) + Math.sin(t)*E.v2[1]/Math.sqrt(E.l2));
+    ex=Math.max(ex,Math.abs(px)); ey=Math.max(ey,Math.abs(py)); }
+  const m={i:52,d:20,t:16,b:42};
+  for (const q of cam) { ex=Math.max(ex,Math.abs(q[0]-opt[0])); ey=Math.max(ey,Math.abs(q[1]-opt[1])); }
+  const escala=Math.min((w-m.i-m.d)/(2.2*ex), (h-m.t-m.b)/(2.2*ey));
+  const cx0=m.i+(w-m.i-m.d)/2, cy0=m.t+(h-m.t-m.b)/2;
+  const PX=v=>cx0+(v-opt[0])*escala, PY=v=>cy0-(v-opt[1])*escala;
+
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(m.i,h-m.b); g.lineTo(w-m.d,h-m.b);
+  g.moveTo(m.i,h-m.b); g.lineTo(m.i,m.t); g.stroke();
+  // curvas de nivel del riesgo empírico
+  g.strokeStyle=C.azul; g.lineWidth=1.4; g.globalAlpha=.55;
+  for (const r of [0.6,1.1,1.6,2.1,2.6]) {
+    g.beginPath();
+    for (let k=0;k<=90;k++){ const t=k/90*2*Math.PI;
+      const a=r*Math.cos(t)/Math.sqrt(E.l1), b=r*Math.sin(t)/Math.sqrt(E.l2);
+      const X=opt[0]+a*E.v1[0]+b*E.v2[0], Y=opt[1]+a*E.v1[1]+b*E.v2[1];
+      k?g.lineTo(PX(X),PY(Y)):g.moveTo(PX(X),PY(Y)); }
+    g.closePath(); g.stroke();
+  }
+  g.globalAlpha=1;
+  // trayectoria
+  g.strokeStyle=C.naranjo; g.lineWidth=2.4; g.beginPath();
+  cam.forEach((q,k)=>k?g.lineTo(PX(q[0]),PY(q[1])):g.moveTo(PX(q[0]),PY(q[1])));
+  g.stroke();
+  g.fillStyle=C.naranjo;
+  cam.forEach(q=>{ g.beginPath(); g.arc(PX(q[0]),PY(q[1]),2.6,0,7); g.fill(); });
+  g.fillStyle=C.verde; g.beginPath(); g.arc(PX(opt[0]),PY(opt[1]),7,0,7); g.fill();
+  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('θ₀  (intercepto)',(m.i+w-m.d)/2,h-10);
+  g.save(); g.translate(18,(m.t+h-m.b)/2); g.rotate(-Math.PI/2);
+  g.fillText('θ₁  (pendiente)',0,0); g.restore();
+
+  const fin=cam[cam.length-1];
+  const err=100*Math.hypot(fin[0]-opt[0],fin[1]-opt[1])/Math.hypot(opt[0],opt[1]);
+  el.querySelector('.lect').innerHTML =
+    `${std?'estandarizada':'sin estandarizar'} &nbsp;·&nbsp; número de condición ${cond.toFixed(2)}` +
+    ` &nbsp;·&nbsp; razón de ejes de la elipse ${Math.sqrt(cond).toFixed(1)} a 1` +
+    ` &nbsp;·&nbsp; paso = ${mult.toFixed(2)}/λ<sub>máx</sub>` +
+    (mult >= 2 ? ' &nbsp;·&nbsp; <b>por sobre 2/λ<sub>máx</sub> el método diverge</b>'
+               : ` &nbsp;·&nbsp; tras ${pasos} pasos el error es ${err.toFixed(1)}%`);
+};
+</script>
+<script>
+// ======== efecto sobre los coeficientes, con ruido y tamaño de muestra ========
+function mulb2(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss2(r){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function datosReg(n, sigma){
+  const r=mulb2(7), X=[], Y=[];
+  for(let i=0;i<n;i++){
+    const x1=10*r(), x2=gauss2(r)*3;     // x2 es ruido puro: su coeficiente verdadero es 0
+    X.push([1,x1,x2]); Y.push(3+2*x1+sigma*gauss2(r));
+  }
+  return {X,Y};
+}
+function ajusteRidge(X,Y,lam){
+  const n=X.length, A=[[0,0,0],[0,0,0],[0,0,0]], b=[0,0,0];
+  for(let i=0;i<n;i++) for(let j=0;j<3;j++){ b[j]+=X[i][j]*Y[i];
+    for(let k=0;k<3;k++) A[j][k]+=X[i][j]*X[i][k]; }
+  for(let j=1;j<3;j++) A[j][j]+=lam*n;   // el intercepto no se penaliza
+  const M=A.map((row,i)=>row.concat([b[i]]));
+  for(let c=0;c<3;c++){
+    let p=c; for(let r2=c+1;r2<3;r2++) if(Math.abs(M[r2][c])>Math.abs(M[p][c])) p=r2;
+    [M[c],M[p]]=[M[p],M[c]];
+    for(let r2=0;r2<3;r2++){ if(r2===c) continue;
+      const f=M[r2][c]/M[c][c]; for(let k=c;k<4;k++) M[r2][k]-=f*M[c][k]; }
+  }
+  return [M[0][3]/M[0][0], M[1][3]/M[1][1], M[2][3]/M[2][2]];
+}
+function ajusteLasso(X,Y,lam){           // descenso por coordenadas con umbral suave
+  const n=X.length; let th=[0,0,0]; const nor=[0,0,0];
+  for(let j=0;j<3;j++){ let s=0; for(let i=0;i<n;i++) s+=X[i][j]*X[i][j]; nor[j]=s/n; }
+  const suave=(z,g)=>Math.sign(z)*Math.max(Math.abs(z)-g,0);
+  for(let t=0;t<300;t++) for(let j=0;j<3;j++){
+    let rho=0;
+    for(let i=0;i<n;i++){ let pred=0; for(let k=0;k<3;k++) if(k!==j) pred+=X[i][k]*th[k];
+      rho+=X[i][j]*(Y[i]-pred); }
+    rho/=n;
+    th[j] = j===0 ? rho/nor[j] : suave(rho,lam)/nor[j];
+  }
+  return th;
+}
+VIZ.efe = function(el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const {g,w,h,C} = vizSetup(cv);
+  const lam=+el.querySelector('[name=l]').value;
+  const nn =+el.querySelector('[name=n]').value;
+  const sg =+el.querySelector('[name=s]').value;
+  const lasso=el.querySelector('[name=tp]').checked;
+  const v=el.querySelectorAll('.val');
+  v[0].textContent=lam.toFixed(2); v[1].textContent=nn; v[2].textContent=sg.toFixed(1);
+
+  const {X,Y}=datosReg(nn,sg);
+  const th = lasso ? ajusteLasso(X,Y,lam) : ajusteRidge(X,Y,lam);
+  const th0 = lasso ? ajusteLasso(X,Y,0) : ajusteRidge(X,Y,0);
+
+  g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
+  // panel izquierdo: los datos y la recta ajustada
+  const W1=Math.round(w*0.50), m={i:46,d:16,t:18,b:38};
+  const px=v2=>m.i+v2/10*(W1-m.i-m.d), py=v2=>h-m.b-(v2+4)/34*(h-m.b-m.t);
+  g.strokeStyle=C.eje; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(m.i,h-m.b); g.lineTo(W1-m.d,h-m.b);
+  g.moveTo(m.i,h-m.b); g.lineTo(m.i,m.t); g.stroke();
+  g.fillStyle=C.dato;
+  for(let i=0;i<X.length;i++){ g.beginPath(); g.arc(px(X[i][1]),py(Y[i]),3.4,0,7); g.fill(); }
+  g.strokeStyle=C.gris; g.lineWidth=2; g.setLineDash([7,6]);
+  g.beginPath(); g.moveTo(px(0),py(3)); g.lineTo(px(10),py(23)); g.stroke(); g.setLineDash([]);
+  g.strokeStyle=lasso?C.naranjo:C.azul; g.lineWidth=3.2;
+  g.beginPath(); g.moveTo(px(0),py(th[0])); g.lineTo(px(10),py(th[0]+10*th[1])); g.stroke();
+  g.fillStyle=C.texto; g.font='15px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('x₁',(m.i+W1)/2,h-8);
+  g.font='13px Helvetica, Arial'; g.textAlign='left';
+  g.fillStyle=C.gris; g.fillText('recta verdadera', m.i+8, m.t+12);
+
+  // panel derecho: los tres coeficientes contra sus valores verdaderos
+  const X0=Math.round(w*0.58), md={d:16,t:26,b:38};
+  const nom=['θ₀  intercepto','θ₁  señal','θ₂  espuria'], ver=[3,2,0];
+  const alto=(h-md.t-md.b)/3;
+  const maxv=Math.max(4, ...th.map(Math.abs), ...th0.map(Math.abs));
+  const bx=v2=>X0+90+v2/maxv*(w-md.d-X0-160);
+  for(let j=0;j<3;j++){
+    const yb=md.t+j*alto+alto/2;
+    g.fillStyle=C.texto; g.font='13px Helvetica, Arial'; g.textAlign='right';
+    g.fillText(nom[j], X0+80, yb+4);
+    g.strokeStyle=C.eje; g.lineWidth=1;
+    g.beginPath(); g.moveTo(bx(0),yb-16); g.lineTo(bx(0),yb+16); g.stroke();
+    g.fillStyle=lasso?C.naranjo:C.azul;
+    g.fillRect(Math.min(bx(0),bx(th[j])), yb-9, Math.abs(bx(th[j])-bx(0)), 18);
+    g.strokeStyle=C.verde; g.lineWidth=2.4;
+    g.beginPath(); g.moveTo(bx(ver[j]),yb-13); g.lineTo(bx(ver[j]),yb+13); g.stroke();
+    g.fillStyle=C.texto; g.font='13px Helvetica, Arial'; g.textAlign='right';
+    g.fillText(th[j].toFixed(2), w-md.d-4, yb+4);
+  }
+  g.fillStyle=C.verde; g.font='12.5px Helvetica, Arial'; g.textAlign='center';
+  g.fillText('las marcas verdes son los valores verdaderos', (X0+w-md.d)/2, h-14);
+
+  el.querySelector('.lect').innerHTML =
+    `<b>${lasso?'lasso':'ridge'}</b> &nbsp;·&nbsp; θ = [${th.map(v2=>v2.toFixed(2)).join(', ')}]` +
+    ` &nbsp;·&nbsp; sin penalizar era [${th0.map(v2=>v2.toFixed(2)).join(', ')}]` +
+    (Math.abs(th[2]) < 1e-8 ? ' &nbsp;·&nbsp; <b>la característica espuria fue eliminada</b>' : '');
+};
+</script>
+
+
+
+
+
+</body>
+</html>

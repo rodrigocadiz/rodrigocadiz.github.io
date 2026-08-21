@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clasificación bayesiana</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Clasificación bayesiana</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Otro clasificador generativo, con un atajo brutal</h2>
+<ul>
+<li>Modelar cómo se ve cada clase es caro. Este método lo hace posible suponiendo algo que casi nunca es cierto.</li>
+</ul>
+</section>
+
+<section>
+<h2>Y funciona de todos modos</h2>
+<ul>
+<li>Lleva décadas siendo una línea base difícil de superar, pese a que nadie cree su supuesto central.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de fondo</div>
+<h2>Bayes convierte lo que se puede estimar en lo que se necesita</h2>
+$$p(y \mid x) = \frac{p(x \mid y)\, p(y)}{p(x)}$$
+<p class="note">En palabras: $p(y)$ es la frecuencia de cada clase, $p(x \mid y)$ describe cómo se ven sus datos y $p(x)$ solo normaliza. Como no depende de la clase, para decidir basta comparar los numeradores.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de fondo</div>
+<h2>El problema está en el término del medio</h2>
+<ul>
+<li>Con $d$ características binarias, describir $p(x \mid y)$ en general exige del orden de $2^d$ probabilidades.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de fondo</div>
+<h2>Con veinte características eso ya es un millón</h2>
+<ul>
+<li>Y ningún conjunto de datos alcanza para estimar un millón de números por clase. El enfoque generativo se cae solo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El problema de fondo</div>
+<h2>Salvo que se imponga una restricción muy fuerte</h2>
+<ul>
+<li>Y la más fuerte disponible es suponer que las características no se hablan entre sí.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto naive</div>
+<h2>Conocida la clase, las características son independientes</h2>
+$$p(x_1, \dots, x_d \mid y) = \prod_{j=1}^d p(x_j \mid y)$$
+<p class="note">En palabras: saber que aparece la palabra "precio" no cambia la probabilidad de que aparezca "oferta", siempre que ya se sepa si el correo es spam.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto naive</div>
+<h2>Lo que el supuesto afirma, dibujado</h2>
+<ul>
+<li>La clase explica todo; entre las características no queda ninguna conexión.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 265" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-nb" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L8,2.5 z" fill="#555"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <text x="185" y="52" font-size="13" font-weight="bold">Lo que Naive Bayes supone</text>
+    <text x="185" y="70" font-size="11.5" font-style="italic" fill="#666">la clase explica todo; nada más las conecta</text>
+    <circle cx="185" cy="100" r="21" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.8"/>
+    <text x="185" y="105" font-size="14" font-weight="bold">y</text>
+    <path d="M165,122 L61,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="65" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="65" y="193" font-size="12.5">x₁</text>
+    <path d="M178,122 L143,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="145" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="145" y="193" font-size="12.5">x₂</text>
+    <path d="M191,122 L226,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="225" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="225" y="193" font-size="12.5">x₃</text>
+    <path d="M204,122 L308,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="305" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="305" y="193" font-size="12.5">x₄</text>
+    <text x="565" y="52" font-size="13" font-weight="bold">Lo que suele ocurrir</text>
+    <text x="565" y="70" font-size="11.5" font-style="italic" fill="#666">las características siguen correlacionadas entre sí</text>
+    <circle cx="565" cy="100" r="21" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.8"/>
+    <text x="565" y="105" font-size="14" font-weight="bold">y</text>
+    <path d="M545,122 L441,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="445" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="445" y="193" font-size="12.5">x₁</text>
+    <path d="M558,122 L523,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="525" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="525" y="193" font-size="12.5">x₂</text>
+    <path d="M571,122 L606,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="605" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="605" y="193" font-size="12.5">x₃</text>
+    <path d="M584,122 L688,168" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#ar-nb)"/>
+    <circle cx="685" cy="188" r="19" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="685" y="193" font-size="12.5">x₄</text>
+    <path d="M445,207 Q485,242 525,207" stroke="#c0653a" stroke-width="2" fill="none" stroke-dasharray="6,4"/>
+    <path d="M605,207 Q645,242 685,207" stroke="#c0653a" stroke-width="2" fill="none" stroke-dasharray="6,4"/>
+    <line x1="380" y1="40" x2="380" y2="252" stroke="#ccc" stroke-width="1"/>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto naive</div>
+<h2>El conteo de parámetros se derrumba</h2>
+<ul>
+<li>De $2^d$ por clase a $d$ por clase. Con veinte características, de un millón a veinte.</li>
+</ul>
+<p class="note">Ese es todo el aporte del método: convierte un problema imposible en uno trivial, al precio de una mentira.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto naive</div>
+<h2>Y estimar cada término es contar</h2>
+$$\phi_{j \mid y} = \frac{\text{ejemplos de clase } y \text{ con } x_j = 1}{\text{ejemplos de clase } y}$$
+<p class="note">En palabras: máxima verosimilitud aquí no requiere optimizar nada. Se cuentan frecuencias y se dividen.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto naive</div>
+<h2>La decisión suma logaritmos</h2>
+$$\hat{y} = \arg\max_y \Big[\log p(y) + \sum_{j=1}^d \log p(x_j \mid y)\Big]$$
+<p class="note">En palabras: se pasa a logaritmos porque multiplicar cientos de probabilidades pequeñas produce números que ningún computador representa bien.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto naive</div>
+<h2>Pero hay una trampa numérica antes de eso</h2>
+<ul>
+<li>Si una característica nunca apareció en una clase durante el entrenamiento, su probabilidad estimada es cero.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Suavizado de Laplace</div>
+<h2>Un cero destruye toda la evidencia restante</h2>
+<ul>
+<li>El producto se anula completo. Una palabra nunca vista basta para descartar una clase, por informativas que sean las demás.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Suavizado de Laplace</div>
+<h2>La solución es contar como si ya se hubiera visto todo una vez</h2>
+$$\phi_{j \mid y} = \frac{1 + \text{conteo}}{k + \text{total de la clase}}$$
+<p class="note">En palabras: se suma un pseudo-conteo a cada valor posible, con $k$ el número de valores que la característica puede tomar. Ninguna probabilidad queda en cero y siguen sumando uno.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Suavizado de Laplace</div>
+<h2>No es un parche: es un prior</h2>
+<ul>
+<li>Visto desde el enfoque bayesiano, el suavizado equivale a un estimador MAP con un prior que reparte un conteo sobre cada valor.</li>
+</ul>
+<p class="note">La misma correspondencia entre prior y regularización que aparece al comparar máxima verosimilitud con el máximo a posteriori.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Variantes</div>
+<h2>La forma de $p(x_j \mid y)$ depende del tipo de dato</h2>
+<ul>
+<li>Binaria, de conteo o continua. Cambia la distribución, no el esquema.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Variantes</div>
+<h2>Bernoulli para presencia o ausencia</h2>
+<ul>
+<li>¿Aparece la palabra "gratis" en el correo? Sí o no.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Variantes</div>
+<h2>Multinomial para frecuencias</h2>
+<ul>
+<li>¿Cuántas veces aparece "oferta"? Es la variante estándar en clasificación de texto, donde el conteo importa.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Variantes</div>
+<h2>Gaussiana para variables continuas</h2>
+$$x_j \mid y \;\sim\; \mathcal{N}(\mu_{jy}, \sigma_{jy}^2)$$
+<p class="note">En palabras: una media y una varianza por característica y por clase. Nótese el subíndice doble: la varianza también depende de la clase.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Variantes</div>
+<h2>Y ese subíndice tiene una consecuencia que suele pasarse por alto</h2>
+<ul>
+<li>Con varianzas propias de cada clase, la frontera de Naive Bayes **no** es lineal.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Variantes</div>
+<h2>El logaritmo de una normal deja un término cuadrático</h2>
+<ul>
+<li>Su coeficiente es $-1/(2\sigma_{jy}^2)$. Si las varianzas difieren entre clases, no se cancela al restar.</li>
+</ul>
+<p class="note">La frontera es lineal con características binarias o de conteo, y también con continuas si se impone la misma varianza a todas las clases. Con varianzas libres es una cónica.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Dónde encaja</div>
+<h2>Independencia entre normales significa covarianza diagonal</h2>
+<ul>
+<li>De modo que el clasificador bayesiano gaussiano es exactamente el análisis discriminante cuadrático con las covarianzas restringidas a su diagonal.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Dónde encaja</div>
+<h2>Los tres modelos forman una escala</h2>
+<ul>
+<li>Naive Bayes estima $d$ dispersiones por clase; QDA una matriz completa por clase; LDA una sola matriz compartida.</li>
+</ul>
+<p class="note">Ordenados por cuánta estructura de covarianza se permiten estimar. Ninguno domina a los otros.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Dónde encaja</div>
+<h2>La pregunta nunca es cuál es más correcto</h2>
+<ul>
+<li>Es cuántos datos hay por clase frente a cuántos parámetros exige cada uno.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Por qué sobrevive</div>
+<h2>El supuesto está claramente violado en datos reales</h2>
+<ul>
+<li>En los datos clínicos de Pima, el pliegue cutáneo y el índice de masa corporal correlacionan 0.66.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Por qué sobrevive</div>
+<h2>Y el modelo equivocado gana igual</h2>
+<ul>
+<li>Naive Bayes acierta 0.767 y el gaussiano de covarianza plena, que no hace el supuesto falso, 0.667.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Por qué sobrevive</div>
+<h2>La explicación no está en los supuestos sino en el conteo</h2>
+<ul>
+<li>14 parámetros contra 56, estimados con 140 ejemplos repartidos en dos clases.</li>
+</ul>
+<p class="note">Las covarianzas estimadas con tan pocos datos son tan ruidosas que introducen más error del que corrigen. Sesgo alto y varianza baja gana cuando los datos escasean.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Por qué sobrevive</div>
+<h2>Además, la decisión tolera lo que las probabilidades no</h2>
+<ul>
+<li>Multiplicar evidencia correlacionada cuenta lo mismo varias veces y descalibra las probabilidades hacia 0 y 1.</li>
+</ul>
+<p class="note">Pero la clase predicha es el argmax, y el argmax solo depende de cuál probabilidad es mayor, no de cuánto. El orden sobrevive aunque los valores no.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Por qué sobrevive</div>
+<h2>Clasifica bien y estima probabilidades mal</h2>
+<ul>
+<li>Esa distinción importa apenas se necesita una probabilidad y no una etiqueta.</li>
+</ul>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>El supuesto de independencia es casi siempre falso, y aun así gana: con datos escasos, un modelo sesgado y estable vence a uno correcto y ruidoso.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

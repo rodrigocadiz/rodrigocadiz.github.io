@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Árboles de decisión y métodos ensamblados</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Árboles de decisión y métodos ensamblados</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Los modelos paramétricos ajustan una fórmula</h2>
+<ul>
+<li>Una recta, una sigmoide, una gaussiana. Este no ajusta ninguna: parte el espacio en pedazos y predice una constante en cada uno.</li>
+</ul>
+</section>
+
+<section>
+<h2>Y eso lo hace radicalmente distinto</h2>
+<ul>
+<li>No necesita que las características estén en escalas comparables, admite variables categóricas sin transformarlas y se puede leer como una lista de reglas.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estructura</div>
+<h2>Una secuencia de preguntas sobre una característica a la vez</h2>
+<ul>
+<li>Cada nodo interno compara una característica con un umbral; cada hoja guarda una predicción constante.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <rect x="285" y="44" width="190" height="42" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="380" y="65" font-size="13">¿x₂ ≤ 2.4?</text>
+    <path d="M340,86 L190,126" stroke="#555" stroke-width="1.5" fill="none"/>
+    <text x="249" y="104" font-size="11.5" font-style="italic" fill="#555">sí</text>
+    <path d="M420,86 L570,126" stroke="#555" stroke-width="1.5" fill="none"/>
+    <text x="511" y="104" font-size="11.5" font-style="italic" fill="#555">no</text>
+    <rect x="115" y="126" width="150" height="42" rx="7" fill="#dbe9f4" stroke="#33607f" stroke-width="1.6"/>
+    <text x="190" y="143" font-size="13">clase 1</text>
+    <text x="190" y="158" font-size="10.5" fill="#666">hoja</text>
+    <rect x="480" y="126" width="180" height="42" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
+    <text x="570" y="147" font-size="13">¿x₁ ≤ 2.6?</text>
+    <path d="M530,168 L450,208" stroke="#555" stroke-width="1.5" fill="none"/>
+    <text x="474" y="186" font-size="11.5" font-style="italic" fill="#555">sí</text>
+    <path d="M610,168 L690,208" stroke="#555" stroke-width="1.5" fill="none"/>
+    <text x="666" y="186" font-size="11.5" font-style="italic" fill="#555">no</text>
+    <rect x="375" y="208" width="150" height="42" rx="7" fill="#dcecdc" stroke="#2f6b33" stroke-width="1.6"/>
+    <text x="450" y="225" font-size="13">clase 3</text>
+    <text x="450" y="240" font-size="10.5" fill="#666">hoja</text>
+    <rect x="625" y="208" width="130" height="42" rx="7" fill="#fbe0d2" stroke="#a06a1f" stroke-width="1.6"/>
+    <text x="690" y="225" font-size="13">clase 2</text>
+    <text x="690" y="240" font-size="10.5" fill="#666">hoja</text>
+    <text x="200" y="216" font-size="12" text-anchor="middle" fill="#444">Cada camino desde la raíz</text>
+    <text x="200" y="234" font-size="12" text-anchor="middle" fill="#444">hasta una hoja define una</text>
+    <text x="200" y="252" font-size="12" text-anchor="middle" fill="#444">región rectangular del espacio.</text>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estructura</div>
+<h2>El modelo es una función constante por tramos</h2>
+$$h(x) = \sum_{\ell=1}^{L} c_\ell \, \mathbf{1}\{x \in R_\ell\}$$
+<p class="note">En palabras: las hojas definen regiones $R_\ell$ que cubren todo el espacio sin solaparse, y dentro de cada una la predicción no cambia.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estructura</div>
+<h2>Las regiones son siempre rectángulos alineados con los ejes</h2>
+<ul>
+<li>Porque cada pregunta involucra una sola característica. Un árbol no puede trazar una diagonal.</li>
+</ul>
+<p class="note">Para aproximar una frontera oblicua necesita una escalera de muchos cortes, y ahí está su principal debilidad frente a los modelos lineales.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estructura</div>
+<h2>Falta decir cómo se eligen esas preguntas</h2>
+<ul>
+<li>El espacio de árboles posibles es enorme; encontrar el óptimo es intratable.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>La estrategia es codiciosa: la mejor división ahora, sin mirar adelante</h2>
+<ul>
+<li>En cada nodo se prueban todos los umbrales de todas las características y se elige el que más reduce la impureza.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>Impureza mide cuán mezcladas están las clases en un nodo</h2>
+$$G(p) = 1 - \sum_k p_k^2 \qquad\text{o}\qquad H(p) = -\sum_k p_k \log p_k$$
+<p class="note">En palabras: Gini y entropía valen cero cuando el nodo es puro y crecen a medida que la distribución de clases se mezcla. $p_k$ es la proporción de la clase $k$ en el nodo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>Y la ganancia es cuánto baja al dividir</h2>
+$$\text{Ganancia} = I(S) - \frac{|S_{\text{izq}}|}{|S|} I(S_{\text{izq}}) - \frac{|S_{\text{der}}|}{|S|} I(S_{\text{der}})$$
+<p class="note">En palabras: la impureza del padre menos el promedio ponderado de la de sus hijos. Ponderar por tamaño evita premiar divisiones que aíslan un solo punto.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>¿Por qué no usar directamente el error de clasificación?</h2>
+<ul>
+<li>Parece el criterio natural, y funciona peor. La razón es geométrica: es lineal por tramos, mientras que Gini y la entropía son estrictamente cóncavas.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>Puede asignar ganancia cero a una división informativa</h2>
+<ul>
+<li>Con 40 y 40 ejemplos, una división en 30/10 y 10/30 no cambia la clase mayoritaria en ninguna parte: el error no se mueve.</li>
+</ul>
+<p class="note">Gini y la entropía sí registran la mejora, porque miden la distribución completa y no solo cuál clase gana. Por eso se dividen con ellas y se poda con el error.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>En regresión el criterio es la varianza dentro del nodo</h2>
+<ul>
+<li>Y la hoja predice la media si se optimiza el error cuadrático, o la mediana si se optimiza el absoluto.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>Si nada lo detiene, el árbol crece hasta la pureza total</h2>
+<ul>
+<li>Una hoja por ejemplo, error de entrenamiento cero y ninguna capacidad de generalizar.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Poda</div>
+<h2>Hay dos maneras de frenarlo</h2>
+<ul>
+<li>Poner límites antes de crecer, o dejarlo crecer y recortarlo después.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Poda</div>
+<h2>Los límites previos son los hiperparámetros habituales</h2>
+<ul>
+<li>Profundidad máxima, mínimo de ejemplos para dividir, mínimo por hoja, ganancia mínima exigida.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Poda</div>
+<h2>La poda posterior penaliza el número de hojas</h2>
+$$R_\alpha(T) = R(T) + \alpha L$$
+<p class="note">En palabras: al riesgo del árbol se le suma una penalización proporcional a su cantidad de hojas $L$. Es la misma idea de regularización de siempre, con la complejidad medida en hojas en vez de en norma de los parámetros.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Poda</div>
+<h2>Y $\alpha$ se elige por validación</h2>
+<ul>
+<li>Valores pequeños permiten árboles grandes; valores altos los reducen. El mismo procedimiento que fija $\lambda$ en los modelos lineales.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El problema de fondo</div>
+<h2>Un árbol tiene poco sesgo y muchísima varianza</h2>
+<ul>
+<li>Puede representar particiones arbitrariamente complejas, pero cambiar unos pocos datos produce un árbol completamente distinto.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El problema de fondo</div>
+<h2>La causa está en la codicia</h2>
+<ul>
+<li>Una división distinta cerca de la raíz cambia todo lo que cuelga debajo. Los errores no se corrigen: se propagan.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · El problema de fondo</div>
+<h2>Y contra la varianza alta hay un remedio conocido</h2>
+<ul>
+<li>Promediar. Si se pueden conseguir muchos árboles que se equivoquen de maneras distintas, el promedio será más estable que cualquiera de ellos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>Se fabrica diversidad por dos vías</h2>
+<ul>
+<li>Cada árbol ve una muestra bootstrap distinta, y en cada división solo puede mirar un subconjunto aleatorio de características.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 285" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar-bg" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L8,2.5 z" fill="#555"/></marker></defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <rect x="20" y="105" width="112" height="56" rx="7" fill="#f0f0ea" stroke="#555" stroke-width="1.6"/>
+    <text x="76" y="130" font-size="12.5" font-weight="bold">Datos</text>
+    <text x="76" y="148" font-size="11" fill="#666">n ejemplos</text>
+    <path d="M136,133 L192,82" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <rect x="200" y="62" width="120" height="42" rx="6" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="260" y="80" font-size="12">muestra 1</text>
+    <text x="260" y="95" font-size="10" fill="#777">con reemplazo</text>
+    <path d="M324,83 L376,83" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <rect x="384" y="62" width="120" height="42" rx="6" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="444" y="80" font-size="12">árbol 1</text>
+    <text x="444" y="95" font-size="10" fill="#777">profundo, inestable</text>
+    <path d="M508,83 L570,133" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <path d="M136,133 L192,144" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <rect x="200" y="124" width="120" height="42" rx="6" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="260" y="142" font-size="12">muestra 2</text>
+    <text x="260" y="157" font-size="10" fill="#777">con reemplazo</text>
+    <path d="M324,145 L376,145" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <rect x="384" y="124" width="120" height="42" rx="6" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="444" y="142" font-size="12">árbol 2</text>
+    <text x="444" y="157" font-size="10" fill="#777">profundo, inestable</text>
+    <path d="M508,145 L570,133" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <path d="M136,133 L192,206" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <rect x="200" y="186" width="120" height="42" rx="6" fill="#fdf1e2" stroke="#a06a1f" stroke-width="1.5"/>
+    <text x="260" y="204" font-size="12">muestra 3</text>
+    <text x="260" y="219" font-size="10" fill="#777">con reemplazo</text>
+    <path d="M324,207 L376,207" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <rect x="384" y="186" width="120" height="42" rx="6" fill="#eef3f8" stroke="#33607f" stroke-width="1.5"/>
+    <text x="444" y="204" font-size="12">árbol 3</text>
+    <text x="444" y="219" font-size="10" fill="#777">profundo, inestable</text>
+    <path d="M508,207 L570,133" stroke="#555" stroke-width="1.4" fill="none" marker-end="url(#ar-bg)"/>
+    <text x="260" y="248" font-size="11.5" font-style="italic" fill="#666">≈ un tercio de los datos queda fuera de cada muestra</text>
+    <rect x="578" y="105" width="150" height="56" rx="7" fill="#dcecdc" stroke="#2f6b33" stroke-width="1.8"/>
+    <text x="653" y="128" font-size="12.5" font-weight="bold">Voto mayoritario</text>
+    <text x="653" y="147" font-size="11" fill="#666">o promedio</text>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>La segunda fuente es la menos obvia y la más importante</h2>
+<ul>
+<li>Sin ella todos los árboles elegirían la misma característica dominante en la raíz y quedarían muy parecidos.</li>
+</ul>
+<p class="note">Restringir las candidatas obliga a que árboles distintos exploren estructuras distintas, y solo entonces promediar sirve de algo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>El remuestreo deja fuera cerca de un tercio de los datos</h2>
+<ul>
+<li>Esos ejemplos no vistos permiten estimar el error de generalización sin apartar un conjunto de validación.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>Lo que se ve al promediar</h2>
+<ul>
+<li>Un árbol único alcanza 0.95 de acierto pero su partición está llena de franjas delgadas que persiguen puntos sueltos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>Con cincuenta árboles esas franjas desaparecen</h2>
+<ul>
+<li>El acierto sube a 0.986 y, sobre todo, la región se vuelve un bloque compacto: cada franja espuria estaba en un árbol y no en los demás.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>Y algo que conviene decir explícitamente</h2>
+<ul>
+<li>El bosque sigue sin poder trazar una diagonal. Promediar reduce varianza, no sesgo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>Agregar árboles nunca empeora</h2>
+<ul>
+<li>Cada uno se entrena de forma independiente, así que sumar términos al promedio solo puede estabilizarlo. El número de árboles no es un hiperparámetro delicado.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Bosques aleatorios</div>
+<h2>Existe otra forma de combinar árboles, con la propiedad opuesta</h2>
+<ul>
+<li>En vez de promediar muchos independientes, encadenarlos para que cada uno corrija al anterior.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Boosting</div>
+<h2>Cada árbol se ajusta a lo que el anterior dejó sin explicar</h2>
+$$F_m(x) = F_{m-1}(x) + \nu \, h_m(x), \qquad h_m \text{ ajustado a los residuos de } F_{m-1}$$
+<p class="note">En palabras: el modelo se construye por acumulación. La tasa $\nu$ decide cuánto se incorpora de cada nuevo árbol, y valores pequeños obligan a avanzar despacio.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Boosting</div>
+<h2>Los árboles son deliberadamente débiles</h2>
+<ul>
+<li>A menudo un solo corte. La potencia no viene de cada término sino de la suma de cientos de ellos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Boosting</div>
+<h2>Y ahora los términos no son independientes</h2>
+<ul>
+<li>Cada uno se define en función de los anteriores. Eso cambia por completo el efecto de agregar más.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Boosting</div>
+<h2>Con una ronda el modelo es un escalón; con veinticuatro, la curva</h2>
+<ul>
+<li>Con seiscientas se vuelve una escalera que persigue cada punto.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Boosting</div>
+<h2>El error de entrenamiento nunca deja de bajar</h2>
+<ul>
+<li>De 0.977 a 0.377. Siempre queda un residuo más que corregir.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Boosting</div>
+<h2>Pero el de prueba toca fondo y vuelve a subir</h2>
+<ul>
+<li>Mínimo de 0.610 en la ronda 24, y desde ahí sube hasta 0.670.</li>
+</ul>
+<p class="note">Esta es la diferencia de fondo con los bosques: ahí agregar árboles nunca empeora; aquí el número de rondas es un hiperparámetro que hay que elegir por validación, no maximizar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Boosting</div>
+<h2>Dos formas de combinar, dos comportamientos opuestos</h2>
+<ul>
+<li>Bagging reduce varianza y es indiferente al número de términos. Boosting reduce sesgo y sobreajusta si se insiste.</li>
+</ul>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>Un árbol solo es inestable; muchos árboles independientes se estabilizan al promediarse, y muchos árboles encadenados se vuelven precisos hasta que empiezan a memorizar.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>

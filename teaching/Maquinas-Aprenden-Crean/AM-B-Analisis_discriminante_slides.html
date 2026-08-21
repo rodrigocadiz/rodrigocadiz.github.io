@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis discriminante</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1 · PORTADA -->
+
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Análisis discriminante</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Hasta ahora, todos los clasificadores buscaban la frontera</h2>
+<ul>
+<li>La regresión logística estima directamente dónde separar, sin decir nada sobre cómo son los datos de cada clase.</li>
+</ul>
+</section>
+
+<section>
+<h2>Este capítulo invierte la pregunta</h2>
+<ul>
+<li>En vez de buscar la frontera, se modela cómo se genera cada clase. La frontera aparece después, como consecuencia.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El enfoque generativo</div>
+<h2>¿Y si en vez de separar, se describe cada clase?</h2>
+<ul>
+<li>Modelar $p(x \mid y)$: cómo se ven las flores de esta especie, cómo son los correos que sí son spam.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El enfoque generativo</div>
+<h2>El teorema de Bayes devuelve lo que interesa</h2>
+$$p(y \mid x) = \frac{p(x \mid y)\, p(y)}{p(x)}$$
+<p class="note">En palabras: si se sabe cómo se ve cada clase y con qué frecuencia aparece, la probabilidad de la clase dado el dato se obtiene invirtiendo con Bayes. No hay que buscarla, se deduce.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El enfoque generativo</div>
+<h2>Discriminativo y generativo, en una frase</h2>
+<ul>
+<li>Uno aprende dónde está la frontera; el otro aprende cómo son los datos, y de ahí saca la frontera.</li>
+</ul>
+<p class="note">El nombre del método confunde: modela la generación de los datos, que es la definición de generativo, pero su propósito es discriminar entre clases.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El enfoque generativo</div>
+<h2>La apuesta es fuerte y tiene un premio</h2>
+<ul>
+<li>Modelar $p(x \mid y)$ es más difícil que modelar $p(y \mid x)$: se pide más información. A cambio, con pocos datos rinde mejor.</li>
+</ul>
+<p class="note">Un supuesto fuerte y aproximadamente correcto vale más que ninguno cuando hay poca evidencia para estimar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · El enfoque generativo</div>
+<h2>Falta decir cómo se ve cada clase</h2>
+<ul>
+<li>El método toma su forma concreta al elegir una familia de distribuciones para $p(x \mid y)$.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto gaussiano</div>
+<h2>La elección por defecto: cada clase es una gaussiana</h2>
+$$x \mid y = k \;\sim\; \mathcal{N}(\mu_k, \Sigma_k)$$
+<p class="note">En palabras: los datos de cada clase forman una nube elipsoidal, con un centro $\mu_k$ y una forma $\Sigma_k$ que dice cuánto se dispersan y en qué direcciones.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto gaussiano</div>
+<h2>Y la clase se sortea antes de generar el dato</h2>
+$$y \sim \text{Categorical}(\pi_1, \dots, \pi_K), \qquad \sum_k \pi_k = 1$$
+<p class="note">En palabras: primero se decide de qué clase será el ejemplo, con probabilidad $\pi_k$, y recién entonces se lo genera de la gaussiana correspondiente. Ese es el modelo generativo completo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto gaussiano</div>
+<h2>Los parámetros se estiman contando y promediando</h2>
+<ul>
+<li>La proporción de cada clase, su media y su covarianza muestral. Máxima verosimilitud aquí no exige iterar.</li>
+</ul>
+$$\hat{\mu}_k = \frac{1}{n_k}\sum_{i: y^{(i)}=k} x^{(i)}, \qquad \hat{\Sigma}_k = \frac{1}{n_k}\sum_{i: y^{(i)}=k} (x^{(i)} - \hat{\mu}_k)(x^{(i)} - \hat{\mu}_k)^\top$$
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto gaussiano</div>
+<h2>Con eso ya se puede clasificar</h2>
+<ul>
+<li>Se evalúa cuán probable es el dato bajo cada clase, se pondera por la frecuencia de la clase y se elige la mayor.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · El supuesto gaussiano</div>
+<h2>Pero queda una decisión de diseño sin tomar</h2>
+<ul>
+<li>¿Cada clase tiene su propia forma $\Sigma_k$, o todas comparten una? De esa respuesta cuelga todo lo que sigue.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Lineal o cuadrático</div>
+<h2>La forma de la frontera la decide la covarianza</h2>
+<ul>
+<li>Con una covarianza común, recta. Con una por clase, curva.</li>
+</ul>
+<div class="svg-holder">
+<svg viewBox="0 0 760 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <text x="195" y="52" font-size="13" font-weight="bold">Covarianza compartida</text>
+    <text x="195" y="70" font-size="11.5" font-style="italic" fill="#666">misma forma y orientación en las dos clases</text>
+    <circle cx="119.4" cy="211.3" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="94.2" cy="217.2" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="104.8" cy="197.3" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="157.3" cy="183.5" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="114.0" cy="206.6" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="138.3" cy="188.0" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="121.8" cy="182.0" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="101.6" cy="196.2" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="74.5" cy="192.4" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="72.8" cy="209.2" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="106.6" cy="195.9" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="108.1" cy="182.3" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="111.1" cy="201.4" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="126.2" cy="182.0" r="3.2" fill="#33607f" opacity="0.8"/>
+    <ellipse cx="112" cy="198" rx="50" ry="24" fill="none" stroke="#33607f" stroke-width="1.8" transform="rotate(-20 112 198)"/>
+    <circle cx="254.1" cy="136.0" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="251.4" cy="126.4" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="235.3" cy="133.5" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="285.9" cy="123.3" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="283.4" cy="121.9" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="268.0" cy="126.7" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="222.4" cy="151.9" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="271.9" cy="129.3" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="211.1" cy="122.8" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="235.2" cy="130.3" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="265.0" cy="124.9" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="267.6" cy="116.3" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="266.9" cy="129.8" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="249.5" cy="153.0" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <ellipse cx="258" cy="128" rx="50" ry="24" fill="none" stroke="#c0653a" stroke-width="1.8" transform="rotate(-20 258 128)"/>
+    <path d="M150,250 L222,96" stroke="#111" stroke-width="3" fill="none"/>
+    <text x="565" y="52" font-size="13" font-weight="bold">Covarianza por clase</text>
+    <text x="565" y="70" font-size="11.5" font-style="italic" fill="#666">cada clase con su propia forma</text>
+    <circle cx="448.6" cy="217.8" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="501.3" cy="192.4" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="444.6" cy="213.8" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="493.3" cy="213.2" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="443.7" cy="200.0" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="497.1" cy="205.0" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="519.3" cy="204.4" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="474.6" cy="202.8" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="541.4" cy="183.5" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="454.9" cy="198.6" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="480.8" cy="205.9" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="469.2" cy="206.8" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="486.9" cy="210.4" r="3.2" fill="#33607f" opacity="0.8"/>
+    <circle cx="506.0" cy="199.4" r="3.2" fill="#33607f" opacity="0.8"/>
+    <ellipse cx="478" cy="205" rx="52" ry="22" fill="none" stroke="#33607f" stroke-width="1.8" transform="rotate(-16 478 205)"/>
+    <circle cx="644.2" cy="123.0" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="667.7" cy="101.5" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="659.1" cy="100.9" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="662.6" cy="156.4" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="668.0" cy="141.5" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="657.2" cy="144.5" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="643.8" cy="151.8" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="640.4" cy="140.0" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="659.0" cy="152.5" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="639.4" cy="196.7" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="654.8" cy="137.4" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="655.6" cy="139.0" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="649.4" cy="141.7" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <circle cx="672.9" cy="154.2" r="3.2" fill="#c0653a" opacity="0.8"/>
+    <ellipse cx="652" cy="150" rx="21" ry="44" fill="none" stroke="#c0653a" stroke-width="1.8" transform="rotate(10 652 150)"/>
+    <path d="M540,258 Q608,168 548,100" stroke="#111" stroke-width="3" fill="none"/>
+    <line x1="380" y1="40" x2="380" y2="288" stroke="#ccc" stroke-width="1"/>
+    <text x="195" y="290" font-size="12.5" font-weight="bold" fill="#2f6b33">frontera lineal (LDA)</text>
+    <text x="565" y="290" font-size="12.5" font-weight="bold" fill="#2f6b33">frontera cuadrática (QDA)</text>
+  </g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Lineal o cuadrático</div>
+<h2>Por qué, en una línea de álgebra</h2>
+<ul>
+<li>Al comparar dos clases se resta el logaritmo de sus densidades. El término en $x^\top \Sigma_k^{-1} x$ es el único cuadrático.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Lineal o cuadrático</div>
+<h2>Si la covarianza es común, ese término se cancela</h2>
+$$\delta_k(x) = x^\top \Sigma^{-1}\mu_k - \tfrac{1}{2}\mu_k^\top \Sigma^{-1}\mu_k + \log \pi_k$$
+<p class="note">En palabras: lo que queda es lineal en $x$. Es el análisis discriminante lineal, LDA, y su frontera es un hiperplano.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Lineal o cuadrático</div>
+<h2>Si cada clase tiene la suya, sobrevive</h2>
+$$\delta_k(x) = -\tfrac{1}{2}\log|\Sigma_k| - \tfrac{1}{2}(x-\mu_k)^\top \Sigma_k^{-1}(x-\mu_k) + \log \pi_k$$
+<p class="note">En palabras: el término cuadrático ya no se cancela y la frontera pasa a ser una cónica. Es el análisis discriminante cuadrático, QDA.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Lineal o cuadrático</div>
+<h2>La diferencia no es de método sino de restricción</h2>
+<ul>
+<li>LDA y QDA son el mismo modelo. Lo único que cambia es cuántas matrices de covarianza se permite estimar.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Lineal o cuadrático</div>
+<h2>Y eso es un problema de conteo de parámetros</h2>
+<ul>
+<li>QDA estima $K \cdot d(d+1)/2$ parámetros de covarianza; LDA solo $d(d+1)/2$. Con $d=10$ y tres clases, 165 contra 55.</li>
+</ul>
+<p class="note">Más flexibilidad significa menos sesgo y más varianza. Con pocos datos por clase, la flexibilidad extra de QDA se paga cara.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Lineal o cuadrático</div>
+<h2>Ninguno domina al otro</h2>
+<ul>
+<li>La elección entre ambos es un caso concreto del compromiso entre sesgo y varianza, y se resuelve por validación.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Relación con lo anterior</div>
+<h2>Bajo sus propios supuestos, LDA produce una sigmoide</h2>
+<ul>
+<li>Si las clases son gaussianas con covarianza común, la probabilidad posterior resulta ser exactamente la función logística.</li>
+</ul>
+<p class="note">Es decir, LDA y la regresión logística proponen la misma familia de fronteras. Llegan a ella por caminos opuestos.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Relación con lo anterior</div>
+<h2>Pero no estiman los mismos parámetros</h2>
+<ul>
+<li>La regresión logística maximiza $p(y \mid x)$ directamente. LDA estima medias y covarianzas y deduce la frontera.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Relación con lo anterior</div>
+<h2>Cuál gana depende de si el supuesto se cumple</h2>
+<ul>
+<li>Si los datos son realmente gaussianos, LDA usa mejor la información disponible y necesita menos ejemplos.</li>
+</ul>
+<p class="note">Si no lo son, la regresión logística es más robusta: nunca apostó a que lo fueran.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Relación con lo anterior</div>
+<h2>Un tercer punto en la misma escala</h2>
+<ul>
+<li>Restringir las covarianzas a su diagonal da el clasificador bayesiano ingenuo, todavía más restringido que LDA.</li>
+</ul>
+<p class="note">Naive Bayes gaussiano, LDA y QDA forman una escala ordenada por cuántos parámetros de covarianza se permiten estimar.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Qué se ve en los datos</div>
+<h2>Dos especies de iris que se solapan</h2>
+<ul>
+<li>Ambos modelos se ajustan desde las fórmulas anteriores: medias, covarianzas y el argmax del discriminante.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Qué se ve en los datos</div>
+<h2>LDA traza una recta y acierta 0.94</h2>
+<ul>
+<li>Una sola covarianza para las dos clases, y la frontera resultante es un segmento.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Qué se ve en los datos</div>
+<h2>QDA la curva y llega a 0.97</h2>
+<ul>
+<li>Al soltar la restricción, la frontera se dobla y se ajusta mejor al solapamiento entre las especies.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Qué se ve en los datos</div>
+<h2>La mejora es real y conviene leerla con cuidado</h2>
+<ul>
+<li>Está medida sobre los mismos datos con que se ajustó. QDA estima el doble de parámetros de covarianza que LDA.</li>
+</ul>
+<p class="note">Con dos características y cincuenta ejemplos por clase la diferencia es asumible; con veinte características dejaría de serlo.</p>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>La frontera no se busca: se deduce de lo que se supuso sobre cada clase, y su forma la decide la estructura de las covarianzas.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+</body>
+</html>
