@@ -688,91 +688,25 @@ $$\mathcal{R}_{\text{emp}}(\theta) = -\frac{1}{n}\sum_{i=1}^n \sum_{c=1}^k \math
 
 <section>
 <div class="section-label">§ 7 · Métricas</div>
-<h2>F1 las resume castigando el desequilibrio</h2>
-$$F_1 = 2 \cdot \frac{\text{precisión} \cdot \text{recall}}{\text{precisión} + \text{recall}}$$
-<p class="note">En palabras: es la media armónica, no la aritmética. Con precisión 1.0 y recall 0.02, la aritmética daría 0.51 y la armónica da 0.04, que refleja mucho mejor lo inútil que es ese modelo.</p>
-</section>
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>La curva ROC recorre todos los umbrales a la vez</h2>
-<ul>
-<li>Grafica la tasa de verdaderos positivos contra la de falsos positivos a medida que el umbral se desliza.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>Se construye ordenando las muestras, no barriendo umbrales</h2>
-<ul>
-<li>Se ordenan por puntaje de mayor a menor y se avanza una muestra por paso: hacia arriba si es positiva, hacia la derecha si es negativa.</li>
-</ul>
-<p class="note">Por eso una ROC empírica es una escalera y no una curva suave: con 120 positivos cada peldaño mide 1/120 de alto, y con 200 negativos, 1/200 de ancho. Un modelo que ordena bien pone todos los positivos primero y sube antes de empezar a moverse a la derecha.</p>
-</section>
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>La diagonal es el modelo que no sabe nada</h2>
-<ul>
-<li>Puntajes al azar mezclan positivos y negativos de forma pareja: por cada paso hacia arriba, uno hacia la derecha.</li>
-</ul>
-<p class="note">Toda curva por encima de la diagonal ordena mejor que el azar. La esquina superior izquierda es el modelo perfecto: detecta todos los positivos sin una sola falsa alarma.</p>
-</section>
-
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>El área bajo esa escalera se llama AUC</h2>
-$$\text{AUC} = \mathbb{P}\big(\hat p(x^{+}) > \hat p(x^{-})\big)$$
-<p class="note">No es una analogía: el área de la escalera es exactamente esa probabilidad. Cada peldaño hacia arriba se dibuja sobre todos los negativos ya dejados atrás, de modo que sumar el área es contar pares positivo-negativo bien ordenados y dividir por el total de pares.</p>
-</section>
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>Cómo se lee el número</h2>
-<ul>
-<li>1.0 es ordenamiento perfecto, 0.5 es azar, y por debajo de 0.5 el modelo ordena al revés, que no es lo mismo que ser inútil.</li>
-</ul>
-<p class="note">Un AUC de 0.2 es un modelo que sabe mucho, con el signo cambiado: invertir sus puntajes da 0.8. El caso realmente inservible es el 0.5. Un AUC de 0.905 significa que ante un positivo y un negativo tomados al azar, el modelo le da mayor puntaje al positivo en el 90.5% de los casos.</p>
-</section>
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>Mide el ordenamiento, no el punto de operación</h2>
-<ul>
-<li>Es lo único que el entrenamiento efectivamente determinó. Mover el umbral desplaza el punto sobre la curva sin cambiar la curva.</li>
-</ul>
-<p class="note">Por eso conviene reportarlo junto con la matriz de confusión del umbral que se va a usar: el AUC dice si el modelo separa las clases, no si la decisión que se tomará con él es buena.</p>
-</section>
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>Y con clases muy desbalanceadas se vuelve optimista</h2>
-<ul>
-<li>La tasa de falsos positivos divide por todos los negativos. Si son abrumadora mayoría, miles de falsas alarmas casi no la mueven.</li>
-</ul>
-<p class="note">Con una prevalencia del 1% se puede tener un AUC de 0.95 y una precisión del 10% en el punto de operación, o sea nueve alarmas falsas por acierto. En ese régimen la curva informativa es la de precisión contra recall.</p>
-</section>
-
-<section>
-<div class="section-label">§ 7 · Métricas</div>
-<h2>Un modelo, y el umbral moviéndose sobre la curva</h2>
+<h2>Un modelo, muchos puntos de operación</h2>
 <div class="viz" data-viz="umb">
   <div class="ctrl">
     <label>umbral <input type="range" name="u" min="0.05" max="0.95" step="0.01" value="0.50"><span class="val">0.50</span></label>
   </div>
-  <canvas data-ratio="0.36"></canvas>
+  <canvas data-ratio="0.40"></canvas>
   <div class="lect"></div>
 </div>
-<p class="note">320 muestras, 120 positivas. Los peldaños de la derecha son las muestras individuales. La precisión, a la izquierda, se vuelve errática cerca del extremo derecho por una razón real: con umbral 0.95 solo 19 muestras superan el corte y con 0.99 quedan 3, así que se calcula sobre un denominador diminuto y una sola muestra la mueve varios puntos.</p>
+<p class="note">320 muestras, 120 positivas. El modelo es el mismo en todas las posiciones del control: no se reentrena nada, solo se mueve un número que no forma parte de los parámetros aprendidos. La precisión se vuelve errática cerca del extremo derecho por una razón real: con umbral 0.95 solo 19 muestras superan el corte y con 0.99 quedan 3, así que una sola muestra la mueve varios puntos.</p>
 </section>
 
 <section>
 <div class="section-label">§ 7 · Métricas</div>
-<h2>Pero un AUC alto no garantiza probabilidades creíbles</h2>
+<h2>Evaluar el modelo, y no un punto de operación, va aparte</h2>
 <ul>
-<li>Ordenar bien y estar bien calibrado son cosas distintas: de los casos a los que el modelo asigna 0.7, debería resultar positivo el 70%.</li>
+<li>Precisión, recall y exactitud describen el umbral elegido. Recorrerlos todos a la vez da las curvas de operación: ROC y precisión-recall.</li>
+<li>Y ordenar bien no es lo mismo que estar calibrado: de los casos a los que el modelo asigna 0.7 debería resultar positivo el 70%.</li>
 </ul>
+<p class="note">Eso, junto con F1, la elección del umbral bajo costos asimétricos y la cuantificación de la incertidumbre, se desarrolla en <a href="AM-I-Evaluacion_calibracion_incertidumbre.html">evaluación, calibración e incertidumbre</a>.</p>
 </section>
 
 <section>
@@ -906,7 +840,7 @@ VIZ.sig = function(el) {
     ` &nbsp;·&nbsp; θ₁ controla la pendiente, θ₀ desplaza la curva`;
 };
 
-// ======== el umbral: precision, recall y ROC ========
+// ======== el umbral: precisión y recall según el punto de operación ========
 function conteo(t) {
   let VP=0,FP=0,FN=0,VN=0;
   for (let i=0;i<SC.length;i++){ const p = SC[i]>=t;
@@ -915,66 +849,48 @@ function conteo(t) {
 }
 const prec = t => { const c=conteo(t); return (c.VP+c.FP)===0 ? 1 : c.VP/(c.VP+c.FP); };
 const exh  = t => { const c=conteo(t); return c.VP/(c.VP+c.FN); };
-const tfp  = t => { const c=conteo(t); return c.FP/(c.FP+c.VN); };
 
-// ROC exacta: se ordenan los puntajes de mayor a menor y se avanza una muestra por paso,
-// hacia arriba si es positiva y hacia la derecha si es negativa. La escalera resultante
-// tiene un vértice por muestra y su área coincide con el estadístico de Mann-Whitney.
-const ROC = (() => {
-  const P = YL.reduce((a,b)=>a+b, 0), N = YL.length - P;
-  const orden = SC.map((s,i)=>i).sort((a,b)=>SC[b]-SC[a]);
-  const pts = [[0,0]];
-  let tp=0, fp=0;
-  for (const i of orden) { YL[i]===1 ? tp++ : fp++; pts.push([fp/N, tp/P]); }
-  let a = 0;
-  for (let k=1;k<pts.length;k++) a += (pts[k][0]-pts[k-1][0])*(pts[k][1]+pts[k-1][1])/2;
-  return {pts, auc:a};
-})();
 VIZ.umb = function(el) {
   const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
   const {g,w,h,C} = vizSetup(cv);
   const u = +el.querySelector('[name=u]').value;
   el.querySelector('.val').textContent = u.toFixed(2);
 
-  // panel izquierdo: las dos metricas contra el umbral
-  const W1=Math.round(w*0.50), m={i:46,d:16,t:22,b:38};
-  const ax=v=>m.i+v*(W1-m.i-m.d), ay=v=>h-m.b-v*(h-m.b-m.t);
+  const m={i:62,d:30,t:26,b:46};
+  const ax=v=>m.i+v*(w-m.i-m.d), ay=v=>h-m.b-v*(h-m.b-m.t);
   g.fillStyle=C.fondo; g.fillRect(0,0,w,h);
-  g.strokeStyle=C.eje; g.lineWidth=1.2;
-  g.beginPath(); g.moveTo(m.i,h-m.b); g.lineTo(W1-m.d,h-m.b);
-  g.moveTo(m.i,h-m.b); g.lineTo(m.i,m.t); g.stroke();
-  const curva=(f,col)=>{ g.strokeStyle=col; g.lineWidth=3; g.beginPath();
-    for(let k=0;k<=100;k++){ const t=0.005+k*0.99/100; k?g.lineTo(ax(t),ay(f(t))):g.moveTo(ax(t),ay(f(t))); }
+
+  // referencias horizontales, para leer valores a distancia
+  g.strokeStyle=C.gris; g.lineWidth=1; g.setLineDash([3,5]);
+  g.fillStyle=C.texto; g.font='14px Helvetica, Arial'; g.textAlign='right';
+  [0.25,0.5,0.75,1].forEach(v=>{
+    g.beginPath(); g.moveTo(m.i,ay(v)); g.lineTo(w-m.d,ay(v)); g.stroke();
+    g.fillText(v.toFixed(2), m.i-8, ay(v)+5);
+  });
+  g.setLineDash([]);
+  g.fillText('0', m.i-8, ay(0)+5);
+
+  vizEjes(g, w, h, m, C, 'umbral de decisión', 'valor de la métrica');
+
+  const curva=(f,col)=>{ g.strokeStyle=col; g.lineWidth=4; g.beginPath();
+    for(let k=0;k<=200;k++){ const t=0.005+k*0.99/200; k?g.lineTo(ax(t),ay(f(t))):g.moveTo(ax(t),ay(f(t))); }
     g.stroke(); };
   curva(prec,C.azul); curva(exh,C.naranjo);
-  g.strokeStyle=C.verde; g.lineWidth=2; g.setLineDash([6,5]);
-  g.beginPath(); g.moveTo(ax(u),h-m.b); g.lineTo(ax(u),m.t); g.stroke(); g.setLineDash([]);
-  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
-  g.fillText('umbral',(m.i+W1)/2,h-8);
-  g.font='14px Helvetica, Arial';
-  g.fillStyle=C.azul; g.textAlign='left'; g.fillText('precisión', m.i+8, m.t+6);
-  g.fillStyle=C.naranjo; g.fillText('recall', m.i+8, m.t+24);
 
-  // panel derecho: ROC con el punto de operacion
-  const X0=Math.round(w*0.58), md={d:16,t:22,b:38};
-  const rx=v=>X0+v*(w-X0-md.d), ry=v=>h-md.b-v*(h-md.b-md.t);
-  g.strokeStyle=C.eje; g.lineWidth=1.2;
-  g.beginPath(); g.moveTo(X0,h-md.b); g.lineTo(w-md.d,h-md.b);
-  g.moveTo(X0,h-md.b); g.lineTo(X0,md.t); g.stroke();
-  g.setLineDash([5,5]); g.strokeStyle=C.gris; g.lineWidth=1.6;
-  g.beginPath(); g.moveTo(rx(0),ry(0)); g.lineTo(rx(1),ry(1)); g.stroke(); g.setLineDash([]);
-  const {pts, auc} = ROC;
-  g.strokeStyle=C.azul; g.lineWidth=3; g.beginPath();
-  pts.forEach(([a,b],k)=>k?g.lineTo(rx(a),ry(b)):g.moveTo(rx(a),ry(b))); g.stroke();
-  g.fillStyle=C.verde; g.beginPath(); g.arc(rx(tfp(u)),ry(exh(u)),8,0,7); g.fill();
-  g.fillStyle=C.texto; g.font='16px Helvetica, Arial'; g.textAlign='center';
-  g.fillText('tasa de falsos positivos',(X0+w-md.d)/2,h-8);
-  g.font='15px Helvetica, Arial'; g.fillText('AUC = '+auc.toFixed(3),(X0+w-md.d)/2,md.t-4);
+  g.strokeStyle=C.verde; g.lineWidth=2.5; g.setLineDash([7,5]);
+  g.beginPath(); g.moveTo(ax(u),h-m.b); g.lineTo(ax(u),m.t); g.stroke(); g.setLineDash([]);
+  g.fillStyle=C.verde;
+  g.beginPath(); g.arc(ax(u),ay(prec(u)),7,0,7); g.fill();
+  g.beginPath(); g.arc(ax(u),ay(exh(u)),7,0,7); g.fill();
+
+  g.font='17px Helvetica, Arial'; g.textAlign='left';
+  g.fillStyle=C.azul;    g.fillText('precisión', m.i+14, ay(0.16));
+  g.fillStyle=C.naranjo; g.fillText('recall',    m.i+14, ay(0.06));
 
   const c=conteo(u);
   el.querySelector('.lect').innerHTML =
     `umbral ${u.toFixed(2)} &nbsp;·&nbsp; precisión ${prec(u).toFixed(3)} &nbsp;·&nbsp; recall ${exh(u).toFixed(3)}` +
-    ` &nbsp;·&nbsp; VP ${c.VP} · FP ${c.FP} · FN ${c.FN} &nbsp;·&nbsp; el AUC no cambia`;
+    ` &nbsp;·&nbsp; VP ${c.VP} · FP ${c.FP} · FN ${c.FN}`;
 };
 </script>
 

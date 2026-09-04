@@ -321,6 +321,15 @@ $$z(u) = \frac{u - \mu_u}{\sigma_u}$$
 <p class="note">En palabras: $z=0$ es la media, $z=+1.3$ significa una unidad y media por encima de ella, y $z=-2$ dos por debajo. Toda característica queda con media cero y desviación uno.</p>
 </section>
 
+<section>
+<div class="section-label">§ 1 · Estandarización de características</div>
+<h2>Falta decir con qué datos se calculan $\mu_u$ y $\sigma_u$</h2>
+<ul>
+<li>Se estiman <strong>solo con el conjunto de entrenamiento</strong>, y esa misma transformación se aplica sin recalcular a validación y prueba.</li>
+</ul>
+<p class="note">La estandarización es parte del predictor: tiene parámetros que se aprenden de los datos igual que los del modelo. Estimarlos con el conjunto completo mete información de la evaluación dentro del ajuste y vuelve optimista cualquier métrica posterior. El argumento está en <a href="AM-A-Validacion.html">validación y generalización</a>.</p>
+</section>
+
 <!-- 14 -->
 <section>
 <div class="section-label">§ 1 · Estandarización de características</div>

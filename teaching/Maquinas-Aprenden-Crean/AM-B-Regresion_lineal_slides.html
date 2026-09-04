@@ -603,6 +603,15 @@ $$\theta := \theta + \alpha \, \big( y^{(i)} - h_\theta(x^{(i)}) \big) \, x^{(i)
 
 <section>
 <div class="section-label">§ 5 · Optimización</div>
+<h2>Con una advertencia sobre de dónde salen esa media y esa desviación</h2>
+<ul>
+<li>Se estiman solo con el conjunto de entrenamiento y se aplican sin recalcular al resto: la estandarización es parte del predictor, no un paso previo inocente.</li>
+</ul>
+<p class="note">Estimarlas con todos los datos filtra información de la evaluación hacia el ajuste. El criterio general está en <a href="AM-A-Validacion.html">validación y generalización</a>.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Optimización</div>
 <h2>Ajustar bien los datos vistos no era el objetivo</h2>
 <ul>
 <li>El objetivo es predecir bien los que no se han visto, y para eso el criterio de hasta aquí resulta insuficiente.</li>

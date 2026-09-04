@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación, métricas, calibración e incertidumbre</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
+</style>
+</head>
+<body>
+
+<div class="reveal"><div class="slides">
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Evaluación, métricas, calibración e incertidumbre</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Un modelo entrenado no viene con un juicio sobre si sirve</h2>
+<ul>
+<li>Evaluarlo no es calcular un número, sino decidir qué se le pregunta al conjunto de prueba.</li>
+<li>Cada pregunta distinta produce una métrica distinta, y dos métricas pueden ordenar los mismos modelos al revés.</li>
+</ul>
+</section>
+
+<section>
+<h2>Y las preguntas se ordenan de menor a mayor exigencia</h2>
+<ul>
+<li>Acierta, ordena, cree lo correcto, sabe lo que ignora, garantiza: cada peldaño supone el anterior.</li>
+</ul>
+<div class="svg-holder"><svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 920 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <line x1="30" y1="215" x2="900" y2="215" stroke="#9aa0a6" stroke-width="1.4"/>
+  
+  <rect x="30" y="198" width="160" height="18" rx="4" fill="#4e79a7" fill-opacity="0.16" stroke="#4e79a7" stroke-width="1.4"/>
+  <text x="110" y="190" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a1a">¿acierta?</text>
+  <text x="110" y="236" text-anchor="middle" font-size="12.5" fill="#5a5a5a">§1-§2</text>
+  <rect x="208" y="162" width="160" height="54" rx="4" fill="#4e79a7" fill-opacity="0.30" stroke="#4e79a7" stroke-width="1.4"/>
+  <text x="288" y="154" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a1a">¿ordena?</text>
+  <text x="288" y="236" text-anchor="middle" font-size="12.5" fill="#5a5a5a">§3-§4</text>
+  <rect x="386" y="126" width="160" height="90" rx="4" fill="#4e79a7" fill-opacity="0.44" stroke="#4e79a7" stroke-width="1.4"/>
+  <text x="466" y="118" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a1a">¿cree lo correcto?</text>
+  <text x="466" y="236" text-anchor="middle" font-size="12.5" fill="#5a5a5a">§5-§7</text>
+  <rect x="564" y="90" width="160" height="126" rx="4" fill="#4e79a7" fill-opacity="0.58" stroke="#4e79a7" stroke-width="1.4"/>
+  <text x="644" y="82" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a1a">¿sabe qué ignora?</text>
+  <text x="644" y="236" text-anchor="middle" font-size="12.5" fill="#5a5a5a">§8</text>
+  <rect x="742" y="54" width="160" height="162" rx="4" fill="#4e79a7" fill-opacity="0.72" stroke="#4e79a7" stroke-width="1.4"/>
+  <text x="822" y="46" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a1a1a">¿garantiza?</text>
+  <text x="822" y="236" text-anchor="middle" font-size="12.5" fill="#5a5a5a">§9</text>
+  <text x="465" y="26" text-anchor="middle" font-size="15.5" font-style="italic" fill="#5a5a5a">cada peldaño es una pregunta más exigente que la anterior</text>
+</svg></div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · La insuficiencia de la exactitud</div>
+<h2>Un detector de fraude acierta el 99 % de las veces: ¿es bueno?</h2>
+<ul>
+<li>La respuesta depende de cuántos fraudes hay y de cuánto cuesta cada tipo de error; la exactitud no mira ninguna de las dos cosas.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 1 · La insuficiencia de la exactitud</div>
+<h2>La exactitud cuenta aciertos y nada más</h2>
+$$\text{Exactitud} = \frac{\text{predicciones correctas}}{N} = \frac{TP + TN}{TP + TN + FP + FN} \tag{1}$$
+<p class="note">En palabras: la fracción de muestras bien clasificadas, con $TP$, $TN$, $FP$ y $FN$ los verdaderos positivos, verdaderos negativos, falsos positivos y falsos negativos.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 1 · La insuficiencia de la exactitud</div>
+<h2>Con clases desbalanceadas, no detectar nada gana</h2>
+<ul>
+<li>Cohorte de $N = 1000$ pacientes con prevalencia del 5 %; el modelo ingenuo responde siempre "sano".</li>
+</ul>
+$$\text{Exactitud}(h_{\text{ing}}) = \frac{950 + 0}{1000} = 95.0\%, \qquad \text{Recall}(h_{\text{ing}}) = \frac{0}{50} = 0\%$$
+<p class="note">Un clasificador clínico útil baja al 93.0 % de exactitud y sube al 80.0 % de recall: la exactitud lo declara peor justo por hacer su trabajo.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 1 · La insuficiencia de la exactitud</div>
+<h2>Y los dos errores casi nunca cuestan lo mismo</h2>
+<ul>
+<li>Si un falso negativo cuesta 500 y un falso positivo 10, el orden se invierte por completo.</li>
+</ul>
+$$\text{Costo}(h_{\text{ing}}) = 25{,}000 \quad \text{frente a} \quad \text{Costo}(h_{\text{cl}}) = 5{,}600$$
+<p class="note">La exactitud pesa igual ambos errores, y por eso no puede distinguir estos dos modelos. Si un solo número no basta, conviene volver a los cuatro de los que salen todos.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 2 · Matriz de confusión</div>
+<h2>Toda clasificación binaria cabe en cuatro números</h2>
+<ul>
+<li>Fijado un umbral y designada una clase como positiva, cada muestra cae en exactamente una de cuatro casillas.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 2 · Matriz de confusión</div>
+<h2>La matriz de confusión los dispone en dos por dos</h2>
+<ul>
+<li>Las columnas son lo que el modelo declara; las filas, lo que la muestra realmente es.</li>
+</ul>
+<div class="svg-holder"><svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <text x="345" y="34" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1a1a1a">predicción del modelo</text>
+  <text x="275" y="76" text-anchor="middle" font-size="12.5" fill="#1a1a1a">negativo (0)</text>
+  <text x="415" y="76" text-anchor="middle" font-size="12.5" fill="#1a1a1a">positivo (1)</text>
+  <text x="52" y="150" font-size="13.5" font-weight="bold" fill="#1a1a1a" transform="rotate(-90 52 150)">etiqueta real</text>
+  <text x="195" y="132" text-anchor="end" font-size="12.5" fill="#1a1a1a">negativo (0)</text>
+  <text x="195" y="212" text-anchor="end" font-size="12.5" fill="#1a1a1a">positivo (1)</text>
+  <rect x="205" y="88" width="140" height="80" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
+  <text x="275" y="122" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a4d1a">TN</text>
+  <text x="275" y="142" text-anchor="middle" font-size="10.5" fill="#2d6b2d">verdadero negativo</text>
+  <rect x="345" y="88" width="140" height="80" fill="#fdecea" stroke="#c62828" stroke-width="1.6"/>
+  <text x="415" y="122" text-anchor="middle" font-size="15" font-weight="bold" fill="#8c1a1a">FP</text>
+  <text x="415" y="142" text-anchor="middle" font-size="10.5" fill="#a33">falsa alarma</text>
+  <rect x="205" y="168" width="140" height="80" fill="#fdecea" stroke="#c62828" stroke-width="1.6"/>
+  <text x="275" y="202" text-anchor="middle" font-size="15" font-weight="bold" fill="#8c1a1a">FN</text>
+  <text x="275" y="222" text-anchor="middle" font-size="10.5" fill="#a33">omisión</text>
+  <rect x="345" y="168" width="140" height="80" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
+  <text x="415" y="202" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a4d1a">TP</text>
+  <text x="415" y="222" text-anchor="middle" font-size="10.5" fill="#2d6b2d">detección correcta</text>
+  <path d="M498 88 L510 88 L510 248 L498 248" fill="none" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="522" y="160" font-size="12" font-weight="bold" fill="#1a3a5c">precisión</text>
+  <text x="522" y="178" font-size="11" fill="#3a6a8c">TP / (TP + FP)</text>
+  <path d="M205 262 L205 274 L485 274 L485 262" fill="none" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="345" y="296" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a3a5c">recall = TP / (TP + FN)</text>
+</svg></div>
+
+</section>
+
+<section>
+<div class="section-label">§ 2 · Matriz de confusión</div>
+<h2>Precisión y recall leen la tabla en dos direcciones</h2>
+$$\text{Precisión} = \frac{TP}{TP + FP} \tag{2}$$
+$$\text{Recall} = \frac{TP}{TP + FN} \tag{3}$$
+<p class="note">En palabras: la precisión pregunta qué fracción de lo declarado positivo lo era; el recall, qué fracción de lo positivo fue detectada. La especificidad hace lo propio con la clase negativa: la fracción de negativos correctamente descartados.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 2 · Matriz de confusión</div>
+<h2>$F_1$ las resume, y $F_\beta$ decide cuál pesa más</h2>
+$$F_1 = \frac{2TP}{2TP + FP + FN} \tag{5}$$
+$$F_\beta = \frac{(1 + \beta^2)TP}{(1 + \beta^2)TP + \beta^2 FN + FP} \tag{6}$$
+<p class="note">En palabras: $F_1$ es la media armónica, que castiga el desequilibrio; $\beta &gt; 1$ pondera el recall por sobre la precisión, como en tamizaje clínico.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 2 · Matriz de confusión</div>
+<h2>MCC y exactitud balanceada usan las cuatro casillas</h2>
+$$\text{MCC} = \frac{TP \cdot TN - FP \cdot FN}{\sqrt{(TP + FP)(TP + FN)(TN + FP)(TN + FN)}} \tag{7}$$
+<p class="note">A diferencia de $F_1$, que ignora $TN$, el coeficiente de correlación de Matthews (MCC) solo es alto si las cuatro casillas son buenas. Ninguna métrica escalar es neutral: elegir una es elegir qué error importa.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 3 · Curvas de operación</div>
+<h2>Pero todas describen un umbral ya elegido</h2>
+<ul>
+<li>Un modelo probabilístico no entrega una clase sino un puntaje $\hat{p}(x)$, y con él una familia completa de clasificadores, uno por umbral.</li>
+<li>Evaluar el modelo y no la decisión arbitraria que tomamos con él exige recorrerlos todos.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 3 · Curvas de operación</div>
+<h2>La curva ROC recorre todos los umbrales a la vez</h2>
+<ul>
+<li>Grafica la tasa de verdaderos positivos $TP/(TP+FN)$ contra la de falsos positivos $FP/(TN+FP)$ al deslizar el umbral.</li>
+</ul>
+<p class="note">La diagonal es el modelo que ordena al azar; la esquina superior izquierda, el que detecta todo sin una falsa alarma.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 3 · Curvas de operación</div>
+<h2>Se construye ordenando muestras, no barriendo umbrales</h2>
+<ul>
+<li>Se ordenan por puntaje de mayor a menor y se avanza una por paso: arriba si es positiva, a la derecha si es negativa.</li>
+</ul>
+<p class="note">Por eso una ROC empírica es una escalera con un vértice por muestra, de $1/P$ de alto y $1/N$ de ancho. Que se vea escalonada informa sobre el tamaño del conjunto de evaluación, no sobre la calidad del modelo.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 3 · Curvas de operación</div>
+<h2>El área bajo esa escalera es una probabilidad exacta</h2>
+$$\text{AUC} = \mathbb{P}\big( \hat{p}(x^{+}) > \hat{p}(x^{-}) \big) \tag{9}$$
+<p class="note">En palabras: la probabilidad de que el modelo puntúe más alto a un positivo al azar que a un negativo al azar. No es una analogía: es el estadístico $U$ de Mann-Whitney normalizado. Vale $1$ si ordena perfecto y $0.5$ si ordena al azar.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 3 · Curvas de operación</div>
+<h2>La curva PR pregunta lo mismo sin mirar los negativos</h2>
+$$\text{AP} = \sum_{n} (R_n - R_{n-1}) \, P_n \tag{10}$$
+<p class="note">En palabras: el average precision acumula la precisión alcanzada en cada incremento de recall. Su línea de referencia no es la diagonal sino la tasa base de positivos.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 3 · Curvas de operación</div>
+<h2>Y bajo desbalance severo la ROC se vuelve optimista</h2>
+<ul>
+<li>La FPR divide por todos los negativos: si son abrumadora mayoría, miles de falsas alarmas apenas la mueven.</li>
+</ul>
+<p class="note">Con prevalencia del 1 % se puede tener AUC de $0.95$ y precisión del 10 %, o sea nueve alarmas falsas por acierto. Pero ordenar bien todavía no dice dónde cortar.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 4 · El umbral óptimo</div>
+<h2>¿Dónde se corta, entonces?</h2>
+<ul>
+<li>Elegir el umbral es una decisión económica, no estadística: depende de lo que cuesta cada error, no de los datos.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 4 · El umbral óptimo</div>
+<h2>Se compara el costo esperado de cada acción</h2>
+$$\mathbb{E}[\text{costo} \mid \text{predecir } 1] = (1 - \hat{p}) \, C_{FP}, \qquad \mathbb{E}[\text{costo} \mid \text{predecir } 0] = \hat{p} \, C_{FN}$$
+<p class="note">En palabras: declarar positivo cuesta un falso positivo con probabilidad $1-\hat{p}$; declarar negativo cuesta un falso negativo con probabilidad $\hat{p}$.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 4 · El umbral óptimo</div>
+<h2>El umbral óptimo sale de igualarlos</h2>
+$$t^{*} = \frac{C_{FP}}{C_{FP} + C_{FN}} \tag{11}$$
+<p class="note">Si un falso negativo cuesta diez veces más que un falso positivo, $t^{*} = 1/11 \approx 0.09$: conviene declarar positivo con muy poca evidencia. La regla es exacta, pero solo vale si $\hat{p}$ es de verdad una probabilidad.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 5 · Métricas de la salida probabilística</div>
+<h2>Todo lo anterior descartó la confianza y guardó la decisión</h2>
+<ul>
+<li>La matriz de confusión trata igual una predicción de $0.51$ y una de $0.99$; para evaluar la probabilidad emitida hacen falta métricas que operen sobre $\hat{p}_i$ directamente.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 5 · Métricas de la salida probabilística</div>
+<h2>La log-loss castiga la confianza equivocada sin techo</h2>
+$$\text{Log-loss} = -\frac{1}{N} \sum_{i=1}^{N} \big[ y_i \log \hat{p}_i + (1 - y_i) \log(1 - \hat{p}_i) \big] \tag{12}$$
+<p class="note">En palabras: el promedio del logaritmo cambiado de signo de la probabilidad asignada a la clase verdadera. Una sola predicción segura y equivocada la manda a infinito.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 5 · Métricas de la salida probabilística</div>
+<h2>El puntaje de Brier es el error cuadrático de la probabilidad</h2>
+$$\text{BS} = \frac{1}{N} \sum_{i=1}^{N} (\hat{p}_i - y_i)^2 \tag{13}$$
+<p class="note">En palabras: la distancia cuadrática media entre lo que el modelo declaró y lo que ocurrió. Acotado en $[0,1]$, a diferencia de la log-loss.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 5 · Métricas de la salida probabilística</div>
+<h2>Y se descompone en tres términos con significado propio</h2>
+$$\text{BS} = \text{Fiabilidad} - \text{Resolución} + \text{Incertidumbre} \tag{14}$$
+<div class="svg-holder"><svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 920 230" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <text x="34" y="105" font-size="21" font-weight="bold" fill="#1a1a1a">BS</text>
+  <text x="82" y="105" font-size="21" fill="#5a5a5a">=</text>
+  <rect x="112" y="58" width="216" height="66" rx="5" fill="#4e79a7" fill-opacity="0.18" stroke="#4e79a7" stroke-width="1.5"/>
+  <text x="220" y="90" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">Fiabilidad</text>
+  <text x="220" y="112" text-anchor="middle" font-size="13.5" fill="#5a5a5a">calibración · baja es mejor</text>
+  <text x="345" y="105" font-size="24" fill="#5a5a5a">−</text>
+  <rect x="378" y="58" width="216" height="66" rx="5" fill="#4e79a7" fill-opacity="0.30" stroke="#4e79a7" stroke-width="1.5"/>
+  <text x="486" y="90" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">Resolución</text>
+  <text x="486" y="112" text-anchor="middle" font-size="13.5" fill="#5a5a5a">discriminación · alta es mejor</text>
+  <text x="611" y="105" font-size="24" fill="#5a5a5a">+</text>
+  <rect x="644" y="58" width="240" height="66" rx="5" fill="#9aa0a6" fill-opacity="0.20" stroke="#9aa0a6" stroke-width="1.5"/>
+  <text x="764" y="90" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a1a1a">Incertidumbre</text>
+  <text x="764" y="112" text-anchor="middle" font-size="13.5" fill="#5a5a5a">tasa base · no depende del modelo</text>
+  <text x="460" y="176" text-anchor="middle" font-size="15.5" font-style="italic" fill="#5a5a5a">un modelo puede mejorar su Brier calibrándose o discriminando mejor: son dos caminos distintos</text>
+  <text x="460" y="204" text-anchor="middle" font-size="15.5" font-style="italic" fill="#5a5a5a">el tercer término lo fija el problema, y ningún modelo lo baja</text>
+</svg></div>
+
+</section>
+
+<section>
+<div class="section-label">§ 5 · Métricas de la salida probabilística</div>
+<h2>Ambas son reglas de puntaje propias: mentir no conviene</h2>
+$$\mathbb{E}_{Y \sim p}\big[ S(\hat{p}, Y) \big] \geq \mathbb{E}_{Y \sim p}\big[ S(p, Y) \big] \tag{15}$$
+<p class="note">En palabras: el puntaje esperado se minimiza exactamente cuando el modelo declara la probabilidad verdadera $p$. La exactitud no cumple esto, y por eso premia la sobreconfianza: redondear $0.6$ a $1$ nunca la empeora.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 6 · Calibración</div>
+<h2>De los casos donde el modelo dijo 0.7, ¿resulta positivo el 70 %?</h2>
+<ul>
+<li>Que un modelo emita números en $[0,1]$ no los convierte en probabilidades; la calibración es exactamente la propiedad que sí lo hace.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 6 · Calibración</div>
+<h2>Un clasificador calibrado cumple una identidad, no una desigualdad</h2>
+$$\mathbb{P}\big( Y = 1 \mid \hat{P} = p \big) = p, \qquad \forall p \in [0, 1] \tag{16}$$
+<p class="note">En palabras: entre todas las muestras a las que el modelo asignó $p$, la fracción realmente positiva debe ser $p$. El diagrama de fiabilidad grafica esa frecuencia observada contra la declarada; la diagonal es la calibración perfecta.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 6 · Calibración</div>
+<h2>El ECE resume la brecha promediando por bins</h2>
+$$\text{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{N} \big| \text{acc}(B_m) - \text{conf}(B_m) \big| \tag{17}$$
+<p class="note">En palabras: se agrupan las predicciones por nivel de confianza y se promedia, ponderando por tamaño, la distancia entre lo declarado y lo observado. El MCE reporta el peor bin en vez del promedio.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 6 · Calibración</div>
+<h2>Pero el binning tiene trampa, y las redes están sobreconfiadas</h2>
+<ul>
+<li>El ECE depende del número de bins y puede cancelar sesgos opuestos dentro de un mismo bin.</li>
+</ul>
+<p class="note">Las redes profundas modernas declaran sistemáticamente más confianza de la que su exactitud respalda, y el fenómeno empeoró al crecer la profundidad. La buena noticia es que se corrige sin reentrenar.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 7 · Recalibración</div>
+<h2>La confianza se corrige sin tocar el modelo</h2>
+<ul>
+<li>Basta una transformación monótona de las salidas: como preserva el orden, no cambia ni la exactitud ni el AUC, solo los números.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 7 · Recalibración</div>
+<h2>El escalamiento de temperatura divide los logits por un escalar</h2>
+<ul>
+<li>Un solo parámetro $T$ ajustado en un conjunto de calibración aparte; $T &gt; 1$ suaviza, $T &lt; 1$ agudiza.</li>
+</ul>
+<div class="svg-holder"><svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 700 215" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="rc" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <rect x="20" y="58" width="120" height="60" rx="9" fill="#eeeeee" stroke="#777" stroke-width="1.6"/>
+  <text x="80" y="82" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">red entrenada</text>
+  <text x="80" y="102" text-anchor="middle" font-size="11" fill="#555">pesos congelados</text>
+  <path d="M140 88 L196 88" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rc)"/>
+  <text x="168" y="78" text-anchor="middle" font-size="11.5" fill="#1a1a1a">z</text>
+  <rect x="200" y="58" width="120" height="60" rx="9" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="260" y="82" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">z / T</text>
+  <text x="260" y="102" text-anchor="middle" font-size="10.5" fill="#3a6a8c">un solo parámetro</text>
+  <path d="M320 88 L376 88" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rc)"/>
+  <rect x="380" y="58" width="120" height="60" rx="9" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
+  <text x="440" y="82" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a4d1a">softmax</text>
+  <text x="440" y="102" text-anchor="middle" font-size="10.5" fill="#2d6b2d">probabilidades</text>
+  <path d="M500 88 L556 88" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rc)"/>
+  <rect x="560" y="58" width="120" height="60" rx="9" fill="#fff8e1" stroke="#b8860b" stroke-width="1.6"/>
+  <text x="620" y="82" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#6b4c00">p calibrada</text>
+  <text x="620" y="102" text-anchor="middle" font-size="10.5" fill="#8a6400">ECE reducido</text>
+  <path d="M260 138 L260 168" stroke="#c62828" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#rc)"/>
+  <text x="260" y="186" text-anchor="middle" font-size="11.5" fill="#8c1a1a">T se ajusta en el conjunto de validación</text>
+  <text x="260" y="202" text-anchor="middle" font-size="11.5" fill="#8c1a1a">minimizando el log-loss, nunca en prueba</text>
+  <text x="620" y="140" text-anchor="middle" font-size="11" fill="#1a1a1a">el argmax no cambia:</text>
+  <text x="620" y="156" text-anchor="middle" font-size="11" fill="#1a1a1a">la exactitud se preserva</text>
+</svg></div>
+
+</section>
+
+<section>
+<div class="section-label">§ 7 · Recalibración</div>
+<h2>Platt para binario, temperatura para multiclase</h2>
+$$\hat{p}_i = \sigma(A z_i + B) \tag{19}$$
+$$\hat{p}_i^{(c)} = \frac{\exp( z_i^{(c)} / T )}{\sum_{j} \exp( z_i^{(j)} / T )} \tag{20}$$
+<p class="note">En palabras: Platt ajusta una regresión logística de un solo predictor sobre el puntaje $z_i$; la temperatura es su versión multiclase con un único grado de libertad.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 7 · Recalibración</div>
+<h2>Y si una sola temperatura no basta, hay más grados de libertad</h2>
+<ul>
+<li>El escalamiento vectorial da un parámetro por clase; la regresión isotónica no supone forma alguna, solo monotonía.</li>
+</ul>
+<p class="note">Todas se ajustan en un conjunto propio, nunca en el de prueba: es el mismo principio de <a href="AM-A-Validacion.html">validación y generalización</a>, ya que todo lo que se estima se estima fuera del conjunto sobre el que después se reporta. Aun así, ninguna crea información que el modelo no tenía.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 8 · Incertidumbre</div>
+<h2>¿Duda porque el caso es ambiguo o porque nunca vio algo así?</h2>
+<ul>
+<li>Una probabilidad calibrada resume cuán probable es cada clase, pero no distingue entre esas dos situaciones, que exigen respuestas opuestas.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 8 · Incertidumbre</div>
+<h2>Una es irreducible y la otra se cura con datos</h2>
+<ul>
+<li>La incertidumbre aleatoria vive en el fenómeno: ruido de medición, solapamiento real entre clases. Más datos no la bajan.</li>
+<li>La epistémica vive en el modelo: es ignorancia sobre regiones poco observadas, y sí desaparece con más datos.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 8 · Incertidumbre</div>
+<h2>Se estima por desacuerdo entre predictores</h2>
+$$\mu_{\text{pred}} = \frac{1}{T} \sum_{t=1}^{T} \hat{y}^{(t)}, \qquad \sigma^2_{\text{epist}} = \frac{1}{T} \sum_{t=1}^{T} \big( \hat{y}^{(t)} - \mu_{\text{pred}} \big)^2 \tag{21}$$
+<p class="note">En palabras: se hacen $T$ pases con dropout activo, o se entrenan varias redes con inicializaciones distintas, y la varianza entre sus predicciones mide cuánto depende la respuesta de detalles que los datos no fijaron.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 8 · Incertidumbre</div>
+<h2>Fuera de distribución, la confianza alta es espuria</h2>
+<ul>
+<li>Ante una entrada distinta de todo lo visto, la red extrapola y puede declarar 0.99 sin ninguna base.</li>
+</ul>
+<p class="note">Los deep ensembles detectan parte de esto porque sus miembros discrepan justo ahí. Pero estimar la duda todavía no es garantizar nada.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 9 · Predicción conforme</div>
+<h2>¿Se puede prometer algo, y no solo estimarlo?</h2>
+<ul>
+<li>La predicción conforme invierte la pregunta: en vez de cuantificar la duda del modelo, construye conjuntos de predicción con cobertura demostrable.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 9 · Predicción conforme</div>
+<h2>El procedimiento de split conformal, en tres pasos</h2>
+<ul>
+<li>Se aparta un conjunto de calibración, se puntúa cada muestra y se toma un cuantil.</li>
+</ul>
+<div class="svg-holder"><svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 700 290" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="rk" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+  </defs>
+  <rect x="20" y="30" width="130" height="52" rx="9" fill="#eeeeee" stroke="#777" stroke-width="1.6"/>
+  <text x="85" y="52" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">entrenamiento</text>
+  <text x="85" y="70" text-anchor="middle" font-size="10.5" fill="#555">ajusta el modelo</text>
+  <path d="M150 56 L206 56" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rk)"/>
+  <rect x="210" y="30" width="130" height="52" rx="9" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
+  <text x="275" y="52" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">modelo</text>
+  <text x="275" y="70" text-anchor="middle" font-size="10.5" fill="#3a6a8c">cualquiera, ya fijo</text>
+  <rect x="20" y="122" width="130" height="52" rx="9" fill="#fff8e1" stroke="#b8860b" stroke-width="1.6"/>
+  <text x="85" y="144" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#6b4c00">calibración</text>
+  <text x="85" y="162" text-anchor="middle" font-size="10.5" fill="#8a6400">n muestras nuevas</text>
+  <path d="M150 148 L206 148" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rk)"/>
+  <rect x="210" y="122" width="130" height="52" rx="9" fill="#fff8e1" stroke="#b8860b" stroke-width="1.6"/>
+  <text x="275" y="144" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#6b4c00">puntajes</text>
+  <text x="275" y="162" text-anchor="middle" font-size="10.5" fill="#8a6400">s_i = disconformidad</text>
+  <path d="M275 82 L275 118" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rk)"/>
+  <path d="M340 148 L396 148" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rk)"/>
+  <rect x="400" y="122" width="130" height="52" rx="9" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
+  <text x="465" y="144" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a4d1a">cuantil q</text>
+  <text x="465" y="162" text-anchor="middle" font-size="10.5" fill="#2d6b2d">nivel ajustado por n</text>
+  <path d="M530 148 L586 148" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#rk)"/>
+  <rect x="565" y="112" width="115" height="72" rx="9" fill="#fdecea" stroke="#c62828" stroke-width="1.6"/>
+  <text x="622" y="138" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#8c1a1a">C(x)</text>
+  <text x="622" y="156" text-anchor="middle" font-size="10.5" fill="#a33">conjunto o</text>
+  <text x="622" y="172" text-anchor="middle" font-size="10.5" fill="#a33">intervalo</text>
+  <text x="350" y="222" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a">cobertura garantizada al menos 1 - alfa, sin supuestos sobre la distribución</text>
+  <text x="350" y="248" text-anchor="middle" font-size="11.5" fill="#8c1a1a">la garantía es marginal: vale en promedio sobre todo el espacio de entrada,</text>
+  <text x="350" y="266" text-anchor="middle" font-size="11.5" fill="#8c1a1a">no separadamente en cada region de x</text>
+</svg></div>
+
+</section>
+
+<section>
+<div class="section-label">§ 9 · Predicción conforme</div>
+<h2>La garantía no depende del modelo ni de la distribución</h2>
+$$\mathbb{P}\big( Y_{\text{nuevo}} \in C(X_{\text{nuevo}}) \big) \geq 1 - \alpha \tag{22}$$
+<p class="note">En palabras: el conjunto $C(x)$ contiene la respuesta verdadera al menos el $(1-\alpha)$ de las veces, para cualquier modelo y cualquier distribución. El único supuesto es que calibración y prueba sean intercambiables.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 9 · Predicción conforme</div>
+<h2>El precio es un cuantil corregido por muestra finita</h2>
+$$q = \text{Cuantil}\left( \frac{\lceil (n+1)(1-\alpha) \rceil}{n}; \ \{s_i\}_{i=1}^{n} \right) \tag{23}$$
+<p class="note">En palabras: se pide un cuantil algo más alto que $1-\alpha$ para compensar que hay solo $n$ muestras de calibración. En regresión el conjunto queda $[\hat{\mu}(x) - q, \ \hat{\mu}(x) + q]$.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 9 · Predicción conforme</div>
+<h2>Pero la cobertura es marginal, no condicional</h2>
+<ul>
+<li>Se cumple en promedio sobre toda la población, no dentro de cada subgrupo.</li>
+</ul>
+<p class="note">Un método puede cubrir el 90 % global y solo el 60 % en una minoría, compensando con exceso en la mayoría. Es la limitación que ninguna variante básica resuelve.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 10 · Métricas de regresión</div>
+<h2>Y cuando la salida es continua, cambia el objeto pero no el problema</h2>
+<ul>
+<li>Evaluar una regresión es resumir la distribución de los residuos $r_i = y_i - \hat{y}_i$ en un escalar, y cada resumen trae su propia patología.</li>
+</ul>
+
+</section>
+
+<section>
+<div class="section-label">§ 10 · Métricas de regresión</div>
+<h2>RMSE castiga los outliers; MAE no</h2>
+$$\text{RMSE} = \sqrt{\frac{1}{N} \sum_{i} (y_i - \hat{y}_i)^2} \tag{24}$$
+$$\text{MAE} = \frac{1}{N} \sum_{i} |y_i - \hat{y}_i| \tag{25}$$
+<p class="note">En palabras: elevar al cuadrado hace que un residuo grande domine el promedio. Sobre $y = [10, 100, 0, 50]$ y $\hat{y} = [12, 80, 5, 50]$, el RMSE da $10.36$ y el MAE $6.75$: la brecha es la firma de un outlier.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 10 · Métricas de regresión</div>
+<h2>$R^2$ compara contra predecir siempre la media</h2>
+$$R^2 = 1 - \frac{\sum_i (y_i - \hat{y}_i)^2}{\sum_i (y_i - \bar{y})^2} \tag{26}$$
+<p class="note">En palabras: cuánto del error de la predicción trivial se logró eliminar. Puede ser negativo, y eso significa exactamente que el modelo es peor que responder la media. Además crece al agregar variables aunque sean ruido.</p>
+
+</section>
+
+<section>
+<div class="section-label">§ 10 · Métricas de regresión</div>
+<h2>Y el MAPE es asimétrico y explota cerca de cero</h2>
+$$\text{MAPE} = \frac{100\%}{N} \sum_{i=1}^{N} \left| \frac{y_i - \hat{y}_i}{y_i} \right| \tag{27}$$
+<p class="note">En palabras: al dividir por el valor real, subestimar tiene un error acotado por el 100 % y sobreestimar no tiene tope. Con $y_i$ cercano a cero el término diverge, y con $y_i = 0$ no está definido.</p>
+
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>Evaluar un modelo es subir una escalera de preguntas cada vez más exigentes: acierta, ordena, cree lo correcto, sabe lo que ignora, garantiza.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+
+</body>
+</html>

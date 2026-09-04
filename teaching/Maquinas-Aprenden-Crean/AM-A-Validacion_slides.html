@@ -474,19 +474,72 @@ $$\text{MAE} = \frac{1}{n}\sum_{i=1}^n |\hat y_i - y_i|$$
 </section>
 
 <!-- 24 · puente -->
+<!-- ============ §4 FUGA DE INFORMACIÓN ============ -->
+
 <section>
-<div class="section-label">§ 3 · Entrenamiento, validación y prueba</div>
+<div class="section-label">§ 4 · Fuga de información</div>
+<h2>Pero la partición tiene una puerta lateral</h2>
+<ul>
+<li>Reservar la prueba y no volver a mirarla no basta: su información puede entrar por el preprocesamiento, mucho antes de que se evalúe nada.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Fuga de información</div>
+<h2>El predictor no es solo el modelo</h2>
+<ul>
+<li>Es la función completa del dato crudo a la predicción: estandarizar, imputar faltantes, codificar categóricas, seleccionar variables, reducir dimensión.</li>
+<li>Todas esas etapas tienen parámetros que se estiman de datos, así que todas son parte del ajuste.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Fuga de información</div>
+<h2>Todo lo que se estima, se estima con entrenamiento</h2>
+<ul>
+<li>Y se aplica sin recalcular a validación y prueba: los tres conjuntos se transforman, pero solo uno aporta números al cómo.</li>
+</ul>
+<p class="note">De ahí un detalle que conviene anticipar al estandarizar: hecho así, el entrenamiento queda con media exactamente cero y los otros dos cerca pero no en cero. Esa desviación residual no es un error a corregir, es la diferencia real entre la muestra de ajuste y la que hace de futuro.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Fuga de información</div>
+<h2>La prueba es insesgada solo si el predictor no la vio</h2>
+$$\mathbb{E}\big[\hat{R}_{\text{prueba}}(h)\big] = R(h)$$
+<p class="note">En palabras: si nada en la construcción de $h$ dependió de esas muestras, y son independientes y de la misma distribución que los datos futuros, el promedio medido sobre ellas tiene por esperanza el riesgo poblacional. Rota la condición, la estimación se vuelve optimista.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Fuga de información</div>
+<h2>Y el sesgo tiene tres órdenes de magnitud</h2>
+<ul>
+<li>Sin etiquetas y por característica, como estandarizar cada píxel: filtra media y escala, sesgo pequeño que se diluye como $1/n$.</li>
+<li>Sin etiquetas pero acoplando muestras, como PCA sobre todo el conjunto: filtra estructura, y no se atenúa al crecer la muestra.</li>
+<li>Con etiquetas, como elegir variables por su correlación con $y$: filtra justo lo que se quería medir, y el sesgo puede ser enorme.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Fuga de información</div>
+<h2>La pregunta que resuelve los tres casos</h2>
+<ul>
+<li>¿Qué información estará disponible antes de ver la muestra que se quiere predecir? Si el ajuste usó algo que en producción todavía no existe, hay fuga.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Pero apartar un quinto de los datos es caro</h2>
 <ul>
 <li>Y peor: la estimación queda a merced de qué muestras cayeron justo en esa partición.</li>
 </ul>
 </section>
 
-<!-- ============ §4 VALIDACIÓN CRUZADA ============ -->
+<!-- ============ §5 VALIDACIÓN CRUZADA ============ -->
 
 <!-- 25 -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>¿Se pueden usar todos los datos sin hacer trampa?</h2>
 <ul>
 <li>La salida no es usar cada dato para las dos cosas a la vez, sino en momentos distintos.</li>
@@ -495,7 +548,7 @@ $$\text{MAE} = \frac{1}{n}\sum_{i=1}^n |\hat y_i - y_i|$$
 
 <!-- 26 · SVG k-fold -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>El rol de validación va rotando entre las particiones</h2>
 <ul><li>En cada iteración se entrena con $k-1$ bloques y se valida con el restante.</li></ul>
 <div class="svg-holder">
@@ -566,7 +619,7 @@ $$\text{MAE} = \frac{1}{n}\sum_{i=1}^n |\hat y_i - y_i|$$
 
 <!-- 27 -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>El error de validación cruzada es el promedio de los $k$</h2>
 $$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{validación}}$$
 <p class="note">En palabras: cada dato termina participando en la validación exactamente una vez y en el entrenamiento las otras $k-1$, de modo que ningún dato se usa nunca para las dos cosas simultáneamente.</p>
@@ -574,7 +627,7 @@ $$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{valida
 
 <!-- 28 -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Promediar $k$ estimaciones estabiliza el resultado</h2>
 <ul>
 <li>Deja de depender del azar de una única partición afortunada o desafortunada.</li>
@@ -583,7 +636,7 @@ $$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{valida
 
 <!-- 29 -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Y la dispersión entre particiones es información gratis</h2>
 <ul>
 <li>Si los $k$ errores se parecen, el modelo es estable; si se disparan entre sí, el rendimiento depende demasiado de qué datos tocó.</li>
@@ -593,7 +646,7 @@ $$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{valida
 
 <!-- 30 -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>¿Y si se lleva la partición hasta su límite?</h2>
 <ul>
 <li>Cada partición contiene un solo dato: $k = n$. Es lo que se llama leave-one-out, dejar uno fuera.</li>
@@ -602,7 +655,7 @@ $$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{valida
 
 <!-- 30b · SVG leave-one-out -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Se entrena $n$ veces, cada una sin un dato distinto</h2>
 <ul><li>El predictor de la iteración $i$ nunca vio el punto con que se le evalúa.</li></ul>
 <div class="svg-holder">
@@ -683,7 +736,7 @@ $$\text{Error}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{Error}^{(i)}_{\text{valida
 
 <!-- 30c -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>El error es el promedio de esas $n$ mediciones</h2>
 $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n} L\left(y_i,\, h^{(-i)}(x_i)\right)$$
 <p class="note">En palabras: $h^{(-i)}$ es el predictor ajustado sin la observación $i$, y $L$ la pérdida elegida. Cada término se mide sobre un único punto, de modo que ninguno por separado estima nada: solo el promedio lo hace.</p>
@@ -691,7 +744,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n} L\left(y_i,\, h^{(-i)}(x_i)\rig
 
 <!-- 30d -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Se gana sesgo bajo: cada modelo entrena con $n-1$ de $n$</h2>
 <ul>
 <li>Es casi exactamente el conjunto con que se entrenará el modelo final, así que la estimación no lo castiga por haber visto menos datos.</li>
@@ -700,7 +753,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n} L\left(y_i,\, h^{(-i)}(x_i)\rig
 
 <!-- 30e -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Pero se paga primero en costo</h2>
 <ul>
 <li>Son $n$ ajustes completos del modelo: con $n=200$ es irrelevante, con $n=10^6$ y una red profunda es impracticable.</li>
@@ -709,7 +762,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n} L\left(y_i,\, h^{(-i)}(x_i)\rig
 
 <!-- 35b -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Y después en varianza, que es lo menos evidente</h2>
 <ul>
 <li>Los $n$ conjuntos de entrenamiento difieren en un solo dato, así que los $n$ predictores son casi idénticos y sus errores están correlacionados.</li>
@@ -719,7 +772,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n} L\left(y_i,\, h^{(-i)}(x_i)\rig
 
 <!-- 30f -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Por eso se reserva para conjuntos pequeños</h2>
 <ul>
 <li>Cuando apartar un quinto de los datos es un lujo que no se puede costear; con datos abundantes $k=5$ o $k=10$ entrega lo mismo por una fracción del costo.</li>
@@ -728,7 +781,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n} L\left(y_i,\, h^{(-i)}(x_i)\rig
 
 <!-- 30g -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Para mínimos cuadrados existe un atajo exacto</h2>
 <ul>
 <li>$\hat{y}_i$ es la predicción del modelo entrenado con todos los datos; $H_{ii}$ mide cuánto influye la observación $i$ sobre su propia predicción.</li>
@@ -739,7 +792,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 -
 
 <!-- 38b -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Un solo ajuste entrega los $n$ errores</h2>
 <ul>
 <li>El costo de leave-one-out cae al de entrenar una vez, pero la identidad vale únicamente para modelos lineales en los parámetros ajustados por mínimos cuadrados.</li>
@@ -748,7 +801,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 -
 
 <!-- 31 · puente -->
 <section>
-<div class="section-label">§ 4 · Validación cruzada</div>
+<div class="section-label">§ 5 · Validación cruzada</div>
 <h2>Con el modelo ya elegido queda una última decisión</h2>
 <ul>
 <li>Y es donde más se equivoca en la práctica.</li>
@@ -759,7 +812,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 -
 
 <!-- 32 -->
 <section>
-<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<div class="section-label">§ 6 · Elección y uso final del modelo</div>
 <h2>¿Qué modelo se pone efectivamente a trabajar?</h2>
 <ul>
 <li>La validación dijo cuál familia y qué hiperparámetros; falta decidir con qué datos se entrena la versión definitiva.</li>
@@ -768,7 +821,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 -
 
 <!-- 33 -->
 <section>
-<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<div class="section-label">§ 6 · Elección y uso final del modelo</div>
 <h2>Hay dos opciones igualmente legítimas</h2>
 <ul>
 <li>Usar el modelo tal como quedó entrenado, o reentrenarlo desde cero juntando entrenamiento y validación para aprovechar más datos.</li>
@@ -777,7 +830,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 -
 
 <!-- 34 -->
 <section>
-<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<div class="section-label">§ 6 · Elección y uso final del modelo</div>
 <h2>Y recién entonces se abre el conjunto de prueba</h2>
 <ul>
 <li>Una sola vez, sobre el modelo ya congelado, sin vuelta atrás.</li>
@@ -786,7 +839,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 -
 
 <!-- 35 -->
 <section>
-<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<div class="section-label">§ 6 · Elección y uso final del modelo</div>
 <h2>El número que salga es el número que se reporta</h2>
 <ul>
 <li>Si decepciona, la tentación es volver a ajustar; pero hacerlo convierte ese conjunto en uno más de validación y obliga a conseguir datos nuevos.</li>
@@ -795,7 +848,7 @@ $$\text{Error}_{LOO} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{1 -
 
 <!-- 36 · cierre de sección -->
 <section>
-<div class="section-label">§ 5 · Elección y uso final del modelo</div>
+<div class="section-label">§ 6 · Elección y uso final del modelo</div>
 <h2>La validación es lo que convierte un ajuste en conocimiento</h2>
 <ul>
 <li>Es el árbitro que fija el grado del polinomio, el $k$ de los vecinos y, más adelante, cuándo detener el entrenamiento.</li>

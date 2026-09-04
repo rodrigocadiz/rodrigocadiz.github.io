@@ -120,13 +120,12 @@ p.note {
 .slide-num { display: none; }
 .reveal .controls { color: var(--ink-faint); }
 .reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
 </style>
 </head>
 <body>
+
 <div class="reveal"><div class="slides">
-
-<!-- 1 · PORTADA -->
-
 
 <section>
 <div class="title-slide">
@@ -138,16 +137,16 @@ p.note {
 </section>
 
 <section>
-<h2>Los modelos paramétricos ajustan una fórmula</h2>
+<h2>Todos los modelos anteriores ajustaban una fórmula</h2>
 <ul>
-<li>Una recta, una sigmoide, una gaussiana. Este no ajusta ninguna: parte el espacio en pedazos y predice una constante en cada uno.</li>
+<li>Se fijaba una forma funcional y se estimaban sus parámetros; el árbol no hace nada de eso.</li>
 </ul>
 </section>
 
 <section>
-<h2>Y eso lo hace radicalmente distinto</h2>
+<h2>Pregunta una variable a la vez y responde con una constante</h2>
 <ul>
-<li>No necesita que las características estén en escalas comparables, admite variables categóricas sin transformarlas y se puede leer como una lista de reglas.</li>
+<li>Eso lo vuelve el modelo más legible del curso y también el más inestable; el resto del capítulo es cómo quedarse con lo primero sin lo segundo.</li>
 </ul>
 </section>
 
@@ -155,11 +154,11 @@ p.note {
 <div class="section-label">§ 1 · Estructura</div>
 <h2>Una secuencia de preguntas sobre una característica a la vez</h2>
 <ul>
-<li>Cada nodo interno compara una característica con un umbral; cada hoja guarda una predicción constante.</li>
+<li>Cada nodo interno compara una variable con un umbral y manda la observación a la izquierda o a la derecha; cada hoja entrega la respuesta.</li>
 </ul>
-<div class="svg-holder">
-<svg viewBox="0 0 760 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<div class="svg-holder"><svg viewBox="0 0 760 290" width="100%" style="max-width:760px; height:auto;" xmlns="http://www.w3.org/2000/svg">
   <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <text x="380" y="22" font-size="14" font-weight="bold">Cada nodo interno es una pregunta; cada hoja, una predicción</text>
     <rect x="285" y="44" width="190" height="42" rx="7" fill="#eef3f8" stroke="#33607f" stroke-width="1.6"/>
     <text x="380" y="65" font-size="13">¿x₂ ≤ 2.4?</text>
     <path d="M340,86 L190,126" stroke="#555" stroke-width="1.5" fill="none"/>
@@ -184,154 +183,208 @@ p.note {
     <text x="200" y="216" font-size="12" text-anchor="middle" fill="#444">Cada camino desde la raíz</text>
     <text x="200" y="234" font-size="12" text-anchor="middle" fill="#444">hasta una hoja define una</text>
     <text x="200" y="252" font-size="12" text-anchor="middle" fill="#444">región rectangular del espacio.</text>
-  </g></svg>
-</div>
+    <text x="380" y="282" font-size="11.5" font-style="italic" fill="#666">Las preguntas comparan una sola característica con un umbral, de modo que los cortes son siempre paralelos a los ejes.</text>
+  </g></svg></div>
 </section>
 
 <section>
 <div class="section-label">§ 1 · Estructura</div>
-<h2>El modelo es una función constante por tramos</h2>
-$$h(x) = \sum_{\ell=1}^{L} c_\ell \, \mathbf{1}\{x \in R_\ell\}$$
-<p class="note">En palabras: las hojas definen regiones $R_\ell$ que cubren todo el espacio sin solaparse, y dentro de cada una la predicción no cambia.</p>
-</section>
-
-<section>
-<div class="section-label">§ 1 · Estructura</div>
-<h2>Las regiones son siempre rectángulos alineados con los ejes</h2>
+<h2>El árbol es en realidad una partición del espacio</h2>
 <ul>
-<li>Porque cada pregunta involucra una sola característica. Un árbol no puede trazar una diagonal.</li>
+<li>Las hojas definen regiones $R_1, \dots, R_L$ que cubren $X$ sin traslaparse, y el modelo predice una constante dentro de cada una.</li>
 </ul>
-<p class="note">Para aproximar una frontera oblicua necesita una escalera de muchos cortes, y ahí está su principal debilidad frente a los modelos lineales.</p>
+<p class="note">Como cada corte solo mira una variable, las fronteras son siempre perpendiculares a un eje: el árbol solo sabe dibujar rectángulos alineados con los ejes.</p>
 </section>
 
 <section>
 <div class="section-label">§ 1 · Estructura</div>
-<h2>Falta decir cómo se eligen esas preguntas</h2>
+<h2>Qué constante entrega cada hoja</h2>
 <ul>
-<li>El espacio de árboles posibles es enorme; encontrar el óptimo es intratable.</li>
+<li>En clasificación, la clase mayoritaria $\hat{y} = \arg\max_k p_k$, o la distribución empírica $p_k = n_k/n$ si se quiere un clasificador probabilístico.</li>
+<li>En regresión, el promedio de las respuestas de la región, o la mediana si se busca robustez.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Estructura</div>
+<h2>Y su complejidad no se cuenta en parámetros sino en hojas</h2>
+<ul>
+<li>Profundidad, número de hojas $L$ y número de nodos $|T|$: mientras más profundo, más expresivo y más expuesto a la varianza.</li>
+</ul>
+<p class="note">Con la estructura definida falta lo esencial, que es de dónde salen esas preguntas.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>Entre todos los cortes posibles, ¿cuál conviene hacer ahora?</h2>
+<ul>
+<li>Buscar el árbol que minimiza el riesgo empírico sobre todas las estructuras posibles es intratable, así que se renuncia al óptimo.</li>
 </ul>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Entrenamiento</div>
-<h2>La estrategia es codiciosa: la mejor división ahora, sin mirar adelante</h2>
+<h2>La estrategia es codiciosa: el mejor corte ahora, sin mirar adelante</h2>
 <ul>
-<li>En cada nodo se prueban todos los umbrales de todas las características y se elige el que más reduce la impureza.</li>
+<li>En cada nodo se prueba cada variable y cada umbral, se elige el que más mejora la pureza, y se repite sobre los dos hijos.</li>
 </ul>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Entrenamiento</div>
 <h2>Impureza mide cuán mezcladas están las clases en un nodo</h2>
-$$G(p) = 1 - \sum_k p_k^2 \qquad\text{o}\qquad H(p) = -\sum_k p_k \log p_k$$
-<p class="note">En palabras: Gini y entropía valen cero cuando el nodo es puro y crecen a medida que la distribución de clases se mezcla. $p_k$ es la proporción de la clase $k$ en el nodo.</p>
+$$G(p) = 1 - \sum_k p_k^2 \qquad H(p) = -\sum_k p_k \log p_k$$
+<p class="note">En palabras: $p_k$ es la proporción de la clase $k$ en el nodo. El índice de Gini y la entropía valen cero en un nodo puro y crecen a medida que la distribución se reparte. En regresión el papel de $I$ lo toma la varianza.</p>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Entrenamiento</div>
-<h2>Y la ganancia es cuánto baja al dividir</h2>
-$$\text{Ganancia} = I(S) - \frac{|S_{\text{izq}}|}{|S|} I(S_{\text{izq}}) - \frac{|S_{\text{der}}|}{|S|} I(S_{\text{der}})$$
-<p class="note">En palabras: la impureza del padre menos el promedio ponderado de la de sus hijos. Ponderar por tamaño evita premiar divisiones que aíslan un solo punto.</p>
-</section>
-
-<section>
-<div class="section-label">§ 2 · Entrenamiento</div>
-<h2>¿Por qué no usar directamente el error de clasificación?</h2>
-<ul>
-<li>Parece el criterio natural, y funciona peor. La razón es geométrica: es lineal por tramos, mientras que Gini y la entropía son estrictamente cóncavas.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 2 · Entrenamiento</div>
-<h2>Puede asignar ganancia cero a una división informativa</h2>
-<ul>
-<li>Con 40 y 40 ejemplos, una división en 30/10 y 10/30 no cambia la clase mayoritaria en ninguna parte: el error no se mueve.</li>
-</ul>
-<p class="note">Gini y la entropía sí registran la mejora, porque miden la distribución completa y no solo cuál clase gana. Por eso se dividen con ellas y se poda con el error.</p>
-</section>
-
-<section>
-<div class="section-label">§ 2 · Entrenamiento</div>
-<h2>En regresión el criterio es la varianza dentro del nodo</h2>
-<ul>
-<li>Y la hoja predice la media si se optimiza el error cuadrático, o la mediana si se optimiza el absoluto.</li>
-</ul>
+<h2>Y la ganancia es cuánto baja la impureza al dividir</h2>
+$$\text{Gain} = I(S) - \left[ \frac{|S_{\text{izq}}|}{|S|} I(S_{\text{izq}}) + \frac{|S_{\text{der}}|}{|S|} I(S_{\text{der}}) \right]$$
+<p class="note">En palabras: la impureza del nodo menos el promedio de las impurezas de los hijos, cada una pesada por la fracción de datos que le tocó. Se elige la división que la maximiza.</p>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Entrenamiento</div>
 <h2>Si nada lo detiene, el árbol crece hasta la pureza total</h2>
 <ul>
-<li>Una hoja por ejemplo, error de entrenamiento cero y ninguna capacidad de generalizar.</li>
+<li>Una hoja por observación tiene error de entrenamiento cero y no ha aprendido nada; los árboles que llegan a pureza perfecta casi siempre sobreajustan.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Poda</div>
-<h2>Hay dos maneras de frenarlo</h2>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>Hay dos maneras de frenarlo, y actúan en momentos distintos</h2>
 <ul>
-<li>Poner límites antes de crecer, o dejarlo crecer y recortarlo después.</li>
+<li>La prepoda impone límites antes de crecer: profundidad máxima, mínimo de ejemplos por hoja, ganancia mínima exigida para aceptar una división.</li>
+<li>La poda posterior deja crecer el árbol y después recorta, penalizando el número de hojas.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Poda</div>
-<h2>Los límites previos son los hiperparámetros habituales</h2>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>La poda posterior le pone precio a cada hoja</h2>
+$$R_\alpha(T) = R(T) + \alpha \, L$$
+<p class="note">En palabras: al error del árbol se le suma $\alpha$ por cada una de sus $L$ hojas, de modo que una hoja solo sobrevive si paga su costo en error. El valor de $\alpha$ se elige por validación, no se fija a mano.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · Entrenamiento</div>
+<h2>Falta decir qué es $I$, y hay dos respuestas</h2>
 <ul>
-<li>Profundidad máxima, mínimo de ejemplos para dividir, mínimo por hoja, ganancia mínima exigida.</li>
+<li>Depende de si la salida es una categoría o un número.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 3 · Poda</div>
-<h2>La poda posterior penaliza el número de hojas</h2>
-$$R_\alpha(T) = R(T) + \alpha L$$
-<p class="note">En palabras: al riesgo del árbol se le suma una penalización proporcional a su cantidad de hojas $L$. Es la misma idea de regularización de siempre, con la complejidad medida en hojas en vez de en norma de los parámetros.</p>
-</section>
-
-<section>
-<div class="section-label">§ 3 · Poda</div>
-<h2>Y $\alpha$ se elige por validación</h2>
+<div class="section-label">§ 3 · Árboles de clasificación</div>
+<h2>Con salida categórica, cada corte busca separar clases</h2>
 <ul>
-<li>Valores pequeños permiten árboles grandes; valores altos los reducen. El mismo procedimiento que fija $\lambda$ en los modelos lineales.</li>
+<li>Gini y entropía sirven; el error de clasificación $1 - \max_k p_k$ también se anula en nodos puros, así que en principio parecería equivalente.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 4 · El problema de fondo</div>
-<h2>Un árbol tiene poco sesgo y muchísima varianza</h2>
+<div class="section-label">§ 3 · Árboles de clasificación</div>
+<h2>Pero el error de clasificación funciona peor, y la razón es geométrica</h2>
 <ul>
-<li>Puede representar particiones arbitrariamente complejas, pero cambiar unos pocos datos produce un árbol completamente distinto.</li>
+<li>Es lineal por tramos, mientras que Gini y la entropía son estrictamente cóncavas.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 4 · El problema de fondo</div>
-<h2>La causa está en la codicia</h2>
+<div class="section-label">§ 3 · Árboles de clasificación</div>
+<h2>Puede dar ganancia cero a una división que sí purifica</h2>
 <ul>
-<li>Una división distinta cerca de la raíz cambia todo lo que cuelga debajo. Los errores no se corrigen: se propagan.</li>
+<li>Si los dos hijos conservan la misma clase mayoritaria, el error no se mueve, aunque uno de ellos haya quedado mucho más limpio que el otro.</li>
 </ul>
+<p class="note">La concavidad estricta es lo que registra ese movimiento de masa dentro de la clase mayoritaria: para una función cóncava, repartir en dos nodos desiguales siempre baja el promedio.</p>
 </section>
 
 <section>
-<div class="section-label">§ 4 · El problema de fondo</div>
-<h2>Y contra la varianza alta hay un remedio conocido</h2>
+<div class="section-label">§ 3 · Árboles de clasificación</div>
+<h2>Y la hoja puede entregar una clase o una distribución</h2>
 <ul>
-<li>Promediar. Si se pueden conseguir muchos árboles que se equivoquen de maneras distintas, el promedio será más estable que cualquiera de ellos.</li>
+<li>Conservar $p_k = n_k/n$ convierte al árbol en un clasificador probabilístico, útil cuando se necesita una probabilidad y no solo una etiqueta.</li>
+</ul>
+<p class="note">Cambiar la salida a continua no cambia el algoritmo: cambia únicamente qué mide $I$.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Árboles de regresión</div>
+<h2>Con salida continua, lo que hay que reducir es la dispersión</h2>
+<ul>
+<li>Cada división busca que las observaciones de una misma hoja tengan valores parecidos entre sí.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
+<div class="section-label">§ 4 · Árboles de regresión</div>
+<h2>La impureza pasa a ser la varianza dentro del nodo</h2>
+$$I(S) = \frac{1}{n} \sum_{i=1}^n (y_i - \bar{y})^2 \qquad \hat{y} = \frac{1}{n} \sum_{i=1}^n y_i$$
+<p class="note">En palabras: la impureza es cuánto se dispersan las respuestas dentro de la región, y la hoja predice su promedio. La ganancia y el resto del procedimiento son idénticos al caso de clasificación.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Árboles de regresión</div>
+<h2>El resultado es una función constante por tramos</h2>
+<ul>
+<li>Una superficie escalonada, no una curva suave: dentro de cada rectángulo la predicción no varía.</li>
+</ul>
+<p class="note">De ahí una limitación que conviene decir en voz alta: un árbol no puede extrapolar. Fuera del rango observado devuelve el valor de la hoja del borde, para siempre.</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Propiedades estadísticas</div>
+<h2>Dos muestras parecidas producen árboles muy distintos</h2>
+<ul>
+<li>Cambiar unas pocas observaciones puede reescribir la estructura completa; es el rasgo que define el comportamiento estadístico del método.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Propiedades estadísticas</div>
+<h2>Sesgo bajo y varianza alta, y el intercambio es ajustable</h2>
+<ul>
+<li>Un árbol profundo ajusta con gran detalle, así que su sesgo es bajo, pero su varianza es enorme.</li>
+<li>Uno superficial simplifica en exceso: más sesgo, pero mucho más estable.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Propiedades estadísticas</div>
+<h2>La causa de la varianza está en la codicia</h2>
+<ul>
+<li>El corte de la raíz se elige sin mirar adelante, y un corte distinto arriba reescribe todo el subárbol que cuelga de él: el error no se promedia, se propaga hacia abajo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Propiedades estadísticas</div>
+<h2>Y contra varianza alta con sesgo bajo hay un remedio conocido</h2>
+<ul>
+<li>Promediar muchos predictores ruidosos pero centrados. Falta que sean distintos entre sí.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Bosques aleatorios</div>
+<h2>¿Se puede bajar la varianza sin volver a subir el sesgo?</h2>
+<ul>
+<li>Sí, si se construyen muchos árboles profundos y se promedian; el problema es que entrenados con los mismos datos saldrían todos iguales.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Bosques aleatorios</div>
 <h2>Se fabrica diversidad por dos vías</h2>
 <ul>
-<li>Cada árbol ve una muestra bootstrap distinta, y en cada división solo puede mirar un subconjunto aleatorio de características.</li>
+<li>Bootstrap de las observaciones y, en cada nodo, un subconjunto aleatorio de variables candidatas.</li>
 </ul>
-<div class="svg-holder">
-<svg viewBox="0 0 760 285" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<div class="svg-holder"><svg viewBox="0 0 760 285" width="100%" style="max-width:760px; height:auto;" xmlns="http://www.w3.org/2000/svg">
   <defs><marker id="ar-bg" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L0,5 L8,2.5 z" fill="#555"/></marker></defs>
   <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222" text-anchor="middle">
+    <text x="380" y="22" font-size="14" font-weight="bold">Bagging: muchos árboles inestables promediados dan uno estable</text>
     <rect x="20" y="105" width="112" height="56" rx="7" fill="#f0f0ea" stroke="#555" stroke-width="1.6"/>
     <text x="76" y="130" font-size="12.5" font-weight="bold">Datos</text>
     <text x="76" y="148" font-size="11" fill="#666">n ejemplos</text>
@@ -366,131 +419,172 @@ $$R_\alpha(T) = R(T) + \alpha L$$
     <rect x="578" y="105" width="150" height="56" rx="7" fill="#dcecdc" stroke="#2f6b33" stroke-width="1.8"/>
     <text x="653" y="128" font-size="12.5" font-weight="bold">Voto mayoritario</text>
     <text x="653" y="147" font-size="11" fill="#666">o promedio</text>
-  </g></svg>
-</div>
+    <text x="380" y="275" font-size="11.5" font-style="italic" fill="#666">Cada árbol se equivoca de manera distinta; al promediar, los errores se cancelan y el sesgo se conserva.</text>
+  </g></svg></div>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
+<div class="section-label">§ 6 · Bosques aleatorios</div>
+<h2>El bootstrap remuestrea con reemplazo</h2>
+<ul>
+<li>De un conjunto de tamaño $n$ se extraen $n$ observaciones con reposición, así que algunas se repiten y otras quedan fuera.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Bosques aleatorios</div>
 <h2>La segunda fuente es la menos obvia y la más importante</h2>
 <ul>
-<li>Sin ella todos los árboles elegirían la misma característica dominante en la raíz y quedarían muy parecidos.</li>
+<li>Si en cada nodo se mirasen todas las variables, una dominante sería elegida por todos los árboles y el bosque promediaría copias.</li>
 </ul>
-<p class="note">Restringir las candidatas obliga a que árboles distintos exploren estructuras distintas, y solo entonces promediar sirve de algo.</p>
+<p class="note">Restringir a un subconjunto aleatorio, típicamente $\sqrt{p}$ variables en clasificación, obliga a los árboles a discrepar. Promediar predictores correlacionados casi no baja la varianza; ese es el punto entero.</p>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
-<h2>El remuestreo deja fuera cerca de un tercio de los datos</h2>
+<div class="section-label">§ 6 · Bosques aleatorios</div>
+<h2>Y el remuestreo deja fuera un tercio de los datos, gratis</h2>
 <ul>
-<li>Esos ejemplos no vistos permiten estimar el error de generalización sin apartar un conjunto de validación.</li>
+<li>Cada muestra bootstrap omite alrededor del 37% de las observaciones, que sirven para evaluar ese árbol sin apartar un conjunto de validación.</li>
 </ul>
+<p class="note">Es el error out-of-bag: una estimación honesta del desempeño obtenida como subproducto del propio entrenamiento.</p>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
+<div class="section-label">§ 6 · Bosques aleatorios</div>
 <h2>Lo que se ve al promediar</h2>
 <ul>
-<li>Un árbol único alcanza 0.95 de acierto pero su partición está llena de franjas delgadas que persiguen puntos sueltos.</li>
+<li>Sobre dos clases en anillos concéntricos, una geometría que ningún corte paralelo a los ejes captura bien, un árbol profundo deja franjas espurias que el promedio de cincuenta cancela.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
-<h2>Con cincuenta árboles esas franjas desaparecen</h2>
+<div class="section-label">§ 6 · Bosques aleatorios</div>
+<h2>Y agregar árboles nunca empeora</h2>
 <ul>
-<li>El acierto sube a 0.986 y, sobre todo, la región se vuelve un bloque compacto: cada franja espuria estaba en un árbol y no en los demás.</li>
+<li>El número de árboles no es un hiperparámetro que sobreajuste: se aumenta hasta que el error se estabiliza y ahí se deja.</li>
 </ul>
+<p class="note">Existe otra forma de combinar árboles, y tiene exactamente la propiedad opuesta.</p>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
-<h2>Y algo que conviene decir explícitamente</h2>
+<div class="section-label">§ 7 · Boosting</div>
+<h2>¿Y si en vez de promediar iguales, cada árbol corrigiera al anterior?</h2>
 <ul>
-<li>El bosque sigue sin poder trazar una diagonal. Promediar reduce varianza, no sesgo.</li>
+<li>En lugar de construirlos en paralelo y luego promediar, se construyen en cadena, cada uno sobre lo que quedó sin explicar.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
-<h2>Agregar árboles nunca empeora</h2>
+<div class="section-label">§ 7 · Boosting</div>
+<h2>Dos maneras de combinar, dos comportamientos opuestos</h2>
 <ul>
-<li>Cada uno se entrena de forma independiente, así que sumar términos al promedio solo puede estabilizarlo. El número de árboles no es un hiperparámetro delicado.</li>
+<li>Bosque: árboles profundos e independientes que se promedian. Boosting: troncos débiles y encadenados que se suman.</li>
 </ul>
+<div class="svg-holder"><svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 920 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<defs><marker id="fa" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#5a5a5a"/></marker></defs>
+<text x="265" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#4e79a7">Bosque: en paralelo, sobre remuestreos</text>
+<rect x="20" y="44" width="120" height="44" rx="5" fill="#9aa0a6" fill-opacity="0.22" stroke="#9aa0a6" stroke-width="1.4"/><text x="80.0" y="60.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">datos</text><text x="80.0" y="79.0" text-anchor="middle" font-size="12" fill="#5a5a5a">n observaciones</text>
+<line x1="140" y1="66" x2="196" y2="66" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/><line x1="140" y1="66" x2="196" y2="122" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/><line x1="140" y1="66" x2="196" y2="178" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/>
+<rect x="200" y="44" width="120" height="44" rx="5" fill="#4e79a7" fill-opacity="0.22" stroke="#4e79a7" stroke-width="1.4"/><text x="260.0" y="60.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">árbol 1</text><text x="260.0" y="79.0" text-anchor="middle" font-size="12" fill="#5a5a5a">profundo</text>
+<rect x="200" y="100" width="120" height="44" rx="5" fill="#4e79a7" fill-opacity="0.22" stroke="#4e79a7" stroke-width="1.4"/><text x="260.0" y="116.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">árbol 2</text><text x="260.0" y="135.0" text-anchor="middle" font-size="12" fill="#5a5a5a">profundo</text>
+<rect x="200" y="156" width="120" height="44" rx="5" fill="#4e79a7" fill-opacity="0.22" stroke="#4e79a7" stroke-width="1.4"/><text x="260.0" y="172.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">árbol B</text><text x="260.0" y="191.0" text-anchor="middle" font-size="12" fill="#5a5a5a">profundo</text>
+<line x1="320" y1="66" x2="376" y2="122" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/><line x1="320" y1="122" x2="376" y2="122" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/><line x1="320" y1="178" x2="376" y2="122" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/>
+<rect x="380" y="100" width="120" height="44" rx="5" fill="#4e79a7" fill-opacity="0.38" stroke="#4e79a7" stroke-width="1.4"/><text x="440.0" y="116.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">promedio</text><text x="440.0" y="135.0" text-anchor="middle" font-size="12" fill="#5a5a5a">baja la varianza</text>
+<text x="80" y="230" font-size="13" fill="#5a5a5a">independientes entre sí</text>
+<text x="80" y="250" font-size="13" fill="#5a5a5a">agregar árboles nunca empeora</text>
+<line x1="530" y1="20" x2="530" y2="280" stroke="#9aa0a6" stroke-width="1.2" stroke-dasharray="4,5"/>
+<text x="724" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="#c0703a">Boosting: en cadena, sobre los residuos</text>
+<rect x="556" y="68" width="96" height="44" rx="5" fill="#c0703a" fill-opacity="0.22" stroke="#c0703a" stroke-width="1.4"/><text x="604.0" y="84.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">tronco 1</text><text x="604.0" y="103.0" text-anchor="middle" font-size="12" fill="#5a5a5a">débil</text>
+<rect x="676" y="68" width="96" height="44" rx="5" fill="#c0703a" fill-opacity="0.28" stroke="#c0703a" stroke-width="1.4"/><text x="724.0" y="84.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">tronco 2</text><text x="724.0" y="103.0" text-anchor="middle" font-size="12" fill="#5a5a5a">débil</text>
+<rect x="796" y="68" width="96" height="44" rx="5" fill="#c0703a" fill-opacity="0.34" stroke="#c0703a" stroke-width="1.4"/><text x="844.0" y="84.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">tronco M</text><text x="844.0" y="103.0" text-anchor="middle" font-size="12" fill="#5a5a5a">débil</text>
+<line x1="652" y1="90" x2="672" y2="90" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/><line x1="772" y1="90" x2="792" y2="90" stroke="#5a5a5a" stroke-width="1.8" marker-end="url(#fa)"/>
+<text x="724" y="150" text-anchor="middle" font-size="13" fill="#5a5a5a">cada uno ajusta lo que el anterior dejó sin explicar</text>
+<text x="724" y="176" text-anchor="middle" font-size="13" fill="#5a5a5a">los términos no son independientes</text>
+<text x="724" y="202" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a1a1a">aquí sí se sobreajusta al insistir</text>
+</svg></div>
 </section>
 
 <section>
-<div class="section-label">§ 5 · Bosques aleatorios</div>
-<h2>Existe otra forma de combinar árboles, con la propiedad opuesta</h2>
+<div class="section-label">§ 7 · Boosting</div>
+<h2>El modelo es una suma aditiva de árboles débiles</h2>
+$$F_M(x) = \sum_{m=1}^M \gamma_m f_m(x)$$
+<p class="note">En palabras: cada $f_m$ es un árbol deliberadamente pequeño, a menudo un tronco de una sola división, y $\gamma_m$ su peso. Ninguno pretende resolver el problema solo.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Boosting</div>
+<h2>Y se construye de a un término por vez</h2>
+$$F_m(x) = F_{m-1}(x) + \eta \, \gamma_m f_m(x)$$
+<p class="note">En palabras: en cada ronda se calculan los pseudo-residuales $r_i = -\partial L(y_i, F(x_i)) / \partial F(x_i)$, se ajusta un árbol a ellos y se suma al modelo escalado por la tasa de aprendizaje $\eta$. Con $\eta$ pequeño se avanza lento y se generaliza mejor.</p>
+</section>
+
+<section>
+<div class="section-label">§ 7 · Boosting</div>
+<h2>Pero ahora los términos no son independientes</h2>
 <ul>
-<li>En vez de promediar muchos independientes, encadenarlos para que cada uno corrija al anterior.</li>
+<li>Cada árbol se ajustó a los errores de la suma anterior, así que insistir empeora: el error de entrenamiento nunca deja de bajar y el de prueba toca fondo y vuelve a subir.</li>
 </ul>
+<p class="note">Por eso el número de rondas sí es un hiperparámetro que sobreajusta, y se controla con early stopping sobre un conjunto de validación propio, además de limitar la profundidad y submuestrear.</p>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Boosting</div>
-<h2>Cada árbol se ajusta a lo que el anterior dejó sin explicar</h2>
-$$F_m(x) = F_{m-1}(x) + \nu \, h_m(x), \qquad h_m \text{ ajustado a los residuos de } F_{m-1}$$
-<p class="note">En palabras: el modelo se construye por acumulación. La tasa $\nu$ decide cuánto se incorpora de cada nuevo árbol, y valores pequeños obligan a avanzar despacio.</p>
-</section>
-
-<section>
-<div class="section-label">§ 6 · Boosting</div>
-<h2>Los árboles son deliberadamente débiles</h2>
+<div class="section-label">§ 8 · Aspectos prácticos</div>
+<h2>Llevarlo a datos reales pide cuidar tres frentes</h2>
 <ul>
-<li>A menudo un solo corte. La potencia no viene de cada término sino de la suma de cientos de ellos.</li>
+<li>Empezando por una buena noticia: los árboles no requieren normalizar las variables, porque solo comparan cada una con un umbral.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Boosting</div>
-<h2>Y ahora los términos no son independientes</h2>
+<div class="section-label">§ 8 · Aspectos prácticos</div>
+<h2>Las categóricas se dividen explícitamente, y eso se encarece rápido</h2>
 <ul>
-<li>Cada uno se define en función de los anteriores. Eso cambia por completo el efecto de agregar más.</li>
+<li>Con muchas categorías el número de particiones posibles explota, y se recurre a codificaciones por impacto o a métodos como CatBoost.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Boosting</div>
-<h2>Con una ronda el modelo es un escalón; con veinticuatro, la curva</h2>
+<div class="section-label">§ 8 · Aspectos prácticos</div>
+<h2>Pero esas codificaciones traen un riesgo propio</h2>
 <ul>
-<li>Con seiscientas se vuelve una escalera que persigue cada punto.</li>
+<li>El target encoding sustituye cada categoría por el promedio de la etiqueta en ella, y por lo tanto usa $y$ de forma directa.</li>
+</ul>
+<p class="note">Calcularlo sobre el conjunto completo es la variante más severa de fuga de información, la que infla las métricas de forma dramática y no marginal. Debe estimarse dentro de cada partición de entrenamiento; el criterio general está en <a href="AM-A-Validacion.html">validación y generalización</a>.</p>
+</section>
+
+<section>
+<div class="section-label">§ 8 · Aspectos prácticos</div>
+<h2>Los faltantes y el desbalance tienen soluciones propias del método</h2>
+<ul>
+<li>Un valor faltante puede recibir una dirección por defecto en cada división, sin imputar nada.</li>
+<li>Frente a clases desbalanceadas: ponderar clases, mover el umbral, y evaluar con métricas que resistan el desbalance.</li>
 </ul>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Boosting</div>
-<h2>El error de entrenamiento nunca deja de bajar</h2>
+<div class="section-label">§ 8 · Aspectos prácticos</div>
+<h2>Y la evaluación tiene aquí un atajo que otros modelos no tienen</h2>
 <ul>
-<li>De 0.977 a 0.377. Siempre queda un residuo más que corregir.</li>
+<li>Validación cruzada estratificada en clasificación, o directamente el error out-of-bag en bosques, que no cuesta datos.</li>
 </ul>
+<p class="note">En boosting, además, el early stopping exige un conjunto de validación independiente: detener el entrenamiento mirando la prueba la contamina igual que cualquier otra decisión tomada con ella.</p>
 </section>
 
 <section>
-<div class="section-label">§ 6 · Boosting</div>
-<h2>Pero el de prueba toca fondo y vuelve a subir</h2>
+<div class="section-label">§ 8 · Aspectos prácticos</div>
+<h2>La interpretación es la trampa que queda</h2>
 <ul>
-<li>Mínimo de 0.610 en la ronda 24, y desde ahí sube hasta 0.670.</li>
+<li>Las medidas de importancia de variables engañan cuando dos variables están correlacionadas, porque el mérito se reparte de forma arbitraria entre ellas.</li>
 </ul>
-<p class="note">Esta es la diferencia de fondo con los bosques: ahí agregar árboles nunca empeora; aquí el número de rondas es un hiperparámetro que hay que elegir por validación, no maximizar.</p>
-</section>
-
-<section>
-<div class="section-label">§ 6 · Boosting</div>
-<h2>Dos formas de combinar, dos comportamientos opuestos</h2>
-<ul>
-<li>Bagging reduce varianza y es indiferente al número de términos. Boosting reduce sesgo y sobreajusta si se insiste.</li>
-</ul>
+<p class="note">Conviene contrastar varias técnicas —dependencia parcial, curvas ICE, SHAP— y no leer una sola tabla de importancias como si fuera causal.</p>
 </section>
 
 <section>
 <div class="close-slide">
-  <h1>Un árbol solo es inestable; muchos árboles independientes se estabilizan al promediarse, y muchos árboles encadenados se vuelven precisos hasta que empiezan a memorizar.</h1>
+  <h1>Un árbol pregunta una variable a la vez: por eso es legible y por eso es inestable, y combinar muchos es cómo quedarse con lo primero sin lo segundo.</h1>
   <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
 </div>
 </section>
-
-
 
 </div></div>
 
@@ -513,5 +607,6 @@ Reveal.initialize({
   plugins: [ RevealMath.KaTeX ]
 });
 </script>
+
 </body>
 </html>
