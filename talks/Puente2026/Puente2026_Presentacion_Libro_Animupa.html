@@ -82,6 +82,8 @@ body{font-family:Poppins,system-ui,sans-serif;color:var(--navy);-webkit-font-smo
 #tclock span{opacity:.85}
 #tclock.early{border-left-color:#8fd3a8}#tclock.late{border-left-color:var(--yel)}#tclock.late2{border-left-color:var(--mag)}
 body.tmode #tbar{display:block}
+#tbar.flash{display:block;animation:tflash 1.6s ease-out}
+@keyframes tflash{0%{background:var(--yel);height:10px}40%{background:var(--yel);height:10px}100%{background:rgba(125,132,150,.18);height:4px}}
 #help{position:fixed;right:16px;top:14px;z-index:60;font:500 13px Poppins,sans-serif;color:#fff;background:rgba(5,20,45,.85);padding:10px 14px;border-radius:4px;opacity:0;transition:opacity .4s;pointer-events:none;line-height:1.6}
 #help.on{opacity:1}
 
@@ -653,7 +655,7 @@ svg .grow{transform-box:fill-box}
 <div id="tbar"><div id="tfill"></div></div>
 <div id="tclock"></div>
 <div id="notes"><div class="t"><span id="nt-title"></span><span id="nt-time">00:00</span></div><div id="nt-body"></div></div>
-<div id="help">→ / espacio: avanzar · ←: retroceder<br>F: pantalla completa · N: notas y cronómetro<br>T: barra de tiempo por lámina<br>Inicio / Fin · H: ocultar esta ayuda</div>
+<div id="help">→ / espacio: avanzar · ←: retroceder<br>F: pantalla completa · N: notas y cronómetro<br>T: barra de tiempo por lámina · R: reiniciar el tiempo desde cero<br>Inicio / Fin · H: ocultar esta ayuda</div>
 <script>
 (function(){
   const stage=document.getElementById('stage');
@@ -776,7 +778,7 @@ svg .grow{transform-box:fill-box}
     else if(k==='Home') show(0); else if(k==='End') show(N-1);
     else if(k==='n'||k==='N') notes.classList.toggle('on');
     else if(k==='t'||k==='T') setT(!tmode);
-    else if(k==='r'||k==='R'){ t0=Date.now()-startAt[cur]*1000; slideT0=Date.now(); tick(); }
+    else if(k==='r'||k==='R'){ t0=Date.now(); slideT0=Date.now(); tick(); tbar.classList.remove('flash'); void tbar.offsetWidth; tbar.classList.add('flash'); setTimeout(()=>tbar.classList.remove('flash'),1600); }
     else if(k==='f'||k==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{}); else document.exitFullscreen(); }
     else if(k==='h'||k==='H'||k==='?') document.getElementById('help').classList.toggle('on');
   });
