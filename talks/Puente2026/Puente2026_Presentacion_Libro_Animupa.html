@@ -81,7 +81,7 @@ body{font-family:Poppins,system-ui,sans-serif;color:var(--navy);-webkit-font-smo
 #tclock b{font-weight:700;font-size:16px;margin-right:8px;letter-spacing:.02em}
 #tclock span{opacity:.85}
 #tclock.early{border-left-color:#8fd3a8}#tclock.late{border-left-color:var(--yel)}#tclock.late2{border-left-color:var(--mag)}
-body.tmode #tbar,body.tmode #tclock{display:block}
+body.tmode #tbar{display:block}
 #help{position:fixed;right:16px;top:14px;z-index:60;font:500 13px Poppins,sans-serif;color:#fff;background:rgba(5,20,45,.85);padding:10px 14px;border-radius:4px;opacity:0;transition:opacity .4s;pointer-events:none;line-height:1.6}
 #help.on{opacity:1}
 
@@ -653,7 +653,7 @@ svg .grow{transform-box:fill-box}
 <div id="tbar"><div id="tfill"></div></div>
 <div id="tclock"></div>
 <div id="notes"><div class="t"><span id="nt-title"></span><span id="nt-time">00:00</span></div><div id="nt-body"></div></div>
-<div id="help">→ / espacio: avanzar · ←: retroceder<br>F: pantalla completa · N: notas y cronómetro<br>T: reloj y ritmo · R: iniciar o reiniciar el reloj<br>Inicio / Fin · H: ocultar esta ayuda</div>
+<div id="help">→ / espacio: avanzar · ←: retroceder<br>F: pantalla completa · N: notas y cronómetro<br>T: barra de tiempo por lámina<br>Inicio / Fin · H: ocultar esta ayuda</div>
 <script>
 (function(){
   const stage=document.getElementById('stage');
@@ -757,7 +757,7 @@ svg .grow{transform-box:fill-box}
     const on=(Date.now()-slideT0)/1000, a=allot[cur];
     const frac=Math.min(1,on/a);
     tfill.style.width=(frac*100)+'%';
-    tbar.classList.toggle('over', t0 && on>a);
+    tbar.classList.toggle('over', on>a);
     if(!t0){ tclock.innerHTML='<b>00:00</b><span>R para iniciar</span>'; tclock.className=''; return; }
     const delta=el-(startAt[cur]+Math.min(on,a));
     let cls='ok', txt='a tiempo';
