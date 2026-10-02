@@ -1,0 +1,1753 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perceptrón</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+/* KaTeX escala las fórmulas en línea a 1.21em; con Alegreya Sans se ven desproporcionadas */
+.reveal :not(.katex-display) > .katex { font-size: 1.02em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
+.viz { width:100%; margin-top:0.3em; }
+.viz .ctrl { display:flex; gap:1.6em; align-items:center; justify-content:center; font-size:0.95em; color:var(--ink-soft); margin-bottom:0.45em; }
+.viz .ctrl label { display:flex; gap:0.5em; align-items:center; white-space:nowrap; }
+.viz input[type=range] { width:14em; height:1.1em; accent-color:var(--pluto-blue); }
+.viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:1.6em; }
+.viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
+.viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft); font-variant-numeric:tabular-nums; margin-top:0.35em; }
+</style>
+</head>
+<body>
+
+<div class="reveal"><div class="slides">
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Perceptrón</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Una neurona biológica suma señales y, si pasan un umbral, dispara</h2>
+<ul><li>Las dendritas reciben señales de otras neuronas, cada sinapsis con su fuerza; el soma las acumula y el axón transmite un pulso si el total supera el umbral.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222" text-anchor="middle">
+    <g stroke="#a35a1f" stroke-width="3" fill="none" stroke-linecap="round">
+      <path d="M150,120 L95,70 L60,55"/><path d="M95,70 L80,35"/><path d="M150,128 L85,120 L45,105"/><path d="M85,120 L55,140"/>
+      <path d="M152,140 L100,185 L65,205"/><path d="M100,185 L95,225"/><path d="M160,108 L140,55 L120,30"/><path d="M140,55 L165,25"/>
+    </g>
+    <circle cx="180" cy="130" r="32" fill="#f6e3d3" stroke="#a35a1f" stroke-width="2.5"/>
+    <circle cx="183" cy="128" r="10" fill="#d9a77f"/>
+    <path d="M212,130 L430,130" stroke="#a35a1f" stroke-width="3.5"/>
+    <g fill="#eef3f8" stroke="#33607f" stroke-width="1.5">
+      <rect x="240" y="122" width="40" height="16" rx="8"/><rect x="290" y="122" width="40" height="16" rx="8"/>
+      <rect x="340" y="122" width="40" height="16" rx="8"/><rect x="390" y="122" width="36" height="16" rx="8"/>
+    </g>
+    <g stroke="#a35a1f" stroke-width="2.5" fill="none" stroke-linecap="round">
+      <path d="M430,130 L465,100"/><path d="M430,130 L470,130"/><path d="M430,130 L465,160"/>
+    </g>
+    <circle cx="468" cy="98" r="5" fill="#a35a1f"/><circle cx="473" cy="130" r="5" fill="#a35a1f"/><circle cx="468" cy="162" r="5" fill="#a35a1f"/>
+    <text x="70" y="248" font-size="12.5" fill="#a35a1f">dendritas</text>
+    <text x="180" y="185" font-size="12.5" fill="#a35a1f">soma</text>
+    <text x="335" y="160" font-size="12.5" fill="#33607f">axón</text>
+    <text x="470" y="200" font-size="12.5" fill="#a35a1f">sinapsis</text>
+    <line x1="510" y1="25" x2="510" y2="240" stroke="#ddd"/>
+    <g text-anchor="start" font-size="12.5">
+      <text x="525" y="45" font-weight="bold" font-size="13.5">En la neurona artificial</text>
+      <text x="525" y="80">dendritas y sinapsis →</text><text x="545" y="97" fill="#4e79a7">entradas xⱼ con pesos wⱼ</text>
+      <text x="525" y="127">soma →</text><text x="545" y="144" fill="#4e79a7">suma z = Σ wⱼ xⱼ + b</text>
+      <text x="525" y="174">umbral de disparo →</text><text x="545" y="191" fill="#4e79a7">signo(z)</text>
+      <text x="525" y="221">axón →</text><text x="545" y="238" fill="#4e79a7">salida ŷ</text>
+    </g>
+  </g>
+</svg>
+</div>
+</section>
+
+<section>
+<h2>McCulloch y Pitts la convirtieron en una unidad lógica</h2>
+<ul>
+<li>En 1943 describieron la neurona como entradas binarias, pesos, una suma y un umbral, y mostraron que redes de esas unidades calculan cualquier función lógica.</li>
+<li>Pero los pesos había que fijarlos a mano: la unidad no aprendía.</li>
+</ul>
+</section>
+
+<section>
+<h2>Rosenblatt le agregó lo que faltaba: aprender los pesos de ejemplos</h2>
+<ul>
+<li>El <strong>perceptrón</strong> (1958) ajusta sus pesos con una regla simple cada vez que se equivoca.</li>
+<li>Se construyó incluso como máquina, el Mark I Perceptron, que aprendía a reconocer figuras con una grilla de 20 × 20 fotoceldas.</li>
+</ul>
+</section>
+
+<section>
+<h2>En una sola neurona ya aparecen las tres preguntas de cualquier red</h2>
+<ul>
+<li>Qué función calcula, cómo se ajustan sus parámetros a partir de datos, y qué es lo que no puede representar.</li>
+</ul>
+</section>
+
+<!-- ============ § 1 ============ -->
+<section>
+<div class="section-label">§ 1 · Una neurona que decide</div>
+<h2>¿Cómo decide una sola neurona entre dos clases?</h2>
+<ul>
+<li>Cada observación es un vector de características $x \in \mathbb{R}^d$, por ejemplo $d$ mediciones de un sensor, con una clase $y \in \{-1, +1\}$.</li>
+<li>La neurona tiene que responder $+1$ o $-1$ a partir de $x$.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Una neurona que decide</div>
+<h2>Suma las entradas con pesos y responde con el signo</h2>
+<ul><li>Los <strong>pesos</strong> $w \in \mathbb{R}^d$ dicen cuánto aporta cada entrada; el <strong>sesgo</strong> $b$ fija el umbral; $z$ es la <strong>preactivación</strong>:</li></ul>
+$$z = w^\top x + b = \sum_{j=1}^{d} w_j x_j + b, \qquad \hat{y} = \operatorname{signo}(z)$$
+<p class="note">En palabras: si la suma ponderada supera el umbral, la neurona responde +1; si no, −1.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Una neurona que decide</div>
+<h2>El perceptrón, dibujado</h2>
+<ul><li>Cada entrada viaja por una conexión con su peso; el nodo Σ calcula $z$ y la caja aplica el signo.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="fln" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#444"/></marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222" text-anchor="middle">
+    <text x="380" y="20" font-size="14" font-weight="bold">El perceptrón: suma ponderada y signo</text>
+    <circle cx="90" cy="55" r="19" fill="#fff" stroke="#444" stroke-width="1.5"/><text x="90" y="60">x₁</text>
+    <circle cx="90" cy="108" r="19" fill="#fff" stroke="#444" stroke-width="1.5"/><text x="90" y="113">x₂</text>
+    <text x="90" y="143" font-size="16">⋮</text>
+    <circle cx="90" cy="170" r="19" fill="#fff" stroke="#444" stroke-width="1.5"/><text x="90" y="175">x<tspan baseline-shift="sub" font-size="10">d</tspan></text>
+    <circle cx="90" cy="222" r="17" fill="#eee" stroke="#999" stroke-width="1.5"/><text x="90" y="227">1</text>
+    <text x="40" y="226" font-size="11" fill="#666">sesgo</text>
+    <path d="M109,58 L329,124" stroke="#4e79a7" stroke-width="2" fill="none" marker-end="url(#fln)"/>
+    <path d="M109,110 L327,128" stroke="#4e79a7" stroke-width="2" fill="none" marker-end="url(#fln)"/>
+    <path d="M109,168 L327,136" stroke="#4e79a7" stroke-width="2" fill="none" marker-end="url(#fln)"/>
+    <path d="M107,218 L329,142" stroke="#999" stroke-width="2" fill="none" marker-end="url(#fln)"/>
+    <text x="210" y="80" fill="#4e79a7">w₁</text><text x="210" y="112" fill="#4e79a7">w₂</text>
+    <text x="210" y="148" fill="#4e79a7">w<tspan baseline-shift="sub" font-size="10">d</tspan></text><text x="210" y="196" fill="#777">b</text>
+    <circle cx="360" cy="132" r="30" fill="#fff7d6" stroke="#444" stroke-width="1.6"/><text x="360" y="140" font-size="24">Σ</text>
+    <text x="360" y="182" font-size="12.5" fill="#555">z = wᵀx + b</text>
+    <path d="M390,132 L456,132" stroke="#444" stroke-width="1.6" fill="none" marker-end="url(#fln)"/>
+    <rect x="460" y="104" width="64" height="56" fill="#fff" stroke="#444" stroke-width="1.6"/>
+    <path d="M472,146 L492,146 L492,118 L512,118" stroke="#222" stroke-width="2.2" fill="none"/>
+    <text x="492" y="178" font-size="12.5" fill="#555">signo(z)</text>
+    <path d="M524,132 L606,132" stroke="#444" stroke-width="1.6" fill="none" marker-end="url(#fln)"/>
+    <circle cx="634" cy="132" r="25" fill="#dcecdc" stroke="#3a8c4f" stroke-width="1.6"/><text x="634" y="137">ŷ</text>
+    <text x="634" y="178" font-size="12.5" fill="#555">−1 o +1</text>
+  </g></svg></div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Una neurona que decide</div>
+<h2>La frontera de decisión es un hiperplano perpendicular a w</h2>
+<ul><li>Los puntos con $z = 0$ forman una recta en el plano, un plano en tres dimensiones: un <strong>hiperplano</strong>.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="flg" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#c0392b"/></marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222" text-anchor="middle">
+    <text x="380" y="20" font-size="14" font-weight="bold">La frontera es un hiperplano perpendicular a w</text>
+    <polygon points="120,250 400,60 430,60 430,250" fill="#4e79a7" opacity="0.10"/>
+    <polygon points="60,60 400,60 120,250 60,250" fill="#e8743b" opacity="0.10"/>
+    <line x1="120" y1="250" x2="400" y2="60" stroke="#222" stroke-width="2.4"/>
+    <path d="M260,155 L299,213" stroke="#c0392b" stroke-width="2.6" fill="none" marker-end="url(#flg)"/>
+    <text x="312" y="222" fill="#c0392b" font-size="15" font-weight="bold">w</text>
+    <circle cx="150" cy="140" r="3.5" fill="#222"/><text x="140" y="132" font-size="12">origen</text>
+    <line x1="150" y1="140" x2="191.7" y2="201.3" stroke="#666" stroke-width="1.4" stroke-dasharray="4,3"/>
+    <text x="146" y="190" font-size="12" fill="#555">|b| / ‖w‖</text>
+    <circle cx="370" cy="200" r="5" fill="#4e79a7"/><text x="384" y="206" font-size="14">x</text>
+    <line x1="370" y1="200" x2="331.8" y2="143.1" stroke="#4e79a7" stroke-width="1.6" stroke-dasharray="4,3"/>
+    <text x="398" y="160" font-size="12" fill="#4e79a7">z / ‖w‖</text>
+    <text x="370" y="244" font-size="12.5" fill="#33607f">ŷ = +1: z ≥ 0</text>
+    <text x="120" y="80" font-size="12.5" fill="#a35a1f">ŷ = −1: z &lt; 0</text>
+    <text x="318" y="108" font-size="12.5" transform="rotate(-34 318 108)">wᵀx + b = 0</text>
+    <g text-anchor="start" font-size="12.5" fill="#444">
+      <text x="470" y="90">La frontera es el conjunto donde z = 0.</text>
+      <text x="470" y="118">w es perpendicular a la frontera y</text>
+      <text x="470" y="134">apunta hacia la clase +1.</text>
+      <text x="470" y="162">b la desplaza: queda a |b| / ‖w‖</text>
+      <text x="470" y="178">del origen.</text>
+      <text x="470" y="206">z / ‖w‖ es la distancia con signo</text>
+      <text x="470" y="222">de x a la frontera.</text>
+    </g>
+  </g></svg></div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Una neurona que decide</div>
+<h2>La preactivación mide a qué distancia de la frontera está el punto</h2>
+<ul><li>Dividida por el largo de $w$, $z$ es la distancia con signo de $x$ a la frontera, positiva del lado de la clase $+1$:</li></ul>
+$$\frac{z}{\|w\|} = \frac{w^\top x + b}{\|w\|}$$
+<p class="note">En palabras: $w$ decide la orientación de la frontera y $b$ la desplaza; la frontera queda a $|b|/\|w\|$ del origen.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Una neurona que decide</div>
+<h2>Con w = (1, 1) y b = −1.5, la neurona calcula AND</h2>
+<ul><li>Mueve $w_1$, $w_2$, $b$ o arrastra el punto negro; con XOR, ninguna combinación acierta los cuatro puntos.</li></ul>
+<div class="nnw-perceptron" style="max-width:900px; margin:0 auto;"></div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Una neurona que decide</div>
+<h2>El sesgo se puede tratar como un peso más</h2>
+<ul>
+<li>Agregando una entrada constante igual a 1, $\tilde{x} = (x, 1)$, y juntando $\tilde{w} = (w, b)$, se tiene $z = \tilde{w}^\top \tilde{x}$.</li>
+<li>Desde aquí se usa esa convención y se omite la tilde. La pregunta siguiente es cómo encontrar $w$ (§ 2).</li>
+</ul>
+</section>
+
+<!-- ============ § 2 ============ -->
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>¿Qué hacer cuando la neurona se equivoca?</h2>
+<ul>
+<li>Hay $n$ ejemplos $(x^{(i)}, y^{(i)})$. La observación $i$ está bien clasificada si $z$ y $y^{(i)}$ tienen el mismo signo.</li>
+<li>Es decir, si el <strong>puntaje</strong> $y^{(i)}\, w^\top x^{(i)}$ es positivo.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>La regla de Rosenblatt: sumar el punto mal clasificado</h2>
+<ul><li>Se parte de $w = 0$ y se recorren los datos en pasadas completas llamadas <strong>épocas</strong>; ante cada error:</li></ul>
+$$\text{si } y^{(i)}\, w^\top x^{(i)} \le 0: \qquad w \leftarrow w + y^{(i)}\, x^{(i)}$$
+<p class="note">En palabras: si el punto es de la clase +1, w gira hacia él; si es de la clase −1, se aleja. El algoritmo termina cuando una época pasa sin errores.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>Cada corrección sube el puntaje del punto corregido en ‖x‖²</h2>
+<ul><li>Como $(y^{(i)})^2 = 1$:</li></ul>
+$$y^{(i)} \big(w + y^{(i)} x^{(i)}\big)^\top x^{(i)} = y^{(i)}\, w^\top x^{(i)} + \|x^{(i)}\|^2$$
+<p class="note">En palabras: el punto corregido mejora siempre, pero nada garantiza que no empeoren otros.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>Sumar x a w gira la frontera hacia el lado correcto</h2>
+<ul><li>Antes (punteada), $x$ de clase $+1$ queda del lado equivocado; $w + x$ gira la frontera y lo deja bien clasificado.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="flu1" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#888"/></marker>
+    <marker id="flu2" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#c0392b"/></marker>
+    <marker id="flu3" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#4e79a7"/></marker>
+  </defs>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222" text-anchor="middle">
+    <text x="380" y="20" font-size="14" font-weight="bold">Una corrección: w ← w + y x, con y = +1</text>
+    <line x1="188.6" y1="121.9" x2="251.4" y2="258.1" stroke="#888" stroke-width="1.6" stroke-dasharray="6,4"/>
+    <line x1="115" y1="157.2" x2="325" y2="222.8" stroke="#222" stroke-width="2.2"/>
+    <path d="M220,190 L324,142" stroke="#888" stroke-width="2.4" fill="none" marker-end="url(#flu1)"/>
+    <text x="338" y="146" fill="#777" font-size="14">w</text>
+    <path d="M220,190 L156,110" stroke="#4e79a7" stroke-width="2.4" fill="none" marker-end="url(#flu3)"/>
+    <circle cx="156" cy="110" r="5" fill="#4e79a7"/>
+    <text x="150" y="98" fill="#4e79a7" font-size="14">x</text>
+    <path d="M324,142 L262,64" stroke="#4e79a7" stroke-width="1.4" stroke-dasharray="4,3" fill="none"/>
+    <path d="M220,190 L260,62" stroke="#c0392b" stroke-width="2.6" fill="none" marker-end="url(#flu2)"/>
+    <text x="282" y="58" fill="#c0392b" font-size="14">w + x</text>
+    <circle cx="220" cy="190" r="3.5" fill="#222"/>
+    <text x="300" y="268" font-size="12" fill="#777">antes (punteada)</text>
+    <text x="110" y="180" font-size="12" fill="#222">después</text>
+    <g text-anchor="start" font-size="12.5" fill="#444">
+      <text x="430" y="90">x es de la clase +1, pero wᵀx &lt; 0:</text>
+      <text x="430" y="106">está del lado equivocado de la punteada.</text>
+      <text x="430" y="134">Sumar x a w gira el vector hacia x,</text>
+      <text x="430" y="150">y con él la frontera, perpendicular a w.</text>
+      <text x="430" y="178">El puntaje de x sube en ‖x‖²: ahora</text>
+      <text x="430" y="194">(w + x)ᵀx &gt; 0 y x queda bien clasificado.</text>
+    </g>
+  </g></svg></div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>Un ejemplo: 40 puntos de dos clases que una recta puede separar</h2>
+<ul><li>Dos nubes gaussianas en el plano; se descartaron los puntos a menos de 0.12 de la recta $x_1 + x_2 = 1.5$.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="290.0" y="15.0" width="240.0" height="240.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="308.5" y1="15.0" x2="308.5" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="308.5" y="270.0" font-size="11" text-anchor="middle" fill="#666">-2</text>
+  <line x1="382.3" y1="15.0" x2="382.3" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="382.3" y="270.0" font-size="11" text-anchor="middle" fill="#666">0</text>
+  <line x1="456.2" y1="15.0" x2="456.2" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="456.2" y="270.0" font-size="11" text-anchor="middle" fill="#666">2</text>
+  <line x1="530.0" y1="15.0" x2="530.0" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="530.0" y="270.0" font-size="11" text-anchor="middle" fill="#666">4</text>
+  <line x1="290.0" y1="236.5" x2="530.0" y2="236.5" stroke="#eee" stroke-width="1"/>
+  <text x="284.0" y="240.5" font-size="11" text-anchor="end" fill="#666">-2</text>
+  <line x1="290.0" y1="162.7" x2="530.0" y2="162.7" stroke="#eee" stroke-width="1"/>
+  <text x="284.0" y="166.7" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="290.0" y1="88.8" x2="530.0" y2="88.8" stroke="#eee" stroke-width="1"/>
+  <text x="284.0" y="92.8" font-size="11" text-anchor="end" fill="#666">2</text>
+  <line x1="290.0" y1="15.0" x2="530.0" y2="15.0" stroke="#eee" stroke-width="1"/>
+  <text x="284.0" y="19.0" font-size="11" text-anchor="end" fill="#666">4</text>
+  <text x="410.0" y="288.0" font-size="12.5" text-anchor="middle" fill="#333">x₁</text>
+  <text x="256.0" y="135.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 256.0 135.0)">x₂</text>
+  <circle cx="466.1" cy="148.2" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="449.2" cy="63.6" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="477.4" cy="172.2" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="455.7" cy="114.6" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="473.1" cy="130.8" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="466.5" cy="153.5" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="482.2" cy="125.5" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="448.2" cy="77.4" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="485.2" cy="117.8" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="429.2" cy="123.6" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="424.6" cy="127.1" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="488.1" cy="119.7" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="450.2" cy="138.8" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="486.4" cy="134.8" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="452.7" cy="166.4" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="449.7" cy="96.3" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="449.9" cy="135.3" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="453.5" cy="149.6" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="417.6" cy="101.2" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="427.0" cy="140.4" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="436.3" cy="94.5" r="3.4" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="398.8" cy="155.1" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="395.6" cy="224.3" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="347.2" cy="221.4" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="385.4" cy="150.8" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="349.8" cy="134.7" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="377.7" cy="120.3" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="406.4" cy="168.8" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="400.1" cy="188.1" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="380.3" cy="198.7" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="360.1" cy="135.4" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="376.7" cy="161.9" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="464.7" cy="200.9" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="367.4" cy="177.7" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="403.1" cy="167.3" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="440.9" cy="223.7" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="391.0" cy="168.2" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="389.5" cy="205.6" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="392.8" cy="152.2" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <circle cx="411.5" cy="191.7" r="3.4" fill="#e8743b" opacity="0.9"/>
+  <text x="560.0" y="120.0" font-size="13" fill="#4e79a7" text-anchor="start">● clase +1 (21 puntos)</text>
+  <text x="560.0" y="145.0" font-size="13" fill="#e8743b" text-anchor="start">● clase −1 (19 puntos)</text>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>Corrección a corrección, la frontera gira hasta separar las clases</h2>
+<ul><li>El perceptrón termina tras 19 correcciones en 8 épocas, con 6, 4, 1, 2, 2, 3, 1 y 0 errores.</li></ul>
+<div class="viz" data-viz="pasos">
+  <div class="ctrl">
+    <label>corrección <input type="range" name="t" min="0" max="19" step="1" value="1"><span class="val">1</span></label>
+  </div>
+  <canvas data-ratio="0.40"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>El avance no es monótono</h2>
+<ul>
+<li>Tras la corrección 3 quedan 3 puntos mal clasificados, pero la corrección 5 gira tanto la frontera que deja 20.</li>
+<li>Al final, $w = (3.06, 3.26)$ y $b = -5$: una frontera casi paralela a la recta que generó los datos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>La regla es descenso de gradiente sobre la pérdida del perceptrón</h2>
+<ul><li>Esta pérdida vale cero si el punto está bien clasificado y crece linealmente con el error si no:</li></ul>
+$$\ell(w; x, y) = \max\big(0,\, -y\, w^\top x\big), \qquad \nabla_w \ell = \begin{cases} 0 & \text{bien clasificado} \\ -y\, x & \text{mal clasificado} \end{cases}$$
+<p class="note">En palabras: el paso $w \leftarrow w - \nabla_w \ell$ es exactamente la regla de Rosenblatt; es descenso de gradiente estocástico, un ejemplo a la vez, con paso 1.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · La regla de aprendizaje</div>
+<h2>La tasa de aprendizaje no cambia ninguna decisión</h2>
+<ul>
+<li>Partiendo de $w = 0$, multiplicar cada corrección por $\alpha &gt; 0$ solo multiplica todos los pesos por $\alpha$, y el signo de $z$ no cambia.</li>
+<li>Queda la pregunta de fondo: ¿el algoritmo termina siempre (§ 3)?</li>
+</ul>
+</section>
+
+<!-- ============ § 3 ============ -->
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>¿Cuántos errores comete antes de acertar todo?</h2>
+<ul>
+<li>Los datos son <strong>linealmente separables</strong> con <strong>margen</strong> $\gamma &gt; 0$ si existe un vector unitario $u$ que deja cada punto a distancia al menos $\gamma$ del lado correcto:</li>
+</ul>
+$$y^{(i)}\, u^\top x^{(i)} \ge \gamma \quad \text{para todo } i, \qquad \text{y además } \|x^{(i)}\| \le R$$
+</section>
+
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>Novikoff (1962): a lo sumo (R/γ)² errores</h2>
+<ul>
+<li>Bajo esas condiciones, el perceptrón comete a lo sumo $(R/\gamma)^2$ errores, en cualquier orden de recorrido, y después clasifica todo bien.</li>
+<li>Sea $w_k$ el vector tras la corrección número $k$, con $w_0 = 0$; la prueba son dos desigualdades.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>Paso 1 · El avance en la dirección de u crece linealmente</h2>
+<ul><li>Cada corrección suma $y\,x$, y por el margen $y\, u^\top x \ge \gamma$:</li></ul>
+$$u^\top w_k = u^\top w_{k-1} + y\, u^\top x \;\ge\; u^\top w_{k-1} + \gamma \quad\Longrightarrow\quad u^\top w_k \ge k\gamma$$
+</section>
+
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>Paso 2 · El largo de w crece a lo más como una raíz</h2>
+<ul><li>El punto corregido estaba mal clasificado, así que $y\, w_{k-1}^\top x \le 0$:</li></ul>
+$$\|w_k\|^2 = \|w_{k-1}\|^2 + \underbrace{2y\, w_{k-1}^\top x}_{\le\, 0} + \underbrace{\|x\|^2}_{\le\, R^2} \quad\Longrightarrow\quad \|w_k\|^2 \le k R^2$$
+</section>
+
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>Paso 3 · Las dos desigualdades no pueden convivir para siempre</h2>
+<ul><li>Por la desigualdad de Cauchy-Schwarz, $u^\top w_k \le \|u\|\,\|w_k\| = \|w_k\|$:</li></ul>
+$$k\gamma \;\le\; u^\top w_k \;\le\; \|w_k\| \;\le\; \sqrt{k}\, R \quad\Longrightarrow\quad k \le \left(\frac{R}{\gamma}\right)^2$$
+<p class="note">En palabras: el avance crece como $k$ y el largo como $\sqrt{k}$; como el avance no puede superar al largo, las correcciones se acaban.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>Un experimento: franjas vacías de ancho controlado</h2>
+<ul>
+<li>Cada conjunto tiene 100 puntos uniformes en $[-1, 1]^2$, sin puntos a menos de $\gamma$ de la recta $x_1 + x_2 = 0$; la clase es el lado de la recta.</li>
+<li>Se cuentan las correcciones hasta converger para 10 valores de $\gamma$ entre 0.02 y 0.5.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>La cota se cumple siempre, y con mucha holgura</h2>
+<ul><li>La cota crece como $1/\gamma^2$; las correcciones reales son de una a dos potencias de diez menores.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="110.0" y="20.0" width="330.0" height="220.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <text x="275.0" y="273.0" font-size="12.5" text-anchor="middle" fill="#333">margen γ (escala log)</text>
+  <text x="76.0" y="130.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 76.0 130.0)">correcciones (escala log)</text>
+  <text x="135.7" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.02</text>
+  <text x="217.7" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.05</text>
+  <text x="279.7" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.1</text>
+  <text x="341.7" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.2</text>
+  <text x="423.7" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.5</text>
+  <text x="104.0" y="244.0" font-size="11" fill="#666" text-anchor="end">1</text>
+  <text x="104.0" y="189.0" font-size="11" fill="#666" text-anchor="end">10</text>
+  <text x="104.0" y="134.0" font-size="11" fill="#666" text-anchor="end">100</text>
+  <text x="104.0" y="79.0" font-size="11" fill="#666" text-anchor="end">1000</text>
+  <text x="104.0" y="24.0" font-size="11" fill="#666" text-anchor="end">10⁴</text>
+  <polyline fill="none" stroke="#888" stroke-width="2.2" stroke-dasharray="6,4" points="149.4,36.9 175.6,51.0 232.0,81.1 266.1,99.3 281.3,107.4 322.4,129.3 345.6,141.7 378.9,159.0 405.4,173.1 425.0,183.5"/>
+  <polyline fill="none" stroke="#4e79a7" stroke-width="2.6"  points="149.4,139.2 175.6,180.6 232.0,173.8 266.1,168.4 281.3,197.2 322.4,197.2 345.6,197.2 378.9,223.4 405.4,223.4 425.0,223.4"/>
+  <circle cx="149.4" cy="139.2" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="175.6" cy="180.6" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="232.0" cy="173.8" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="266.1" cy="168.4" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="281.3" cy="197.2" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="322.4" cy="197.2" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="345.6" cy="197.2" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="378.9" cy="223.4" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="405.4" cy="223.4" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="425.0" cy="223.4" r="3.5" fill="#4e79a7" opacity="1"/>
+  <circle cx="149.4" cy="36.9" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="175.6" cy="51.0" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="232.0" cy="81.1" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="266.1" cy="99.3" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="281.3" cy="107.4" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="322.4" cy="129.3" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="345.6" cy="141.7" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="378.9" cy="159.0" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="405.4" cy="173.1" r="3.5" fill="#888" opacity="1"/>
+  <circle cx="425.0" cy="183.5" r="3.5" fill="#888" opacity="1"/>
+  <text x="470.0" y="70.0" font-size="13" fill="#666" text-anchor="start">- - cota (R/γ)²</text>
+  <text x="470.0" y="95.0" font-size="13" fill="#4e79a7" text-anchor="start">— correcciones del perceptrón</text>
+  <text x="470.0" y="140.0" font-size="12.5" fill="#333" text-anchor="start">γ = 0.02: 68 correcciones; cota 4921</text>
+  <text x="470.0" y="162.0" font-size="12.5" fill="#333" text-anchor="start">γ = 0.05: 16 correcciones; cota 776</text>
+  <text x="470.0" y="184.0" font-size="12.5" fill="#333" text-anchor="start">γ = 0.3: 2 correcciones; cota 30</text>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Convergencia</div>
+<h2>La cota depende solo de la geometría de los datos</h2>
+<ul>
+<li>No depende del número de observaciones ni de la dimensión: solo del cociente entre el tamaño $R$ de los datos y su margen $\gamma$.</li>
+<li>Pero exige que los datos sean separables. ¿Qué pasa si no lo son (§ 4)?</li>
+</ul>
+</section>
+
+<!-- ============ § 4 ============ -->
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Si ninguna recta separa las clases, el algoritmo no se detiene</h2>
+<ul>
+<li>Siempre queda un punto mal clasificado, la regla sigue corrigiendo y los pesos oscilan sin converger.</li>
+<li>Las variantes guardan la mejor solución vista o promedian los pesos, pero la frontera sigue siendo una recta.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>El caso más simple: la función XOR</h2>
+<ul>
+<li>XOR, el "o exclusivo", vale $+1$ cuando exactamente una de dos entradas binarias vale 1: en $(0,1)$ y $(1,0)$; vale $-1$ en $(0,0)$ y $(1,1)$.</li>
+<li>Los dos puntos de cada clase están en diagonales opuestas del cuadrado.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Ninguna recta separa XOR: las desigualdades se contradicen</h2>
+<ul><li>Si un perceptrón calculara XOR, sus pesos cumplirían, punto por punto:</li></ul>
+$$\underbrace{b &lt; 0}_{(0,0)}, \quad \underbrace{w_1 + b \ge 0}_{(1,0)}, \quad \underbrace{w_2 + b \ge 0}_{(0,1)}, \quad \underbrace{w_1 + w_2 + b &lt; 0}_{(1,1)}$$
+<p class="note">Sumando las dos del medio: $w_1 + w_2 + b \ge -b &gt; 0$, lo que contradice la última.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Con XOR, los errores por época nunca llegan a cero</h2>
+<ul><li>100 puntos en cuatro nubes en las esquinas; en 30 épocas los errores oscilan entre 43 y 56, y el acierto salta entre 35% y 71%.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="70.0" y="25.0" width="230.0" height="230.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="127.5" y1="25.0" x2="127.5" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="127.5" y="270.0" font-size="11" text-anchor="middle" fill="#666">0</text>
+  <line x1="242.5" y1="25.0" x2="242.5" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="242.5" y="270.0" font-size="11" text-anchor="middle" fill="#666">1</text>
+  <line x1="70.0" y1="197.5" x2="300.0" y2="197.5" stroke="#eee" stroke-width="1"/>
+  <text x="64.0" y="201.5" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="70.0" y1="82.5" x2="300.0" y2="82.5" stroke="#eee" stroke-width="1"/>
+  <text x="64.0" y="86.5" font-size="11" text-anchor="end" fill="#666">1</text>
+  <text x="185.0" y="288.0" font-size="12.5" text-anchor="middle" fill="#333">x₁</text>
+  <text x="36.0" y="140.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 36.0 140.0)">x₂</text>
+  <text x="185.0" y="17.0" font-size="13" font-weight="bold" text-anchor="middle" fill="#222">XOR con ruido: 100 puntos</text>
+  <circle cx="113.7" cy="86.6" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="232.1" cy="242.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="253.4" cy="198.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="236.9" cy="208.6" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="147.7" cy="98.4" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="126.7" cy="107.0" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="266.3" cy="185.3" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="254.9" cy="209.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="98.4" cy="58.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="102.9" cy="79.2" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="129.4" cy="70.9" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="241.6" cy="183.9" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="125.8" cy="115.0" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="121.2" cy="81.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="133.8" cy="82.9" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="235.3" cy="211.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="126.9" cy="107.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="253.1" cy="191.9" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="122.1" cy="101.8" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="217.4" cy="181.9" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="135.8" cy="86.6" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="109.6" cy="95.3" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="121.8" cy="85.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="256.3" cy="197.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="233.8" cy="201.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="112.8" cy="77.2" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="243.2" cy="220.3" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="262.8" cy="225.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="239.9" cy="207.8" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="230.5" cy="201.3" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="256.6" cy="185.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="217.5" cy="197.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="252.1" cy="209.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="110.5" cy="94.3" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="122.2" cy="74.0" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="234.2" cy="201.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="255.4" cy="202.4" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="142.8" cy="72.8" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="229.0" cy="194.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="139.2" cy="87.1" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="127.9" cy="94.6" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="257.1" cy="187.2" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="124.8" cy="83.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="130.7" cy="82.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="116.1" cy="64.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="230.7" cy="206.2" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="251.0" cy="193.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="222.3" cy="218.6" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="138.8" cy="81.8" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="130.6" cy="97.6" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="119.6" cy="98.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="243.8" cy="218.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="226.7" cy="200.7" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="239.7" cy="203.8" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="246.8" cy="212.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="116.1" cy="85.9" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="124.7" cy="91.6" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="256.3" cy="197.4" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="143.6" cy="94.2" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="255.1" cy="195.2" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="229.5" cy="205.5" r="3" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="127.1" cy="175.4" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="246.4" cy="81.2" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="105.4" cy="200.4" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="226.0" cy="67.0" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="220.2" cy="89.9" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="252.4" cy="77.5" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="232.4" cy="79.2" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="260.5" cy="104.4" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="123.2" cy="192.0" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="142.4" cy="182.4" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="232.7" cy="94.3" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="132.7" cy="200.2" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="147.0" cy="197.7" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="131.4" cy="187.4" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="243.3" cy="98.7" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="256.4" cy="92.9" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="243.0" cy="88.9" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="133.2" cy="190.1" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="240.0" cy="112.3" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="127.0" cy="189.8" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="260.6" cy="81.1" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="109.9" cy="191.7" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="215.8" cy="89.6" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="246.9" cy="94.0" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="137.2" cy="200.5" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="127.2" cy="209.8" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="222.9" cy="88.9" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="109.3" cy="211.7" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="253.0" cy="89.3" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="100.6" cy="187.6" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="219.9" cy="88.4" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="104.0" cy="191.4" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="123.3" cy="189.8" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="108.7" cy="195.8" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="271.0" cy="91.6" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="139.2" cy="176.6" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="234.7" cy="65.3" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="143.0" cy="203.0" r="3" fill="#e8743b" opacity="0.9"/>
+  <circle cx="120.3" cy="173.3" r="3" fill="#e8743b" opacity="0.9"/>
+  <rect x="420.0" y="25.0" width="300.0" height="230.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="429.7" y1="25.0" x2="429.7" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="429.7" y="270.0" font-size="11" text-anchor="middle" fill="#666">1</text>
+  <line x1="516.8" y1="25.0" x2="516.8" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="516.8" y="270.0" font-size="11" text-anchor="middle" fill="#666">10</text>
+  <line x1="613.5" y1="25.0" x2="613.5" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="613.5" y="270.0" font-size="11" text-anchor="middle" fill="#666">20</text>
+  <line x1="710.3" y1="25.0" x2="710.3" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="710.3" y="270.0" font-size="11" text-anchor="middle" fill="#666">30</text>
+  <line x1="420.0" y1="255.0" x2="720.0" y2="255.0" stroke="#eee" stroke-width="1"/>
+  <text x="414.0" y="259.0" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="420.0" y1="189.3" x2="720.0" y2="189.3" stroke="#eee" stroke-width="1"/>
+  <text x="414.0" y="193.3" font-size="11" text-anchor="end" fill="#666">20</text>
+  <line x1="420.0" y1="123.6" x2="720.0" y2="123.6" stroke="#eee" stroke-width="1"/>
+  <text x="414.0" y="127.6" font-size="11" text-anchor="end" fill="#666">40</text>
+  <line x1="420.0" y1="57.9" x2="720.0" y2="57.9" stroke="#eee" stroke-width="1"/>
+  <text x="414.0" y="61.9" font-size="11" text-anchor="end" fill="#666">60</text>
+  <text x="570.0" y="288.0" font-size="12.5" text-anchor="middle" fill="#333">época</text>
+  <text x="386.0" y="140.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 386.0 140.0)">errores</text>
+  <text x="570.0" y="17.0" font-size="13" font-weight="bold" text-anchor="middle" fill="#222">Errores por época</text>
+  <polyline fill="none" stroke="#4e79a7" stroke-width="2.2"  points="429.7,107.1 439.4,84.1 449.0,90.7 458.7,87.4 468.4,100.6 478.1,87.4 487.7,90.7 497.4,113.7 507.1,84.1 516.8,90.7 526.5,87.4 536.1,97.3 545.8,113.7 555.5,87.4 565.2,97.3 574.8,113.7 584.5,84.1 594.2,71.0 603.9,90.7 613.5,84.1 623.2,97.3 632.9,84.1 642.6,71.0 652.3,90.7 661.9,87.4 671.6,90.7 681.3,113.7 691.0,84.1 700.6,71.0 710.3,90.7"/>
+  <circle cx="429.7" cy="107.1" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="439.4" cy="84.1" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="449.0" cy="90.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="458.7" cy="87.4" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="468.4" cy="100.6" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="478.1" cy="87.4" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="487.7" cy="90.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="497.4" cy="113.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="507.1" cy="84.1" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="516.8" cy="90.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="526.5" cy="87.4" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="536.1" cy="97.3" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="545.8" cy="113.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="555.5" cy="87.4" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="565.2" cy="97.3" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="574.8" cy="113.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="584.5" cy="84.1" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="594.2" cy="71.0" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="603.9" cy="90.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="613.5" cy="84.1" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="623.2" cy="97.3" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="632.9" cy="84.1" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="642.6" cy="71.0" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="652.3" cy="90.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="661.9" cy="87.4" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="671.6" cy="90.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="681.3" cy="113.7" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="691.0" cy="84.1" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="700.6" cy="71.0" r="2.8" fill="#4e79a7" opacity="1"/>
+  <circle cx="710.3" cy="90.7" r="2.8" fill="#4e79a7" opacity="1"/>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Minsky y Papert convirtieron este límite en un programa</h2>
+<ul>
+<li>Su libro de 1969 mostró que un perceptrón de una capa no puede calcular XOR, ni la paridad, ni la conectividad de una figura.</li>
+<li>Se sabía que una red con capas intermedias sí podía calcular XOR; lo que nadie sabía era cómo <strong>entrenarla</strong>.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Vino un invierno, y XOR fue también la señal del regreso</h2>
+<ul>
+<li>El interés y el financiamiento cayeron durante más de una década: el primer <strong>invierno de la inteligencia artificial</strong>.</li>
+<li>En 1986, Rumelhart, Hinton y Williams popularizaron la <strong>retropropagación</strong>, que corrige también las capas intermedias, y XOR fue uno de los primeros problemas que mostraron resuelto.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Otros clasificadores lineales resuelven lo que al perceptrón le falta</h2>
+<ul>
+<li>La <strong>regresión logística</strong> usa la misma $z$, pero con la sigmoide $\sigma(z) = 1/(1 + e^{-z})$ entrega una probabilidad, y converge aunque los datos no sean separables.</li>
+<li>Las <strong>máquinas de vectores de soporte</strong> eligen, entre todas las fronteras que separan, la de margen máximo; el perceptrón se queda con la primera que encuentra.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Para usar gradientes, el escalón se reemplaza por una curva suave</h2>
+<ul><li>La derivada del signo es cero en todas partes; las neuronas modernas conservan la suma pero aplican una <strong>función de activación</strong> $\phi$ con derivada útil:</li></ul>
+$$a = \phi(w^\top x + b), \qquad \phi \in \{\text{sigmoide},\ \tanh,\ \operatorname{ReLU}(z) = \max(0, z)\}$$
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Pero una neurona sigmoide sigue trazando una recta</h2>
+<ul><li>La sigmoide convierte el acantilado en una rampa, pero la decisión compara con 0.5, y eso es comparar $z$ con cero:</li></ul>
+$$\sigma(w^\top x + b) \ge 0.5 \iff w^\top x + b \ge 0$$
+<p class="note">En palabras: la frontera es la misma recta del perceptrón; las curvas de nivel σ = c son rectas paralelas a ella.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>La rampa cambia la forma de la salida, no la de la frontera</h2>
+<ul><li>Recta continua: σ = 0.5; punteadas: σ = 0.1 y 0.9. Con XOR, el máximo sigue siendo 3 de 4 puntos.</li></ul>
+<div class="nnw-perceptron" data-act="sigmoide" data-puntos="XOR" style="max-width:900px; margin:0 auto;"></div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Una función no lineal no hace un clasificador no lineal</h2>
+<ul>
+<li>La sigmoide es una <strong>función</strong> no lineal; una neurona sigmoide es un <strong>clasificador</strong> lineal, porque su frontera es un hiperplano.</li>
+<li>La no linealidad es necesaria, pero no suficiente: también hace falta más de una neurona.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Límites del perceptrón</div>
+<h2>Una neurona traza una recta; para XOR hay que combinar varias</h2>
+<ul><li>Si las salidas de algunas neuronas son las entradas de otra, la red ya puede calcular XOR: ese es el tema de las redes multicapa.</li></ul>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>Una neurona traza una recta, y aprender es empujar esa recta cada vez que se equivoca.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+
+<script>
+const PX=[[2.268,0.393,1],[0.447,0.205,-1],[1.811,2.684,1],[2.576,-0.257,1],[0.359,-1.669,-1],[-0.952,-1.591,-1],[0.083,0.322,-1],[1.987,1.302,1],[-0.881,0.759,-1],[-0.124,1.147,-1],[2.460,0.863,1],[2.281,0.250,1],[0.653,-0.164,-1],[2.706,1.008,1],[1.784,2.309,1],[0.482,-0.689,-1],[2.786,1.216,1],[-0.055,-0.975,-1],[-0.601,0.740,-1],[1.271,1.058,1],[1.145,0.964,1],[2.864,1.164,1],[1.840,0.646,1],[2.819,0.754,1],[-0.152,0.022,-1],[1.908,-0.100,1],[1.825,1.798,1],[2.231,-1.034,-1],[-0.403,-0.406,-1],[1.831,0.742,1],[0.563,-0.125,-1],[1.927,0.356,1],[1.588,-1.654,-1],[0.235,-0.149,-1],[0.956,1.665,1],[1.211,0.603,1],[0.194,-1.162,-1],[0.284,0.285,-1],[0.790,-0.785,-1],[1.461,1.846,1]];
+const PH=[{w:[0.000,0.000,0.000],i:-1,e:0},{w:[2.268,0.393,1.000],i:0,e:1},{w:[1.821,0.187,0.000],i:1,e:1},{w:[1.462,1.856,-1.000],i:4,e:1},{w:[1.586,0.709,-2.000],i:9,e:1},{w:[-0.645,1.743,-3.000],i:27,e:1},{w:[1.186,2.485,-2.000],i:29,e:1},{w:[1.309,1.338,-3.000],i:9,e:2},{w:[2.454,2.302,-2.000],i:20,e:2},{w:[0.223,3.335,-3.000],i:27,e:2},{w:[2.054,4.078,-2.000],i:29,e:2},{w:[2.178,2.930,-3.000],i:9,e:3},{w:[2.302,1.783,-4.000],i:9,e:4},{w:[3.513,2.386,-3.000],i:35,e:4},{w:[1.282,3.420,-4.000],i:27,e:5},{w:[3.209,3.776,-3.000],i:31,e:5},{w:[3.333,2.628,-4.000],i:9,e:6},{w:[1.102,3.662,-5.000],i:27,e:6},{w:[2.933,4.404,-4.000],i:29,e:6},{w:[3.057,3.257,-5.000],i:9,e:7}];
+const PE=[6,4,1,2,2,3,1,0];
+// ======== infraestructura de visualizaciones interactivas ========
+const VIZ = {};
+function vizColors() {
+  const oscuro = matchMedia('(prefers-color-scheme: dark)').matches
+                 && document.documentElement.dataset.theme !== 'light'
+                 || document.documentElement.dataset.theme === 'dark';
+  return { fondo: oscuro ? '#2a2928' : '#ffffff', eje: oscuro ? '#6b6b6b' : '#bbbbbb',
+           texto: oscuro ? '#c9c9c9' : '#444444', tinta: oscuro ? '#eeeeee' : '#111111',
+           grupos: ['#4e79a7', '#e8743b', '#3a8c4f'], gris: oscuro ? '#888' : '#999' };
+}
+function vizSetup(cv) {
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 900, h = Math.round(w * (+cv.dataset.ratio || 0.42));
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  return { g, w, h, C: vizColors() };
+}
+function vizRedraw(root) {
+  (root || document).querySelectorAll('.viz[data-viz]').forEach(el => { const f = VIZ[el.dataset.viz]; if (f) f(el); });
+}
+function vizInit() {
+  document.querySelectorAll('.viz[data-viz]').forEach(el => {
+    if (el.dataset.listo) return;
+    el.dataset.listo = '1';
+    const f = () => { const d = VIZ[el.dataset.viz]; if (d) d(el); };
+    el.addEventListener('input', f); el.addEventListener('change', f);
+  });
+  vizRedraw();
+}
+vizInit(); requestAnimationFrame(vizInit); setTimeout(vizInit, 250);
+if (window.Reveal && Reveal.on) {
+  Reveal.on('ready', e => vizRedraw(e.currentSlide));
+  Reveal.on('slidechanged', e => vizRedraw(e.currentSlide));
+}
+window.addEventListener('resize', () => vizRedraw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => vizRedraw());
+
+
+(function () {
+if (window.NNW) return;
+const NNW = window.NNW = {};
+
+// ---------------- estilos y utilidades ----------------
+const PAL = { paper: '#faf7eb', ink: '#222', soft: '#555', faint: '#999', pos: '#4e79a7', neg: '#e8743b',
+              posL: [78, 121, 167], negL: [232, 116, 59], red: '#c0392b', grid: '#ddd8c4', green: '#3a8c4f' };
+const CSS = `
+.nnw { background:${PAL.paper}; color:${PAL.ink}; border-radius:8px; padding:10px 12px; margin:6px 0;
+       font-family: Helvetica, Arial, sans-serif; font-size:14px; line-height:1.3; text-align:left; box-sizing:border-box; }
+.nnw * { box-sizing:border-box; }
+.nnw-row { display:flex; gap:10px; align-items:flex-start; }
+.nnw-row canvas { display:block; min-width:0; touch-action:none; }
+.nnw-bar { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:6px; }
+.nnw-bar select, .nnw-bar button { font-size:14px; padding:1px 4px; }
+.nnw-ctrl { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:3px 18px; margin-top:6px; }
+.nnw-sl { display:flex; align-items:center; gap:6px; white-space:nowrap; margin:0; }
+.nnw-sl input { flex:1; min-width:50px; accent-color:${PAL.pos}; margin:0; }
+.nnw-lab { min-width:2.4em; }
+.nnw-val { min-width:2.8em; text-align:right; font-variant-numeric:tabular-nums; color:${PAL.pos}; font-weight:600; }
+.nnw-read { margin-top:5px; color:${PAL.soft}; font-variant-numeric:tabular-nums; }
+.nnw details summary { cursor:pointer; color:${PAL.soft}; margin-top:4px; }
+`;
+function injectCSS() {
+  if (document.getElementById('nnw-style')) return;
+  const s = document.createElement('style'); s.id = 'nnw-style'; s.textContent = CSS; document.head.appendChild(s);
+}
+function fit(cv, ratio) {
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 300, h = Math.round(w * ratio);
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  return { g, w, h };
+}
+function el(tag, attrs, parent) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'html') e.innerHTML = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function slider(parent, label, min, max, step, val, onInput) {
+  const lab = el('label', { class: 'nnw-sl' }, parent);
+  el('span', { class: 'nnw-lab', html: label }, lab);
+  const inp = el('input', { type: 'range', min, max, step, value: val }, lab);
+  const out = el('span', { class: 'nnw-val', text: (+val).toFixed(1) }, lab);
+  inp.addEventListener('input', () => { out.textContent = (+inp.value).toFixed(1); onInput(+inp.value); });
+  return { set(v) { inp.value = v; out.textContent = (+v).toFixed(1); } };
+}
+const fmt = v => (v >= 0 ? ' ' : '') + v.toFixed(2);
+const ACT = {
+  'escalón': z => (z >= 0 ? 1 : 0),
+  'sigmoide': z => 1 / (1 + Math.exp(-z)),
+  'tanh': z => Math.tanh(z),
+  'ReLU': z => Math.max(0, z),
+  'identidad': z => z,
+};
+function arrow(g, x0, y0, x1, y1, col, w) {
+  const a = Math.atan2(y1 - y0, x1 - x0), L = 9 + w;
+  g.strokeStyle = col; g.fillStyle = col; g.lineWidth = w;
+  g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1 - L * 0.7 * Math.cos(a), y1 - L * 0.7 * Math.sin(a)); g.stroke();
+  g.beginPath(); g.moveTo(x1, y1);
+  g.lineTo(x1 - L * Math.cos(a - 0.4), y1 - L * Math.sin(a - 0.4));
+  g.lineTo(x1 - L * Math.cos(a + 0.4), y1 - L * Math.sin(a + 0.4)); g.closePath(); g.fill();
+}
+function edgeStyle(w) { return { col: w >= 0 ? PAL.pos : PAL.neg, wd: 1 + Math.min(Math.abs(w), 6) * 0.9 }; }
+function node(g, x, y, r, fill, stroke, txt, txtCol, size) {
+  g.fillStyle = fill; g.strokeStyle = stroke || PAL.ink; g.lineWidth = 1.6;
+  g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fill(); g.stroke();
+  if (txt !== undefined) { g.fillStyle = txtCol || PAL.ink; g.font = (size || 14) + 'px Helvetica, Arial';
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, x, y); g.textBaseline = 'alphabetic'; }
+}
+function mix(t) {            // t ∈ [0,1]: 0 = naranjo (clase 0 / -1), 1 = azul (clase 1 / +1)
+  t = Math.max(0, Math.min(1, t));
+  const c = PAL.negL.map((v, i) => Math.round(v + (PAL.posL[i] - v) * t));
+  return c;
+}
+function pulse(g, x0, y0, x1, y1, p) {
+  if (p <= 0 || p >= 1) return;
+  g.fillStyle = '#f1c40f'; g.strokeStyle = '#7a5c00'; g.lineWidth = 1;
+  g.beginPath(); g.arc(x0 + (x1 - x0) * p, y0 + (y1 - y0) * p, 5, 0, 2 * Math.PI); g.fill(); g.stroke();
+}
+function animator(draw) {      // ejecuta draw(fase) con fase de 0 a 1 durante 900 ms tras cada cambio
+  let t0 = null, id = null;
+  const loop = ts => { if (t0 === null) t0 = ts; const p = Math.min(1, (ts - t0) / 900); draw(p); id = p < 1 ? requestAnimationFrame(loop) : null; };
+  return () => { t0 = null; if (!id) id = requestAnimationFrame(loop); };
+}
+function onResize(root, f) {
+  let lastW = -1;
+  const g = () => { const w = root.clientWidth; if (w && w !== lastW) { lastW = w; f(); } };
+  if (window.ResizeObserver) new ResizeObserver(g).observe(root);
+  window.addEventListener('resize', g);
+}
+function planeAxes(g, P, X0, X1, Y0, Y1, ticks) {
+  const px = v => P.x + (v - X0) / (X1 - X0) * P.w, py = v => P.y + P.h - (v - Y0) / (Y1 - Y0) * P.h;
+  g.strokeStyle = 'rgba(0,0,0,0.12)'; g.lineWidth = 1;
+  ticks.forEach(v => { if (v > X0 && v < X1) { g.beginPath(); g.moveTo(px(v), P.y); g.lineTo(px(v), P.y + P.h); g.stroke(); }
+                       if (v > Y0 && v < Y1) { g.beginPath(); g.moveTo(P.x, py(v)); g.lineTo(P.x + P.w, py(v)); g.stroke(); } });
+  g.strokeStyle = PAL.faint; g.lineWidth = 1.2; g.strokeRect(P.x, P.y, P.w, P.h);
+  g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center';
+  ticks.forEach(v => { if (v >= X0 && v <= X1) g.fillText(v, px(v), P.y + P.h + 14); });
+  g.textAlign = 'right'; ticks.forEach(v => { if (v >= Y0 && v <= Y1) g.fillText(v, P.x - 4, py(v) + 4); });
+  return [px, py];
+}
+function dragPoint(cv, P, inv, onMove) {     // clic o arrastre sobre el plano fija la entrada
+  let down = false;
+  const go = ev => { const r = cv.getBoundingClientRect(), sx = cv.clientWidth / r.width;
+    const x = (ev.clientX - r.left) * sx, y = (ev.clientY - r.top) * sx; const p = P();
+    if (x < p.x || x > p.x + p.w || y < p.y || y > p.y + p.h) return; onMove(inv(x, y)); };
+  cv.addEventListener('pointerdown', ev => { down = true; cv.setPointerCapture(ev.pointerId); go(ev); ev.stopPropagation(); });
+  cv.addEventListener('pointermove', ev => { if (down) go(ev); });
+  cv.addEventListener('pointerup', () => { down = false; });
+  ['mousedown', 'touchstart', 'keydown'].forEach(t => cv.addEventListener(t, e => e.stopPropagation()));
+}
+
+// ======================== PERCEPTRÓN ========================
+const COMPUERTAS = {
+  'ninguna': null,
+  'AND': [[0, 0, -1], [0, 1, -1], [1, 0, -1], [1, 1, 1]],
+  'OR':  [[0, 0, -1], [0, 1, 1], [1, 0, 1], [1, 1, 1]],
+  'XOR': [[0, 0, -1], [0, 1, 1], [1, 0, 1], [1, 1, -1]],
+};
+NNW.perceptron = function (root) {
+  injectCSS();
+  root.classList.add('nnw'); root.innerHTML = '';
+  const S = { w1: 1, w2: 1, b: -1.5, x1: 1, x2: 1, puntos: root.dataset.puntos || 'AND', act: root.dataset.act || 'signo' };
+  const bar = el('div', { class: 'nnw-bar' }, root);
+  const actLab = el('label', { html: 'activación ' }, bar);
+  const selAct = el('select', {}, actLab);
+  ['signo', 'sigmoide'].forEach(k => el('option', { value: k, text: k }, selAct));
+  selAct.value = S.act;
+  selAct.addEventListener('change', () => { S.act = selAct.value; upd(); });
+  const selLab = el('label', { html: 'puntos de ejemplo ' }, bar);
+  const sel = el('select', {}, selLab);
+  Object.keys(COMPUERTAS).forEach(k => el('option', { value: k, text: k }, sel));
+  sel.value = S.puntos;
+  el('span', { class: 'nnw-read', text: 'arrastra el punto negro en el plano para cambiar la entrada' }, bar);
+  const row = el('div', { class: 'nnw-row' }, root);
+  const cd = el('canvas', { style: 'flex:57 1 0' }, row);
+  const cp = el('canvas', { style: 'flex:43 1 0' }, row);
+  const ctrl = el('div', { class: 'nnw-ctrl' }, root);
+  const sl = {};
+  sl.w1 = slider(ctrl, 'w₁', -3, 3, 0.1, S.w1, v => { S.w1 = v; upd(); });
+  sl.w2 = slider(ctrl, 'w₂', -3, 3, 0.1, S.w2, v => { S.w2 = v; upd(); });
+  sl.b  = slider(ctrl, 'b',  -3, 3, 0.1, S.b,  v => { S.b = v; upd(); });
+  sl.x1 = slider(ctrl, 'x₁', -1, 2, 0.1, S.x1, v => { S.x1 = v; upd(); });
+  sl.x2 = slider(ctrl, 'x₂', -1, 2, 0.1, S.x2, v => { S.x2 = v; upd(); });
+  const read = el('div', { class: 'nnw-read' }, root);
+  sel.addEventListener('change', () => { S.puntos = sel.value; upd(); });
+
+  const X0 = -1, X1 = 2;
+  let PP = { x: 0, y: 0, w: 1, h: 1 };
+  const z = () => S.w1 * S.x1 + S.w2 * S.x2 + S.b;
+
+  function drawDiagram(p) {
+    const { g, w, h } = fit(cd, cp.clientWidth / Math.max(cd.clientWidth, 1));
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const zz = z(), y = zz >= 0 ? 1 : -1;
+    const N = { x1: [w * 0.11, h * 0.2], x2: [w * 0.11, h * 0.5], one: [w * 0.11, h * 0.8], s: [w * 0.5, h * 0.5], st: [w * 0.72, h * 0.5], o: [w * 0.91, h * 0.5] };
+    const r = Math.min(w, h) * 0.075;
+    const edges = [['x1', S.w1, 'w₁'], ['x2', S.w2, 'w₂'], ['one', S.b, 'b']];
+    edges.forEach(([k, wt, nm]) => { const e = edgeStyle(wt), a = N[k], s = N.s;
+      const ang = Math.atan2(s[1] - a[1], s[0] - a[0]);
+      arrow(g, a[0] + r * Math.cos(ang), a[1] + r * Math.sin(ang), s[0] - r * 1.25 * Math.cos(ang), s[1] - r * 1.25 * Math.sin(ang), e.col, e.wd);
+      g.fillStyle = e.col; g.font = 'bold 14px Helvetica, Arial'; g.textAlign = 'center';
+      const mx = (a[0] + s[0]) / 2, my = (a[1] + s[1]) / 2 - 10;
+      g.fillText(`${nm} = ${wt.toFixed(1)}`, mx, my);
+      pulse(g, a[0], a[1], s[0], s[1], p / 0.5); });
+    node(g, ...N.x1, r, '#fff', PAL.ink, S.x1.toFixed(1)); node(g, ...N.x2, r, '#fff', PAL.ink, S.x2.toFixed(1));
+    node(g, ...N.one, r, '#eee', PAL.faint, '1');
+    g.fillStyle = PAL.soft; g.font = '13px Helvetica, Arial'; g.textAlign = 'center';
+    g.fillText('x₁', N.x1[0], N.x1[1] - r - 6); g.fillText('x₂', N.x2[0], N.x2[1] - r - 6); g.fillText('sesgo', N.one[0], N.one[1] + r + 15);
+    const lit = p >= 0.5;
+    node(g, ...N.s, r * 1.25, lit ? '#fff7d6' : '#fff', PAL.ink, 'Σ', PAL.ink, 22);
+    g.fillStyle = PAL.ink; g.font = '14px Helvetica, Arial'; g.textAlign = 'center';
+    g.fillText(`z = ${zz.toFixed(2)}`, N.s[0], N.s[1] + r * 1.25 + 18);
+    // caja de la activación: escalón o sigmoide
+    const bw = r * 1.6, bh = r * 1.5; g.strokeStyle = PAL.ink; g.lineWidth = 1.6; g.fillStyle = '#fff';
+    g.fillRect(N.st[0] - bw / 2, N.st[1] - bh / 2, bw, bh); g.strokeRect(N.st[0] - bw / 2, N.st[1] - bh / 2, bw, bh);
+    g.beginPath();
+    if (S.act === 'signo') {
+      g.moveTo(N.st[0] - bw * 0.35, N.st[1] + bh * 0.25); g.lineTo(N.st[0], N.st[1] + bh * 0.25);
+      g.lineTo(N.st[0], N.st[1] - bh * 0.25); g.lineTo(N.st[0] + bw * 0.35, N.st[1] - bh * 0.25);
+    } else {
+      for (let k = 0; k <= 30; k++) { const u = -1 + 2 * k / 30, v = 1 / (1 + Math.exp(-6 * u));
+        const X = N.st[0] + u * bw * 0.38, Y = N.st[1] + bh * 0.25 - v * bh * 0.5; k ? g.lineTo(X, Y) : g.moveTo(X, Y); }
+    }
+    g.lineWidth = 2.2; g.stroke();
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.fillText(S.act === 'signo' ? 'signo' : 'sigmoide', N.st[0], N.st[1] + bh / 2 + 15);
+    arrow(g, N.s[0] + r * 1.25, N.s[1], N.st[0] - bw / 2 - 2, N.st[1], PAL.ink, 1.6);
+    arrow(g, N.st[0] + bw / 2, N.st[1], N.o[0] - r - 2, N.o[1], PAL.ink, 1.6);
+    pulse(g, N.s[0], N.s[1], N.o[0], N.o[1], (p - 0.5) / 0.5);
+    const done = p >= 1;
+    if (S.act === 'signo') node(g, ...N.o, r, done ? (y > 0 ? PAL.pos : PAL.neg) : '#fff', PAL.ink, done ? (y > 0 ? '+1' : '−1') : '?', done ? '#fff' : PAL.ink, 16);
+    else { const sg = 1 / (1 + Math.exp(-zz)); node(g, ...N.o, r, done ? `rgb(${mix(sg)})` : '#fff', PAL.ink, done ? sg.toFixed(2) : '?', done ? '#fff' : PAL.ink, 14); }
+    g.fillStyle = PAL.soft; g.font = '13px Helvetica, Arial'; g.fillText('ŷ', N.o[0], N.o[1] - r - 6);
+  }
+  function drawPlane() {
+    const { g, w, h } = fit(cp, 1);
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const P = PP = { x: 30, y: 8, w: w - 40, h: h - 38 };
+    const px = v => P.x + (v - X0) / (X1 - X0) * P.w, py = v => P.y + P.h - (v - X0) / (X1 - X0) * P.h;
+    const cell = 5;
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    for (let i = P.x; i < P.x + P.w; i += cell) for (let j = P.y; j < P.y + P.h; j += cell) {
+      const a = X0 + (i + cell / 2 - P.x) / P.w * (X1 - X0), b = X0 + (P.y + P.h - j - cell / 2) / P.h * (X1 - X0);
+      const zab = S.w1 * a + S.w2 * b + S.b;
+      const c = mix(S.act === 'signo' ? (zab >= 0 ? 1 : 0) : 1 / (1 + Math.exp(-zab)));
+      g.fillStyle = `rgba(${c},${S.act === 'signo' ? 0.18 : 0.3})`; g.fillRect(i, j, cell, cell);
+    }
+    g.restore();
+    planeAxes(g, P, X0, X1, X0, X1, [-1, 0, 1, 2]);
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    const nw = Math.hypot(S.w1, S.w2);
+    if (nw > 1e-9) {
+      // frontera w·x + b = 0
+      const p0 = [-S.b * S.w1 / nw ** 2, -S.b * S.w2 / nw ** 2], d = [-S.w2 / nw, S.w1 / nw];
+      g.strokeStyle = PAL.ink; g.lineWidth = 2.4; g.beginPath();
+      g.moveTo(px(p0[0] - 6 * d[0]), py(p0[1] - 6 * d[1])); g.lineTo(px(p0[0] + 6 * d[0]), py(p0[1] + 6 * d[1])); g.stroke();
+      if (S.act === 'sigmoide') {        // curvas de nivel σ = 0.1 y σ = 0.9: z = ∓2.2, rectas paralelas
+        g.setLineDash([5, 4]); g.lineWidth = 1.4;
+        [-2.197, 2.197].forEach(zl => { const o = zl / nw ** 2; const p1 = [p0[0] + o * S.w1, p0[1] + o * S.w2];
+          g.beginPath(); g.moveTo(px(p1[0] - 6 * d[0]), py(p1[1] - 6 * d[1])); g.lineTo(px(p1[0] + 6 * d[0]), py(p1[1] + 6 * d[1])); g.stroke(); });
+        g.setLineDash([]);
+      }
+      const q = [p0[0] + 0.6 * S.w1 / nw, p0[1] + 0.6 * S.w2 / nw];
+      arrow(g, px(p0[0]), py(p0[1]), px(q[0]), py(q[1]), PAL.red, 2.4);
+      g.fillStyle = PAL.red; g.font = 'bold 14px Helvetica, Arial'; g.textAlign = 'left'; g.fillText('w', px(q[0]) + 5, py(q[1]) - 4);
+    }
+    let ok = 0, tot = 0;
+    const pts = COMPUERTAS[S.puntos];
+    if (pts) pts.forEach(([a, b, yy]) => { tot++; const pred = S.w1 * a + S.w2 * b + S.b >= 0 ? 1 : -1; if (pred === yy) ok++;
+      node(g, px(a), py(b), 9, yy > 0 ? PAL.pos : PAL.neg, pred === yy ? PAL.ink : PAL.red);
+      if (pred !== yy) { g.strokeStyle = PAL.red; g.lineWidth = 2.5; g.beginPath(); g.arc(px(a), py(b), 13, 0, 7); g.stroke(); } });
+    g.fillStyle = PAL.ink; g.beginPath(); g.arc(px(S.x1), py(S.x2), 6, 0, 7); g.fill();
+    g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
+    g.restore();
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center';
+    g.fillText('x₁', P.x + P.w / 2, h - 2);
+    g.save(); g.translate(10, P.y + P.h / 2); g.rotate(-Math.PI / 2); g.fillText('x₂', 0, 0); g.restore();
+    const zz = z();
+    read.innerHTML = `z = w₁x₁ + w₂x₂ + b = ${S.w1.toFixed(1)}·${S.x1.toFixed(1)} + ${S.w2.toFixed(1)}·${S.x2.toFixed(1)} + (${S.b.toFixed(1)}) = <b>${zz.toFixed(2)}</b>` +
+      (S.act === 'signo' ? ` &nbsp;→&nbsp; ŷ = <b style="color:${zz >= 0 ? PAL.pos : PAL.neg}">${zz >= 0 ? '+1' : '−1'}</b>`
+        : ` &nbsp;→&nbsp; σ(z) = <b>${(1 / (1 + Math.exp(-zz))).toFixed(2)}</b>, clase ${zz >= 0 ? '+1' : '−1'} (umbral 0.5)`) +
+      (tot ? ` &nbsp;·&nbsp; ${S.puntos}: ${ok} de ${tot} puntos bien clasificados` : '') +
+      (S.act === 'signo' ? ` &nbsp;·&nbsp; zona azul: ŷ = +1; naranja: ŷ = −1` : ` &nbsp;·&nbsp; recta continua: σ = 0.5; punteadas: σ = 0.1 y 0.9`);
+  }
+  dragPoint(cp, () => PP, (x, y) => [X0 + (x - PP.x) / PP.w * (X1 - X0), X0 + (PP.y + PP.h - y) / PP.h * (X1 - X0)],
+    ([a, b]) => { S.x1 = Math.round(a * 10) / 10; S.x2 = Math.round(b * 10) / 10; sl.x1.set(S.x1); sl.x2.set(S.x2); upd(); });
+  const anim = animator(p => { drawDiagram(p); });
+  function upd() { drawPlane(); anim(); }
+  function full() { drawPlane(); drawDiagram(1); }
+  onResize(root, full);
+  full(); setTimeout(full, 300);
+  root._redraw = full;
+};
+
+// ======================== RED MULTICAPA ========================
+NNW.mlp = function (root, presets) {
+  injectCSS();
+  root.classList.add('nnw'); root.innerHTML = '';
+  const nombres = Object.keys(presets);
+  let S = null;
+  const bar = el('div', { class: 'nnw-bar' }, root);
+  const l1 = el('label', { html: 'red ' }, bar); const sel = el('select', {}, l1);
+  nombres.forEach(k => el('option', { value: k, text: k }, sel));
+  const l2 = el('label', { html: 'activación oculta ' }, bar); const selA = el('select', {}, l2);
+  ['escalón', 'sigmoide', 'tanh', 'ReLU', 'identidad'].forEach(k => el('option', { value: k, text: k }, selA));
+  el('span', { class: 'nnw-read', text: 'arrastra el punto negro en el plano de entrada' }, bar);
+  const row = el('div', { class: 'nnw-row' }, root);
+  const cd = el('canvas', { style: 'flex:40 1 0' }, row);
+  const cp = el('canvas', { style: 'flex:30 1 0' }, row);
+  const ch = el('canvas', { style: 'flex:30 1 0' }, row);
+  const det = el('details', {}, root);
+  el('summary', { text: 'editar pesos (redes de 2 neuronas ocultas)' }, det);
+  const ctrl = el('div', { class: 'nnw-ctrl' }, det);
+  const read = el('div', { class: 'nnw-read' }, root);
+  let sls = [];
+
+  function load(name) {
+    const p = presets[name];
+    S = { name, H: p.W1.length, act: p.act, out: p.out, W1: p.W1.map(r => r.slice()), b1: p.b1.slice(), W2: p.W2.slice(), b2: p.b2,
+          x: p.x0.slice(), rng: p.rng, pts: p.pts || [] };
+    selA.value = S.act;
+    ctrl.innerHTML = ''; sls = [];
+    det.style.display = S.H <= 2 ? '' : 'none';
+    if (S.H <= 2) {
+      const mk = (lab, get, set) => sls.push(slider(ctrl, lab, -12, 12, 0.5, get(), v => { set(v); upd(); }));
+      for (let j = 0; j < S.H; j++) {
+        mk(`W₁[${j + 1},1]`, () => S.W1[j][0], v => S.W1[j][0] = v);
+        mk(`W₁[${j + 1},2]`, () => S.W1[j][1], v => S.W1[j][1] = v);
+        mk(`b₁[${j + 1}]`, () => S.b1[j], v => S.b1[j] = v);
+      }
+      for (let j = 0; j < S.H; j++) mk(`W₂[${j + 1}]`, () => S.W2[j], v => S.W2[j] = v);
+      mk('b₂', () => S.b2, v => S.b2 = v);
+    }
+  }
+  function fwd(x) {
+    const f = ACT[S.act];
+    const z1 = S.W1.map((r, j) => r[0] * x[0] + r[1] * x[1] + S.b1[j]);
+    const a1 = z1.map(f);
+    const z2 = a1.reduce((s, a, j) => s + S.W2[j] * a, S.b2);
+    const y = S.out === 'escalón' ? (z2 >= 0 ? 1 : 0) : 1 / (1 + Math.exp(-z2));
+    return { z1, a1, z2, y };
+  }
+  let PP = { x: 0, y: 0, w: 1, h: 1 };
+  function drawDiagram(p) {
+    const { g, w, h } = fit(cd, cp.clientWidth / Math.max(cd.clientWidth, 1));
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const F = fwd(S.x);
+    const H = S.H, xi = w * 0.1, xh = w * 0.5, xo = w * 0.88;
+    const yin = [h * 0.33, h * 0.67], yh = [...Array(H).keys()].map(j => h * (j + 1) / (H + 1)), yo = h * 0.5;
+    const r = Math.min(h / (2.6 * Math.max(H, 2)), w * 0.06, 26);
+    const amax = Math.max(1, ...F.a1.map(Math.abs));
+    for (let j = 0; j < H; j++) for (let i = 0; i < 2; i++) {
+      const e = edgeStyle(S.W1[j][i] * (H > 2 ? 0.5 : 1));
+      g.strokeStyle = e.col; g.lineWidth = e.wd; g.globalAlpha = 0.85;
+      g.beginPath(); g.moveTo(xi + r, yin[i]); g.lineTo(xh - r, yh[j]); g.stroke(); g.globalAlpha = 1;
+      pulse(g, xi, yin[i], xh, yh[j], p / 0.5);
+    }
+    for (let j = 0; j < H; j++) {
+      const e = edgeStyle(S.W2[j] * (H > 2 ? 0.5 : 1));
+      g.strokeStyle = e.col; g.lineWidth = e.wd; g.globalAlpha = 0.85;
+      g.beginPath(); g.moveTo(xh + r, yh[j]); g.lineTo(xo - r, yo); g.stroke(); g.globalAlpha = 1;
+      pulse(g, xh, yh[j], xo, yo, (p - 0.5) / 0.5);
+    }
+    node(g, xi, yin[0], r, '#fff', PAL.ink, S.x[0].toFixed(1), PAL.ink, 13);
+    node(g, xi, yin[1], r, '#fff', PAL.ink, S.x[1].toFixed(1), PAL.ink, 13);
+    g.fillStyle = PAL.soft; g.font = '13px Helvetica, Arial'; g.textAlign = 'center';
+    g.fillText('x₁', xi, yin[0] - r - 5); g.fillText('x₂', xi, yin[1] - r - 5);
+    const lit = p >= 0.5;
+    for (let j = 0; j < H; j++) {
+      const v = F.a1[j], t = lit ? Math.min(1, Math.abs(v) / amax) : 0;
+      const base = v >= 0 ? PAL.posL : PAL.negL;
+      const fill = `rgb(${base.map(c => Math.round(255 + (c - 255) * t))})`;
+      node(g, xh, yh[j], r, fill, PAL.ink, H <= 4 && lit ? v.toFixed(2) : '', t > 0.6 ? '#fff' : PAL.ink, 12);
+    }
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial';
+    g.fillText(`capa oculta (${S.act})`, xh, h - 4);
+    const done = p >= 1, c = mix(F.y);
+    node(g, xo, yo, r * 1.1, done ? `rgb(${c})` : '#fff', PAL.ink, done ? F.y.toFixed(2) : '?', done ? '#fff' : PAL.ink, 13);
+    g.fillStyle = PAL.soft; g.fillText('ŷ', xo, yo - r * 1.1 - 5);
+  }
+  function drawPlane() {
+    const { g, w, h } = fit(cp, 1);
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const [X0, X1] = S.rng;
+    const P = PP = { x: 30, y: 8, w: w - 40, h: h - 38 };
+    const cell = 5;
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    for (let i = P.x; i < P.x + P.w; i += cell) for (let j = P.y; j < P.y + P.h; j += cell) {
+      const a = X0 + (i + cell / 2 - P.x) / P.w * (X1 - X0), b = X0 + (P.y + P.h - j - cell / 2) / P.h * (X1 - X0);
+      g.fillStyle = `rgba(${mix(fwd([a, b]).y)},0.32)`; g.fillRect(i, j, cell, cell);
+    }
+    g.restore();
+    const ticks = X1 - X0 > 3 ? [-2, -1, 0, 1, 2] : [0, 1];
+    const [px, py] = planeAxes(g, P, X0, X1, X0, X1, ticks);
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    let ok = 0;
+    S.pts.forEach(([a, b, yy]) => { const pr = fwd([a, b]).y >= 0.5 ? 1 : 0; if (pr === yy) ok++;
+      const rr = S.pts.length > 10 ? 3.2 : 8;
+      node(g, px(a), py(b), rr, yy ? PAL.pos : PAL.neg, pr === yy ? 'rgba(0,0,0,0.5)' : PAL.red); });
+    g.fillStyle = PAL.ink; g.beginPath(); g.arc(px(S.x[0]), py(S.x[1]), 6, 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
+    g.restore();
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center'; g.fillText('entrada (x₁, x₂)', P.x + P.w / 2, h - 2);
+    return ok;
+  }
+  function drawHidden() {
+    const { g, w, h } = fit(ch, 1);
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const F = fwd(S.x);
+    if (S.H === 2) {
+      // espacio oculto: imagen de una grilla del plano de entrada, de los puntos y de la frontera de salida
+      const [X0, X1] = S.rng, n = 9, lines = [];
+      for (let k = 0; k <= n; k++) { const c = X0 + (X1 - X0) * k / n, L1 = [], L2 = [];
+        for (let m = 0; m <= 40; m++) { const t = X0 + (X1 - X0) * m / 40; L1.push(fwd([c, t]).a1); L2.push(fwd([t, c]).a1); }
+        lines.push(L1, L2); }
+      const all = lines.flat().concat(S.pts.map(q => fwd(q).a1));
+      let lo0 = Math.min(...all.map(v => v[0])), hi0 = Math.max(...all.map(v => v[0]));
+      let lo1 = Math.min(...all.map(v => v[1])), hi1 = Math.max(...all.map(v => v[1]));
+      const sp = Math.max(hi0 - lo0, hi1 - lo1, 0.5), c0 = (lo0 + hi0) / 2, c1 = (lo1 + hi1) / 2;
+      const A0 = c0 - sp * 0.6, A1 = c0 + sp * 0.6, B0 = c1 - sp * 0.6, B1 = c1 + sp * 0.6;
+      const P = { x: 30, y: 8, w: w - 40, h: h - 38 };
+      const px = v => P.x + (v - A0) / (A1 - A0) * P.w, py = v => P.y + P.h - (v - B0) / (B1 - B0) * P.h;
+      g.strokeStyle = PAL.faint; g.lineWidth = 1.2; g.strokeRect(P.x, P.y, P.w, P.h);
+      g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+      g.strokeStyle = 'rgba(0,0,0,0.18)'; g.lineWidth = 1;
+      lines.forEach(L => { g.beginPath(); L.forEach((v, m) => m ? g.lineTo(px(v[0]), py(v[1])) : g.moveTo(px(v[0]), py(v[1]))); g.stroke(); });
+      // frontera de la neurona de salida: W2·a + b2 = 0
+      const nw = Math.hypot(S.W2[0], S.W2[1]);
+      if (nw > 1e-9) { const p0 = [-S.b2 * S.W2[0] / nw ** 2, -S.b2 * S.W2[1] / nw ** 2], d = [-S.W2[1] / nw, S.W2[0] / nw], L = 10 * sp;
+        g.strokeStyle = PAL.ink; g.lineWidth = 2.4; g.setLineDash([7, 4]); g.beginPath();
+        g.moveTo(px(p0[0] - L * d[0]), py(p0[1] - L * d[1])); g.lineTo(px(p0[0] + L * d[0]), py(p0[1] + L * d[1])); g.stroke(); g.setLineDash([]); }
+      S.pts.forEach(q => { const a = fwd(q).a1; node(g, px(a[0]), py(a[1]), S.pts.length > 10 ? 3.2 : 8, q[2] ? PAL.pos : PAL.neg, 'rgba(0,0,0,0.5)'); });
+      g.fillStyle = PAL.ink; g.beginPath(); g.arc(px(F.a1[0]), py(F.a1[1]), 6, 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
+      g.restore();
+      g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center';
+      g.fillText('espacio oculto (a₁, a₂)', P.x + P.w / 2, h - 2);
+    } else {
+      // contribución de cada neurona oculta al puntaje de salida z₂ = Σ W₂[j] a[j] + b₂
+      const c = F.a1.map((a, j) => S.W2[j] * a), vals = c.concat([S.b2, F.z2]);
+      const M = Math.max(1, ...vals.map(Math.abs));
+      const P = { x: 20, y: 24, w: w - 30, h: h - 46 }, n = c.length + 2, bw = P.w / n;
+      const y0 = P.y + P.h / 2, sc = (P.h / 2 - 4) / M;
+      g.strokeStyle = PAL.faint; g.beginPath(); g.moveTo(P.x, y0); g.lineTo(P.x + P.w, y0); g.stroke();
+      vals.forEach((v, k) => { g.fillStyle = k === n - 1 ? PAL.ink : (k === n - 2 ? PAL.faint : (v >= 0 ? PAL.pos : PAL.neg));
+        g.fillRect(P.x + k * bw + bw * 0.15, v >= 0 ? y0 - v * sc : y0, bw * 0.7, Math.abs(v) * sc);
+        g.fillStyle = PAL.soft; g.font = '11px Helvetica, Arial'; g.textAlign = 'center';
+        g.fillText(k < c.length ? (k + 1) : (k === n - 2 ? 'b₂' : 'z'), P.x + k * bw + bw / 2, P.y + P.h + 14); });
+      g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center';
+      g.fillText('aporte W₂[j]·aⱼ de cada neurona a z', w / 2, 14);
+    }
+  }
+  function readout(ok) {
+    const F = fwd(S.x);
+    read.innerHTML = `x = (${S.x[0].toFixed(2)}, ${S.x[1].toFixed(2)}) &nbsp;→&nbsp; capa oculta a = (${F.a1.map(v => v.toFixed(2)).join(', ')})` +
+      ` &nbsp;→&nbsp; z = ${F.z2.toFixed(2)} &nbsp;→&nbsp; ŷ = <b>${F.y.toFixed(2)}</b>` +
+      (S.pts.length ? ` &nbsp;·&nbsp; ${ok} de ${S.pts.length} puntos bien clasificados` : '');
+  }
+  dragPoint(cp, () => PP, (x, y) => { const [X0, X1] = S.rng; return [X0 + (x - PP.x) / PP.w * (X1 - X0), X0 + (PP.y + PP.h - y) / PP.h * (X1 - X0)]; },
+    v => { S.x = v; upd(); });
+  const anim = animator(p => drawDiagram(p));
+  function upd() { const ok = drawPlane(); drawHidden(); readout(ok); anim(); }
+  function full() { const ok = drawPlane(); drawHidden(); readout(ok); drawDiagram(1); }
+  sel.addEventListener('change', () => { load(sel.value); full(); });
+  selA.addEventListener('change', () => { S.act = selA.value; upd(); });
+  load(nombres[0]);
+  onResize(root, full);
+  full(); setTimeout(full, 300);
+  root._redraw = full;
+};
+
+// ======================== ENTRENAR XOR ========================
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const XOR4 = [[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0]];
+const XORAUG = (() => { const r = mulberry32(2), out = [];
+  XOR4.forEach(([a, b, y]) => { for (let k = 0; k < 50; k++) out.push([a + 0.15 * gauss(r), b + 0.15 * gauss(r), y]); }); return out; })();
+const sig = z => 1 / (1 + Math.exp(-z));
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+
+NNW.xorTrainer = function (root) {
+  injectCSS();
+  root.classList.add('nnw'); root.innerHTML = '';
+  const S = { H: 2, act: 'sigmoide', loss: 'entropía cruzada', datos: '4 esquinas', eta: 1, semilla: 1, vel: 5,
+              th: null, t: 0, hist: [], tray: [], corriendo: false, pi: 0, pj: 2, intentos: null };
+  // ---- controles ----
+  const bar = el('div', { class: 'nnw-bar' }, root);
+  const mkSel = (lab, opts, key, cb) => { const l = el('label', { html: lab + ' ' }, bar), s = el('select', {}, l);
+    opts.forEach(o => el('option', { value: o, text: o }, s)); s.value = S[key];
+    s.addEventListener('change', () => { S[key] = isNaN(+s.value) ? s.value : +s.value; cb(); }); return s; };
+  mkSel('ocultas', [2, 3, 4], 'H', () => { S.pi = 0; S.pj = 2 * S.H; reiniciar(); armarSelectores(); });
+  mkSel('activación', ['sigmoide', 'ReLU'], 'act', () => reiniciar());
+  mkSel('pérdida', ['entropía cruzada', 'MSE'], 'loss', () => reiniciar());
+  mkSel('datos', ['4 esquinas', 'aumentados (200)'], 'datos', () => reiniciar());
+  const bar2 = el('div', { class: 'nnw-bar' }, root);
+  const btn = (t, f) => { const b = el('button', { text: t }, bar2); b.addEventListener('click', e => { e.stopPropagation(); f(); }); return b; };
+  const bPlay = btn('▶ entrenar', () => { S.corriendo = !S.corriendo; bPlay.textContent = S.corriendo ? '⏸ pausa' : '▶ entrenar'; if (S.corriendo) loop(); });
+  btn('un paso', () => { paso(1); dibujar(); });
+  btn('nueva semilla', () => { S.semilla++; reiniciar(); });
+  btn('probar 20 semillas', () => probarSemillas());
+  const etaSl = slider(bar2, 'η', 0.1, 4, 0.1, S.eta, v => { S.eta = v; });
+  const velSl = slider(bar2, 'pasos/cuadro', 1, 50, 1, S.vel, v => { S.vel = v; });
+  const row = el('div', { class: 'nnw-row' }, root);
+  const cIn = el('canvas', { style: 'flex:1 1 0' }, row);
+  const cL = el('canvas', { style: 'flex:1 1 0' }, row);
+  const cS = el('canvas', { style: 'flex:1 1 0' }, row);
+  const row2 = el('div', { class: 'nnw-row', style: 'margin-top:6px' }, root);
+  const tab = el('div', { style: 'flex:1.15 1 0; font-size:12.5px; font-variant-numeric:tabular-nums' }, row2);
+  const cA = el('canvas', { style: 'flex:1 1 0' }, row2);
+  const sliceBar = el('div', { class: 'nnw-bar', style: 'margin-top:4px' }, root);
+  const read = el('div', { class: 'nnw-read' }, root);
+
+  const nP = () => 4 * S.H + 1;
+  const nombre = k => { const H = S.H;
+    if (k < 2 * H) return `W¹[${Math.floor(k / 2) + 1},${k % 2 + 1}]`;
+    if (k < 3 * H) return `b¹[${k - 2 * H + 1}]`;
+    if (k < 4 * H) return `W²[${k - 3 * H + 1}]`; return 'b²'; };
+  // capa oculta: θ = [W1 (H×2 por filas), b1 (H), W2 (H), b2]
+  let selI, selJ;
+  function armarSelectores() {
+    sliceBar.innerHTML = '';
+    el('span', { text: 'corte de la superficie de pérdida según ' }, sliceBar);
+    selI = el('select', {}, sliceBar); el('span', { text: ' y ' }, sliceBar); selJ = el('select', {}, sliceBar);
+    for (let k = 0; k < 4 * S.H; k++) { el('option', { value: k, text: nombre(k) }, selI); el('option', { value: k, text: nombre(k) }, selJ); }
+    selI.value = S.pi; selJ.value = S.pj;
+    selI.addEventListener('change', () => { S.pi = +selI.value; dibujar(); });
+    selJ.addEventListener('change', () => { S.pj = +selJ.value; dibujar(); });
+  }
+  const datos = () => S.datos === '4 esquinas' ? XOR4 : XORAUG;
+  const fAct = z => S.act === 'sigmoide' ? sig(z) : Math.max(0, z);
+  const dAct = z => S.act === 'sigmoide' ? sig(z) * (1 - sig(z)) : (z > 0 ? 1 : 0);
+  function evalua(th, D, conGrad) {
+    const H = S.H, g = conGrad ? new Array(th.length).fill(0) : null; let L = 0;
+    for (const [x1, x2, y] of D) {
+      const z = [], a = [];
+      for (let j = 0; j < H; j++) { z[j] = th[2 * j] * x1 + th[2 * j + 1] * x2 + th[2 * H + j]; a[j] = fAct(z[j]); }
+      let zo = th[4 * H]; for (let j = 0; j < H; j++) zo += th[3 * H + j] * a[j];
+      const p = sig(zo);
+      let d2;
+      if (S.loss === 'MSE') { L += (p - y) ** 2; d2 = 2 * (p - y) * p * (1 - p); }
+      else { L += -(y * Math.log(p + 1e-12) + (1 - y) * Math.log(1 - p + 1e-12)); d2 = p - y; }
+      if (conGrad) {
+        g[4 * H] += d2;
+        for (let j = 0; j < H; j++) { g[3 * H + j] += d2 * a[j]; const d1 = d2 * th[3 * H + j] * dAct(z[j]);
+          g[2 * j] += d1 * x1; g[2 * j + 1] += d1 * x2; g[2 * H + j] += d1; }
+      }
+    }
+    const n = D.length; if (conGrad) for (let k = 0; k < g.length; k++) g[k] /= n;
+    return { L: L / n, g };
+  }
+  const salida = (th, x1, x2) => { const H = S.H; let zo = th[4 * H];
+    for (let j = 0; j < H; j++) zo += th[3 * H + j] * fAct(th[2 * j] * x1 + th[2 * j + 1] * x2 + th[2 * H + j]); return sig(zo); };
+  const resuelve = th => XOR4.every(([a, b, y]) => (salida(th, a, b) > 0.5) === (y > 0.5));
+  function inicial(seed) { const r = mulberry32(seed * 7919 + 13); return Array.from({ length: nP() }, () => gauss(r)); }
+  function reiniciar() {
+    S.intentos = null; S.th = inicial(S.semilla); S.t = 0; S.hist = [evalua(S.th, datos(), false).L]; S.tray = [S.th.slice()];
+    S.ult = evalua(S.th, datos(), true); dibujar();
+  }
+  function paso(k) {
+    for (let i = 0; i < k; i++) {
+      const E = evalua(S.th, datos(), true);
+      for (let q = 0; q < S.th.length; q++) S.th[q] -= S.eta * E.g[q];
+      S.t++;
+    }
+    S.ult = evalua(S.th, datos(), true); S.hist.push(S.ult.L);
+    S.tray.push(S.th.slice()); if (S.tray.length > 4000) S.tray = S.tray.filter((_, i) => i % 2 === 0);
+  }
+  function loop() { if (!S.corriendo) return; paso(S.vel); dibujar();
+    if (S.t >= 20000) { S.corriendo = false; bPlay.textContent = '▶ entrenar'; return; } requestAnimationFrame(loop); }
+  function probarSemillas() {
+    const res = [];
+    for (let s = 1; s <= 20; s++) { let th = inicial(1000 + s);
+      for (let t = 0; t < 3000; t++) { const E = evalua(th, datos(), true); for (let q = 0; q < th.length; q++) th[q] -= S.eta * E.g[q]; }
+      res.push({ L: evalua(th, datos(), false).L, ok: resuelve(th) }); }
+    S.intentos = res; dibujar();
+  }
+  // ---- dibujo ----
+  const colN = ['#8e44ad', '#3a8c4f', '#c0392b', '#b7950b'];
+  function dibIn() {
+    const { g, w, h } = fit(cIn, 1); g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const X0 = -0.5, X1 = 1.5, P = { x: 30, y: 8, w: w - 40, h: h - 38 }, cell = 5;
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    for (let i = P.x; i < P.x + P.w; i += cell) for (let j = P.y; j < P.y + P.h; j += cell) {
+      const a = X0 + (i + cell / 2 - P.x) / P.w * (X1 - X0), b = X0 + (P.y + P.h - j - cell / 2) / P.h * (X1 - X0);
+      g.fillStyle = `rgba(${mix(salida(S.th, a, b))},0.32)`; g.fillRect(i, j, cell, cell); }
+    g.restore();
+    const [px, py] = planeAxes(g, P, X0, X1, X0, X1, [0, 1]);
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    for (let j = 0; j < S.H; j++) {        // recta de cada neurona oculta: z_j = 0
+      const w1 = S.th[2 * j], w2 = S.th[2 * j + 1], b = S.th[2 * S.H + j]; g.strokeStyle = colN[j]; g.lineWidth = 2.2; g.setLineDash([6, 4]); g.beginPath();
+      if (Math.abs(w2) > Math.abs(w1)) { g.moveTo(px(-1), py((-b + w1) / w2)); g.lineTo(px(2), py((-b - 2 * w1) / w2)); }
+      else if (Math.abs(w1) > 1e-9) { g.moveTo(px((-b + w2) / w1), py(-1)); g.lineTo(px((-b - 2 * w2) / w1), py(2)); }
+      g.stroke(); g.setLineDash([]);
+    }
+    if (S.datos !== '4 esquinas') XORAUG.forEach(([a, b, y]) => node(g, px(a), py(b), 2.4, y ? PAL.pos : PAL.neg, 'rgba(0,0,0,0.3)'));
+    XOR4.forEach(([a, b, y]) => { const ok = (salida(S.th, a, b) > 0.5) === (y > 0.5);
+      node(g, px(a), py(b), 8, y ? PAL.pos : PAL.neg, ok ? PAL.ink : PAL.red);
+      if (!ok) { g.strokeStyle = PAL.red; g.lineWidth = 2.5; g.beginPath(); g.arc(px(a), py(b), 12, 0, 7); g.stroke(); } });
+    g.restore();
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center'; g.fillText('entrada y rectas ocultas', P.x + P.w / 2, h - 2);
+  }
+  function dibL() {
+    const { g, w, h } = fit(cL, 1); g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const P = { x: 42, y: 10, w: w - 52, h: h - 40 };
+    const n = S.hist.length, Tm = Math.max(S.t, 100);
+    const lg = v => Math.log10(Math.max(v, 1e-4)), Y0 = -4, Y1 = 0.5;
+    const px = k => P.x + k / Tm * P.w, py = v => P.y + P.h - (lg(v) - Y0) / (Y1 - Y0) * P.h;
+    g.strokeStyle = PAL.faint; g.lineWidth = 1.2; g.strokeRect(P.x, P.y, P.w, P.h);
+    g.fillStyle = PAL.soft; g.font = '11px Helvetica, Arial'; g.textAlign = 'right';
+    [[1, '1'], [0.1, '0.1'], [0.01, '0.01'], [0.001, '10⁻³']].forEach(([v, t]) => { g.fillText(t, P.x - 4, py(v) + 4);
+      g.strokeStyle = 'rgba(0,0,0,0.1)'; g.beginPath(); g.moveTo(P.x, py(v)); g.lineTo(P.x + P.w, py(v)); g.stroke(); });
+    if (S.loss === 'entropía cruzada') { g.strokeStyle = PAL.red; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(P.x, py(0.3466)); g.lineTo(P.x + P.w, py(0.3466)); g.stroke(); g.setLineDash([]);
+      g.fillStyle = PAL.red; g.textAlign = 'left'; g.fillText('mínimo local (ln 2)/2', P.x + 4, py(0.3466) - 4); }
+    g.strokeStyle = PAL.pos; g.lineWidth = 2.2; g.beginPath();
+    // la historia guarda un valor por cuadro; se reparte uniformemente en [0, t]
+    S.hist.forEach((v, k) => { const X = P.x + (n > 1 ? k / (n - 1) : 0) * (S.t / Tm) * P.w; k ? g.lineTo(X, py(v)) : g.moveTo(X, py(v)); }); g.stroke();
+    if (S.intentos) S.intentos.forEach((r, k) => { g.fillStyle = r.ok ? PAL.green : PAL.red;
+      g.beginPath(); g.arc(P.x + P.w - 8 - (k % 4) * 9, py(r.L) + (Math.floor(k / 4) - 2) * 2, 3.5, 0, 7); g.fill(); });
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center';
+    g.fillText(`pérdida (${S.loss}), iteración ${S.t}`, P.x + P.w / 2, h - 4);
+  }
+  function dibS() {
+    const { g, w, h } = fit(cS, 1); g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const i = S.pi, j = S.pj, P = { x: 36, y: 8, w: w - 46, h: h - 40 }, n = 36, R = 6;
+    const ci = S.th[i], cj = S.th[j], A0 = ci - R, A1 = ci + R, B0 = cj - R, B1 = cj + R;
+    const th = S.th.slice(), D = datos().length > 50 ? XORAUG.filter((_, k) => k % 5 === 0) : XOR4;
+    const vals = []; let lo = Infinity, hi = -Infinity;
+    for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) { th[i] = A0 + (a + 0.5) / n * (A1 - A0); th[j] = B0 + (b + 0.5) / n * (B1 - B0);
+      const v = Math.log10(evalua(th, D, false).L + 1e-4); vals.push(v); lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    const cw = P.w / n, chh = P.h / n;
+    for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) { const t = (vals[a * n + b] - lo) / Math.max(hi - lo, 1e-9);
+      const c = [Math.round(30 + 200 * t), Math.round(60 + 170 * t), Math.round(110 + 110 * t)];
+      g.fillStyle = `rgb(${c})`; g.fillRect(P.x + a * cw, P.y + P.h - (b + 1) * chh, cw + 0.5, chh + 0.5); }
+    const px = v => P.x + (v - A0) / (A1 - A0) * P.w, py = v => P.y + P.h - (v - B0) / (B1 - B0) * P.h;
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    g.strokeStyle = '#fff'; g.lineWidth = 1.6; g.beginPath();
+    S.tray.forEach((q, k) => k ? g.lineTo(px(q[i]), py(q[j])) : g.moveTo(px(q[i]), py(q[j]))); g.stroke();
+    if (S.tray.length) { const q = S.tray[0]; g.fillStyle = '#fff'; g.beginPath(); g.arc(px(q[i]), py(q[j]), 4, 0, 7); g.fill(); }
+    g.fillStyle = PAL.red; g.beginPath(); g.arc(px(ci), py(cj), 6, 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
+    g.restore();
+    g.strokeStyle = PAL.faint; g.lineWidth = 1.2; g.strokeRect(P.x, P.y, P.w, P.h);
+    g.fillStyle = PAL.soft; g.font = '11px Helvetica, Arial'; g.textAlign = 'center';
+    g.fillText(nombre(i) + ' →', P.x + P.w / 2, P.y + P.h + 14);
+    g.save(); g.translate(P.x - 8, P.y + P.h / 2); g.rotate(-Math.PI / 2); g.fillText(nombre(j) + ' →', 0, 0); g.restore();
+    g.font = '12px Helvetica, Arial'; g.fillText('oscuro: pérdida baja; blanco: trayectoria', P.x + P.w / 2, h - 4);
+  }
+  function dibA() {
+    const { g, w, h } = fit(cA, 0.62); g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const P = { x: 34, y: 18, w: w - 44, h: h - 46 }, Z0 = -6, Z1 = 6, Y0 = S.act === 'sigmoide' ? -0.05 : -0.3, Y1 = S.act === 'sigmoide' ? 1.05 : 6;
+    const [px, py] = planeAxes(g, P, Z0, Z1, Y0, Y1, S.act === 'sigmoide' ? [-6, 0, 6, 1] : [-6, 0, 6]);
+    const zs = [...Array(121).keys()].map(k => Z0 + k * 0.1);
+    g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+    g.strokeStyle = PAL.ink; g.lineWidth = 2.2; g.beginPath(); zs.forEach((z, k) => k ? g.lineTo(px(z), py(fAct(z))) : g.moveTo(px(z), py(fAct(z)))); g.stroke();
+    const esc = S.act === 'sigmoide' ? 4 : 1;   // la derivada de la sigmoide (≤ 1/4) se dibuja ×4
+    g.strokeStyle = PAL.red; g.lineWidth = 1.8; g.setLineDash([5, 3]); g.beginPath();
+    zs.forEach((z, k) => k ? g.lineTo(px(z), py(esc * dAct(z))) : g.moveTo(px(z), py(esc * dAct(z)))); g.stroke(); g.setLineDash([]);
+    const muertas = [];
+    for (let j = 0; j < S.H; j++) { let viva = false;
+      XOR4.forEach(([a, b]) => { const z = S.th[2 * j] * a + S.th[2 * j + 1] * b + S.th[2 * S.H + j]; if (z > 0) viva = true;
+        node(g, px(Math.max(Z0, Math.min(Z1, z))), py(fAct(z)), 4.5, colN[j], '#fff'); });
+      if (S.act === 'ReLU' && !viva) muertas.push(j + 1); }
+    g.restore();
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center';
+    g.fillText(`${S.act} y su derivada${S.act === 'sigmoide' ? ' ×4' : ''} (rojo); puntos: neuronas ocultas`, w / 2, 12);
+    g.fillText('z', P.x + P.w / 2, h - 4);
+    return muertas;
+  }
+  function dibTabla() {
+    const g = S.ult.g, mg = Math.max(...g.map(Math.abs), 1e-6);
+    let html = '<table style="border-collapse:collapse;width:100%"><tr style="color:#555"><td>parámetro</td><td style="text-align:right">valor</td><td style="text-align:right">∂J/∂θ</td><td style="width:42%"></td></tr>';
+    for (let k = 0; k < nP(); k++) {
+      const v = S.th[k], d = g[k], wpx = Math.abs(d) / mg * 100;
+      html += `<tr><td>${nombre(k)}</td><td style="text-align:right">${v.toFixed(2)}</td><td style="text-align:right">${d.toExponential(1)}</td>` +
+        `<td><div style="height:8px;width:${wpx.toFixed(0)}%;background:${d >= 0 ? PAL.pos : PAL.neg};${d >= 0 ? '' : ''}"></div></td></tr>`;
+    }
+    tab.innerHTML = html + '</table>';
+  }
+  function dibujar() {
+    dibIn(); dibL(); dibS(); const muertas = dibA(); dibTabla();
+    const ok = resuelve(S.th), nrm = Math.hypot(...S.ult.g);
+    read.innerHTML = `semilla ${S.semilla} · iteración ${S.t} · pérdida ${S.ult.L.toFixed(4)} · ‖∇J‖ = ${nrm.toExponential(1)} · ` +
+      (ok ? '<b style="color:#3a8c4f">resuelve XOR</b>' : '<b style="color:#c0392b">todavía no resuelve XOR</b>') +
+      (muertas.length ? ` · <b style="color:#c0392b">neurona ${muertas.join(' y ')} muerta: z ≤ 0 en las 4 esquinas</b>` : '') +
+      (S.intentos ? ` · 20 semillas, 3000 iteraciones: <b>${S.intentos.filter(r => r.ok).length} de 20</b> resuelven (puntos a la derecha de la curva)` : '');
+  }
+  armarSelectores(); reiniciar();
+  onResize(root, dibujar); setTimeout(dibujar, 300);
+  root._redraw = dibujar;
+};
+
+// ======================== MNIST: DIBUJAR UN DÍGITO ========================
+function b64i8(s) { const b = atob(s), a = new Int8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = (b.charCodeAt(i) << 24) >> 24; return a; }
+function b64u8(s) { const b = atob(s), a = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+NNW.mnist = function (root, M) {
+  injectCSS();
+  root.classList.add('nnw'); root.innerHTML = '';
+  const H = M.H, W1 = b64i8(M.W1), W2 = b64i8(M.W2), imgs = b64u8(M.imgs);
+  const bar = el('div', { class: 'nnw-bar' }, root);
+  el('span', { class: 'nnw-read', text: 'dibuja un dígito con el mouse o el dedo, grande y centrado' }, bar);
+  const bBorrar = el('button', { text: 'borrar' }, bar);
+  const bEj = el('button', { text: 'ejemplo del conjunto de prueba' }, bar);
+  const row = el('div', { class: 'nnw-row', style: 'align-items:stretch' }, root);
+  const cD = el('canvas', { style: 'flex:30 1 0; cursor:crosshair; border-radius:6px' }, row);
+  const cV = el('canvas', { style: 'flex:22 1 0' }, row);
+  const cP = el('canvas', { style: 'flex:48 1 0' }, row);
+  const read = el('div', { class: 'nnw-read' }, root);
+  // el lienzo de dibujo guarda los trazos en resolución fija 280 × 280
+  const lienzo = document.createElement('canvas'); lienzo.width = lienzo.height = 280;
+  const lg = lienzo.getContext('2d'); lg.fillStyle = '#000'; lg.fillRect(0, 0, 280, 280);
+  let entrada = new Float32Array(784), etiqueta = null;
+
+  function preprocesar() {      // como MNIST: caja de 20 × 20 y centro de masa en el centro de 28 × 28
+    const d = lg.getImageData(0, 0, 280, 280).data;
+    let x0 = 280, x1 = -1, y0 = 280, y1 = -1;
+    for (let y = 0; y < 280; y++) for (let x = 0; x < 280; x++) if (d[4 * (y * 280 + x)] > 30) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    entrada = new Float32Array(784);
+    if (x1 < 0) return false;
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, s = 20 / Math.max(bw, bh);
+    const c = document.createElement('canvas'); c.width = c.height = 28; const g = c.getContext('2d');
+    g.fillStyle = '#000'; g.fillRect(0, 0, 28, 28); g.imageSmoothingEnabled = true;
+    g.drawImage(lienzo, x0, y0, bw, bh, 14 - bw * s / 2, 14 - bh * s / 2, bw * s, bh * s);
+    const p = g.getImageData(0, 0, 28, 28).data;
+    let m = 0, mx = 0, my = 0;
+    for (let i = 0; i < 784; i++) { const v = p[4 * i] / 255; m += v; mx += v * (i % 28); my += v * Math.floor(i / 28); }
+    const dx = Math.round(14 - mx / m), dy = Math.round(14 - my / m);
+    for (let y = 0; y < 28; y++) for (let x = 0; x < 28; x++) { const xs = x - dx, ys = y - dy;
+      if (xs >= 0 && xs < 28 && ys >= 0 && ys < 28) entrada[y * 28 + x] = p[4 * (ys * 28 + xs)] / 255; }
+    return true;
+  }
+  function adelante(x) {
+    const a = new Float32Array(H);
+    // W1 está cuantizado a 8 bits: z = s1 · Σ q·x + b1
+    for (let j = 0; j < H; j++) { let z = 0; const o = j * 784; for (let i = 0; i < 784; i++) z += W1[o + i] * x[i]; a[j] = Math.max(0, M.s1 * z + M.b1[j]); }
+    const zo = new Float32Array(10);
+    for (let c = 0; c < 10; c++) { let z = M.b2[c]; for (let j = 0; j < H; j++) z += M.s2 * W2[c * H + j] * a[j]; zo[c] = z; }
+    const mx = Math.max(...zo), e = zo.map(z => Math.exp(z - mx)), s = e.reduce((u, v) => u + v, 0);
+    return { a, p: e.map(v => v / s) };
+  }
+  function dibujar() {
+    // (a) lienzo
+    let { g, w, h } = fit(cD, 1);
+    g.drawImage(lienzo, 0, 0, w, h);
+    g.strokeStyle = 'rgba(255,255,255,0.15)'; g.strokeRect(w * 0.15, h * 0.15, w * 0.7, h * 0.7);
+    // (b) lo que ve la red (28 × 28) y activaciones ocultas (16 × 8)
+    ({ g, w, h } = fit(cV, cD.clientWidth / Math.max(cV.clientWidth, 1)));
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const lado = Math.min(w - 10, h * 0.55), px = lado / 28, ox = (w - lado) / 2;
+    for (let i = 0; i < 784; i++) { const v = Math.round(255 * (1 - entrada[i])); g.fillStyle = `rgb(${v},${v},${v})`;
+      g.fillRect(ox + (i % 28) * px, 16 + Math.floor(i / 28) * px, px + 0.4, px + 0.4); }
+    g.strokeStyle = PAL.faint; g.strokeRect(ox, 16, lado, lado);
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center'; g.fillText('entrada: 28 × 28 = 784', w / 2, 12);
+    const R = adelante(entrada), am = Math.max(...R.a, 1e-6), cw = (w - 10) / 16, y0 = 16 + lado + 22;
+    g.fillText(`capa oculta: ${H} ReLU`, w / 2, y0 - 6);
+    for (let j = 0; j < H; j++) { const t = R.a[j] / am, c = PAL.posL.map(u => Math.round(255 + (u - 255) * t));
+      g.fillStyle = `rgb(${c})`; g.fillRect(5 + (j % 16) * cw, y0 + Math.floor(j / 16) * cw, cw - 1, cw - 1); }
+    // (c) probabilidades
+    ({ g, w, h } = fit(cP, cD.clientWidth / Math.max(cP.clientWidth, 1)));
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const vacio = entrada.every(v => v === 0), best = R.p.indexOf(Math.max(...R.p));
+    const P = { x: 20, y: 24, w: w - 30, h: h - 52 }, bw2 = P.w / 10;
+    g.fillStyle = PAL.soft; g.font = '12px Helvetica, Arial'; g.textAlign = 'center'; g.fillText('probabilidad de cada dígito (softmax)', w / 2, 14);
+    for (let c = 0; c < 10; c++) { const v = vacio ? 0 : R.p[c];
+      g.fillStyle = c === best && !vacio ? PAL.pos : '#b9c7d6'; g.fillRect(P.x + c * bw2 + bw2 * 0.15, P.y + P.h * (1 - v), bw2 * 0.7, P.h * v);
+      g.fillStyle = PAL.ink; g.font = (c === best && !vacio ? 'bold ' : '') + '16px Helvetica, Arial'; g.fillText(c, P.x + c * bw2 + bw2 / 2, P.y + P.h + 18); }
+    g.strokeStyle = PAL.faint; g.beginPath(); g.moveTo(P.x, P.y + P.h); g.lineTo(P.x + P.w, P.y + P.h); g.stroke();
+    read.innerHTML = vacio ? `red 784 → ${H} → 10 entrenada con las 60 000 imágenes de MNIST; acierta el ${(100 * M.acierto_prueba).toFixed(1)}% de las 10 000 de prueba` :
+      `la red dice <b>${best}</b> con probabilidad ${(100 * R.p[best]).toFixed(1)}%` + (etiqueta !== null ? ` · etiqueta verdadera: <b>${etiqueta}</b>` : '');
+  }
+  // trazos
+  let abajo = false, ult = null;
+  const pos = ev => { const r = cD.getBoundingClientRect(); return [(ev.clientX - r.left) / r.width * 280, (ev.clientY - r.top) / r.height * 280]; };
+  cD.addEventListener('pointerdown', ev => { abajo = true; ult = pos(ev); cD.setPointerCapture(ev.pointerId); etiqueta = null; ev.stopPropagation(); });
+  cD.addEventListener('pointermove', ev => { if (!abajo) return; const p = pos(ev);
+    lg.strokeStyle = '#fff'; lg.lineWidth = 20; lg.lineCap = 'round'; lg.beginPath(); lg.moveTo(...ult); lg.lineTo(...p); lg.stroke(); ult = p;
+    preprocesar(); dibujar(); });
+  cD.addEventListener('pointerup', () => { abajo = false; preprocesar(); dibujar(); });
+  ['mousedown', 'touchstart', 'keydown'].forEach(t => cD.addEventListener(t, e => e.stopPropagation()));
+  bBorrar.addEventListener('click', e => { e.stopPropagation(); lg.fillStyle = '#000'; lg.fillRect(0, 0, 280, 280); etiqueta = null; entrada = new Float32Array(784); dibujar(); });
+  let k = 0;
+  bEj.addEventListener('click', e => { e.stopPropagation(); const n = k++ % M.etiquetas.length;
+    const c = document.createElement('canvas'); c.width = c.height = 28; const g = c.getContext('2d'), im = g.createImageData(28, 28);
+    for (let i = 0; i < 784; i++) { const v = imgs[n * 784 + i]; im.data[4 * i] = im.data[4 * i + 1] = im.data[4 * i + 2] = v; im.data[4 * i + 3] = 255; }
+    g.putImageData(im, 0, 0); lg.imageSmoothingEnabled = false; lg.drawImage(c, 0, 0, 280, 280); lg.imageSmoothingEnabled = true;
+    entrada = Float32Array.from(imgs.subarray(n * 784, n * 784 + 784), v => v / 255); etiqueta = M.etiquetas[n]; dibujar(); });
+  onResize(root, dibujar); dibujar(); setTimeout(dibujar, 300);
+  root._redraw = dibujar;
+};
+
+})();
+
+// ======== utilidades de ejes ========
+function marcoEjes(g, C, P, X0, X1, Y0, Y1, xt, yt, xlab, ylab) {
+  const px = v => P.x + (v - X0) / (X1 - X0) * P.w, py = v => P.y + P.h - (v - Y0) / (Y1 - Y0) * P.h;
+  g.strokeStyle = C.eje; g.lineWidth = 1.2; g.strokeRect(P.x, P.y, P.w, P.h);
+  g.fillStyle = C.texto; g.font = '14px Helvetica, Arial'; g.textAlign = 'center';
+  xt.forEach(v => g.fillText(v, px(v), P.y + P.h + 17));
+  g.textAlign = 'right'; yt.forEach(v => g.fillText(v, P.x - 6, py(v) + 5));
+  g.textAlign = 'center'; g.font = '15px Helvetica, Arial';
+  if (xlab) g.fillText(xlab, P.x + P.w / 2, P.y + P.h + 40);
+  if (ylab) { g.save(); g.translate(P.x - 40, P.y + P.h / 2); g.rotate(-Math.PI / 2); g.fillText(ylab, 0, 0); g.restore(); }
+  return [px, py];
+}
+
+// ======== D.1: el perceptrón corrección a corrección ========
+VIZ.pasos = function (el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const { g, w, h, C } = vizSetup(cv);
+  const t = +el.querySelector('[name=t]').value;
+  el.querySelector('.val').textContent = t;
+  g.fillStyle = C.fondo; g.fillRect(0, 0, w, h);
+  const s = h - 60, A = { x: 70, y: 10, w: s, h: s };
+  const [ax, ay] = marcoEjes(g, C, A, -2.5, 4, -2.5, 4, [-2, 0, 2, 4], [-2, 0, 2, 4], 'x₁', 'x₂');
+  const recta = (wv, col, wd, dash) => {
+    if (Math.abs(wv[0]) + Math.abs(wv[1]) < 1e-9) return;
+    g.strokeStyle = col; g.lineWidth = wd; g.setLineDash(dash || []); g.beginPath();
+    if (Math.abs(wv[1]) > 1e-9) { g.moveTo(ax(-3), ay((-wv[2] + 3 * wv[0]) / wv[1])); g.lineTo(ax(5), ay((-wv[2] - 5 * wv[0]) / wv[1])); }
+    else { g.moveTo(ax(-wv[2] / wv[0]), ay(-3)); g.lineTo(ax(-wv[2] / wv[0]), ay(5)); }
+    g.stroke(); g.setLineDash([]);
+  };
+  const H = PH[t];
+  g.save(); g.beginPath(); g.rect(A.x, A.y, A.w, A.h); g.clip();
+  PX.forEach(p => { g.fillStyle = p[2] > 0 ? C.grupos[0] : C.grupos[1]; g.beginPath(); g.arc(ax(p[0]), ay(p[1]), 5, 0, 7); g.fill(); });
+  if (t > 0) {
+    recta(PH[t - 1].w, C.gris, 2.5, [7, 5]);
+    recta(H.w, C.tinta, 3.5);
+    const p = PX[H.i]; g.strokeStyle = C.tinta; g.lineWidth = 3; g.beginPath(); g.arc(ax(p[0]), ay(p[1]), 12, 0, 7); g.stroke();
+  }
+  g.restore();
+  const malos = PX.filter(p => p[2] * (H.w[0] * p[0] + H.w[1] * p[1] + H.w[2]) <= 0).length;
+  // errores por época
+  const B = { x: A.x + A.w + 110, y: 20, w: w - (A.x + A.w + 110) - 30, h: s - 20 };
+  const n = PE.length;
+  const [bx, by] = marcoEjes(g, C, B, 0.4, n + 0.6, 0, 8, PE.map((_, k) => k + 1), [0, 2, 4, 6, 8], 'época', 'errores');
+  PE.forEach((e, k) => { g.fillStyle = C.grupos[0]; g.fillRect(bx(k + 1) - 12, by(e), 24, by(0) - by(e)); });
+  if (t > 0) { g.strokeStyle = '#c0392b'; g.lineWidth = 3; g.beginPath(); g.moveTo(bx(H.e), B.y); g.lineTo(bx(H.e), B.y + B.h); g.stroke(); }
+  el.querySelector('.lect').innerHTML = t === 0 ? 'w = 0: todavía no hay frontera; los 40 puntos cuentan como mal clasificados' :
+    `corrección ${t} de ${PH.length - 1} · época ${H.e} · w = (${H.w[0].toFixed(2)}, ${H.w[1].toFixed(2)}), b = ${H.w[2].toFixed(0)} · ` +
+    `quedan ${malos} de 40 mal clasificados · gris: frontera anterior; negro: nueva; círculo: punto corregido`;
+};
+
+// ======== animaciones de neuronas (perceptrón y red multicapa) ========
+function nnwInit() {
+  document.querySelectorAll('.nnw-perceptron').forEach(r => { if (!r.dataset.listo) { r.dataset.listo = 1; NNW.perceptron(r); } });
+  document.querySelectorAll('.nnw-mlp').forEach(r => { if (!r.dataset.listo) { r.dataset.listo = 1; NNW.mlp(r, window[r.dataset.presets]); } });
+  document.querySelectorAll('.nnw-xor').forEach(r => { if (!r.dataset.listo) { r.dataset.listo = 1; NNW.xorTrainer(r); } });
+  document.querySelectorAll('.nnw-mnist').forEach(r => { if (!r.dataset.listo) { r.dataset.listo = 1; NNW.mnist(r, MNIST_DATA); } });
+}
+nnwInit();
+if (window.Reveal && Reveal.on) {
+  const re = e => e.currentSlide && e.currentSlide.querySelectorAll('.nnw').forEach(r => r._redraw && r._redraw());
+  Reveal.on('ready', re); Reveal.on('slidechanged', re);
+}
+
+</script>
+</body>
+</html>
