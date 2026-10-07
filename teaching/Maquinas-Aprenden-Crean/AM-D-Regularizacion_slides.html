@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regularización</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+
+<style>
+:root {
+  --pluto-blue: #4e79a7;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #888;
+  --paper: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pluto-blue: #8ab4d4;
+    --ink: #dcdcdc;
+    --ink-soft: #aaaaaa;
+    --ink-faint: #666;
+    --paper: #2a2928;
+  }
+  .svg-holder svg { background:#faf7eb; border-radius:6px; padding:4px; }
+}
+
+.reveal, .reveal .slides section {
+  font-family: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  text-align: left;
+  background: var(--paper);
+}
+.reveal .slide-background { background: var(--paper); }
+
+.reveal .slides section {
+  padding: 0 5%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.section-label {
+  font-size: 0.75em;
+  color: var(--ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  flex-shrink: 0;
+}
+
+.reveal h1 {
+  font-size: 2.6em; font-weight: 700; color: var(--ink);
+  margin: 0 0 0.4em 0; line-height: 1.15;
+  text-transform: none; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.reveal h2 {
+  font-size: 2.1em; font-weight: 700; color: var(--pluto-blue);
+  margin: 0 0 0.3em 0; line-height: 1.2;
+  text-transform: none; border: none; flex-shrink: 0;
+}
+
+.reveal p, .reveal li {
+  font-size: 1.75em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.reveal ul {
+  padding-left: 1.3em;
+  margin: 0.2em 0 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.reveal li + li { margin-top: 0.6em; }
+.reveal li {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.reveal strong { font-weight: 700; color: var(--ink); }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--pluto-blue); text-decoration: none; }
+
+.reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+/* KaTeX escala las fórmulas en línea a 1.21em; con Alegreya Sans se ven desproporcionadas */
+.reveal :not(.katex-display) > .katex { font-size: 1.02em; }
+
+p.note {
+  font-size: 1.3em;
+  color: var(--ink-soft);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.svg-holder {
+  width: 100%; margin-top: 0.5em; text-align: center;
+}
+.svg-holder svg { width: 100%; max-height: 470px; height: auto; display: block; margin: 0 auto; }
+
+.title-slide { }
+.title-slide .course-id {
+  font-size: 0.8em; color: var(--ink-faint); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-bottom: 1.8em; font-weight: 500;
+}
+.title-slide h1 { font-size: 2.6em; }
+.title-slide .byline { font-size: 1em; color: var(--ink-soft); margin-top: 1em; }
+
+.close-slide { }
+.close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
+
+.slide-num { display: none; }
+.reveal .controls { color: var(--ink-faint); }
+.reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
+.viz { width:100%; margin-top:0.3em; }
+.viz .ctrl { display:flex; gap:1.6em; align-items:center; justify-content:center; font-size:0.95em; color:var(--ink-soft); margin-bottom:0.45em; }
+.viz .ctrl label { display:flex; gap:0.5em; align-items:center; white-space:nowrap; }
+.viz input[type=range] { width:14em; height:1.1em; accent-color:var(--pluto-blue); }
+.viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:1.6em; }
+.viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
+.viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft); font-variant-numeric:tabular-nums; margin-top:0.35em; }
+</style>
+</head>
+<body>
+
+<div class="reveal"><div class="slides">
+
+<section>
+<div class="title-slide">
+  <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Regularización</h1>
+  <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
+  <div class="byline">Pontificia Universidad Católica de Chile</div>
+</div>
+</section>
+
+<section>
+<h2>Una red con miles de parámetros y veinte datos memoriza el ruido</h2>
+<ul>
+<li>Con 20 observaciones ruidosas de una curva, una red de dos capas ocultas de 64 neuronas (unos 4300 parámetros) encuentra pesos que pasan casi por todos los puntos, ruido incluido.</li>
+<li>Es un modelo de <strong>sesgo</strong> bajo y <strong>varianza</strong> enorme: con otros 20 puntos dibujaría una curva completamente distinta.</li>
+</ul>
+</section>
+
+<section>
+<h2>Regularizar es pagar un poco de sesgo para comprar mucha menos varianza</h2>
+<ul><li><strong>Regularizar</strong> es modificar el entrenamiento para preferir soluciones más simples, aceptando más error en los datos de entrenamiento a cambio de equivocarse menos con datos nuevos.</li></ul>
+</section>
+
+<section>
+<h2>El caso de toda la clase: veinte puntos de una sinusoide</h2>
+<ul><li>Se quiere aprender $f(x) = \sin(2\pi x)$ a partir de 20 mediciones con ruido; otras 500, generadas aparte, sirven para validar.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="230.0" y="20.0" width="330.0" height="200.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="230.0" y1="20.0" x2="230.0" y2="220.0" stroke="#eee" stroke-width="1"/>
+  <text x="230.0" y="235.0" font-size="11" text-anchor="middle" fill="#666">0.0</text>
+  <line x1="395.0" y1="20.0" x2="395.0" y2="220.0" stroke="#eee" stroke-width="1"/>
+  <text x="395.0" y="235.0" font-size="11" text-anchor="middle" fill="#666">0.5</text>
+  <line x1="560.0" y1="20.0" x2="560.0" y2="220.0" stroke="#eee" stroke-width="1"/>
+  <text x="560.0" y="235.0" font-size="11" text-anchor="middle" fill="#666">1.0</text>
+  <line x1="230.0" y1="220.0" x2="560.0" y2="220.0" stroke="#eee" stroke-width="1"/>
+  <text x="224.0" y="224.0" font-size="11" text-anchor="end" fill="#666">-2</text>
+  <line x1="230.0" y1="170.0" x2="560.0" y2="170.0" stroke="#eee" stroke-width="1"/>
+  <text x="224.0" y="174.0" font-size="11" text-anchor="end" fill="#666">-1</text>
+  <line x1="230.0" y1="120.0" x2="560.0" y2="120.0" stroke="#eee" stroke-width="1"/>
+  <text x="224.0" y="124.0" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="230.0" y1="70.0" x2="560.0" y2="70.0" stroke="#eee" stroke-width="1"/>
+  <text x="224.0" y="74.0" font-size="11" text-anchor="end" fill="#666">1</text>
+  <line x1="230.0" y1="20.0" x2="560.0" y2="20.0" stroke="#eee" stroke-width="1"/>
+  <text x="224.0" y="24.0" font-size="11" text-anchor="end" fill="#666">2</text>
+  <text x="395.0" y="253.0" font-size="12.5" text-anchor="middle" fill="#333">x</text>
+  <text x="196.0" y="120.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 196.0 120.0)">y</text>
+  <polyline fill="none" stroke="#bbb" stroke-width="4"  points="230.0,120.0 231.1,118.9 232.2,117.9 233.3,116.8 234.4,115.8 235.5,114.8 236.6,113.7 237.7,112.7 238.8,111.6 239.9,110.6 241.0,109.6 242.1,108.5 243.2,107.5 244.3,106.5 245.5,105.5 246.6,104.5 247.7,103.5 248.8,102.5 249.9,101.5 251.0,100.6 252.1,99.6 253.2,98.6 254.3,97.7 255.4,96.8 256.5,95.8 257.6,94.9 258.7,94.0 259.8,93.1 260.9,92.2 262.0,91.4 263.1,90.5 264.2,89.7 265.3,88.9 266.4,88.0 267.5,87.2 268.6,86.5 269.7,85.7 270.8,84.9 271.9,84.2 273.0,83.5 274.1,82.7 275.3,82.1 276.4,81.4 277.5,80.7 278.6,80.1 279.7,79.5 280.8,78.9 281.9,78.3 283.0,77.7 284.1,77.1 285.2,76.6 286.3,76.1 287.4,75.6 288.5,75.1 289.6,74.7 290.7,74.2 291.8,73.8 292.9,73.4 294.0,73.1 295.1,72.7 296.2,72.4 297.3,72.1 298.4,71.8 299.5,71.5 300.6,71.3 301.7,71.0 302.8,70.8 303.9,70.7 305.1,70.5 306.2,70.4 307.3,70.2 308.4,70.2 309.5,70.1 310.6,70.0 311.7,70.0 312.8,70.0 313.9,70.0 315.0,70.1 316.1,70.1 317.2,70.2 318.3,70.3 319.4,70.4 320.5,70.6 321.6,70.7 322.7,70.9 323.8,71.2 324.9,71.4 326.0,71.6 327.1,71.9 328.2,72.2 329.3,72.5 330.4,72.9 331.5,73.2 332.6,73.6 333.7,74.0 334.8,74.5 336.0,74.9 337.1,75.4 338.2,75.8 339.3,76.4 340.4,76.9 341.5,77.4 342.6,78.0 343.7,78.6 344.8,79.2 345.9,79.8 347.0,80.4 348.1,81.0 349.2,81.7 350.3,82.4 351.4,83.1 352.5,83.8 353.6,84.6 354.7,85.3 355.8,86.1 356.9,86.8 358.0,87.6 359.1,88.4 360.2,89.3 361.3,90.1 362.4,91.0 363.5,91.8 364.6,92.7 365.8,93.6 366.9,94.5 368.0,95.4 369.1,96.3 370.2,97.2 371.3,98.2 372.4,99.1 373.5,100.1 374.6,101.0 375.7,102.0 376.8,103.0 377.9,104.0 379.0,105.0 380.1,106.0 381.2,107.0 382.3,108.0 383.4,109.1 384.5,110.1 385.6,111.1 386.7,112.2 387.8,113.2 388.9,114.2 390.0,115.3 391.1,116.3 392.2,117.4 393.3,118.4 394.4,119.5 395.6,120.5 396.7,121.6 397.8,122.6 398.9,123.7 400.0,124.7 401.1,125.8 402.2,126.8 403.3,127.8 404.4,128.9 405.5,129.9 406.6,130.9 407.7,132.0 408.8,133.0 409.9,134.0 411.0,135.0 412.1,136.0 413.2,137.0 414.3,138.0 415.4,139.0 416.5,139.9 417.6,140.9 418.7,141.8 419.8,142.8 420.9,143.7 422.0,144.6 423.1,145.5 424.2,146.4 425.4,147.3 426.5,148.2 427.6,149.0 428.7,149.9 429.8,150.7 430.9,151.6 432.0,152.4 433.1,153.2 434.2,153.9 435.3,154.7 436.4,155.4 437.5,156.2 438.6,156.9 439.7,157.6 440.8,158.3 441.9,159.0 443.0,159.6 444.1,160.2 445.2,160.8 446.3,161.4 447.4,162.0 448.5,162.6 449.6,163.1 450.7,163.6 451.8,164.2 452.9,164.6 454.0,165.1 455.2,165.5 456.3,166.0 457.4,166.4 458.5,166.8 459.6,167.1 460.7,167.5 461.8,167.8 462.9,168.1 464.0,168.4 465.1,168.6 466.2,168.8 467.3,169.1 468.4,169.3 469.5,169.4 470.6,169.6 471.7,169.7 472.8,169.8 473.9,169.9 475.0,169.9 476.1,170.0 477.2,170.0 478.3,170.0 479.4,170.0 480.5,169.9 481.6,169.8 482.7,169.8 483.8,169.6 484.9,169.5 486.1,169.3 487.2,169.2 488.3,169.0 489.4,168.7 490.5,168.5 491.6,168.2 492.7,167.9 493.8,167.6 494.9,167.3 496.0,166.9 497.1,166.6 498.2,166.2 499.3,165.8 500.4,165.3 501.5,164.9 502.6,164.4 503.7,163.9 504.8,163.4 505.9,162.9 507.0,162.3 508.1,161.7 509.2,161.1 510.3,160.5 511.4,159.9 512.5,159.3 513.6,158.6 514.7,157.9 515.9,157.3 517.0,156.5 518.1,155.8 519.2,155.1 520.3,154.3 521.4,153.5 522.5,152.8 523.6,152.0 524.7,151.1 525.8,150.3 526.9,149.5 528.0,148.6 529.1,147.8 530.2,146.9 531.3,146.0 532.4,145.1 533.5,144.2 534.6,143.2 535.7,142.3 536.8,141.4 537.9,140.4 539.0,139.4 540.1,138.5 541.2,137.5 542.3,136.5 543.4,135.5 544.5,134.5 545.7,133.5 546.8,132.5 547.9,131.5 549.0,130.4 550.1,129.4 551.2,128.4 552.3,127.3 553.4,126.3 554.5,125.2 555.6,124.2 556.7,123.2 557.8,122.1 558.9,121.1 560.0,120.0"/>
+  <circle cx="253.5" cy="129.6" r="4" fill="#111" opacity="1"/>
+  <circle cx="262.7" cy="76.5" r="4" fill="#111" opacity="1"/>
+  <circle cx="271.5" cy="111.7" r="4" fill="#111" opacity="1"/>
+  <circle cx="275.7" cy="111.6" r="4" fill="#111" opacity="1"/>
+  <circle cx="279.4" cy="44.2" r="4" fill="#111" opacity="1"/>
+  <circle cx="288.7" cy="82.9" r="4" fill="#111" opacity="1"/>
+  <circle cx="359.8" cy="82.9" r="4" fill="#111" opacity="1"/>
+  <circle cx="396.1" cy="142.1" r="4" fill="#111" opacity="1"/>
+  <circle cx="397.6" cy="113.3" r="4" fill="#111" opacity="1"/>
+  <circle cx="402.8" cy="121.8" r="4" fill="#111" opacity="1"/>
+  <circle cx="421.7" cy="142.8" r="4" fill="#111" opacity="1"/>
+  <circle cx="461.7" cy="193.6" r="4" fill="#111" opacity="1"/>
+  <circle cx="490.6" cy="154.2" r="4" fill="#111" opacity="1"/>
+  <circle cx="501.4" cy="171.7" r="4" fill="#111" opacity="1"/>
+  <circle cx="508.6" cy="163.4" r="4" fill="#111" opacity="1"/>
+  <circle cx="519.0" cy="171.0" r="4" fill="#111" opacity="1"/>
+  <circle cx="544.6" cy="116.7" r="4" fill="#111" opacity="1"/>
+  <circle cx="553.2" cy="138.1" r="4" fill="#111" opacity="1"/>
+  <circle cx="554.0" cy="104.1" r="4" fill="#111" opacity="1"/>
+  <circle cx="554.4" cy="161.5" r="4" fill="#111" opacity="1"/>
+  <text x="580.0" y="90.0" font-size="13" fill="#888" text-anchor="start">— sin(2πx), la función verdadera</text>
+  <text x="580.0" y="115.0" font-size="13" fill="#111" text-anchor="start">● 20 observaciones con ruido</text>
+  <text x="580.0" y="140.0" font-size="13" fill="#555" text-anchor="start">ruido gaussiano, σ = 0.3</text>
+</g></svg>
+</div>
+</section>
+
+<!-- ============ § 1 ============ -->
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>¿Cómo se le dice a la red que prefiera soluciones simples?</h2>
+<ul>
+<li>Pesos grandes hacen que la salida cambie bruscamente con la entrada: son los que permiten oscilar para pasar por cada punto.</li>
+<li>La idea más directa es cobrarle a la red por el tamaño de sus pesos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>La penalización L2 suma a la pérdida el cuadrado de los pesos</h2>
+<ul><li>Si $J(w)$ es la pérdida de entrenamiento y $w$ reúne todos los pesos (no los sesgos), se minimiza</li></ul>
+$$\tilde{J}(w) = J(w) + \frac{\lambda}{2}\,\|w\|_2^2$$
+<p class="note">En palabras: λ ≥ 0 decide cuánto pesa la simplicidad frente al ajuste; con λ = 0 no hay regularización.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>Cada paso de gradiente encoge los pesos antes de corregirlos</h2>
+<ul><li>El gradiente de la pérdida penalizada es $\nabla J(w) + \lambda w$, y un paso con tasa $\eta$ queda:</li></ul>
+$$w \leftarrow (1 - \eta\lambda)\, w - \eta\, \nabla J(w)$$
+<p class="note">En palabras: multiplicar por 1 − ηλ, algo menor que uno, encoge los pesos en cada paso; por eso se llama decaimiento de los pesos (weight decay).</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>Paso 1 · Cerca del mínimo, la pérdida es una cuadrática</h2>
+<ul><li>Alrededor del mínimo $w^*$ sin penalización, con $H$ la matriz de segundas derivadas (el <strong>hessiano</strong>, que mide la curvatura):</li></ul>
+$$J(w) \approx J(w^*) + \tfrac{1}{2}(w - w^*)^\top H\,(w - w^*)$$
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>Paso 2 · El mínimo penalizado se escribe con H</h2>
+<ul><li>Igualando a cero el gradiente de la cuadrática más la penalización, $H(w - w^*) + \lambda w = 0$:</li></ul>
+$$\tilde{w} = (H + \lambda I)^{-1} H\, w^*$$
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>Paso 3 · Cada dirección se encoge según su curvatura</h2>
+<ul><li>En la base de autovectores $q_i$ de $H$, con autovalores $h_i$ (la curvatura en esa dirección):</li></ul>
+$$q_i^\top \tilde{w} = \frac{h_i}{h_i + \lambda}\; q_i^\top w^*$$
+<p class="note">En palabras: donde la pérdida es muy curva (h ≫ λ), los datos determinan bien el peso y casi no cambia; donde es plana (h ≪ λ), los datos dicen poco y la penalización lo lleva a cero.</p>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>L2 es suponer de antemano que los pesos son pequeños</h2>
+<ul>
+<li>Con una distribución a priori gaussiana, $w \sim \mathcal{N}(0, \tau^2 I)$, maximizar la probabilidad a posteriori (estimación MAP) equivale a minimizar la pérdida con penalización L2.</li>
+<li>Un λ grande expresa una creencia fuerte en pesos pequeños, y su efecto se diluye a medida que hay más datos; en regresión lineal, L2 es la regresión ridge.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>Con λ adecuado, la red deja de perseguir el ruido</h2>
+<ul><li>La misma red, entrenada con ocho valores de λ; mueve el slider y observa la curva y el error.</li></ul>
+<div class="viz" data-viz="lambda">
+  <div class="ctrl">
+    <label>λ <input type="range" name="k" min="0" max="7" step="1" value="0"><span class="val">0</span></label>
+  </div>
+  <canvas data-ratio="0.40"></canvas>
+  <div class="lect"></div>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>El error de validación dibuja la U del sesgo y la varianza</h2>
+<ul>
+<li>Sin penalización: entrenamiento 0.036, por debajo del ruido 0.09, y validación 0.381; con λ = 0.01: validación 0.107, cerca del mínimo posible.</li>
+<li>Con λ = 0.1 la curva se aplana y ambos errores superan 0.3: demasiada penalización es sesgo.</li>
+</ul>
+</section>
+
+<!-- ============ § 2 ============ -->
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>¿Y si en vez de encoger los pesos se quisiera apagarlos?</h2>
+<ul>
+<li>A veces solo unas pocas variables importan, y se quiere que el modelo use esas y ninguna otra.</li>
+<li>Cambiar el cuadrado por el valor absoluto produce exactamente eso: la <strong>penalización L1</strong>.</li>
+</ul>
+$$\tilde{J}(w) = J(w) + \lambda \sum_j |w_j|$$
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>Con un solo peso, L1 es un umbral suave</h2>
+<ul><li>Si sin penalización se elegiría $z$, el mínimo de $\tfrac{1}{2}(w - z)^2 + \lambda|w|$ es $w = z - \lambda$ si $z &gt; \lambda$, $w = z + \lambda$ si $z &lt; -\lambda$, y $w = 0$ en otro caso:</li></ul>
+$$w = \operatorname{signo}(z)\,\max\big(|z| - \lambda,\ 0\big)$$
+<p class="note">En palabras: los valores pequeños se vuelven exactamente cero, y los grandes se acercan a cero en una cantidad fija λ.</p>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>L1 empuja con fuerza constante; L2 afloja cerca del cero</h2>
+<ul>
+<li>La derivada de L2 respecto de un peso es $\lambda w_j$: se debilita justo antes de llegar a cero.</li>
+<li>La de L1 es $\lambda\,\operatorname{signo}(w_j)$, siempre del mismo tamaño: un peso que los datos no sostienen con al menos esa fuerza termina en cero.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>La geometría: el rombo tiene esquinas</h2>
+<ul><li>Las curvas de nivel de la pérdida, elipses, tocan el círculo de L2 en cualquier punto y el rombo de L1 casi siempre en una esquina.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222" text-anchor="middle">
+    <text x="180.0" y="18" font-size="14" font-weight="bold">L2: región ‖w‖₂ ≤ t</text>
+    <line x1="56.0" y1="232" x2="276.0" y2="232" stroke="#bbb"/><line x1="120" y1="292.0" x2="120" y2="48.0" stroke="#bbb"/>
+    <circle cx="120.0" cy="232.0" r="40.0" fill="#dcecdc" stroke="#3a8c4f" stroke-width="2"/>
+    <polygon points="214.5,144.9 214.9,143.7 215.2,142.4 215.3,141.1 215.3,139.7 215.1,138.3 214.9,136.8 214.5,135.4 213.9,133.9 213.3,132.4 212.5,130.9 211.5,129.4 210.5,127.9 209.4,126.4 208.1,124.8 206.7,123.3 205.2,121.8 203.6,120.4 201.9,118.9 200.2,117.5 198.3,116.1 196.3,114.7 194.3,113.4 192.2,112.1 190.0,110.9 187.8,109.7 185.5,108.5 183.1,107.4 180.7,106.4 178.3,105.4 175.9,104.5 173.4,103.7 170.9,102.9 168.4,102.2 165.9,101.5 163.4,101.0 160.9,100.5 158.5,100.1 156.0,99.8 153.6,99.5 151.3,99.3 149.0,99.2 146.7,99.2 144.5,99.3 142.4,99.4 140.3,99.7 138.3,100.0 136.4,100.4 134.6,100.8 132.9,101.4 131.3,102.0 129.7,102.6 128.3,103.4 127.0,104.2 125.8,105.1 124.8,106.1 123.8,107.1 123.0,108.1 122.3,109.3 121.7,110.5 121.3,111.7 120.9,113.0 120.8,114.3 120.7,115.6 120.8,117.0 121.0,118.4 121.3,119.9 121.8,121.3 122.4,122.8 123.1,124.3 124.0,125.8 125.0,127.4 126.0,128.9 127.3,130.4 128.6,131.9 130.0,133.4 131.6,134.9 133.2,136.4 134.9,137.8 136.8,139.2 138.7,140.6 140.7,141.9 142.8,143.3 144.9,144.5 147.1,145.7 149.4,146.9 151.7,148.0 154.1,149.1 156.5,150.1 158.9,151.0 161.4,151.9 163.9,152.7 166.4,153.5 168.9,154.1 171.3,154.7 173.8,155.3 176.3,155.7 178.7,156.1 181.2,156.4 183.5,156.6 185.9,156.7 188.2,156.8 190.4,156.8 192.6,156.6 194.7,156.5 196.7,156.2 198.6,155.8 200.5,155.4 202.3,154.9 203.9,154.4 205.5,153.7 207.0,153.0 208.3,152.2 209.6,151.3 210.7,150.4 211.7,149.4 212.6,148.4 213.4,147.3 214.0,146.1 214.5,144.9" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="256.3,160.1 257.0,157.8 257.5,155.3 257.7,152.8 257.7,150.2 257.4,147.5 256.9,144.8 256.1,142.0 255.1,139.2 253.9,136.4 252.4,133.5 250.6,130.6 248.7,127.8 246.5,124.9 244.1,122.0 241.5,119.2 238.6,116.3 235.6,113.5 232.4,110.8 229.0,108.1 225.5,105.4 221.7,102.8 217.9,100.3 213.9,97.8 209.7,95.5 205.5,93.2 201.1,91.0 196.7,89.0 192.1,87.0 187.6,85.2 182.9,83.4 178.2,81.8 173.5,80.4 168.8,79.0 164.0,77.8 159.3,76.7 154.6,75.8 149.9,75.0 145.3,74.4 140.8,73.9 136.3,73.6 131.9,73.4 127.6,73.4 123.4,73.5 119.4,73.8 115.5,74.2 111.7,74.8 108.1,75.5 104.7,76.4 101.4,77.4 98.3,78.6 95.4,79.9 92.7,81.3 90.3,82.9 88.0,84.6 86.0,86.4 84.2,88.3 82.6,90.3 81.3,92.5 80.2,94.7 79.3,97.0 78.7,99.5 78.4,102.0 78.3,104.5 78.4,107.2 78.8,109.9 79.5,112.6 80.3,115.4 81.5,118.2 82.9,121.0 84.5,123.9 86.3,126.8 88.4,129.7 90.7,132.6 93.2,135.4 95.9,138.3 98.9,141.1 102.0,143.9 105.3,146.6 108.7,149.3 112.4,151.9 116.2,154.5 120.1,156.9 124.2,159.4 128.4,161.7 132.7,163.9 137.1,166.0 141.6,168.0 146.1,169.9 150.8,171.7 155.4,173.4 160.1,174.9 164.9,176.3 169.6,177.6 174.3,178.7 179.1,179.7 183.7,180.6 188.4,181.3 193.0,181.8 197.5,182.2 201.9,182.5 206.3,182.6 210.5,182.6 214.6,182.3 218.6,182.0 222.4,181.5 226.1,180.8 229.6,180.0 233.0,179.1 236.2,178.0 239.2,176.8 241.9,175.4 244.5,173.9 246.9,172.3 249.0,170.5 251.0,168.7 252.7,166.7 254.1,164.6 255.3,162.4 256.3,160.1" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="307.6,178.8 308.7,175.1 309.5,171.2 309.9,167.2 309.8,163.0 309.4,158.8 308.6,154.5 307.4,150.2 305.7,145.7 303.8,141.2 301.4,136.7 298.6,132.2 295.5,127.6 292.1,123.1 288.3,118.5 284.1,114.0 279.7,109.5 274.9,105.1 269.8,100.7 264.5,96.5 258.8,92.3 253.0,88.2 246.9,84.2 240.5,80.3 234.0,76.6 227.3,73.0 220.4,69.6 213.3,66.3 206.2,63.2 198.9,60.3 191.6,57.5 184.1,55.0 176.7,52.7 169.2,50.5 161.7,48.6 154.2,47.0 146.8,45.5 139.4,44.3 132.1,43.3 124.9,42.5 117.9,42.0 110.9,41.7 104.1,41.7 97.5,41.9 91.1,42.3 85.0,43.0 79.0,43.9 73.3,45.1 67.8,46.4 62.7,48.1 57.8,49.9 53.2,51.9 49.0,54.2 45.1,56.7 41.5,59.3 38.3,62.2 35.4,65.2 33.0,68.4 30.8,71.8 29.1,75.4 27.8,79.0 26.8,82.9 26.3,86.8 26.1,90.9 26.3,95.0 27.0,99.3 28.0,103.6 29.4,108.0 31.2,112.5 33.4,117.0 35.9,121.5 38.9,126.1 42.1,130.7 45.8,135.2 49.7,139.7 54.1,144.2 58.7,148.7 63.6,153.1 68.8,157.4 74.3,161.6 80.1,165.8 86.1,169.8 92.3,173.8 98.7,177.6 105.4,181.2 112.2,184.7 119.1,188.1 126.2,191.3 133.4,194.3 140.8,197.1 148.1,199.8 155.6,202.2 163.1,204.4 170.6,206.4 178.0,208.2 185.5,209.8 192.9,211.1 200.2,212.3 207.5,213.1 214.6,213.8 221.6,214.2 228.5,214.3 235.2,214.3 241.7,213.9 248.0,213.4 254.1,212.6 259.9,211.5 265.5,210.3 270.8,208.8 275.8,207.1 280.5,205.1 284.9,203.0 289.0,200.6 292.7,198.0 296.1,195.3 299.2,192.3 301.8,189.2 304.1,185.9 306.1,182.4 307.6,178.8" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <circle cx="168.0" cy="128.0" r="4" fill="#4e79a7"/><text x="176.0" y="112.0" font-size="12" fill="#4e79a7" text-anchor="start" stroke="#fff" stroke-width="3" paint-order="stroke">mínimo de J</text>
+    <circle cx="134.7" cy="194.8" r="6" fill="#c0392b"/>
+    <line x1="139.7" y1="197.8" x2="182.0" y2="242.0" stroke="#c0392b" stroke-width="1"/>
+    <text x="184.0" y="252.0" font-size="12" fill="#c0392b" text-anchor="start">solución: ambos</text>
+    <text x="184.0" y="267.0" font-size="12" fill="#c0392b" text-anchor="start">pesos distintos de cero</text>
+    <text x="272.0" y="226.0" font-size="12" fill="#666">w₁</text><text x="132.0" y="56.0" font-size="12" fill="#666">w₂</text>
+    <text x="560.0" y="18" font-size="14" font-weight="bold">L1: región ‖w‖₁ ≤ t</text>
+    <line x1="436.0" y1="232" x2="656.0" y2="232" stroke="#bbb"/><line x1="500" y1="292.0" x2="500" y2="48.0" stroke="#bbb"/>
+    <polygon points="540.0,232.0 500.0,192.0 460.0,232.0 500.0,272.0" fill="#dcecdc" stroke="#3a8c4f" stroke-width="2"/>
+    <polygon points="596.5,145.7 596.9,144.4 597.2,143.0 597.3,141.6 597.3,140.2 597.1,138.7 596.8,137.2 596.4,135.7 595.9,134.2 595.2,132.6 594.3,131.0 593.4,129.5 592.3,127.9 591.1,126.3 589.8,124.7 588.4,123.1 586.8,121.6 585.1,120.0 583.4,118.5 581.5,117.0 579.6,115.6 577.5,114.2 575.4,112.8 573.2,111.4 570.9,110.1 568.6,108.9 566.2,107.7 563.8,106.6 561.3,105.5 558.7,104.5 556.2,103.5 553.6,102.6 551.0,101.8 548.4,101.1 545.8,100.4 543.2,99.8 540.6,99.3 538.1,98.9 535.5,98.6 533.0,98.3 530.6,98.1 528.2,98.0 525.8,98.0 523.5,98.1 521.3,98.2 519.1,98.5 517.1,98.8 515.1,99.2 513.2,99.7 511.4,100.2 509.7,100.9 508.1,101.6 506.7,102.4 505.3,103.2 504.1,104.1 502.9,105.1 501.9,106.2 501.1,107.3 500.3,108.5 499.7,109.7 499.3,111.0 498.9,112.3 498.8,113.7 498.7,115.1 498.8,116.5 499.0,118.0 499.3,119.5 499.8,121.1 500.5,122.6 501.2,124.2 502.1,125.8 503.1,127.3 504.3,128.9 505.5,130.5 506.9,132.1 508.4,133.6 510.0,135.2 511.7,136.7 513.5,138.2 515.4,139.7 517.4,141.1 519.5,142.5 521.7,143.9 523.9,145.2 526.2,146.5 528.6,147.7 531.0,148.9 533.5,150.0 536.0,151.0 538.5,152.0 541.1,152.9 543.7,153.8 546.3,154.6 548.9,155.3 551.5,155.9 554.1,156.4 556.7,156.9 559.2,157.3 561.7,157.6 564.2,157.8 566.6,157.9 569.0,158.0 571.3,158.0 573.6,157.9 575.8,157.7 577.9,157.4 579.9,157.0 581.9,156.6 583.7,156.1 585.5,155.5 587.1,154.8 588.6,154.0 590.0,153.2 591.3,152.3 592.5,151.4 593.6,150.3 594.5,149.3 595.3,148.1 596.0,146.9 596.5,145.7" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="640.0,161.5 640.8,159.0 641.3,156.5 641.5,153.8 641.5,151.1 641.2,148.3 640.7,145.5 639.9,142.6 638.8,139.7 637.5,136.7 635.9,133.8 634.1,130.8 632.1,127.8 629.8,124.7 627.3,121.8 624.6,118.8 621.6,115.8 618.5,112.9 615.1,110.0 611.6,107.2 607.9,104.4 604.0,101.7 600.0,99.1 595.8,96.6 591.5,94.1 587.1,91.7 582.5,89.5 577.9,87.3 573.2,85.3 568.4,83.3 563.5,81.5 558.6,79.9 553.7,78.3 548.8,76.9 543.8,75.7 538.9,74.6 534.0,73.6 529.2,72.8 524.3,72.1 519.6,71.6 514.9,71.3 510.4,71.1 505.9,71.1 501.6,71.2 497.3,71.5 493.3,72.0 489.3,72.6 485.6,73.3 482.0,74.2 478.6,75.3 475.4,76.5 472.3,77.9 469.5,79.3 467.0,81.0 464.6,82.7 462.5,84.6 460.6,86.6 459.0,88.7 457.6,91.0 456.4,93.3 455.6,95.7 454.9,98.2 454.6,100.8 454.5,103.5 454.6,106.3 455.0,109.1 455.7,111.9 456.6,114.8 457.8,117.8 459.2,120.8 460.9,123.7 462.9,126.7 465.0,129.8 467.4,132.8 470.0,135.7 472.9,138.7 475.9,141.6 479.2,144.5 482.6,147.4 486.2,150.2 490.0,152.9 494.0,155.6 498.1,158.2 502.3,160.7 506.7,163.1 511.2,165.4 515.8,167.6 520.5,169.7 525.2,171.7 530.0,173.6 534.9,175.3 539.8,176.9 544.7,178.4 549.7,179.7 554.6,180.9 559.5,181.9 564.4,182.8 569.3,183.5 574.0,184.1 578.7,184.5 583.4,184.8 587.9,184.9 592.3,184.9 596.6,184.7 600.7,184.3 604.7,183.8 608.6,183.1 612.3,182.2 615.8,181.3 619.1,180.1 622.2,178.8 625.1,177.4 627.8,175.9 630.2,174.2 632.5,172.3 634.5,170.4 636.2,168.3 637.8,166.2 639.0,163.9 640.0,161.5" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="693.5,181.0 694.7,177.1 695.5,173.0 695.9,168.8 695.8,164.5 695.4,160.1 694.5,155.7 693.3,151.1 691.6,146.5 689.5,141.8 687.0,137.1 684.2,132.4 681.0,127.6 677.4,122.9 673.4,118.1 669.1,113.4 664.4,108.7 659.4,104.1 654.2,99.6 648.6,95.1 642.7,90.7 636.6,86.5 630.2,82.3 623.6,78.3 616.8,74.4 609.8,70.7 602.6,67.1 595.3,63.7 587.8,60.4 580.2,57.4 572.6,54.5 564.8,51.9 557.0,49.5 549.2,47.3 541.4,45.3 533.6,43.5 525.9,42.0 518.2,40.7 510.6,39.7 503.1,38.9 495.7,38.3 488.5,38.1 481.4,38.0 474.6,38.2 467.9,38.7 461.4,39.4 455.2,40.3 449.3,41.5 443.6,43.0 438.2,44.7 433.1,46.6 428.4,48.7 424.0,51.1 419.9,53.6 416.2,56.4 412.8,59.4 409.8,62.6 407.2,65.9 405.0,69.4 403.2,73.1 401.8,77.0 400.8,81.0 400.3,85.1 400.1,89.3 400.3,93.6 401.0,98.1 402.0,102.6 403.5,107.2 405.4,111.8 407.7,116.5 410.3,121.3 413.4,126.0 416.8,130.8 420.6,135.5 424.7,140.2 429.2,144.9 434.0,149.6 439.2,154.1 444.6,158.7 450.3,163.1 456.3,167.4 462.6,171.6 469.1,175.7 475.8,179.7 482.7,183.5 489.8,187.2 497.1,190.6 504.5,194.0 512.0,197.1 519.6,200.1 527.3,202.8 535.1,205.3 542.9,207.7 550.7,209.8 558.5,211.6 566.2,213.3 574.0,214.7 581.6,215.8 589.2,216.7 596.6,217.4 603.9,217.8 611.1,218.0 618.0,217.9 624.8,217.6 631.4,217.0 637.7,216.2 643.8,215.1 649.6,213.8 655.1,212.2 660.4,210.4 665.3,208.4 669.9,206.1 674.1,203.7 678.0,201.0 681.6,198.1 684.7,195.0 687.5,191.8 689.9,188.3 691.9,184.7 693.5,181.0" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <circle cx="548.0" cy="128.0" r="4" fill="#4e79a7"/><text x="556.0" y="112.0" font-size="12" fill="#4e79a7" text-anchor="start" stroke="#fff" stroke-width="3" paint-order="stroke">mínimo de J</text>
+    <circle cx="500.0" cy="192.0" r="6" fill="#c0392b"/>
+    <line x1="505.0" y1="195.0" x2="562.0" y2="242.0" stroke="#c0392b" stroke-width="1"/>
+    <text x="564.0" y="252.0" font-size="12" fill="#c0392b" text-anchor="start">solución en una esquina:</text>
+    <text x="564.0" y="267.0" font-size="12" fill="#c0392b" text-anchor="start">w₁ = 0</text>
+    <text x="652.0" y="226.0" font-size="12" fill="#666">w₁</text><text x="512.0" y="56.0" font-size="12" fill="#666">w₂</text>
+    <text x="190" y="292" font-size="12" fill="#555">la elipse toca el círculo en un punto cualquiera</text>
+    <text x="570" y="292" font-size="12" fill="#555">la elipse toca el rombo en una esquina</text>
+  </g></svg></div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>Un experimento: diez variables, de las cuales solo tres importan</h2>
+<ul><li>60 observaciones de 10 variables estandarizadas; la respuesta es $y = 3x_1 - 2x_2 + 1.5x_3$ más ruido normal estándar, y las otras siete no influyen.</li></ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>Ridge encoge todo; lasso apaga las variables irrelevantes</h2>
+<ul><li>En color, las tres variables reales; en gris, las siete irrelevantes. Entre λ = 0.28 y 1.5, lasso conserva exactamente las tres verdaderas.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="70.0" y="25.0" width="290.0" height="215.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="70.0" y1="222.1" x2="360.0" y2="222.1" stroke="#eee" stroke-width="1"/>
+  <text x="64.0" y="226.1" font-size="11" text-anchor="end" fill="#666">-2</text>
+  <line x1="70.0" y1="150.4" x2="360.0" y2="150.4" stroke="#eee" stroke-width="1"/>
+  <text x="64.0" y="154.4" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="70.0" y1="78.8" x2="360.0" y2="78.8" stroke="#eee" stroke-width="1"/>
+  <text x="64.0" y="82.8" font-size="11" text-anchor="end" fill="#666">2</text>
+  <text x="215.0" y="273.0" font-size="12.5" text-anchor="middle" fill="#333">λ (escala log)</text>
+  <text x="36.0" y="132.5" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 36.0 132.5)">coeficiente</text>
+  <text x="215.0" y="17.0" font-size="13" font-weight="bold" text-anchor="middle" fill="#222">Ridge (L2)</text>
+  <text x="70.0" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.001</text>
+  <text x="142.5" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.01</text>
+  <text x="215.0" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.1</text>
+  <text x="287.5" y="255.0" font-size="11" fill="#666" text-anchor="middle">1</text>
+  <text x="360.0" y="255.0" font-size="11" fill="#666" text-anchor="middle">10</text>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="70.0,150.2 74.9,150.2 79.8,150.1 84.7,150.1 89.7,150.1 94.6,150.1 99.5,150.1 104.4,150.1 109.3,150.1 114.2,150.1 119.2,150.1 124.1,150.0 129.0,150.0 133.9,150.0 138.8,150.0 143.7,149.9 148.6,149.9 153.6,149.8 158.5,149.8 163.4,149.7 168.3,149.7 173.2,149.6 178.1,149.5 183.1,149.4 188.0,149.3 192.9,149.1 197.8,149.0 202.7,148.9 207.6,148.7 212.5,148.5 217.5,148.3 222.4,148.1 227.3,147.9 232.2,147.7 237.1,147.5 242.0,147.3 246.9,147.1 251.9,147.0 256.8,146.8 261.7,146.7 266.6,146.7 271.5,146.7 276.4,146.7 281.4,146.8 286.3,146.9 291.2,147.1 296.1,147.2 301.0,147.4 305.9,147.6 310.8,147.9 315.8,148.1 320.7,148.3 325.6,148.5 330.5,148.7 335.4,148.9 340.3,149.1 345.3,149.2 350.2,149.4 355.1,149.5 360.0,149.6"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="70.0,147.2 74.9,147.2 79.8,147.2 84.7,147.2 89.7,147.2 94.6,147.2 99.5,147.2 104.4,147.3 109.3,147.3 114.2,147.3 119.2,147.3 124.1,147.3 129.0,147.3 133.9,147.4 138.8,147.4 143.7,147.4 148.6,147.5 153.6,147.5 158.5,147.6 163.4,147.6 168.3,147.7 173.2,147.8 178.1,147.8 183.1,147.9 188.0,148.1 192.9,148.2 197.8,148.3 202.7,148.5 207.6,148.7 212.5,148.9 217.5,149.1 222.4,149.3 227.3,149.6 232.2,149.8 237.1,150.1 242.0,150.4 246.9,150.7 251.9,150.9 256.8,151.2 261.7,151.4 266.6,151.6 271.5,151.8 276.4,152.0 281.4,152.1 286.3,152.2 291.2,152.2 296.1,152.2 301.0,152.2 305.9,152.1 310.8,152.1 315.8,152.0 320.7,151.9 325.6,151.8 330.5,151.6 335.4,151.5 340.3,151.4 345.3,151.3 350.2,151.2 355.1,151.1 360.0,151.0"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="70.0,159.7 74.9,159.7 79.8,159.7 84.7,159.7 89.7,159.7 94.6,159.7 99.5,159.6 104.4,159.6 109.3,159.6 114.2,159.6 119.2,159.6 124.1,159.6 129.0,159.6 133.9,159.6 138.8,159.5 143.7,159.5 148.6,159.5 153.6,159.5 158.5,159.4 163.4,159.4 168.3,159.3 173.2,159.3 178.1,159.2 183.1,159.1 188.0,159.1 192.9,159.0 197.8,158.8 202.7,158.7 207.6,158.6 212.5,158.4 217.5,158.2 222.4,158.0 227.3,157.8 232.2,157.5 237.1,157.2 242.0,156.9 246.9,156.6 251.9,156.3 256.8,155.9 261.7,155.5 266.6,155.1 271.5,154.7 276.4,154.4 281.4,154.0 286.3,153.6 291.2,153.3 296.1,152.9 301.0,152.6 305.9,152.3 310.8,152.1 315.8,151.8 320.7,151.6 325.6,151.5 330.5,151.3 335.4,151.2 340.3,151.1 345.3,151.0 350.2,150.9 355.1,150.8 360.0,150.7"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="70.0,150.1 74.9,150.1 79.8,150.1 84.7,150.1 89.7,150.0 94.6,150.0 99.5,150.0 104.4,150.0 109.3,150.0 114.2,150.0 119.2,150.0 124.1,150.0 129.0,149.9 133.9,149.9 138.8,149.9 143.7,149.9 148.6,149.8 153.6,149.8 158.5,149.7 163.4,149.7 168.3,149.6 173.2,149.5 178.1,149.5 183.1,149.4 188.0,149.3 192.9,149.1 197.8,149.0 202.7,148.9 207.6,148.7 212.5,148.5 217.5,148.4 222.4,148.2 227.3,148.0 232.2,147.8 237.1,147.6 242.0,147.4 246.9,147.2 251.9,147.0 256.8,146.9 261.7,146.8 266.6,146.7 271.5,146.6 276.4,146.6 281.4,146.7 286.3,146.8 291.2,146.9 296.1,147.0 301.0,147.2 305.9,147.3 310.8,147.6 315.8,147.8 320.7,148.0 325.6,148.2 330.5,148.4 335.4,148.6 340.3,148.8 345.3,149.0 350.2,149.1 355.1,149.3 360.0,149.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="70.0,145.6 74.9,145.6 79.8,145.6 84.7,145.6 89.7,145.6 94.6,145.6 99.5,145.6 104.4,145.7 109.3,145.7 114.2,145.7 119.2,145.7 124.1,145.8 129.0,145.8 133.9,145.8 138.8,145.9 143.7,145.9 148.6,146.0 153.6,146.1 158.5,146.2 163.4,146.3 168.3,146.4 173.2,146.5 178.1,146.7 183.1,146.9 188.0,147.0 192.9,147.3 197.8,147.5 202.7,147.8 207.6,148.1 212.5,148.4 217.5,148.8 222.4,149.2 227.3,149.6 232.2,150.1 237.1,150.5 242.0,151.0 246.9,151.5 251.9,151.9 256.8,152.4 261.7,152.8 266.6,153.1 271.5,153.4 276.4,153.7 281.4,153.9 286.3,154.0 291.2,154.1 296.1,154.1 301.0,154.0 305.9,153.9 310.8,153.8 315.8,153.6 320.7,153.4 325.6,153.2 330.5,152.9 335.4,152.7 340.3,152.5 345.3,152.3 350.2,152.1 355.1,151.9 360.0,151.7"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="70.0,150.5 74.9,150.5 79.8,150.5 84.7,150.5 89.7,150.5 94.6,150.5 99.5,150.5 104.4,150.5 109.3,150.5 114.2,150.5 119.2,150.5 124.1,150.5 129.0,150.5 133.9,150.5 138.8,150.5 143.7,150.5 148.6,150.5 153.6,150.5 158.5,150.5 163.4,150.5 168.3,150.6 173.2,150.6 178.1,150.6 183.1,150.6 188.0,150.6 192.9,150.6 197.8,150.6 202.7,150.6 207.6,150.6 212.5,150.7 217.5,150.7 222.4,150.7 227.3,150.7 232.2,150.7 237.1,150.8 242.0,150.8 246.9,150.8 251.9,150.8 256.8,150.8 261.7,150.8 266.6,150.8 271.5,150.8 276.4,150.8 281.4,150.8 286.3,150.8 291.2,150.8 296.1,150.7 301.0,150.7 305.9,150.7 310.8,150.6 315.8,150.6 320.7,150.6 325.6,150.5 330.5,150.5 335.4,150.5 340.3,150.5 345.3,150.5 350.2,150.4 355.1,150.4 360.0,150.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="70.0,152.1 74.9,152.1 79.8,152.1 84.7,152.1 89.7,152.1 94.6,152.1 99.5,152.1 104.4,152.1 109.3,152.1 114.2,152.1 119.2,152.1 124.1,152.1 129.0,152.1 133.9,152.1 138.8,152.1 143.7,152.1 148.6,152.1 153.6,152.1 158.5,152.1 163.4,152.1 168.3,152.1 173.2,152.1 178.1,152.1 183.1,152.1 188.0,152.1 192.9,152.1 197.8,152.1 202.7,152.1 207.6,152.1 212.5,152.1 217.5,152.1 222.4,152.1 227.3,152.1 232.2,152.1 237.1,152.1 242.0,152.0 246.9,152.0 251.9,151.9 256.8,151.9 261.7,151.8 266.6,151.7 271.5,151.6 276.4,151.4 281.4,151.3 286.3,151.2 291.2,151.1 296.1,151.0 301.0,150.9 305.9,150.8 310.8,150.7 315.8,150.6 320.7,150.5 325.6,150.5 330.5,150.5 335.4,150.4 340.3,150.4 345.3,150.4 350.2,150.4 355.1,150.4 360.0,150.4"/>
+  <polyline fill="none" stroke="#3a8c4f" stroke-width="2.5"  points="70.0,94.4 74.9,94.4 79.8,94.4 84.7,94.4 89.7,94.4 94.6,94.4 99.5,94.4 104.4,94.4 109.3,94.4 114.2,94.5 119.2,94.5 124.1,94.5 129.0,94.5 133.9,94.5 138.8,94.6 143.7,94.6 148.6,94.7 153.6,94.7 158.5,94.8 163.4,94.9 168.3,95.0 173.2,95.1 178.1,95.2 183.1,95.4 188.0,95.5 192.9,95.8 197.8,96.0 202.7,96.3 207.6,96.7 212.5,97.1 217.5,97.6 222.4,98.1 227.3,98.8 232.2,99.6 237.1,100.5 242.0,101.5 246.9,102.7 251.9,104.0 256.8,105.5 261.7,107.1 266.6,108.9 271.5,110.9 276.4,113.0 281.4,115.2 286.3,117.4 291.2,119.8 296.1,122.1 301.0,124.5 305.9,126.8 310.8,129.0 315.8,131.1 320.7,133.1 325.6,135.0 330.5,136.7 335.4,138.3 340.3,139.8 345.3,141.1 350.2,142.2 355.1,143.3 360.0,144.2"/>
+  <polyline fill="none" stroke="#e8743b" stroke-width="2.5"  points="70.0,222.5 74.9,222.5 79.8,222.5 84.7,222.4 89.7,222.4 94.6,222.4 99.5,222.4 104.4,222.3 109.3,222.3 114.2,222.2 119.2,222.1 124.1,222.1 129.0,222.0 133.9,221.9 138.8,221.8 143.7,221.6 148.6,221.4 153.6,221.3 158.5,221.0 163.4,220.8 168.3,220.5 173.2,220.1 178.1,219.7 183.1,219.3 188.0,218.7 192.9,218.1 197.8,217.4 202.7,216.6 207.6,215.7 212.5,214.7 217.5,213.5 222.4,212.2 227.3,210.7 232.2,209.1 237.1,207.3 242.0,205.4 246.9,203.2 251.9,200.9 256.8,198.5 261.7,195.9 266.6,193.3 271.5,190.5 276.4,187.7 281.4,184.8 286.3,182.0 291.2,179.3 296.1,176.6 301.0,174.0 305.9,171.6 310.8,169.3 315.8,167.2 320.7,165.2 325.6,163.5 330.5,161.9 335.4,160.4 340.3,159.1 345.3,158.0 350.2,157.0 355.1,156.1 360.0,155.3"/>
+  <polyline fill="none" stroke="#4e79a7" stroke-width="2.5"  points="70.0,42.5 74.9,42.5 79.8,42.5 84.7,42.5 89.7,42.6 94.6,42.6 99.5,42.7 104.4,42.8 109.3,42.8 114.2,42.9 119.2,43.0 124.1,43.1 129.0,43.3 133.9,43.4 138.8,43.6 143.7,43.9 148.6,44.1 153.6,44.4 158.5,44.8 163.4,45.2 168.3,45.6 173.2,46.2 178.1,46.8 183.1,47.5 188.0,48.3 192.9,49.3 197.8,50.4 202.7,51.6 207.6,53.0 212.5,54.5 217.5,56.3 222.4,58.2 227.3,60.4 232.2,62.8 237.1,65.4 242.0,68.3 246.9,71.3 251.9,74.6 256.8,78.1 261.7,81.7 266.6,85.5 271.5,89.4 276.4,93.3 281.4,97.3 286.3,101.3 291.2,105.3 296.1,109.1 301.0,112.9 305.9,116.4 310.8,119.8 315.8,123.0 320.7,126.0 325.6,128.7 330.5,131.2 335.4,133.5 340.3,135.6 345.3,137.4 350.2,139.1 355.1,140.5 360.0,141.8"/>
+  <rect x="440.0" y="25.0" width="290.0" height="215.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="440.0" y1="222.1" x2="730.0" y2="222.1" stroke="#eee" stroke-width="1"/>
+  <text x="434.0" y="226.1" font-size="11" text-anchor="end" fill="#666">-2</text>
+  <line x1="440.0" y1="150.4" x2="730.0" y2="150.4" stroke="#eee" stroke-width="1"/>
+  <text x="434.0" y="154.4" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="440.0" y1="78.8" x2="730.0" y2="78.8" stroke="#eee" stroke-width="1"/>
+  <text x="434.0" y="82.8" font-size="11" text-anchor="end" fill="#666">2</text>
+  <text x="585.0" y="273.0" font-size="12.5" text-anchor="middle" fill="#333">λ (escala log)</text>
+  <text x="406.0" y="132.5" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 406.0 132.5)">coeficiente</text>
+  <text x="585.0" y="17.0" font-size="13" font-weight="bold" text-anchor="middle" fill="#222">Lasso (L1)</text>
+  <text x="440.0" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.001</text>
+  <text x="512.5" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.01</text>
+  <text x="585.0" y="255.0" font-size="11" fill="#666" text-anchor="middle">0.1</text>
+  <text x="657.5" y="255.0" font-size="11" fill="#666" text-anchor="middle">1</text>
+  <text x="730.0" y="255.0" font-size="11" fill="#666" text-anchor="middle">10</text>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="440.0,150.2 444.9,150.2 449.8,150.2 454.7,150.2 459.7,150.2 464.6,150.3 469.5,150.3 474.4,150.3 479.3,150.3 484.2,150.3 489.2,150.4 494.1,150.4 499.0,150.4 503.9,150.4 508.8,150.4 513.7,150.4 518.6,150.4 523.6,150.4 528.5,150.4 533.4,150.4 538.3,150.4 543.2,150.4 548.1,150.4 553.1,150.4 558.0,150.4 562.9,150.4 567.8,150.4 572.7,150.4 577.6,150.4 582.5,150.4 587.5,150.4 592.4,150.4 597.3,150.4 602.2,150.4 607.1,150.4 612.0,150.4 616.9,150.4 621.9,150.4 626.8,150.4 631.7,150.4 636.6,150.4 641.5,150.4 646.4,150.4 651.4,150.4 656.3,150.4 661.2,150.4 666.1,150.4 671.0,150.4 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="440.0,147.2 444.9,147.3 449.8,147.3 454.7,147.3 459.7,147.3 464.6,147.3 469.5,147.3 474.4,147.3 479.3,147.4 484.2,147.4 489.2,147.4 494.1,147.5 499.0,147.5 503.9,147.6 508.8,147.7 513.7,147.7 518.6,147.8 523.6,148.0 528.5,148.1 533.4,148.2 538.3,148.4 543.2,148.6 548.1,148.9 553.1,149.2 558.0,149.5 562.9,149.9 567.8,150.4 572.7,150.4 577.6,150.4 582.5,150.4 587.5,150.4 592.4,150.4 597.3,150.4 602.2,150.4 607.1,150.4 612.0,150.4 616.9,150.4 621.9,150.4 626.8,150.4 631.7,150.4 636.6,150.4 641.5,150.4 646.4,150.4 651.4,150.4 656.3,150.4 661.2,150.4 666.1,150.4 671.0,150.4 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="440.0,159.7 444.9,159.7 449.8,159.6 454.7,159.6 459.7,159.6 464.6,159.6 469.5,159.6 474.4,159.6 479.3,159.6 484.2,159.6 489.2,159.6 494.1,159.5 499.0,159.5 503.9,159.5 508.8,159.4 513.7,159.4 518.6,159.3 523.6,159.2 528.5,159.1 533.4,159.0 538.3,158.9 543.2,158.8 548.1,158.6 553.1,158.4 558.0,158.2 562.9,158.0 567.8,157.7 572.7,157.4 577.6,157.0 582.5,156.6 587.5,156.0 592.4,155.3 597.3,154.4 602.2,153.4 607.1,152.2 612.0,150.8 616.9,150.4 621.9,150.4 626.8,150.4 631.7,150.4 636.6,150.4 641.5,150.4 646.4,150.4 651.4,150.4 656.3,150.4 661.2,150.4 666.1,150.4 671.0,150.4 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="440.0,150.1 444.9,150.1 449.8,150.1 454.7,150.1 459.7,150.1 464.6,150.2 469.5,150.2 474.4,150.2 479.3,150.2 484.2,150.2 489.2,150.2 494.1,150.3 499.0,150.3 503.9,150.3 508.8,150.4 513.7,150.4 518.6,150.4 523.6,150.4 528.5,150.4 533.4,150.4 538.3,150.4 543.2,150.4 548.1,150.4 553.1,150.4 558.0,150.4 562.9,150.4 567.8,150.4 572.7,150.4 577.6,150.4 582.5,150.4 587.5,150.4 592.4,150.4 597.3,150.4 602.2,150.4 607.1,150.4 612.0,150.4 616.9,150.4 621.9,150.4 626.8,150.4 631.7,150.4 636.6,150.4 641.5,150.4 646.4,150.4 651.4,150.4 656.3,150.4 661.2,150.4 666.1,150.4 671.0,150.4 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="440.0,145.6 444.9,145.6 449.8,145.6 454.7,145.6 459.7,145.6 464.6,145.6 469.5,145.7 474.4,145.7 479.3,145.7 484.2,145.7 489.2,145.8 494.1,145.8 499.0,145.8 503.9,145.9 508.8,145.9 513.7,146.0 518.6,146.1 523.6,146.2 528.5,146.3 533.4,146.5 538.3,146.6 543.2,146.8 548.1,147.1 553.1,147.3 558.0,147.6 562.9,148.0 567.8,148.4 572.7,148.8 577.6,149.3 582.5,149.9 587.5,150.4 592.4,150.4 597.3,150.4 602.2,150.4 607.1,150.4 612.0,150.4 616.9,150.4 621.9,150.4 626.8,150.4 631.7,150.4 636.6,150.4 641.5,150.4 646.4,150.4 651.4,150.4 656.3,150.4 661.2,150.4 666.1,150.4 671.0,150.4 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="440.0,150.5 444.9,150.5 449.8,150.5 454.7,150.5 459.7,150.5 464.6,150.5 469.5,150.5 474.4,150.5 479.3,150.4 484.2,150.4 489.2,150.4 494.1,150.4 499.0,150.4 503.9,150.4 508.8,150.4 513.7,150.4 518.6,150.4 523.6,150.4 528.5,150.4 533.4,150.4 538.3,150.4 543.2,150.4 548.1,150.4 553.1,150.4 558.0,150.4 562.9,150.4 567.8,150.4 572.7,150.4 577.6,150.4 582.5,150.4 587.5,150.4 592.4,150.4 597.3,150.4 602.2,150.4 607.1,150.4 612.0,150.4 616.9,150.4 621.9,150.4 626.8,150.4 631.7,150.4 636.6,150.4 641.5,150.4 646.4,150.4 651.4,150.4 656.3,150.4 661.2,150.4 666.1,150.4 671.0,150.4 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#aaa" stroke-width="1.4"  points="440.0,152.0 444.9,152.0 449.8,152.0 454.7,152.0 459.7,152.0 464.6,152.0 469.5,152.0 474.4,152.0 479.3,152.0 484.2,152.0 489.2,152.0 494.1,151.9 499.0,151.9 503.9,151.9 508.8,151.9 513.7,151.8 518.6,151.8 523.6,151.8 528.5,151.7 533.4,151.6 538.3,151.6 543.2,151.5 548.1,151.4 553.1,151.3 558.0,151.1 562.9,151.0 567.8,150.8 572.7,150.6 577.6,150.4 582.5,150.4 587.5,150.4 592.4,150.4 597.3,150.4 602.2,150.4 607.1,150.4 612.0,150.4 616.9,150.4 621.9,150.4 626.8,150.4 631.7,150.4 636.6,150.4 641.5,150.4 646.4,150.4 651.4,150.4 656.3,150.4 661.2,150.4 666.1,150.4 671.0,150.4 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#3a8c4f" stroke-width="2.5"  points="440.0,94.4 444.9,94.4 449.8,94.4 454.7,94.4 459.7,94.4 464.6,94.5 469.5,94.5 474.4,94.5 479.3,94.5 484.2,94.6 489.2,94.6 494.1,94.6 499.0,94.7 503.9,94.7 508.8,94.8 513.7,94.8 518.6,94.9 523.6,94.9 528.5,95.0 533.4,95.1 538.3,95.2 543.2,95.4 548.1,95.5 553.1,95.7 558.0,95.9 562.9,96.1 567.8,96.4 572.7,96.7 577.6,97.0 582.5,97.4 587.5,97.8 592.4,98.4 597.3,99.2 602.2,100.0 607.1,101.0 612.0,102.1 616.9,103.3 621.9,104.7 626.8,106.3 631.7,108.2 636.6,110.4 641.5,113.0 646.4,116.0 651.4,119.5 656.3,123.6 661.2,128.4 666.1,134.0 671.0,140.6 675.9,148.8 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#e8743b" stroke-width="2.5"  points="440.0,222.6 444.9,222.6 449.8,222.5 454.7,222.5 459.7,222.5 464.6,222.5 469.5,222.5 474.4,222.5 479.3,222.5 484.2,222.4 489.2,222.4 494.1,222.4 499.0,222.3 503.9,222.3 508.8,222.2 513.7,222.2 518.6,222.1 523.6,222.0 528.5,221.9 533.4,221.8 538.3,221.7 543.2,221.5 548.1,221.3 553.1,221.1 558.0,220.8 562.9,220.5 567.8,220.2 572.7,219.8 577.6,219.3 582.5,218.8 587.5,218.1 592.4,217.3 597.3,216.4 602.2,215.3 607.1,214.0 612.0,212.5 616.9,210.7 621.9,208.7 626.8,206.3 631.7,203.5 636.6,200.3 641.5,196.4 646.4,192.0 651.4,186.8 656.3,180.7 661.2,173.6 666.1,165.3 671.0,155.6 675.9,150.4 680.8,150.4 685.8,150.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+  <polyline fill="none" stroke="#4e79a7" stroke-width="2.5"  points="440.0,42.3 444.9,42.3 449.8,42.4 454.7,42.4 459.7,42.4 464.6,42.4 469.5,42.4 474.4,42.4 479.3,42.4 484.2,42.5 489.2,42.5 494.1,42.5 499.0,42.6 503.9,42.6 508.8,42.7 513.7,42.8 518.6,42.9 523.6,43.0 528.5,43.2 533.4,43.3 538.3,43.5 543.2,43.8 548.1,44.0 553.1,44.4 558.0,44.7 562.9,45.2 567.8,45.7 572.7,46.3 577.6,46.9 582.5,47.7 587.5,48.6 592.4,49.3 597.3,50.2 602.2,51.3 607.1,52.6 612.0,54.0 616.9,55.7 621.9,57.7 626.8,60.1 631.7,62.8 636.6,66.0 641.5,69.7 646.4,74.1 651.4,79.2 656.3,85.1 661.2,92.1 666.1,100.3 671.0,109.8 675.9,119.6 680.8,130.5 685.8,143.4 690.7,150.4 695.6,150.4 700.5,150.4 705.4,150.4 710.3,150.4 715.3,150.4 720.2,150.4 725.1,150.4 730.0,150.4"/>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>L1 corresponde a creer que la mayoría de los pesos son cero</h2>
+<ul>
+<li>Con el mismo razonamiento bayesiano, L1 corresponde a una distribución a priori de Laplace, $p(w_j) \propto e^{-|w_j|/b}$, con mucha masa en cero.</li>
+<li>Combinar ambas penalizaciones es la <em>elastic net</em>: esparsidad de L1 con la estabilidad de L2 ante variables correlacionadas.</li>
+</ul>
+</section>
+
+<!-- ============ § 3 ============ -->
+<section>
+<div class="section-label">§ 3 · Detenerse a tiempo</div>
+<h2>¿Hace falta penalizar, o basta con parar antes?</h2>
+<ul>
+<li>El error de entrenamiento baja durante todo el entrenamiento; el de validación baja, toca fondo y vuelve a subir cuando la red empieza a ajustar el ruido.</li>
+<li>La <strong>detención temprana</strong> guarda los pesos con menor error de validación y para cuando deja de mejorar durante un número fijo de pasos, la <strong>paciencia</strong>.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Detenerse a tiempo</div>
+<h2>Sin regularizar, después de 180 iteraciones todo es ruido</h2>
+<ul><li>El mínimo de validación, 0.124, llega en la iteración 180; de ahí sube hasta 0.381. Con λ = 0.01, la curva verde se queda en 0.107.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="90.0" y="25.0" width="420.0" height="210.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="90.0" y1="25.0" x2="90.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="90.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">0</text>
+  <line x1="195.0" y1="25.0" x2="195.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="195.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">1000</text>
+  <line x1="300.0" y1="25.0" x2="300.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="300.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">2000</text>
+  <line x1="405.0" y1="25.0" x2="405.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="405.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">3000</text>
+  <line x1="510.0" y1="25.0" x2="510.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="510.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">4000</text>
+  <text x="300.0" y="268.0" font-size="12.5" text-anchor="middle" fill="#333">iteración</text>
+  <text x="56.0" y="130.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 56.0 130.0)">error cuadrático (log)</text>
+  <text x="84.0" y="220.5" font-size="11" fill="#666" text-anchor="end">0.03</text>
+  <text x="84.0" y="165.6" font-size="11" fill="#666" text-anchor="end">0.1</text>
+  <text x="84.0" y="115.5" font-size="11" fill="#666" text-anchor="end">0.3</text>
+  <text x="84.0" y="60.6" font-size="11" fill="#666" text-anchor="end">1</text>
+  <polyline fill="none" stroke="#4e79a7" stroke-width="2.2"  points="90.1,30.6 92.1,110.0 94.2,111.5 96.3,112.8 98.4,114.3 100.5,116.3 102.6,119.4 104.7,124.4 106.8,132.9 108.9,143.2 111.0,145.5 113.1,145.7 115.2,145.8 117.3,145.9 119.4,146.0 121.5,146.0 123.6,146.1 125.7,146.3 127.8,146.4 129.9,146.6 132.0,146.8 134.1,147.1 136.2,147.5 138.3,148.1 140.4,148.7 142.5,149.5 144.6,150.2 146.7,151.0 148.8,151.6 150.9,152.2 153.0,152.7 155.1,153.1 157.2,153.4 159.3,153.7 161.4,154.0 163.5,154.3 165.6,154.5 167.7,154.8 169.8,155.1 171.9,155.3 174.0,155.6 176.1,155.9 178.2,156.2 180.3,156.5 182.4,156.9 184.5,157.2 186.6,157.5 188.7,157.8 190.8,158.0 192.9,158.3 195.0,158.5 197.1,153.3 199.2,158.6 201.3,159.0 203.4,159.2 205.5,159.4 207.6,159.6 209.7,159.9 211.8,160.3 213.9,160.8 216.0,161.6 218.1,162.6 220.2,163.8 222.3,164.9 224.4,165.9 226.5,162.9 228.6,167.0 230.7,167.8 232.8,168.3 234.9,168.9 237.0,169.4 239.1,170.0 241.2,170.5 243.3,171.1 245.4,171.7 247.5,172.4 249.6,173.1 251.7,174.0 253.8,175.2 255.9,176.8 258.0,174.7 260.1,181.4 262.2,185.3 264.3,189.4 266.4,193.5 268.5,196.6 270.6,198.7 272.7,197.5 274.8,200.1 276.9,200.2 279.0,198.2 281.1,200.4 283.2,200.6 285.3,200.7 287.4,198.9 289.5,201.0 291.6,201.1 293.7,201.2 295.8,201.4 297.9,201.5 300.0,197.5 302.1,200.9 304.2,201.8 306.3,202.0 308.4,202.1 310.5,202.3 312.6,202.4 314.7,202.5 316.8,202.7 318.9,201.1 321.0,202.6 323.1,202.9 325.2,203.1 327.3,203.2 329.4,203.3 331.5,203.4 333.6,203.4 335.7,199.9 337.8,203.4 339.9,203.5 342.0,203.6 344.1,202.9 346.2,202.6 348.3,203.4 350.4,203.7 352.5,203.7 354.6,203.8 356.7,203.8 358.8,203.8 360.9,203.8 363.0,200.1 365.1,203.6 367.2,203.8 369.3,203.9 371.4,203.9 373.5,204.0 375.6,204.0 377.7,204.0 379.8,204.1 381.9,203.5 384.0,201.1 386.1,203.8 388.2,204.1 390.3,204.2 392.4,204.2 394.5,204.2 396.6,204.3 398.7,204.3 400.8,197.9 402.9,202.9 405.0,204.1 407.1,204.4 409.2,204.5 411.3,204.5 413.4,204.5 415.5,204.6 417.6,204.6 419.7,204.7 421.8,204.7 423.9,204.8 426.0,203.2 428.1,204.2 430.2,204.9 432.3,205.0 434.4,205.1 436.5,205.1 438.6,202.8 440.7,204.3 442.8,205.1 444.9,205.4 447.0,205.5 449.1,204.4 451.2,204.9 453.3,205.7 455.4,205.4 457.5,205.6 459.6,205.2 461.7,205.6 463.8,204.8 465.9,206.1 468.0,204.6 470.1,206.1 472.2,206.5 474.3,205.4 476.4,203.6 478.5,206.6 480.6,206.5 482.7,207.0 484.8,207.1 486.9,206.9 489.0,207.1 491.1,207.1 493.2,207.5 495.3,205.2 497.4,206.6 499.5,207.8 501.6,204.4 503.7,207.3 505.8,207.4 507.9,208.5 510.0,208.6"/>
+  <polyline fill="none" stroke="#e8743b" stroke-width="2.2"  points="90.1,25.6 92.1,109.4 94.2,114.2 96.3,118.6 98.4,122.3 100.5,127.5 102.6,134.2 104.7,142.9 106.8,151.4 108.9,151.9 111.0,150.7 113.1,150.7 115.2,149.9 117.3,149.3 119.4,148.8 121.5,148.2 123.6,147.5 125.7,146.9 127.8,146.2 129.9,145.4 132.0,144.7 134.1,143.8 136.2,143.0 138.3,142.1 140.4,141.3 142.5,140.6 144.6,139.9 146.7,139.2 148.8,138.5 150.9,137.9 153.0,137.2 155.1,136.5 157.2,135.9 159.3,135.3 161.4,134.9 163.5,134.5 165.6,134.0 167.7,133.6 169.8,133.2 171.9,132.8 174.0,132.3 176.1,131.7 178.2,131.1 180.3,130.7 182.4,130.5 184.5,130.4 186.6,130.1 188.7,129.8 190.8,129.7 192.9,129.8 195.0,130.2 197.1,127.4 199.2,130.4 201.3,131.3 203.4,132.2 205.5,133.4 207.6,134.2 209.7,134.4 211.8,134.8 213.9,135.1 216.0,135.2 218.1,135.0 220.2,134.4 222.3,133.1 224.4,131.2 226.5,129.1 228.6,126.5 230.7,124.5 232.8,123.3 234.9,122.6 237.0,122.5 239.1,122.9 241.2,123.6 243.3,124.3 245.4,125.5 247.5,127.0 249.6,128.5 251.7,129.7 253.8,132.0 255.9,132.5 258.0,129.4 260.1,129.7 262.2,127.8 264.3,125.5 266.4,123.0 268.5,120.8 270.6,119.6 272.7,117.9 274.8,117.8 276.9,117.7 279.0,118.0 281.1,117.9 283.2,117.8 285.3,117.9 287.4,118.0 289.5,117.7 291.6,117.8 293.7,117.9 295.8,117.8 297.9,117.9 300.0,118.2 302.1,117.1 304.2,117.7 306.3,118.0 308.4,118.2 310.5,118.3 312.6,118.4 314.7,118.5 316.8,118.5 318.9,118.8 321.0,118.0 323.1,118.4 325.2,118.6 327.3,118.6 329.4,118.6 331.5,118.6 333.6,118.6 335.7,119.8 337.8,118.2 339.9,118.1 342.0,117.9 344.1,118.0 346.2,117.7 348.3,117.4 350.4,117.1 352.5,117.1 354.6,117.1 356.7,117.0 358.8,117.0 360.9,116.9 363.0,116.0 365.1,115.9 367.2,115.8 369.3,115.6 371.4,115.5 373.5,115.5 375.6,115.4 377.7,115.3 379.8,115.3 381.9,114.5 384.0,114.0 386.1,114.3 388.2,113.4 390.3,113.6 392.4,113.5 394.5,113.5 396.6,113.5 398.7,113.4 400.8,113.7 402.9,112.6 405.0,112.5 407.1,111.6 409.2,111.2 411.3,110.9 413.4,110.7 415.5,110.3 417.6,110.0 419.7,109.6 421.8,109.1 423.9,108.8 426.0,109.5 428.1,109.0 430.2,108.3 432.3,108.2 434.4,108.1 436.5,107.9 438.6,107.0 440.7,106.8 442.8,106.2 444.9,106.4 447.0,106.2 449.1,106.5 451.2,106.4 453.3,105.7 455.4,105.7 457.5,105.3 459.6,105.0 461.7,105.1 463.8,104.4 465.9,104.4 468.0,103.4 470.1,104.7 472.2,104.3 474.3,103.7 476.4,103.5 478.5,103.3 480.6,102.5 482.7,102.4 484.8,102.6 486.9,102.1 489.0,102.1 491.1,101.8 493.2,101.6 495.3,102.5 497.4,102.0 499.5,101.6 501.6,100.5 503.7,101.7 505.8,100.7 507.9,100.9 510.0,100.6"/>
+  <polyline fill="none" stroke="#3a8c4f" stroke-width="2.2" stroke-dasharray="6,4" points="90.1,27.0 92.1,108.0 94.2,113.9 96.3,114.7 98.4,114.7 100.5,114.5 102.6,114.2 104.7,114.1 106.8,114.1 108.9,114.3 111.0,114.6 113.1,114.9 115.2,115.5 117.3,116.2 119.4,117.2 121.5,118.7 123.6,120.7 125.7,123.3 127.8,126.6 129.9,130.4 132.0,134.2 134.1,137.8 136.2,140.9 138.3,143.4 140.4,145.7 142.5,147.5 144.6,149.2 146.7,150.6 148.8,151.8 150.9,152.8 153.0,153.7 155.1,154.4 157.2,155.1 159.3,155.6 161.4,156.0 163.5,156.4 165.6,156.7 167.7,157.0 169.8,157.2 171.9,157.4 174.0,157.6 176.1,157.8 178.2,157.9 180.3,158.0 182.4,158.1 184.5,158.2 186.6,158.3 188.7,158.4 190.8,158.5 192.9,158.5 195.0,158.6 197.1,158.6 199.2,158.7 201.3,158.7 203.4,158.7 205.5,158.8 207.6,158.8 209.7,158.8 211.8,158.8 213.9,158.8 216.0,158.9 218.1,158.9 220.2,158.9 222.3,158.9 224.4,158.9 226.5,158.3 228.6,158.9 230.7,158.9 232.8,158.9 234.9,158.9 237.0,158.9 239.1,158.9 241.2,158.9 243.3,158.9 245.4,158.9 247.5,158.9 249.6,158.9 251.7,158.9 253.8,158.9 255.9,159.0 258.0,158.9 260.1,158.9 262.2,158.9 264.3,158.9 266.4,158.9 268.5,158.9 270.6,158.9 272.7,158.9 274.8,158.9 276.9,158.9 279.0,158.9 281.1,159.0 283.2,158.6 285.3,158.8 287.4,158.8 289.5,158.8 291.6,158.8 293.7,158.7 295.8,158.7 297.9,158.7 300.0,158.7 302.1,158.7 304.2,158.6 306.3,158.9 308.4,157.8 310.5,158.6 312.6,158.6 314.7,158.5 316.8,158.5 318.9,158.4 321.0,158.4 323.1,158.4 325.2,158.4 327.3,158.3 329.4,158.3 331.5,158.3 333.6,157.5 335.7,158.8 337.8,158.0 339.9,158.1 342.0,158.2 344.1,158.2 346.2,158.2 348.3,158.2 350.4,158.1 352.5,158.1 354.6,158.1 356.7,158.1 358.8,158.1 360.9,158.1 363.0,158.8 365.1,158.2 367.2,157.8 369.3,158.0 371.4,158.0 373.5,158.0 375.6,158.0 377.7,158.0 379.8,158.0 381.9,158.0 384.0,158.0 386.1,158.0 388.2,157.7 390.3,156.5 392.4,158.3 394.5,158.1 396.6,158.0 398.7,158.0 400.8,158.0 402.9,158.0 405.0,158.0 407.1,158.0 409.2,158.0 411.3,158.0 413.4,157.6 415.5,157.1 417.6,158.3 419.7,157.8 421.8,157.9 423.9,158.0 426.0,158.0 428.1,158.0 430.2,158.0 432.3,158.0 434.4,158.0 436.5,158.0 438.6,158.0 440.7,153.5 442.8,158.2 444.9,158.2 447.0,158.0 449.1,158.0 451.2,157.9 453.3,158.0 455.4,158.0 457.5,158.0 459.6,158.0 461.7,158.0 463.8,158.7 465.9,157.0 468.0,157.7 470.1,157.9 472.2,157.9 474.3,158.0 476.4,158.0 478.5,158.0 480.6,158.0 482.7,158.0 484.8,158.0 486.9,152.2 489.0,157.3 491.1,157.9 493.2,157.8 495.3,158.0 497.4,157.9 499.5,158.0 501.6,158.0 503.7,158.0 505.8,157.9 507.9,158.8 510.0,158.4"/>
+  <polyline fill="none" stroke="#111" stroke-width="1.2" stroke-dasharray="3,3" points="90.0,166.4 510.0,166.4"/>
+  <circle cx="108.9" cy="151.9" r="6" fill="#c0392b" opacity="1"/>
+  <text x="540.0" y="70.0" font-size="13" fill="#4e79a7" text-anchor="start">— entrenamiento, sin regularizar</text>
+  <text x="540.0" y="94.0" font-size="13" fill="#e8743b" text-anchor="start">— validación, sin regularizar</text>
+  <text x="540.0" y="118.0" font-size="13" fill="#3a8c4f" text-anchor="start">- - validación, λ = 0.01</text>
+  <text x="540.0" y="150.0" font-size="13" fill="#c0392b" text-anchor="start">● mínimo: 0.124 en la iteración 180</text>
+  <text x="540.0" y="174.0" font-size="13" fill="#333" text-anchor="start">··· ruido σ² = 0.09</text>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Detenerse a tiempo</div>
+<h2>Paso 1 · El descenso de gradiente también encoge por dirección</h2>
+<ul><li>En la misma aproximación cuadrática, partiendo de $w^{(0)} = 0$ con tasa $\eta$, después de $\tau$ pasos la componente en cada autovector de $H$ es:</li></ul>
+$$q_i^\top w^{(\tau)} = \Big[1 - (1 - \eta h_i)^{\tau}\Big]\; q_i^\top w^*$$
+</section>
+
+<section>
+<div class="section-label">§ 3 · Detenerse a tiempo</div>
+<h2>Paso 2 · Detenerse equivale a L2 con λ ≈ 1/(ητ)</h2>
+<ul><li>Si $h_i$ es grande, ambos factores valen casi uno; si es pequeño, el de la detención vale $\approx \eta h_i \tau$ y el de L2 $\approx h_i / \lambda$. Coinciden cuando:</li></ul>
+$$\lambda \approx \frac{1}{\eta\, \tau}$$
+<p class="note">En palabras: entrenar más tiempo es regularizar menos; la paciencia hace el papel de λ.</p>
+</section>
+
+<!-- ============ § 4 ============ -->
+<section>
+<div class="section-label">§ 4 · Dropout</div>
+<h2>¿Por qué apagar neuronas al azar mejora a la red?</h2>
+<ul><li>Srivastava et al. (2014): en cada paso de entrenamiento, cada neurona oculta se <strong>apaga</strong>, como si no existiera, con probabilidad $p$.</li></ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Dropout</div>
+<h2>Dropout invertido: apagar y reescalar al entrenar</h2>
+<ul><li>Con $a$ las activaciones de una capa y una máscara $m_j \sim \text{Bernoulli}(1 - p)$, independiente en cada paso:</li></ul>
+$$\tilde{a} = \frac{a \odot m}{1 - p}, \qquad \mathbb{E}[\tilde{a}] = a$$
+<p class="note">En palabras: dividir por 1 − p compensa las neuronas apagadas; al usar la red entrenada no se apaga ni se reescala nada.</p>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Dropout</div>
+<h2>Es entrenar a la vez un ensamble de subredes</h2>
+<ul>
+<li>Cada máscara define una subred; con $H$ neuronas hay $2^H$, todas compartiendo los mismos pesos, y la red completa aproxima su promedio.</li>
+<li>Ninguna neurona puede depender de que otra esté presente: se evita la <strong>coadaptación</strong>.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Dropout</div>
+<h2>Con dropout, la red deja de oscilar</h2>
+<ul><li>Sin penalización y con p = 0.3, el error de validación baja de 0.381 a 0.124; curiosamente, los pesos no se achican.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="60.0" y="25.0" width="300.0" height="210.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="60.0" y1="25.0" x2="60.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="60.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">0.0</text>
+  <line x1="210.0" y1="25.0" x2="210.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="210.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">0.5</text>
+  <line x1="360.0" y1="25.0" x2="360.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="360.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">1.0</text>
+  <line x1="60.0" y1="235.0" x2="360.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="54.0" y="239.0" font-size="11" text-anchor="end" fill="#666">-2</text>
+  <line x1="60.0" y1="130.0" x2="360.0" y2="130.0" stroke="#eee" stroke-width="1"/>
+  <text x="54.0" y="134.0" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="60.0" y1="25.0" x2="360.0" y2="25.0" stroke="#eee" stroke-width="1"/>
+  <text x="54.0" y="29.0" font-size="11" text-anchor="end" fill="#666">2</text>
+  <text x="210.0" y="268.0" font-size="12.5" text-anchor="middle" fill="#333">x</text>
+  <text x="210.0" y="17.0" font-size="13" font-weight="bold" text-anchor="middle" fill="#222">Sin dropout: validación 0.381</text>
+  <polyline fill="none" stroke="#ccc" stroke-width="4"  points="60.0,130.0 61.0,128.9 62.0,127.8 63.0,126.7 64.0,125.6 65.0,124.5 66.0,123.4 67.0,122.3 68.0,121.2 69.0,120.1 70.0,119.0 71.0,118.0 72.0,116.9 73.0,115.8 74.0,114.8 75.1,113.7 76.1,112.7 77.1,111.6 78.1,110.6 79.1,109.6 80.1,108.6 81.1,107.6 82.1,106.6 83.1,105.6 84.1,104.6 85.1,103.7 86.1,102.7 87.1,101.8 88.1,100.9 89.1,100.0 90.1,99.1 91.1,98.2 92.1,97.3 93.1,96.4 94.1,95.6 95.1,94.8 96.1,94.0 97.1,93.2 98.1,92.4 99.1,91.6 100.1,90.9 101.1,90.2 102.1,89.4 103.1,88.8 104.1,88.1 105.2,87.4 106.2,86.8 107.2,86.2 108.2,85.6 109.2,85.0 110.2,84.4 111.2,83.9 112.2,83.4 113.2,82.9 114.2,82.4 115.2,82.0 116.2,81.5 117.2,81.1 118.2,80.7 119.2,80.3 120.2,80.0 121.2,79.7 122.2,79.4 123.2,79.1 124.2,78.8 125.2,78.6 126.2,78.4 127.2,78.2 128.2,78.0 129.2,77.9 130.2,77.8 131.2,77.7 132.2,77.6 133.2,77.5 134.2,77.5 135.3,77.5 136.3,77.5 137.3,77.6 138.3,77.6 139.3,77.7 140.3,77.8 141.3,78.0 142.3,78.1 143.3,78.3 144.3,78.5 145.3,78.7 146.3,79.0 147.3,79.2 148.3,79.5 149.3,79.8 150.3,80.2 151.3,80.5 152.3,80.9 153.3,81.3 154.3,81.7 155.3,82.2 156.3,82.6 157.3,83.1 158.3,83.6 159.3,84.2 160.3,84.7 161.3,85.3 162.3,85.9 163.3,86.5 164.3,87.1 165.4,87.8 166.4,88.4 167.4,89.1 168.4,89.8 169.4,90.5 170.4,91.3 171.4,92.0 172.4,92.8 173.4,93.6 174.4,94.4 175.4,95.2 176.4,96.0 177.4,96.9 178.4,97.7 179.4,98.6 180.4,99.5 181.4,100.4 182.4,101.3 183.4,102.3 184.4,103.2 185.4,104.1 186.4,105.1 187.4,106.1 188.4,107.1 189.4,108.1 190.4,109.1 191.4,110.1 192.4,111.1 193.4,112.2 194.4,113.2 195.5,114.2 196.5,115.3 197.5,116.4 198.5,117.4 199.5,118.5 200.5,119.6 201.5,120.7 202.5,121.8 203.5,122.9 204.5,123.9 205.5,125.0 206.5,126.1 207.5,127.2 208.5,128.3 209.5,129.4 210.5,130.6 211.5,131.7 212.5,132.8 213.5,133.9 214.5,135.0 215.5,136.1 216.5,137.1 217.5,138.2 218.5,139.3 219.5,140.4 220.5,141.5 221.5,142.6 222.5,143.6 223.5,144.7 224.5,145.8 225.6,146.8 226.6,147.8 227.6,148.9 228.6,149.9 229.6,150.9 230.6,151.9 231.6,152.9 232.6,153.9 233.6,154.9 234.6,155.9 235.6,156.8 236.6,157.7 237.6,158.7 238.6,159.6 239.6,160.5 240.6,161.4 241.6,162.3 242.6,163.1 243.6,164.0 244.6,164.8 245.6,165.6 246.6,166.4 247.6,167.2 248.6,168.0 249.6,168.7 250.6,169.5 251.6,170.2 252.6,170.9 253.6,171.6 254.6,172.2 255.7,172.9 256.7,173.5 257.7,174.1 258.7,174.7 259.7,175.3 260.7,175.8 261.7,176.4 262.7,176.9 263.7,177.4 264.7,177.8 265.7,178.3 266.7,178.7 267.7,179.1 268.7,179.5 269.7,179.8 270.7,180.2 271.7,180.5 272.7,180.8 273.7,181.0 274.7,181.3 275.7,181.5 276.7,181.7 277.7,181.9 278.7,182.0 279.7,182.2 280.7,182.3 281.7,182.4 282.7,182.4 283.7,182.5 284.7,182.5 285.8,182.5 286.8,182.5 287.8,182.4 288.8,182.3 289.8,182.2 290.8,182.1 291.8,182.0 292.8,181.8 293.8,181.6 294.8,181.4 295.8,181.2 296.8,180.9 297.8,180.6 298.8,180.3 299.8,180.0 300.8,179.7 301.8,179.3 302.8,178.9 303.8,178.5 304.8,178.0 305.8,177.6 306.8,177.1 307.8,176.6 308.8,176.1 309.8,175.6 310.8,175.0 311.8,174.4 312.8,173.8 313.8,173.2 314.8,172.6 315.9,171.9 316.9,171.2 317.9,170.6 318.9,169.8 319.9,169.1 320.9,168.4 321.9,167.6 322.9,166.8 323.9,166.0 324.9,165.2 325.9,164.4 326.9,163.6 327.9,162.7 328.9,161.8 329.9,160.9 330.9,160.0 331.9,159.1 332.9,158.2 333.9,157.3 334.9,156.3 335.9,155.4 336.9,154.4 337.9,153.4 338.9,152.4 339.9,151.4 340.9,150.4 341.9,149.4 342.9,148.4 343.9,147.3 344.9,146.3 346.0,145.2 347.0,144.2 348.0,143.1 349.0,142.0 350.0,141.0 351.0,139.9 352.0,138.8 353.0,137.7 354.0,136.6 355.0,135.5 356.0,134.4 357.0,133.3 358.0,132.2 359.0,131.1 360.0,130.0"/>
+  <polyline fill="none" stroke="#888" stroke-width="2.4"  points="60.0,122.4 61.0,123.0 62.0,123.4 63.0,123.9 64.0,124.4 65.0,124.8 66.0,125.3 67.0,125.8 68.0,126.3 69.0,126.9 70.0,127.6 71.0,128.4 72.0,129.3 73.0,130.3 74.0,131.4 75.1,132.6 76.1,133.9 77.1,135.2 78.1,136.7 79.1,138.1 80.1,139.4 81.1,140.2 82.1,140.2 83.1,138.4 84.1,133.2 85.1,123.0 86.1,108.8 87.1,96.0 88.1,88.4 89.1,85.2 90.1,84.5 91.1,84.6 92.1,85.1 93.1,85.5 94.1,86.1 95.1,87.8 96.1,93.8 97.1,108.6 98.1,129.4 99.1,141.6 100.1,140.0 101.1,128.1 102.1,109.4 103.1,86.6 104.1,64.5 105.2,47.7 106.2,38.4 107.2,36.6 108.2,40.8 109.2,49.3 110.2,60.1 111.2,71.3 112.2,81.4 113.2,90.1 114.2,97.1 115.2,102.8 116.2,107.5 117.2,111.2 118.2,114.3 119.2,116.9 120.2,119.0 121.2,120.7 122.2,122.0 123.2,123.0 124.2,123.7 125.2,124.1 126.2,124.3 127.2,124.2 128.2,123.8 129.2,123.3 130.2,122.5 131.2,121.5 132.2,120.3 133.2,118.9 134.2,117.4 135.3,115.8 136.3,114.1 137.3,112.4 138.3,110.6 139.3,108.8 140.3,107.0 141.3,105.3 142.3,103.6 143.3,102.1 144.3,100.6 145.3,99.2 146.3,98.0 147.3,96.8 148.3,95.8 149.3,94.9 150.3,94.1 151.3,93.3 152.3,92.7 153.3,92.1 154.3,91.6 155.3,91.2 156.3,90.8 157.3,90.5 158.3,90.2 159.3,90.0 160.3,89.8 161.3,89.6 162.3,89.4 163.3,89.3 164.3,89.2 165.4,89.2 166.4,89.1 167.4,89.1 168.4,89.1 169.4,89.1 170.4,89.1 171.4,89.2 172.4,89.3 173.4,89.4 174.4,89.6 175.4,89.9 176.4,90.3 177.4,90.8 178.4,91.5 179.4,92.5 180.4,93.8 181.4,95.5 182.4,97.8 183.4,100.8 184.4,104.7 185.4,109.6 186.4,115.7 187.4,123.0 188.4,131.4 189.4,140.7 190.4,150.4 191.4,160.0 192.4,169.1 193.4,177.2 194.4,184.1 195.5,189.6 196.5,193.7 197.5,196.7 198.5,198.6 199.5,199.7 200.5,200.0 201.5,199.8 202.5,199.1 203.5,198.1 204.5,196.5 205.5,194.1 206.5,190.6 207.5,185.1 208.5,176.8 209.5,165.7 210.5,153.1 211.5,141.4 212.5,132.7 213.5,127.7 214.5,125.8 215.5,126.0 216.5,127.4 217.5,129.5 218.5,131.9 219.5,134.4 220.5,136.6 221.5,138.7 222.5,140.5 223.5,142.1 224.5,143.5 225.6,144.8 226.6,145.8 227.6,146.9 228.6,147.8 229.6,148.8 230.6,149.8 231.6,150.8 232.6,151.9 233.6,153.2 234.6,154.5 235.6,156.1 236.6,157.8 237.6,159.7 238.6,161.7 239.6,163.9 240.6,166.3 241.6,168.9 242.6,171.5 243.6,174.2 244.6,177.0 245.6,179.7 246.6,182.4 247.6,185.0 248.6,187.4 249.6,189.7 250.6,191.8 251.6,193.8 252.6,195.5 253.6,197.2 254.6,198.6 255.7,199.9 256.7,201.1 257.7,202.1 258.7,203.1 259.7,204.0 260.7,204.8 261.7,205.6 262.7,206.3 263.7,207.0 264.7,207.5 265.7,208.0 266.7,208.4 267.7,208.6 268.7,208.6 269.7,208.2 270.7,207.3 271.7,205.8 272.7,203.4 273.7,199.8 274.7,195.1 275.7,188.9 276.7,181.6 277.7,173.4 278.7,165.0 279.7,157.0 280.7,150.1 281.7,144.6 282.7,140.7 283.7,138.2 284.7,137.1 285.8,137.0 286.8,137.8 287.8,139.2 288.8,141.2 289.8,143.5 290.8,146.2 291.8,149.1 292.8,152.2 293.8,155.4 294.8,158.7 295.8,162.0 296.8,165.4 297.8,168.7 298.8,171.9 299.8,174.9 300.8,177.7 301.8,180.2 302.8,182.2 303.8,183.7 304.8,184.6 305.8,184.8 306.8,184.4 307.8,183.3 308.8,181.8 309.8,180.1 310.8,178.4 311.8,177.0 312.8,175.9 313.8,175.4 314.8,175.3 315.9,175.6 316.9,176.3 317.9,177.2 318.9,178.3 319.9,179.6 320.9,180.9 321.9,182.3 322.9,183.7 323.9,185.0 324.9,186.4 325.9,187.7 326.9,189.0 327.9,190.3 328.9,191.4 329.9,192.5 330.9,193.5 331.9,194.2 332.9,194.6 333.9,194.6 334.9,193.9 335.9,192.1 336.9,188.9 337.9,184.0 338.9,177.0 339.9,168.1 340.9,158.2 341.9,148.4 342.9,139.8 343.9,133.3 344.9,129.0 346.0,126.7 347.0,126.1 348.0,126.6 349.0,128.1 350.0,130.3 351.0,133.0 352.0,136.1 353.0,139.6 354.0,143.3 355.0,147.2 356.0,151.2 357.0,155.3 358.0,159.3 359.0,163.3 360.0,167.1"/>
+  <circle cx="81.4" cy="140.1" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="89.7" cy="84.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="97.7" cy="121.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="101.5" cy="121.2" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="104.9" cy="50.4" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="113.3" cy="91.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="178.0" cy="91.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="211.0" cy="153.2" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="212.3" cy="123.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="217.1" cy="131.9" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="234.2" cy="153.9" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="270.6" cy="207.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="296.9" cy="165.9" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="306.7" cy="184.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="313.2" cy="175.6" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="322.8" cy="183.6" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="346.0" cy="126.5" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="353.8" cy="149.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="354.6" cy="113.4" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="354.9" cy="173.6" r="3.5" fill="#111" opacity="1"/>
+  <rect x="430.0" y="25.0" width="300.0" height="210.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="430.0" y1="25.0" x2="430.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="430.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">0.0</text>
+  <line x1="580.0" y1="25.0" x2="580.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="580.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">0.5</text>
+  <line x1="730.0" y1="25.0" x2="730.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="730.0" y="250.0" font-size="11" text-anchor="middle" fill="#666">1.0</text>
+  <line x1="430.0" y1="235.0" x2="730.0" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="424.0" y="239.0" font-size="11" text-anchor="end" fill="#666">-2</text>
+  <line x1="430.0" y1="130.0" x2="730.0" y2="130.0" stroke="#eee" stroke-width="1"/>
+  <text x="424.0" y="134.0" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="430.0" y1="25.0" x2="730.0" y2="25.0" stroke="#eee" stroke-width="1"/>
+  <text x="424.0" y="29.0" font-size="11" text-anchor="end" fill="#666">2</text>
+  <text x="580.0" y="268.0" font-size="12.5" text-anchor="middle" fill="#333">x</text>
+  <text x="580.0" y="17.0" font-size="13" font-weight="bold" text-anchor="middle" fill="#222">Dropout p = 0.3: validación 0.124</text>
+  <polyline fill="none" stroke="#ccc" stroke-width="4"  points="430.0,130.0 431.0,128.9 432.0,127.8 433.0,126.7 434.0,125.6 435.0,124.5 436.0,123.4 437.0,122.3 438.0,121.2 439.0,120.1 440.0,119.0 441.0,118.0 442.0,116.9 443.0,115.8 444.0,114.8 445.1,113.7 446.1,112.7 447.1,111.6 448.1,110.6 449.1,109.6 450.1,108.6 451.1,107.6 452.1,106.6 453.1,105.6 454.1,104.6 455.1,103.7 456.1,102.7 457.1,101.8 458.1,100.9 459.1,100.0 460.1,99.1 461.1,98.2 462.1,97.3 463.1,96.4 464.1,95.6 465.1,94.8 466.1,94.0 467.1,93.2 468.1,92.4 469.1,91.6 470.1,90.9 471.1,90.2 472.1,89.4 473.1,88.8 474.1,88.1 475.2,87.4 476.2,86.8 477.2,86.2 478.2,85.6 479.2,85.0 480.2,84.4 481.2,83.9 482.2,83.4 483.2,82.9 484.2,82.4 485.2,82.0 486.2,81.5 487.2,81.1 488.2,80.7 489.2,80.3 490.2,80.0 491.2,79.7 492.2,79.4 493.2,79.1 494.2,78.8 495.2,78.6 496.2,78.4 497.2,78.2 498.2,78.0 499.2,77.9 500.2,77.8 501.2,77.7 502.2,77.6 503.2,77.5 504.2,77.5 505.3,77.5 506.3,77.5 507.3,77.6 508.3,77.6 509.3,77.7 510.3,77.8 511.3,78.0 512.3,78.1 513.3,78.3 514.3,78.5 515.3,78.7 516.3,79.0 517.3,79.2 518.3,79.5 519.3,79.8 520.3,80.2 521.3,80.5 522.3,80.9 523.3,81.3 524.3,81.7 525.3,82.2 526.3,82.6 527.3,83.1 528.3,83.6 529.3,84.2 530.3,84.7 531.3,85.3 532.3,85.9 533.3,86.5 534.3,87.1 535.4,87.8 536.4,88.4 537.4,89.1 538.4,89.8 539.4,90.5 540.4,91.3 541.4,92.0 542.4,92.8 543.4,93.6 544.4,94.4 545.4,95.2 546.4,96.0 547.4,96.9 548.4,97.7 549.4,98.6 550.4,99.5 551.4,100.4 552.4,101.3 553.4,102.3 554.4,103.2 555.4,104.1 556.4,105.1 557.4,106.1 558.4,107.1 559.4,108.1 560.4,109.1 561.4,110.1 562.4,111.1 563.4,112.2 564.4,113.2 565.5,114.2 566.5,115.3 567.5,116.4 568.5,117.4 569.5,118.5 570.5,119.6 571.5,120.7 572.5,121.8 573.5,122.9 574.5,123.9 575.5,125.0 576.5,126.1 577.5,127.2 578.5,128.3 579.5,129.4 580.5,130.6 581.5,131.7 582.5,132.8 583.5,133.9 584.5,135.0 585.5,136.1 586.5,137.1 587.5,138.2 588.5,139.3 589.5,140.4 590.5,141.5 591.5,142.6 592.5,143.6 593.5,144.7 594.5,145.8 595.6,146.8 596.6,147.8 597.6,148.9 598.6,149.9 599.6,150.9 600.6,151.9 601.6,152.9 602.6,153.9 603.6,154.9 604.6,155.9 605.6,156.8 606.6,157.7 607.6,158.7 608.6,159.6 609.6,160.5 610.6,161.4 611.6,162.3 612.6,163.1 613.6,164.0 614.6,164.8 615.6,165.6 616.6,166.4 617.6,167.2 618.6,168.0 619.6,168.7 620.6,169.5 621.6,170.2 622.6,170.9 623.6,171.6 624.6,172.2 625.7,172.9 626.7,173.5 627.7,174.1 628.7,174.7 629.7,175.3 630.7,175.8 631.7,176.4 632.7,176.9 633.7,177.4 634.7,177.8 635.7,178.3 636.7,178.7 637.7,179.1 638.7,179.5 639.7,179.8 640.7,180.2 641.7,180.5 642.7,180.8 643.7,181.0 644.7,181.3 645.7,181.5 646.7,181.7 647.7,181.9 648.7,182.0 649.7,182.2 650.7,182.3 651.7,182.4 652.7,182.4 653.7,182.5 654.7,182.5 655.8,182.5 656.8,182.5 657.8,182.4 658.8,182.3 659.8,182.2 660.8,182.1 661.8,182.0 662.8,181.8 663.8,181.6 664.8,181.4 665.8,181.2 666.8,180.9 667.8,180.6 668.8,180.3 669.8,180.0 670.8,179.7 671.8,179.3 672.8,178.9 673.8,178.5 674.8,178.0 675.8,177.6 676.8,177.1 677.8,176.6 678.8,176.1 679.8,175.6 680.8,175.0 681.8,174.4 682.8,173.8 683.8,173.2 684.8,172.6 685.9,171.9 686.9,171.2 687.9,170.6 688.9,169.8 689.9,169.1 690.9,168.4 691.9,167.6 692.9,166.8 693.9,166.0 694.9,165.2 695.9,164.4 696.9,163.6 697.9,162.7 698.9,161.8 699.9,160.9 700.9,160.0 701.9,159.1 702.9,158.2 703.9,157.3 704.9,156.3 705.9,155.4 706.9,154.4 707.9,153.4 708.9,152.4 709.9,151.4 710.9,150.4 711.9,149.4 712.9,148.4 713.9,147.3 714.9,146.3 716.0,145.2 717.0,144.2 718.0,143.1 719.0,142.0 720.0,141.0 721.0,139.9 722.0,138.8 723.0,137.7 724.0,136.6 725.0,135.5 726.0,134.4 727.0,133.3 728.0,132.2 729.0,131.1 730.0,130.0"/>
+  <polyline fill="none" stroke="#c0392b" stroke-width="2.4"  points="430.0,131.7 431.0,131.7 432.0,131.7 433.0,131.7 434.0,131.7 435.0,131.7 436.0,131.7 437.0,131.7 438.0,131.7 439.0,131.7 440.0,131.7 441.0,131.7 442.0,131.7 443.0,131.7 444.0,131.7 445.1,131.7 446.1,131.7 447.1,131.6 448.1,131.6 449.1,131.6 450.1,131.5 451.1,131.3 452.1,130.9 453.1,129.9 454.1,128.0 455.1,124.4 456.1,119.0 457.1,113.3 458.1,109.3 459.1,107.1 460.1,106.1 461.1,105.7 462.1,105.5 463.1,105.4 464.1,105.4 465.1,105.3 466.1,105.1 467.1,104.8 468.1,104.2 469.1,103.2 470.1,101.7 471.1,99.6 472.1,97.4 473.1,95.6 474.1,94.4 475.2,93.7 476.2,93.3 477.2,93.0 478.2,92.9 479.2,92.8 480.2,92.8 481.2,92.8 482.2,92.8 483.2,92.8 484.2,92.8 485.2,92.8 486.2,92.8 487.2,92.8 488.2,92.8 489.2,92.8 490.2,92.8 491.2,92.8 492.2,92.8 493.2,92.8 494.2,92.8 495.2,92.8 496.2,92.8 497.2,92.8 498.2,92.8 499.2,92.8 500.2,92.8 501.2,92.8 502.2,92.8 503.2,92.8 504.2,92.8 505.3,92.8 506.3,92.8 507.3,92.8 508.3,92.8 509.3,92.8 510.3,92.8 511.3,92.8 512.3,92.8 513.3,92.8 514.3,92.8 515.3,92.8 516.3,92.8 517.3,92.8 518.3,92.8 519.3,92.8 520.3,92.8 521.3,92.8 522.3,92.9 523.3,92.9 524.3,92.9 525.3,92.9 526.3,92.9 527.3,92.9 528.3,92.9 529.3,93.0 530.3,93.0 531.3,93.0 532.3,93.1 533.3,93.1 534.3,93.1 535.4,93.2 536.4,93.2 537.4,93.3 538.4,93.4 539.4,93.5 540.4,93.6 541.4,93.7 542.4,93.8 543.4,93.9 544.4,94.1 545.4,94.3 546.4,94.5 547.4,94.8 548.4,95.0 549.4,95.4 550.4,95.8 551.4,96.3 552.4,96.8 553.4,97.4 554.4,98.2 555.4,99.1 556.4,100.1 557.4,101.4 558.4,102.8 559.4,104.5 560.4,106.3 561.4,108.4 562.4,110.7 563.4,113.1 564.4,115.6 565.5,118.1 566.5,120.5 567.5,122.7 568.5,124.8 569.5,126.7 570.5,128.3 571.5,129.7 572.5,131.0 573.5,132.1 574.5,133.1 575.5,133.9 576.5,134.7 577.5,135.5 578.5,136.1 579.5,136.8 580.5,137.4 581.5,138.0 582.5,138.5 583.5,139.1 584.5,139.6 585.5,140.1 586.5,140.6 587.5,141.1 588.5,141.6 589.5,142.1 590.5,142.6 591.5,143.1 592.5,143.6 593.5,144.1 594.5,144.6 595.6,145.1 596.6,145.6 597.6,146.2 598.6,146.8 599.6,147.4 600.6,148.0 601.6,148.7 602.6,149.4 603.6,150.2 604.6,151.1 605.6,152.0 606.6,153.0 607.6,154.0 608.6,155.2 609.6,156.4 610.6,157.8 611.6,159.3 612.6,160.9 613.6,162.6 614.6,164.5 615.6,166.5 616.6,168.7 617.6,170.9 618.6,173.3 619.6,175.7 620.6,178.0 621.6,180.2 622.6,182.2 623.6,184.0 624.6,185.6 625.7,187.0 626.7,188.1 627.7,189.0 628.7,189.8 629.7,190.4 630.7,190.9 631.7,191.2 632.7,191.5 633.7,191.8 634.7,191.9 635.7,192.0 636.7,192.1 637.7,192.2 638.7,192.2 639.7,192.2 640.7,192.1 641.7,192.0 642.7,191.9 643.7,191.8 644.7,191.6 645.7,191.4 646.7,191.2 647.7,190.9 648.7,190.5 649.7,190.1 650.7,189.6 651.7,189.0 652.7,188.4 653.7,187.7 654.7,186.9 655.8,186.0 656.8,185.2 657.8,184.3 658.8,183.6 659.8,182.9 660.8,182.3 661.8,181.8 662.8,181.3 663.8,181.0 664.8,180.7 665.8,180.5 666.8,180.3 667.8,180.2 668.8,180.1 669.8,180.0 670.8,179.9 671.8,179.8 672.8,179.7 673.8,179.7 674.8,179.6 675.8,179.5 676.8,179.5 677.8,179.4 678.8,179.3 679.8,179.2 680.8,179.2 681.8,179.1 682.8,178.9 683.8,178.8 684.8,178.7 685.9,178.5 686.9,178.4 687.9,178.1 688.9,177.9 689.9,177.6 690.9,177.3 691.9,176.9 692.9,176.4 693.9,175.8 694.9,175.1 695.9,174.2 696.9,173.1 697.9,171.8 698.9,170.3 699.9,168.4 700.9,166.2 701.9,163.7 702.9,161.0 703.9,158.1 704.9,155.2 705.9,152.3 706.9,149.8 707.9,147.5 708.9,145.5 709.9,143.8 710.9,142.5 711.9,141.4 712.9,140.5 713.9,139.8 714.9,139.3 716.0,138.9 717.0,138.5 718.0,138.3 719.0,138.0 720.0,137.9 721.0,137.8 722.0,137.7 723.0,137.6 724.0,137.5 725.0,137.5 726.0,137.5 727.0,137.5 728.0,137.4 729.0,137.4 730.0,137.4"/>
+  <circle cx="451.4" cy="140.1" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="459.7" cy="84.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="467.7" cy="121.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="471.5" cy="121.2" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="474.9" cy="50.4" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="483.3" cy="91.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="548.0" cy="91.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="581.0" cy="153.2" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="582.3" cy="123.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="587.1" cy="131.9" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="604.2" cy="153.9" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="640.6" cy="207.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="666.9" cy="165.9" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="676.7" cy="184.3" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="683.2" cy="175.6" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="692.8" cy="183.6" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="716.0" cy="126.5" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="723.8" cy="149.0" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="724.6" cy="113.4" r="3.5" fill="#111" opacity="1"/>
+  <circle cx="724.9" cy="173.6" r="3.5" fill="#111" opacity="1"/>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Dropout</div>
+<h2>Una red con dropout tiene dos modos</h2>
+<ul>
+<li>Evaluarla en modo de entrenamiento da predicciones aleatorias y peores: hay que apagar el dropout para validar.</li>
+<li>La brecha entre entrenamiento y validación se mide siempre con la red completa.</li>
+</ul>
+</section>
+
+<!-- ============ § 5 ============ -->
+<section>
+<div class="section-label">§ 5 · Regularizar a través de los datos</div>
+<h2>¿Se puede regularizar sin tocar la pérdida ni la red?</h2>
+<ul><li>Sí: modificando los datos que la red ve en cada paso, sumando ruido o aplicando transformaciones que no cambian la etiqueta.</li></ul>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularizar a través de los datos</div>
+<h2>Sumar ruido a la entrada es, en promedio, una penalización L2</h2>
+<ul><li>Para un modelo lineal con entradas $x + \varepsilon$, $\varepsilon \sim \mathcal{N}(0, \sigma^2 I)$, el término cruzado tiene media cero y el último vale $\sigma^2\|w\|^2$:</li></ul>
+$$\mathbb{E}_\varepsilon\Big[\big(y - w^\top(x + \varepsilon)\big)^2\Big] = \big(y - w^\top x\big)^2 + \sigma^2\,\|w\|^2$$
+<p class="note">En palabras: una red que debe responder igual ante entradas un poco distintas no puede depender de detalles finos de cada observación (regularización de Tikhonov).</p>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularizar a través de los datos</div>
+<h2>Verificado: ruido de σ = 0.5 da los coeficientes de ridge con λ = 0.25</h2>
+<ul><li>Los datos de las diez variables, copiados 2000 veces con ruido en la entrada, y ajustados por mínimos cuadrados.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="80.0" y="25.0" width="430.0" height="210.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="105.3" y1="25.0" x2="105.3" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="105.3" y="250.0" font-size="11" text-anchor="middle" fill="#666">1</text>
+  <line x1="147.5" y1="25.0" x2="147.5" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="147.5" y="250.0" font-size="11" text-anchor="middle" fill="#666">2</text>
+  <line x1="189.6" y1="25.0" x2="189.6" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="189.6" y="250.0" font-size="11" text-anchor="middle" fill="#666">3</text>
+  <line x1="231.8" y1="25.0" x2="231.8" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="231.8" y="250.0" font-size="11" text-anchor="middle" fill="#666">4</text>
+  <line x1="273.9" y1="25.0" x2="273.9" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="273.9" y="250.0" font-size="11" text-anchor="middle" fill="#666">5</text>
+  <line x1="316.1" y1="25.0" x2="316.1" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="316.1" y="250.0" font-size="11" text-anchor="middle" fill="#666">6</text>
+  <line x1="358.2" y1="25.0" x2="358.2" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="358.2" y="250.0" font-size="11" text-anchor="middle" fill="#666">7</text>
+  <line x1="400.4" y1="25.0" x2="400.4" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="400.4" y="250.0" font-size="11" text-anchor="middle" fill="#666">8</text>
+  <line x1="442.5" y1="25.0" x2="442.5" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="442.5" y="250.0" font-size="11" text-anchor="middle" fill="#666">9</text>
+  <line x1="484.7" y1="25.0" x2="484.7" y2="235.0" stroke="#eee" stroke-width="1"/>
+  <text x="484.7" y="250.0" font-size="11" text-anchor="middle" fill="#666">10</text>
+  <line x1="80.0" y1="217.5" x2="510.0" y2="217.5" stroke="#eee" stroke-width="1"/>
+  <text x="74.0" y="221.5" font-size="11" text-anchor="end" fill="#666">-2</text>
+  <line x1="80.0" y1="147.5" x2="510.0" y2="147.5" stroke="#eee" stroke-width="1"/>
+  <text x="74.0" y="151.5" font-size="11" text-anchor="end" fill="#666">0</text>
+  <line x1="80.0" y1="77.5" x2="510.0" y2="77.5" stroke="#eee" stroke-width="1"/>
+  <text x="74.0" y="81.5" font-size="11" text-anchor="end" fill="#666">2</text>
+  <text x="295.0" y="268.0" font-size="12.5" text-anchor="middle" fill="#333">coeficiente</text>
+  <text x="46.0" y="130.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 46.0 130.0)">valor</text>
+<rect x="88.4" y="41.9" width="11.0" height="105.6" fill="#bbb"/>
+<rect x="130.6" y="147.5" width="11.0" height="70.5" fill="#bbb"/>
+<rect x="172.7" y="92.7" width="11.0" height="54.8" fill="#bbb"/>
+<rect x="214.9" y="147.5" width="11.0" height="1.6" fill="#bbb"/>
+<rect x="257.1" y="147.5" width="11.0" height="0.1" fill="#bbb"/>
+<rect x="299.2" y="142.7" width="11.0" height="4.8" fill="#bbb"/>
+<rect x="341.4" y="147.2" width="11.0" height="0.3" fill="#bbb"/>
+<rect x="383.5" y="147.5" width="11.0" height="9.1" fill="#bbb"/>
+<rect x="425.7" y="144.3" width="11.0" height="3.2" fill="#bbb"/>
+<rect x="467.8" y="147.3" width="11.0" height="0.2" fill="#bbb"/>
+<rect x="99.8" y="68.3" width="11.0" height="79.2" fill="#4e79a7"/>
+<rect x="142.0" y="147.5" width="11.0" height="52.9" fill="#4e79a7"/>
+<rect x="184.1" y="100.1" width="11.0" height="47.4" fill="#4e79a7"/>
+<rect x="226.3" y="147.5" width="11.0" height="1.6" fill="#4e79a7"/>
+<rect x="268.4" y="147.5" width="11.0" height="0.4" fill="#4e79a7"/>
+<rect x="310.6" y="147.5" width="11.0" height="0.7" fill="#4e79a7"/>
+<rect x="352.8" y="144.5" width="11.0" height="3.0" fill="#4e79a7"/>
+<rect x="394.9" y="147.5" width="11.0" height="6.2" fill="#4e79a7"/>
+<rect x="437.1" y="147.5" width="11.0" height="0.1" fill="#4e79a7"/>
+<rect x="479.2" y="144.4" width="11.0" height="3.1" fill="#4e79a7"/>
+<rect x="111.2" y="68.2" width="11.0" height="79.3" fill="#e8743b"/>
+<rect x="153.4" y="147.5" width="11.0" height="53.0" fill="#e8743b"/>
+<rect x="195.5" y="100.1" width="11.0" height="47.4" fill="#e8743b"/>
+<rect x="237.7" y="147.5" width="11.0" height="1.5" fill="#e8743b"/>
+<rect x="279.8" y="147.5" width="11.0" height="0.3" fill="#e8743b"/>
+<rect x="322.0" y="147.5" width="11.0" height="0.7" fill="#e8743b"/>
+<rect x="364.1" y="144.5" width="11.0" height="3.0" fill="#e8743b"/>
+<rect x="406.3" y="147.5" width="11.0" height="6.2" fill="#e8743b"/>
+<rect x="448.5" y="147.4" width="11.0" height="0.1" fill="#e8743b"/>
+<rect x="490.6" y="144.5" width="11.0" height="3.0" fill="#e8743b"/>
+  <text x="540.0" y="80.0" font-size="13" fill="#999" text-anchor="start">■ mínimos cuadrados</text>
+  <text x="540.0" y="104.0" font-size="13" fill="#4e79a7" text-anchor="start">■ ridge, λ = σ² = 0.25</text>
+  <text x="540.0" y="128.0" font-size="13" fill="#e8743b" text-anchor="start">■ entradas con ruido, σ = 0.5</text>
+  <text x="540.0" y="166.0" font-size="13" fill="#333" text-anchor="start">distancia ridge–ruido: 0.009</text>
+  <text x="540.0" y="188.0" font-size="13" fill="#333" text-anchor="start">distancia a mín. cuadrados: 0.95</text>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 5 · Regularizar a través de los datos</div>
+<h2>Aumentar los datos y compartir parámetros son otras restricciones</h2>
+<ul>
+<li>La <strong>aumentación de datos</strong> agrega versiones transformadas que conservan la etiqueta (una imagen desplazada o reflejada): le dice a la red qué variaciones ignorar.</li>
+<li><strong>Compartir parámetros</strong>, como usar el mismo filtro en toda la imagen, es la base de las redes convolucionales.</li>
+</ul>
+</section>
+
+<!-- ============ § 6 ============ -->
+<section>
+<div class="section-label">§ 6 · Regularización implícita</div>
+<h2>¿Por qué el descenso de gradiente generaliza sin que se lo pidan?</h2>
+<ul><li>Las redes modernas tienen más parámetros que datos, y muchas soluciones ajustan los datos de entrenamiento a la perfección. El algoritmo elige una, y no cualquiera.</li></ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización implícita</div>
+<h2>Paso 1 · Cada paso de gradiente es una combinación de los datos</h2>
+<ul><li>En regresión lineal con $p &gt; n$, el descenso de gradiente sobre el error cuadrático hace:</li></ul>
+$$w \leftarrow w - \frac{\eta}{n}\, X^\top (Xw - y)$$
+<p class="note">En palabras: lo que se suma en cada paso es una combinación de las filas de X; partiendo de cero, w nunca sale del espacio que generan.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización implícita</div>
+<h2>Paso 2 · La única solución en ese espacio es la de norma mínima</h2>
+<ul><li>Cualquier otra solución de $Xw = y$ es esa más un vector ortogonal a las filas, que solo agrega norma:</li></ul>
+$$w^{\dagger} = X^\top (X X^\top)^{-1} y = X^{+} y$$
+<p class="note">En palabras: sin pedirlo, el descenso de gradiente desde cero aplica el criterio de simplicidad de L2.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización implícita</div>
+<h2>Verificado: desde cero, el descenso llega exactamente a X⁺y</h2>
+<ul><li>20 ecuaciones y 100 incógnitas; desde un punto al azar también ajusta los datos, pero cae en otra solución, con norma 8.28 en vez de 0.465.</li></ul>
+<div class="svg-holder"><svg viewBox="0 0 760 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
+  <rect x="250.0" y="20.0" width="220.0" height="220.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
+  <line x1="286.7" y1="20.0" x2="286.7" y2="240.0" stroke="#eee" stroke-width="1"/>
+  <text x="286.7" y="255.0" font-size="11" text-anchor="middle" fill="#666">-0.1</text>
+  <line x1="360.0" y1="20.0" x2="360.0" y2="240.0" stroke="#eee" stroke-width="1"/>
+  <text x="360.0" y="255.0" font-size="11" text-anchor="middle" fill="#666">0.0</text>
+  <line x1="433.3" y1="20.0" x2="433.3" y2="240.0" stroke="#eee" stroke-width="1"/>
+  <text x="433.3" y="255.0" font-size="11" text-anchor="middle" fill="#666">0.1</text>
+  <line x1="250.0" y1="203.3" x2="470.0" y2="203.3" stroke="#eee" stroke-width="1"/>
+  <text x="244.0" y="207.3" font-size="11" text-anchor="end" fill="#666">-0.1</text>
+  <line x1="250.0" y1="130.0" x2="470.0" y2="130.0" stroke="#eee" stroke-width="1"/>
+  <text x="244.0" y="134.0" font-size="11" text-anchor="end" fill="#666">0.0</text>
+  <line x1="250.0" y1="56.7" x2="470.0" y2="56.7" stroke="#eee" stroke-width="1"/>
+  <text x="244.0" y="60.7" font-size="11" text-anchor="end" fill="#666">0.1</text>
+  <text x="360.0" y="273.0" font-size="12.5" text-anchor="middle" fill="#333">X⁺y (norma mínima)</text>
+  <text x="216.0" y="130.0" font-size="12.5" text-anchor="middle" fill="#333" transform="rotate(-90 216.0 130.0)">descenso de gradiente</text>
+  <polyline fill="none" stroke="#333" stroke-width="1.2" stroke-dasharray="5,4" points="250.0,240.0 470.0,20.0"/>
+  <circle cx="356.9" cy="133.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="401.1" cy="88.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="341.9" cy="148.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="373.1" cy="116.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="347.0" cy="143.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="346.1" cy="143.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="374.9" cy="115.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="351.6" cy="138.4" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="360.4" cy="129.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="313.8" cy="176.2" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="344.1" cy="145.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="384.4" cy="105.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="299.3" cy="190.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="401.6" cy="88.4" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="350.3" cy="139.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="326.7" cy="163.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="284.5" cy="205.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="363.4" cy="126.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="384.5" cy="105.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="341.3" cy="148.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="333.7" cy="156.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="388.2" cy="101.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="408.7" cy="81.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="318.7" cy="171.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="354.2" cy="135.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="326.0" cy="164.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="360.0" cy="130.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="414.2" cy="75.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="398.8" cy="91.2" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="279.9" cy="210.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="340.7" cy="149.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="414.0" cy="76.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="356.7" cy="133.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="317.7" cy="172.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="374.6" cy="115.4" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="334.3" cy="155.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="400.5" cy="89.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="309.3" cy="180.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="319.6" cy="170.4" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="330.9" cy="159.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="365.1" cy="124.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="444.6" cy="45.4" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="385.1" cy="104.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="308.6" cy="181.4" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="336.2" cy="153.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="385.7" cy="104.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="336.0" cy="154.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="325.0" cy="165.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="340.8" cy="149.2" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="323.3" cy="166.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="325.5" cy="164.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="406.7" cy="83.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="340.4" cy="149.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="328.4" cy="161.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="361.7" cy="128.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="334.0" cy="156.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="371.0" cy="119.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="308.2" cy="181.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="389.2" cy="100.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="372.8" cy="117.2" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="416.2" cy="73.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="368.5" cy="121.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="385.0" cy="105.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="305.7" cy="184.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="331.0" cy="159.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="322.2" cy="167.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="341.2" cy="148.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="336.9" cy="153.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="379.9" cy="110.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="334.3" cy="155.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="308.7" cy="181.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="424.1" cy="65.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="329.7" cy="160.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="331.1" cy="158.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="336.1" cy="153.9" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="390.7" cy="99.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="316.4" cy="173.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="392.4" cy="97.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="342.0" cy="148.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="360.9" cy="129.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="339.8" cy="150.2" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="414.5" cy="75.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="322.4" cy="167.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="343.7" cy="146.3" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="298.9" cy="191.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="349.5" cy="140.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="345.3" cy="144.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="358.3" cy="131.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="363.4" cy="126.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="397.2" cy="92.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="293.9" cy="196.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="391.3" cy="98.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="343.4" cy="146.6" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="366.0" cy="124.0" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="373.2" cy="116.8" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="369.6" cy="120.4" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="376.9" cy="113.1" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="332.3" cy="157.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="382.5" cy="107.5" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <circle cx="354.3" cy="135.7" r="3.5" fill="#4e79a7" opacity="0.9"/>
+  <text x="500.0" y="90.0" font-size="13" fill="#333" text-anchor="start">100 coeficientes, 20 ecuaciones</text>
+  <text x="500.0" y="116.0" font-size="13" fill="#4e79a7" text-anchor="start">desde w = 0: distancia 4.5 × 10⁻¹⁵</text>
+  <text x="500.0" y="142.0" font-size="13" fill="#e8743b" text-anchor="start">desde w al azar: distancia 8.27</text>
+  <text x="500.0" y="168.0" font-size="13" fill="#333" text-anchor="start">‖X⁺y‖ = 0.465</text>
+</g></svg>
+</div>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización implícita</div>
+<h2>El optimizador también decide qué se aprende</h2>
+<ul>
+<li>La inicialización, el tamaño de los minilotes y la tasa de aprendizaje eligen cuál de las muchas soluciones se encuentra.</li>
+<li>Esta regularización implícita es parte de por qué las redes enormes, en el doble descenso, vuelven a generalizar.</li>
+</ul>
+</section>
+
+<section>
+<div class="close-slide">
+  <h1>Regularizar es pagar un poco de sesgo para comprar mucha menos varianza.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+</div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+  hash: true, controls: true, progress: true, slideNumber: false,
+  transition: 'none', backgroundTransition: 'none',
+  width: 1280, height: 720, margin: 0.03,
+  minScale: 0.3, maxScale: 2.5,
+  katex: {
+    version: 'latest',
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$',  right: '$',  display: false}
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  },
+  plugins: [ RevealMath.KaTeX ]
+});
+</script>
+
+<script>
+const RX=[0.071,0.099,0.126,0.138,0.150,0.178,0.393,0.503,0.508,0.524,0.581,0.702,0.790,0.822,0.844,0.876,0.953,0.979,0.982,0.983]; const RY=[-0.193,0.870,0.166,0.167,1.515,0.742,0.743,-0.442,0.134,-0.035,-0.456,-1.473,-0.684,-1.034,-0.869,-1.020,0.066,-0.363,0.317,-0.830];
+const RM=[0.000,0.007,0.013,0.020,0.027,0.034,0.040,0.047,0.054,0.060,0.067,0.074,0.081,0.087,0.094,0.101,0.107,0.114,0.121,0.128,0.134,0.141,0.148,0.154,0.161,0.168,0.174,0.181,0.188,0.195,0.201,0.208,0.215,0.221,0.228,0.235,0.242,0.248,0.255,0.262,0.268,0.275,0.282,0.289,0.295,0.302,0.309,0.315,0.322,0.329,0.336,0.342,0.349,0.356,0.362,0.369,0.376,0.383,0.389,0.396,0.403,0.409,0.416,0.423,0.430,0.436,0.443,0.450,0.456,0.463,0.470,0.477,0.483,0.490,0.497,0.503,0.510,0.517,0.523,0.530,0.537,0.544,0.550,0.557,0.564,0.570,0.577,0.584,0.591,0.597,0.604,0.611,0.617,0.624,0.631,0.638,0.644,0.651,0.658,0.664,0.671,0.678,0.685,0.691,0.698,0.705,0.711,0.718,0.725,0.732,0.738,0.745,0.752,0.758,0.765,0.772,0.779,0.785,0.792,0.799,0.805,0.812,0.819,0.826,0.832,0.839,0.846,0.852,0.859,0.866,0.872,0.879,0.886,0.893,0.899,0.906,0.913,0.919,0.926,0.933,0.940,0.946,0.953,0.960,0.966,0.973,0.980,0.987,0.993,1.000]; const RF=[0.000,0.042,0.084,0.126,0.168,0.209,0.250,0.291,0.331,0.370,0.409,0.447,0.485,0.521,0.557,0.591,0.625,0.657,0.688,0.718,0.747,0.774,0.800,0.825,0.848,0.870,0.890,0.908,0.925,0.940,0.954,0.965,0.976,0.984,0.991,0.996,0.999,1.000,0.999,0.997,0.993,0.988,0.980,0.971,0.960,0.947,0.933,0.917,0.899,0.880,0.859,0.837,0.813,0.787,0.761,0.733,0.703,0.673,0.641,0.608,0.574,0.539,0.503,0.466,0.428,0.390,0.351,0.311,0.271,0.230,0.189,0.147,0.105,0.063,0.021,-0.021,-0.063,-0.105,-0.147,-0.189,-0.230,-0.271,-0.311,-0.351,-0.390,-0.428,-0.466,-0.503,-0.539,-0.574,-0.608,-0.641,-0.673,-0.703,-0.733,-0.761,-0.787,-0.813,-0.837,-0.859,-0.880,-0.899,-0.917,-0.933,-0.947,-0.960,-0.971,-0.980,-0.988,-0.993,-0.997,-0.999,-1.000,-0.999,-0.996,-0.991,-0.984,-0.976,-0.965,-0.954,-0.940,-0.925,-0.908,-0.890,-0.870,-0.848,-0.825,-0.800,-0.774,-0.747,-0.718,-0.688,-0.657,-0.625,-0.591,-0.557,-0.521,-0.485,-0.447,-0.409,-0.370,-0.331,-0.291,-0.250,-0.209,-0.168,-0.126,-0.084,-0.042,-0.000];
+const RL=[0.0,0.0001,0.0003,0.001,0.003,0.01,0.03,0.1];
+const RN=[{p:[0.144,0.125,0.107,0.090,0.070,0.045,0.013,-0.027,-0.075,-0.129,-0.180,-0.193,-0.048,0.428,0.801,0.868,0.855,0.835,0.666,-0.032,-0.169,0.451,1.302,1.758,1.677,1.295,0.894,0.605,0.415,0.288,0.203,0.148,0.118,0.109,0.120,0.147,0.191,0.247,0.311,0.379,0.447,0.511,0.568,0.616,0.657,0.689,0.714,0.734,0.749,0.760,0.768,0.773,0.777,0.779,0.780,0.778,0.775,0.767,0.753,0.726,0.678,0.592,0.446,0.216,-0.101,-0.469,-0.816,-1.080,-1.242,-1.318,-1.333,-1.308,-1.247,-1.108,-0.793,-0.322,0.005,0.083,0.029,-0.061,-0.148,-0.218,-0.271,-0.313,-0.350,-0.388,-0.431,-0.484,-0.550,-0.629,-0.721,-0.822,-0.927,-1.029,-1.121,-1.202,-1.269,-1.323,-1.367,-1.404,-1.435,-1.462,-1.484,-1.497,-1.493,-1.454,-1.352,-1.158,-0.871,-0.554,-0.302,-0.166,-0.132,-0.169,-0.247,-0.351,-0.470,-0.596,-0.724,-0.844,-0.947,-1.019,-1.045,-1.020,-0.960,-0.898,-0.865,-0.867,-0.896,-0.941,-0.992,-1.045,-1.097,-1.146,-1.189,-1.222,-1.231,-1.187,-1.036,-0.738,-0.360,-0.069,0.061,0.065,-0.003,-0.115,-0.252,-0.403,-0.558,-0.707],e:0.036,v:0.381,w:46.6},{p:[-0.525,-0.539,-0.552,-0.563,-0.572,-0.578,-0.579,-0.567,-0.531,-0.446,-0.278,-0.006,0.340,0.657,0.851,0.894,0.809,0.633,0.398,0.167,0.119,0.606,1.418,1.706,1.535,1.233,0.929,0.660,0.434,0.250,0.106,-0.005,-0.085,-0.141,-0.174,-0.190,-0.189,-0.175,-0.150,-0.115,-0.071,-0.021,0.034,0.094,0.157,0.221,0.287,0.353,0.417,0.480,0.540,0.596,0.648,0.695,0.734,0.764,0.783,0.787,0.773,0.736,0.674,0.586,0.475,0.347,0.213,0.085,-0.026,-0.113,-0.174,-0.210,-0.225,-0.223,-0.207,-0.184,-0.155,-0.124,-0.094,-0.067,-0.046,-0.033,-0.031,-0.043,-0.069,-0.114,-0.177,-0.261,-0.365,-0.486,-0.621,-0.765,-0.910,-1.051,-1.183,-1.300,-1.400,-1.483,-1.548,-1.596,-1.628,-1.644,-1.643,-1.628,-1.596,-1.549,-1.487,-1.411,-1.324,-1.230,-1.135,-1.042,-0.956,-0.882,-0.822,-0.777,-0.746,-0.729,-0.724,-0.730,-0.745,-0.767,-0.794,-0.826,-0.860,-0.896,-0.931,-0.964,-0.993,-1.014,-1.024,-1.020,-0.996,-0.948,-0.872,-0.769,-0.641,-0.495,-0.345,-0.205,-0.087,-0.001,0.048,0.061,0.041,-0.008,-0.078,-0.165,-0.263,-0.367,-0.475,-0.583],e:0.045,v:0.368,w:19.9},{p:[-0.726,-0.655,-0.583,-0.511,-0.438,-0.365,-0.292,-0.219,-0.146,-0.074,-0.003,0.068,0.137,0.205,0.272,0.337,0.400,0.461,0.520,0.577,0.632,0.684,0.735,0.783,0.829,0.872,0.913,0.952,0.988,1.022,1.054,1.084,1.111,1.137,1.160,1.180,1.199,1.215,1.228,1.240,1.248,1.254,1.258,1.258,1.255,1.249,1.239,1.225,1.207,1.185,1.158,1.125,1.088,1.045,0.997,0.944,0.886,0.824,0.758,0.690,0.619,0.549,0.478,0.410,0.344,0.282,0.224,0.170,0.122,0.079,0.041,0.008,-0.021,-0.046,-0.068,-0.087,-0.105,-0.123,-0.141,-0.161,-0.183,-0.209,-0.239,-0.276,-0.319,-0.370,-0.429,-0.495,-0.568,-0.647,-0.730,-0.815,-0.900,-0.981,-1.057,-1.127,-1.188,-1.240,-1.283,-1.316,-1.341,-1.357,-1.367,-1.370,-1.367,-1.359,-1.348,-1.333,-1.315,-1.295,-1.273,-1.249,-1.224,-1.198,-1.170,-1.143,-1.114,-1.086,-1.056,-1.027,-0.997,-0.967,-0.937,-0.907,-0.877,-0.847,-0.817,-0.787,-0.757,-0.727,-0.697,-0.667,-0.637,-0.607,-0.578,-0.548,-0.519,-0.489,-0.460,-0.431,-0.402,-0.373,-0.345,-0.316,-0.288,-0.260,-0.232,-0.204,-0.176,-0.149],e:0.135,v:0.158,w:7.5},{p:[-0.616,-0.553,-0.490,-0.426,-0.361,-0.296,-0.230,-0.164,-0.098,-0.032,0.033,0.098,0.162,0.225,0.287,0.348,0.407,0.464,0.520,0.574,0.625,0.674,0.721,0.766,0.808,0.847,0.884,0.919,0.950,0.979,1.005,1.028,1.049,1.067,1.083,1.095,1.106,1.113,1.118,1.121,1.121,1.118,1.114,1.107,1.097,1.086,1.072,1.056,1.038,1.018,0.996,0.972,0.946,0.918,0.888,0.857,0.824,0.789,0.753,0.715,0.676,0.635,0.594,0.550,0.506,0.460,0.414,0.367,0.318,0.269,0.220,0.169,0.118,0.067,0.016,-0.036,-0.087,-0.139,-0.190,-0.242,-0.293,-0.343,-0.393,-0.442,-0.490,-0.537,-0.584,-0.629,-0.673,-0.716,-0.757,-0.797,-0.835,-0.871,-0.906,-0.938,-0.969,-0.998,-1.025,-1.049,-1.072,-1.092,-1.110,-1.125,-1.138,-1.149,-1.157,-1.163,-1.167,-1.168,-1.166,-1.163,-1.157,-1.148,-1.137,-1.125,-1.110,-1.092,-1.073,-1.053,-1.030,-1.005,-0.980,-0.952,-0.924,-0.894,-0.863,-0.831,-0.799,-0.766,-0.732,-0.699,-0.665,-0.630,-0.596,-0.562,-0.529,-0.495,-0.462,-0.430,-0.398,-0.367,-0.337,-0.307,-0.278,-0.250,-0.223,-0.197,-0.172,-0.147],e:0.142,v:0.126,w:5.5},{p:[-0.380,-0.334,-0.287,-0.239,-0.190,-0.141,-0.090,-0.039,0.012,0.064,0.115,0.167,0.219,0.270,0.321,0.371,0.420,0.469,0.516,0.562,0.607,0.650,0.691,0.731,0.769,0.805,0.839,0.871,0.900,0.928,0.953,0.976,0.997,1.015,1.031,1.044,1.056,1.064,1.071,1.075,1.077,1.077,1.074,1.069,1.062,1.052,1.041,1.027,1.011,0.993,0.973,0.951,0.926,0.900,0.872,0.843,0.811,0.777,0.742,0.706,0.667,0.627,0.586,0.543,0.499,0.454,0.408,0.361,0.313,0.264,0.214,0.164,0.113,0.062,0.011,-0.040,-0.092,-0.143,-0.194,-0.244,-0.294,-0.344,-0.393,-0.441,-0.487,-0.533,-0.578,-0.621,-0.663,-0.704,-0.743,-0.781,-0.816,-0.850,-0.883,-0.913,-0.941,-0.968,-0.992,-1.015,-1.035,-1.054,-1.070,-1.084,-1.096,-1.106,-1.114,-1.119,-1.123,-1.124,-1.124,-1.121,-1.116,-1.110,-1.101,-1.090,-1.078,-1.064,-1.048,-1.030,-1.011,-0.990,-0.968,-0.945,-0.920,-0.894,-0.866,-0.838,-0.809,-0.779,-0.748,-0.717,-0.685,-0.652,-0.619,-0.586,-0.553,-0.520,-0.487,-0.453,-0.420,-0.387,-0.355,-0.323,-0.291,-0.260,-0.229,-0.199,-0.169,-0.141],e:0.144,v:0.112,w:5.0},{p:[0.283,0.299,0.314,0.329,0.344,0.360,0.375,0.390,0.405,0.420,0.434,0.449,0.464,0.478,0.492,0.507,0.521,0.534,0.548,0.562,0.575,0.588,0.601,0.613,0.625,0.637,0.649,0.660,0.671,0.681,0.691,0.700,0.709,0.718,0.725,0.732,0.739,0.745,0.750,0.754,0.757,0.759,0.761,0.761,0.760,0.759,0.755,0.751,0.746,0.739,0.730,0.720,0.709,0.696,0.681,0.664,0.646,0.626,0.604,0.581,0.555,0.528,0.499,0.468,0.435,0.400,0.364,0.326,0.286,0.245,0.203,0.159,0.114,0.068,0.021,-0.026,-0.074,-0.123,-0.171,-0.219,-0.268,-0.315,-0.363,-0.409,-0.455,-0.499,-0.542,-0.584,-0.624,-0.663,-0.700,-0.735,-0.768,-0.799,-0.828,-0.855,-0.880,-0.903,-0.924,-0.943,-0.959,-0.974,-0.986,-0.997,-1.006,-1.012,-1.017,-1.021,-1.022,-1.022,-1.020,-1.017,-1.012,-1.006,-0.998,-0.989,-0.979,-0.968,-0.956,-0.942,-0.928,-0.912,-0.896,-0.879,-0.861,-0.843,-0.823,-0.803,-0.782,-0.761,-0.739,-0.717,-0.694,-0.671,-0.647,-0.623,-0.598,-0.573,-0.548,-0.523,-0.497,-0.471,-0.444,-0.418,-0.391,-0.365,-0.338,-0.310,-0.283,-0.256],e:0.165,v:0.107,w:4.3},{p:[0.626,0.620,0.613,0.607,0.600,0.593,0.586,0.579,0.571,0.564,0.556,0.549,0.541,0.533,0.525,0.517,0.509,0.500,0.492,0.483,0.475,0.466,0.457,0.448,0.439,0.430,0.420,0.411,0.401,0.392,0.382,0.372,0.362,0.352,0.342,0.331,0.321,0.311,0.300,0.290,0.279,0.268,0.257,0.246,0.235,0.224,0.213,0.202,0.191,0.180,0.168,0.157,0.146,0.134,0.123,0.112,0.100,0.089,0.077,0.066,0.054,0.043,0.031,0.020,0.008,-0.003,-0.014,-0.026,-0.037,-0.048,-0.060,-0.071,-0.082,-0.093,-0.104,-0.115,-0.126,-0.137,-0.147,-0.158,-0.169,-0.179,-0.190,-0.200,-0.210,-0.220,-0.230,-0.240,-0.250,-0.260,-0.269,-0.279,-0.288,-0.298,-0.307,-0.316,-0.325,-0.334,-0.343,-0.351,-0.360,-0.368,-0.376,-0.385,-0.393,-0.400,-0.408,-0.416,-0.423,-0.431,-0.438,-0.445,-0.453,-0.460,-0.466,-0.473,-0.480,-0.486,-0.493,-0.499,-0.505,-0.511,-0.517,-0.523,-0.529,-0.534,-0.540,-0.545,-0.551,-0.556,-0.561,-0.566,-0.571,-0.576,-0.581,-0.586,-0.590,-0.595,-0.599,-0.603,-0.608,-0.612,-0.616,-0.620,-0.624,-0.628,-0.631,-0.635,-0.639,-0.642],e:0.302,v:0.285,w:2.1},{p:[0.378,0.372,0.366,0.360,0.354,0.347,0.341,0.335,0.329,0.323,0.317,0.311,0.305,0.299,0.293,0.287,0.281,0.274,0.268,0.262,0.256,0.250,0.244,0.238,0.232,0.225,0.219,0.213,0.207,0.201,0.195,0.188,0.182,0.176,0.170,0.164,0.158,0.151,0.145,0.139,0.133,0.127,0.121,0.114,0.108,0.102,0.096,0.090,0.083,0.077,0.071,0.065,0.059,0.052,0.046,0.040,0.034,0.028,0.021,0.015,0.009,0.003,-0.003,-0.010,-0.016,-0.022,-0.028,-0.034,-0.041,-0.047,-0.053,-0.059,-0.065,-0.072,-0.078,-0.084,-0.090,-0.096,-0.103,-0.109,-0.115,-0.121,-0.127,-0.133,-0.140,-0.146,-0.152,-0.158,-0.164,-0.171,-0.177,-0.183,-0.189,-0.195,-0.201,-0.208,-0.214,-0.220,-0.226,-0.232,-0.238,-0.244,-0.251,-0.257,-0.263,-0.269,-0.275,-0.281,-0.287,-0.293,-0.299,-0.306,-0.312,-0.318,-0.324,-0.330,-0.336,-0.342,-0.348,-0.354,-0.360,-0.366,-0.372,-0.378,-0.384,-0.390,-0.397,-0.403,-0.409,-0.415,-0.421,-0.427,-0.433,-0.439,-0.445,-0.450,-0.456,-0.462,-0.468,-0.474,-0.480,-0.486,-0.492,-0.498,-0.504,-0.510,-0.516,-0.522,-0.528,-0.533],e:0.351,v:0.375,w:1.7},];
+// ======== infraestructura de visualizaciones interactivas ========
+const VIZ = {};
+function vizColors() {
+  const oscuro = matchMedia('(prefers-color-scheme: dark)').matches
+                 && document.documentElement.dataset.theme !== 'light'
+                 || document.documentElement.dataset.theme === 'dark';
+  return { fondo: oscuro ? '#2a2928' : '#ffffff', eje: oscuro ? '#6b6b6b' : '#bbbbbb',
+           texto: oscuro ? '#c9c9c9' : '#444444', tinta: oscuro ? '#eeeeee' : '#111111',
+           grupos: ['#4e79a7', '#e8743b', '#3a8c4f'], gris: oscuro ? '#888' : '#999' };
+}
+function vizSetup(cv) {
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 900, h = Math.round(w * (+cv.dataset.ratio || 0.42));
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  return { g, w, h, C: vizColors() };
+}
+function vizRedraw(root) {
+  (root || document).querySelectorAll('.viz[data-viz]').forEach(el => { const f = VIZ[el.dataset.viz]; if (f) f(el); });
+}
+function vizInit() {
+  document.querySelectorAll('.viz[data-viz]').forEach(el => {
+    if (el.dataset.listo) return;
+    el.dataset.listo = '1';
+    const f = () => { const d = VIZ[el.dataset.viz]; if (d) d(el); };
+    el.addEventListener('input', f); el.addEventListener('change', f);
+  });
+  vizRedraw();
+}
+vizInit(); requestAnimationFrame(vizInit); setTimeout(vizInit, 250);
+if (window.Reveal && Reveal.on) {
+  Reveal.on('ready', e => vizRedraw(e.currentSlide));
+  Reveal.on('slidechanged', e => vizRedraw(e.currentSlide));
+}
+window.addEventListener('resize', () => vizRedraw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => vizRedraw());
+
+
+
+// ======== utilidades de ejes ========
+function marcoEjes(g, C, P, X0, X1, Y0, Y1, xt, yt, xlab, ylab, fx, fy) {
+  const px = v => P.x + (v - X0) / (X1 - X0) * P.w, py = v => P.y + P.h - (v - Y0) / (Y1 - Y0) * P.h;
+  g.strokeStyle = C.eje; g.lineWidth = 1.2; g.strokeRect(P.x, P.y, P.w, P.h);
+  g.fillStyle = C.texto; g.font = '14px Helvetica, Arial'; g.textAlign = 'center';
+  xt.forEach(v => g.fillText(fx ? fx(v) : v, px(v), P.y + P.h + 17));
+  g.textAlign = 'right'; yt.forEach(v => g.fillText(fy ? fy(v) : v, P.x - 6, py(v) + 5));
+  g.textAlign = 'center'; g.font = '15px Helvetica, Arial';
+  if (xlab) g.fillText(xlab, P.x + P.w / 2, P.y + P.h + 40);
+  if (ylab) { g.save(); g.translate(P.x - 44, P.y + P.h / 2); g.rotate(-Math.PI / 2); g.fillText(ylab, 0, 0); g.restore(); }
+  return [px, py];
+}
+function curva(g, xs, ys, px, py, col, w, dash) {
+  g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.beginPath();
+  xs.forEach((x, i) => i ? g.lineTo(px(x), py(ys[i])) : g.moveTo(px(x), py(ys[i]))); g.stroke(); g.setLineDash([]);
+}
+
+// ======== D.5: la misma red con distintos λ ========
+VIZ.lambda = function (el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const { g, w, h, C } = vizSetup(cv);
+  const k = +el.querySelector('[name=k]').value, N = RN[k];
+  el.querySelector('.val').textContent = RL[k] === 0 ? '0' : RL[k];
+  g.fillStyle = C.fondo; g.fillRect(0, 0, w, h);
+  // (a) ajuste
+  const A = { x: 70, y: 12, w: w * 0.46, h: h - 64 };
+  const [ax, ay] = marcoEjes(g, C, A, 0, 1, -2, 2, [0, 0.5, 1], [-2, -1, 0, 1, 2], 'x', 'y');
+  g.save(); g.beginPath(); g.rect(A.x, A.y, A.w, A.h); g.clip();
+  curva(g, RM, RF, ax, ay, C.gris, 5);
+  curva(g, RM, N.p, ax, ay, '#c0392b', 3);
+  g.fillStyle = C.tinta; RX.forEach((x, i) => { g.beginPath(); g.arc(ax(x), ay(RY[i]), 5, 0, 7); g.fill(); });
+  g.restore();
+  // (b) error según λ (λ = 0 se dibuja en 3·10⁻⁵)
+  const B = { x: A.x + A.w + 110, y: 12, w: w - (A.x + A.w + 110) - 25, h: h - 64 };
+  const lx = l => Math.log10(Math.max(l, 3e-5)), ly = v => Math.log10(v);
+  const [bx, by] = marcoEjes(g, C, B, -4.7, -0.8, ly(0.02), ly(1), [-4.5, -4, -3, -2, -1], [ly(0.03), ly(0.1), ly(0.3), ly(1)],
+    'penalización λ', 'error cuadrático', v => v === -4.5 ? '0' : '10' + ['⁻⁴', '⁻³', '⁻²', '⁻¹'][[-4, -3, -2, -1].indexOf(v)], v => [0.03, 0.1, 0.3, 1][[ly(0.03), ly(0.1), ly(0.3), ly(1)].indexOf(v)]);
+  const xs = RL.map(l => l === 0 ? -4.5 : Math.log10(l));
+  curva(g, [-4.7, -0.8], [ly(0.09), ly(0.09)], bx, by, C.tinta, 1.2, [3, 3]);
+  curva(g, xs, RN.map(n => ly(n.e)), bx, by, C.grupos[0], 2.5);
+  curva(g, xs, RN.map(n => ly(n.v)), bx, by, C.grupos[1], 2.5);
+  [0, 1].forEach(j => { g.fillStyle = C.grupos[j]; xs.forEach((x, i) => { g.beginPath(); g.arc(bx(x), by(ly(j ? RN[i].v : RN[i].e)), 3.5, 0, 7); g.fill(); }); });
+  g.strokeStyle = '#c0392b'; g.lineWidth = 3; g.beginPath(); g.arc(bx(xs[k]), by(ly(N.v)), 9, 0, 7); g.stroke();
+  el.querySelector('.lect').innerHTML = `λ = ${RL[k]} · entrenamiento ${N.e.toFixed(3)} · <b>validación ${N.v.toFixed(3)}</b> · norma de los pesos ${N.w} · ` +
+    `<span style="color:${C.grupos[0]}">azul: entrenamiento</span>, <span style="color:${C.grupos[1]}">naranjo: validación</span>, punteada: ruido 0.09`;
+};
+
+</script>
+</body>
+</html>
