@@ -637,7 +637,7 @@ $$\max_{U^\top U = I_k} \operatorname{tr}\big(U^\top C\, U\big)$$
 <section>
 <div class="section-label">§ 1 · Planteamiento general</div>
 <h2>Tenemos el criterio; falta saber qué dirección lo maximiza</h2>
-<ul><li>La pregunta queda reducida a un problema concreto: encontrar el $u$ unitario que hace máxima $u^\top C\, u$. Eso es PCA (§ 2).</li></ul>
+<ul><li>La pregunta queda reducida a un problema concreto: encontrar el $u$ unitario que hace máxima $u^\top C\, u$. Eso es PCA.</li></ul>
 </section>
 
 <!-- ================= § 2 ================= -->
@@ -1735,14 +1735,14 @@ $$y = U_k^\top x \in \mathbb{R}^k, \qquad \hat{x} = U_k\, y = U_k U_k^\top x$$
 <h2>Para una gaussiana, esos ejes lo describen todo</h2>
 <ul>
 <li>Una distribución gaussiana queda determinada por su media y su covarianza; sus curvas de nivel son elipsoides con ejes $u_j$ y semiejes proporcionales a $\sqrt{\lambda_j}$.</li>
-<li>Para cualquier otra distribución, $C$ resume solo una parte de la estructura: esa diferencia será el punto de partida de ICA (§ 4).</li>
+<li>Para cualquier otra distribución, $C$ resume solo una parte de la estructura: esa diferencia será el punto de partida de ICA.</li>
 </ul>
 </section>
 
 <section>
 <div class="section-label">§ 2 · Análisis de componentes principales</div>
 <h2>Sabemos qué calcula PCA; falta ver cómo se usa sin equivocarse</h2>
-<ul><li>Quedan tres preguntas prácticas: cómo se calcula con estabilidad numérica, cuántos ejes conservar y qué puede salir mal (§ 3).</li></ul>
+<ul><li>Quedan tres preguntas prácticas: cómo se calcula con estabilidad numérica, cuántos ejes conservar y qué puede salir mal.</li></ul>
 </section>
 
 <!-- ================= § 3 ================= -->
@@ -1840,7 +1840,7 @@ $$\|X - X_k\|_F^2 = \sum_{j > k} \sigma_j^2 = n \sum_{j > k} \lambda_j$$
 <section>
 <div class="section-label">§ 3 · PCA en la práctica</div>
 <h2>Todo lo que PCA sabe de los datos está en C</h2>
-<ul><li>$C$ solo contiene promedios de productos de <strong>dos</strong> variables, estadísticos de segundo orden. ¿Basta con eso para describir los datos (§ 4)?</li></ul>
+<ul><li>$C$ solo contiene promedios de productos de <strong>dos</strong> variables, estadísticos de segundo orden. ¿Basta con eso para describir los datos?</li></ul>
 </section>
 
 <!-- ================= § 4 ================= -->
@@ -1915,7 +1915,7 @@ $$\log \mathbb{E}\big[e^{tx}\big] = \mu t + \tfrac{1}{2}\sigma^2 t^2, \qquad \te
 <section>
 <div class="section-label">§ 4 · Más allá de la covarianza</div>
 <h2>Esa información sobrante es la que usa ICA</h2>
-<ul><li>Si las señales que se mezclaron no son gaussianas, su huella está en los cumulantes de orden superior, y se puede usar para desmezclarlas (§ 5).</li></ul>
+<ul><li>Si las señales que se mezclaron no son gaussianas, su huella está en los cumulantes de orden superior, y se puede usar para desmezclarlas.</li></ul>
 </section>
 
 <!-- ================= § 5 ================= -->
@@ -2102,7 +2102,7 @@ $$\operatorname{Cov}(z) = M\, M^\top = I \quad\Longrightarrow\quad M \text{ es o
 <section>
 <div class="section-label">§ 5 · Análisis de componentes independientes</div>
 <h2>Queda una rotación por elegir, y la covarianza ya no orienta</h2>
-<ul><li>Tras el blanqueo $C = I$ en todas las direcciones; lo único que puede indicar hacia dónde girar son los cumulantes de orden superior (§ 6).</li></ul>
+<ul><li>Tras el blanqueo $C = I$ en todas las direcciones; lo único que puede indicar hacia dónde girar son los cumulantes de orden superior.</li></ul>
 </section>
 
 <!-- ================= § 6 ================= -->
@@ -2245,7 +2245,7 @@ $$w \leftarrow \mathbb{E}\big[z\, g(w^\top z)\big] - \mathbb{E}\big[g'(w^\top z)
 <section>
 <div class="section-label">§ 6 · Cómo encuentra ICA la rotación</div>
 <h2>Ambos métodos proyectan sobre un subespacio plano</h2>
-<ul><li>Son lineales. ¿Qué pasa cuando los datos viven sobre una superficie curva, que ningún plano puede aplanar sin superponer partes lejanas (§ 7)?</li></ul>
+<ul><li>Son lineales. ¿Qué pasa cuando los datos viven sobre una superficie curva, que ningún plano puede aplanar sin superponer partes lejanas?</li></ul>
 </section>
 
 <!-- ================= § 7 ================= -->

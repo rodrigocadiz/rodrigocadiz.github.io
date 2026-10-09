@@ -784,7 +784,7 @@ $$\text{AUC} = \mathbb{P}\big(X^{+} - X^{-} > 0\big) = \mathbb{P}\Big(Z > -\tfra
 <div class="section-label">§ 3 · Curvas de operación</div>
 <h2>La ROC mira a los sanos; la curva de precisión-recall no</h2>
 <ul>
-<li>La curva de precisión-recall, o curva PR, dibuja para cada corte la precisión (eje vertical) contra el recall (eje horizontal), las dos métricas de § 2.</li>
+<li>La curva de precisión-recall, o curva PR, dibuja para cada corte la precisión (eje vertical) contra el recall (eje horizontal).</li>
 <li>Ninguna de las dos usa a los sanos bien descartados, $TN$: la curva PR solo mira a los enfermos y a las alarmas.</li>
 </ul>
 </section>
@@ -970,7 +970,7 @@ $$t^{*} = \frac{C_{FP}}{C_{FP} + C_{FN}} = \frac{10}{10 + 90} = 0.1 \tag{11}$$
 <h2>La regla supone que p̂ es de verdad una probabilidad</h2>
 <ul>
 <li>La derivación usa $\hat{p}$ como la probabilidad real de estar enfermo.</li>
-<li>Si el modelo exagera su confianza, su 0.1 no es un 10 %, y el corte deja de ser óptimo: se verá en § 6.</li>
+<li>Si el modelo exagera su confianza, su 0.1 no es un 10 %, y el corte deja de ser óptimo: por eso importa la calibración, que se trata más adelante.</li>
 </ul>
 </section>
 

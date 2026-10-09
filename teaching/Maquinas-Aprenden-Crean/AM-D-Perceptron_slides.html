@@ -314,7 +314,7 @@ $$\frac{z}{\|w\|} = \frac{w^\top x + b}{\|w\|}$$
 <h2>El sesgo se puede tratar como un peso más</h2>
 <ul>
 <li>Agregando una entrada constante igual a 1, $\tilde{x} = (x, 1)$, y juntando $\tilde{w} = (w, b)$, se tiene $z = \tilde{w}^\top \tilde{x}$.</li>
-<li>Desde aquí se usa esa convención y se omite la tilde. La pregunta siguiente es cómo encontrar $w$ (§ 2).</li>
+<li>Desde aquí se usa esa convención y se omite la tilde. La pregunta siguiente es cómo encontrar $w$.</li>
 </ul>
 </section>
 
@@ -486,7 +486,7 @@ $$\ell(w; x, y) = \max\big(0,\, -y\, w^\top x\big), \qquad \nabla_w \ell = \begi
 <h2>La tasa de aprendizaje no cambia ninguna decisión</h2>
 <ul>
 <li>Partiendo de $w = 0$, multiplicar cada corrección por $\alpha &gt; 0$ solo multiplica todos los pesos por $\alpha$, y el signo de $z$ no cambia.</li>
-<li>Queda la pregunta de fondo: ¿el algoritmo termina siempre (§ 3)?</li>
+<li>Queda la pregunta de fondo: ¿el algoritmo termina siempre?</li>
 </ul>
 </section>
 
@@ -595,7 +595,7 @@ $$k\gamma \;\le\; u^\top w_k \;\le\; \|w_k\| \;\le\; \sqrt{k}\, R \quad\Longrigh
 <h2>La cota depende solo de la geometría de los datos</h2>
 <ul>
 <li>No depende del número de observaciones ni de la dimensión: solo del cociente entre el tamaño $R$ de los datos y su margen $\gamma$.</li>
-<li>Pero exige que los datos sean separables. ¿Qué pasa si no lo son (§ 4)?</li>
+<li>Pero exige que los datos sean separables. ¿Qué pasa si no lo son?</li>
 </ul>
 </section>
 

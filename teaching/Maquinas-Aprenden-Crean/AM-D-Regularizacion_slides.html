@@ -239,6 +239,15 @@ $$w \leftarrow (1 - \eta\lambda)\, w - \eta\, \nabla J(w)$$
 
 <section>
 <div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>¿Qué pesos encoge la penalización L2?</h2>
+<ul>
+<li>Se compara el mínimo de la pérdida sin penalizar, $w^*$, con el mínimo de la pérdida penalizada, $\tilde{w}$.</li>
+<li>La derivación tiene cuatro pasos: aproximar la pérdida por una cuadrática, despejar $\tilde{w}$, descomponer en direcciones y comparar dirección por dirección.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
 <h2>Paso 1 · Cerca del mínimo, la pérdida es una cuadrática</h2>
 <ul><li>Alrededor del mínimo $w^*$ sin penalización, con $H$ la matriz de segundas derivadas (el <strong>hessiano</strong>, que mide la curvatura):</li></ul>
 $$J(w) \approx J(w^*) + \tfrac{1}{2}(w - w^*)^\top H\,(w - w^*)$$
@@ -246,15 +255,25 @@ $$J(w) \approx J(w^*) + \tfrac{1}{2}(w - w^*)^\top H\,(w - w^*)$$
 
 <section>
 <div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
-<h2>Paso 2 · El mínimo penalizado se escribe con H</h2>
+<h2>Paso 2 · Despejar el mínimo penalizado</h2>
 <ul><li>Igualando a cero el gradiente de la cuadrática más la penalización, $H(w - w^*) + \lambda w = 0$:</li></ul>
 $$\tilde{w} = (H + \lambda I)^{-1} H\, w^*$$
+<p class="note">En palabras: la matriz $(H + \lambda I)^{-1} H$ mezcla todas las componentes de $w^*$; para ver qué hace, conviene usar una base en que no las mezcle.</p>
 </section>
 
 <section>
 <div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
-<h2>Paso 3 · Cada dirección se encoge según su curvatura</h2>
-<ul><li>En la base de autovectores $q_i$ de $H$, con autovalores $h_i$ (la curvatura en esa dirección):</li></ul>
+<h2>Paso 3 · El hessiano tiene direcciones propias</h2>
+<ul>
+<li>Como $H$ es simétrica, tiene autovectores ortonormales $q_i$ con autovalores $h_i \ge 0$: $h_i$ es la curvatura de la pérdida en la dirección $q_i$.</li>
+<li>La componente de un vector $w$ en la dirección $q_i$ es el número $q_i^\top w$. En esta base, $H$ y $(H + \lambda I)^{-1}$ solo multiplican cada componente por un número.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 1 · Penalizar el tamaño de los pesos</div>
+<h2>Paso 4 · Cada dirección se encoge según su curvatura</h2>
+<ul><li>Proyectando sobre $q_i$, la componente de la solución es la de $w^*$ por un factor entre 0 y 1:</li></ul>
 $$q_i^\top \tilde{w} = \frac{h_i}{h_i + \lambda}\; q_i^\top w^*$$
 <p class="note">En palabras: donde la pérdida es muy curva (h ≫ λ), los datos determinan bien el peso y casi no cambia; donde es plana (h ≪ λ), los datos dicen poco y la penalización lo lleva a cero.</p>
 </section>
@@ -303,10 +322,29 @@ $$\tilde{J}(w) = J(w) + \lambda \sum_j |w_j|$$
 
 <section>
 <div class="section-label">§ 2 · L1 y soluciones esparsas</div>
-<h2>Con un solo peso, L1 es un umbral suave</h2>
-<ul><li>Si sin penalización se elegiría $z$, el mínimo de $\tfrac{1}{2}(w - z)^2 + \lambda|w|$ es $w = z - \lambda$ si $z &gt; \lambda$, $w = z + \lambda$ si $z &lt; -\lambda$, y $w = 0$ en otro caso:</li></ul>
+<h2>Con un solo peso, el efecto de L1 se calcula a mano</h2>
+<ul>
+<li>Se toma la pérdida más simple: la cuadrática del Paso 1 para un solo peso, con curvatura 1, $\tfrac{1}{2}(w - z)^2$.</li>
+<li>Su mínimo sin penalización es $w = z$: $z$ es el peso que elegirían los datos solos. Con L1 se minimiza</li>
+</ul>
+$$\tfrac{1}{2}(w - z)^2 + \lambda|w|$$
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>El mínimo depende del signo de w: tres casos</h2>
+<ul>
+<li>Si $w &gt; 0$, la derivada $w - z + \lambda$ se anula en $w = z - \lambda$, que es positivo solo si $z &gt; \lambda$.</li>
+<li>Si $w &lt; 0$, se anula en $w = z + \lambda$, que es negativo solo si $z &lt; -\lambda$.</li>
+<li>Si $|z| \le \lambda$, ninguno de los dos es posible y el mínimo está en $w = 0$, donde $|w|$ no es derivable.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>Juntando los tres casos, L1 es un umbral suave</h2>
 $$w = \operatorname{signo}(z)\,\max\big(|z| - \lambda,\ 0\big)$$
-<p class="note">En palabras: los valores pequeños se vuelven exactamente cero, y los grandes se acercan a cero en una cantidad fija λ.</p>
+<p class="note">En palabras: los pesos que los datos elegirían pequeños, con |z| ≤ λ, se vuelven exactamente cero, y los grandes se acercan a cero en una cantidad fija λ.</p>
 </section>
 
 <section>
@@ -320,37 +358,72 @@ $$w = \operatorname{signo}(z)\,\max\big(|z| - \lambda,\ 0\big)$$
 
 <section>
 <div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>Con dos pesos, cada punto del plano es un modelo</h2>
+<ul>
+<li>Un punto $(w_1, w_2)$ es una elección de los dos pesos, es decir, un modelo completo. Moverse en el plano es cambiar el modelo.</li>
+<li>La pérdida de entrenamiento $J(w)$ es como la altura de un terreno sobre ese plano. Sus <strong>curvas de nivel</strong> unen los modelos con el mismo error, como en un mapa topográfico.</li>
+<li>Cerca de su mínimo, $J$ es una cuadrática, y sus curvas de nivel son elipses centradas en el mínimo: el mejor ajuste sin regularizar. Cada elipse más externa tiene un error mayor.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>Penalizar equivale a ponerle un presupuesto al tamaño de los pesos</h2>
+<ul>
+<li>Minimizar $J(w) + \lambda\,\|w\|$ da la misma solución que minimizar $J(w)$ con la restricción $\|w\| \le t$: a cada λ le corresponde un presupuesto $t$, y más λ es menos $t$.</li>
+<li>La región permitida está centrada en el origen porque la penalización mide el tamaño de $w$, su distancia a cero. En dos dimensiones, L2 da un círculo, $w_1^2 + w_2^2 \le t^2$, y L1 un rombo, $|w_1| + |w_2| \le t$.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>La solución es el modelo permitido con menor pérdida</h2>
+<ul>
+<li>Si el mínimo de $J$ queda dentro de la región, es la solución y la restricción no cambia nada.</li>
+<li>Si queda fuera, se infla una elipse desde el mínimo: mientras no toque la región, ningún modelo permitido tiene ese error. El primer punto que toca es la solución, y ahí la toca sin cruzarla; si la cruzara, habría modelos permitidos con menos error.</li>
+<li>La solución queda lejos del mínimo a propósito: se acepta más error de entrenamiento, más sesgo, a cambio de pesos más pequeños y menos varianza.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
+<h2>Inflar la elipse hasta que toque la región</h2>
+<div class="reg-inflar"></div>
+</section>
+
+<section>
+<div class="section-label">§ 2 · L1 y soluciones esparsas</div>
 <h2>La geometría: el rombo tiene esquinas</h2>
-<ul><li>Las curvas de nivel de la pérdida, elipses, tocan el círculo de L2 en cualquier punto y el rombo de L1 casi siempre en una esquina.</li></ul>
+<ul><li>El círculo no tiene esquinas: la elipse lo toca en un punto cualquiera de su borde, con ambos pesos distintos de cero. Las esquinas del rombo sobresalen y están sobre los ejes: con un presupuesto chico, la elipse suele tocarlas primero, y ahí un peso vale exactamente cero.</li></ul>
 <div class="svg-holder"><svg viewBox="0 0 760 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
   <g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#222" text-anchor="middle">
     <text x="180.0" y="18" font-size="14" font-weight="bold">L2: región ‖w‖₂ ≤ t</text>
-    <line x1="56.0" y1="232" x2="276.0" y2="232" stroke="#bbb"/><line x1="120" y1="292.0" x2="120" y2="48.0" stroke="#bbb"/>
-    <circle cx="120.0" cy="232.0" r="40.0" fill="#dcecdc" stroke="#3a8c4f" stroke-width="2"/>
-    <polygon points="214.5,144.9 214.9,143.7 215.2,142.4 215.3,141.1 215.3,139.7 215.1,138.3 214.9,136.8 214.5,135.4 213.9,133.9 213.3,132.4 212.5,130.9 211.5,129.4 210.5,127.9 209.4,126.4 208.1,124.8 206.7,123.3 205.2,121.8 203.6,120.4 201.9,118.9 200.2,117.5 198.3,116.1 196.3,114.7 194.3,113.4 192.2,112.1 190.0,110.9 187.8,109.7 185.5,108.5 183.1,107.4 180.7,106.4 178.3,105.4 175.9,104.5 173.4,103.7 170.9,102.9 168.4,102.2 165.9,101.5 163.4,101.0 160.9,100.5 158.5,100.1 156.0,99.8 153.6,99.5 151.3,99.3 149.0,99.2 146.7,99.2 144.5,99.3 142.4,99.4 140.3,99.7 138.3,100.0 136.4,100.4 134.6,100.8 132.9,101.4 131.3,102.0 129.7,102.6 128.3,103.4 127.0,104.2 125.8,105.1 124.8,106.1 123.8,107.1 123.0,108.1 122.3,109.3 121.7,110.5 121.3,111.7 120.9,113.0 120.8,114.3 120.7,115.6 120.8,117.0 121.0,118.4 121.3,119.9 121.8,121.3 122.4,122.8 123.1,124.3 124.0,125.8 125.0,127.4 126.0,128.9 127.3,130.4 128.6,131.9 130.0,133.4 131.6,134.9 133.2,136.4 134.9,137.8 136.8,139.2 138.7,140.6 140.7,141.9 142.8,143.3 144.9,144.5 147.1,145.7 149.4,146.9 151.7,148.0 154.1,149.1 156.5,150.1 158.9,151.0 161.4,151.9 163.9,152.7 166.4,153.5 168.9,154.1 171.3,154.7 173.8,155.3 176.3,155.7 178.7,156.1 181.2,156.4 183.5,156.6 185.9,156.7 188.2,156.8 190.4,156.8 192.6,156.6 194.7,156.5 196.7,156.2 198.6,155.8 200.5,155.4 202.3,154.9 203.9,154.4 205.5,153.7 207.0,153.0 208.3,152.2 209.6,151.3 210.7,150.4 211.7,149.4 212.6,148.4 213.4,147.3 214.0,146.1 214.5,144.9" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
-    <polygon points="256.3,160.1 257.0,157.8 257.5,155.3 257.7,152.8 257.7,150.2 257.4,147.5 256.9,144.8 256.1,142.0 255.1,139.2 253.9,136.4 252.4,133.5 250.6,130.6 248.7,127.8 246.5,124.9 244.1,122.0 241.5,119.2 238.6,116.3 235.6,113.5 232.4,110.8 229.0,108.1 225.5,105.4 221.7,102.8 217.9,100.3 213.9,97.8 209.7,95.5 205.5,93.2 201.1,91.0 196.7,89.0 192.1,87.0 187.6,85.2 182.9,83.4 178.2,81.8 173.5,80.4 168.8,79.0 164.0,77.8 159.3,76.7 154.6,75.8 149.9,75.0 145.3,74.4 140.8,73.9 136.3,73.6 131.9,73.4 127.6,73.4 123.4,73.5 119.4,73.8 115.5,74.2 111.7,74.8 108.1,75.5 104.7,76.4 101.4,77.4 98.3,78.6 95.4,79.9 92.7,81.3 90.3,82.9 88.0,84.6 86.0,86.4 84.2,88.3 82.6,90.3 81.3,92.5 80.2,94.7 79.3,97.0 78.7,99.5 78.4,102.0 78.3,104.5 78.4,107.2 78.8,109.9 79.5,112.6 80.3,115.4 81.5,118.2 82.9,121.0 84.5,123.9 86.3,126.8 88.4,129.7 90.7,132.6 93.2,135.4 95.9,138.3 98.9,141.1 102.0,143.9 105.3,146.6 108.7,149.3 112.4,151.9 116.2,154.5 120.1,156.9 124.2,159.4 128.4,161.7 132.7,163.9 137.1,166.0 141.6,168.0 146.1,169.9 150.8,171.7 155.4,173.4 160.1,174.9 164.9,176.3 169.6,177.6 174.3,178.7 179.1,179.7 183.7,180.6 188.4,181.3 193.0,181.8 197.5,182.2 201.9,182.5 206.3,182.6 210.5,182.6 214.6,182.3 218.6,182.0 222.4,181.5 226.1,180.8 229.6,180.0 233.0,179.1 236.2,178.0 239.2,176.8 241.9,175.4 244.5,173.9 246.9,172.3 249.0,170.5 251.0,168.7 252.7,166.7 254.1,164.6 255.3,162.4 256.3,160.1" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
-    <polygon points="307.6,178.8 308.7,175.1 309.5,171.2 309.9,167.2 309.8,163.0 309.4,158.8 308.6,154.5 307.4,150.2 305.7,145.7 303.8,141.2 301.4,136.7 298.6,132.2 295.5,127.6 292.1,123.1 288.3,118.5 284.1,114.0 279.7,109.5 274.9,105.1 269.8,100.7 264.5,96.5 258.8,92.3 253.0,88.2 246.9,84.2 240.5,80.3 234.0,76.6 227.3,73.0 220.4,69.6 213.3,66.3 206.2,63.2 198.9,60.3 191.6,57.5 184.1,55.0 176.7,52.7 169.2,50.5 161.7,48.6 154.2,47.0 146.8,45.5 139.4,44.3 132.1,43.3 124.9,42.5 117.9,42.0 110.9,41.7 104.1,41.7 97.5,41.9 91.1,42.3 85.0,43.0 79.0,43.9 73.3,45.1 67.8,46.4 62.7,48.1 57.8,49.9 53.2,51.9 49.0,54.2 45.1,56.7 41.5,59.3 38.3,62.2 35.4,65.2 33.0,68.4 30.8,71.8 29.1,75.4 27.8,79.0 26.8,82.9 26.3,86.8 26.1,90.9 26.3,95.0 27.0,99.3 28.0,103.6 29.4,108.0 31.2,112.5 33.4,117.0 35.9,121.5 38.9,126.1 42.1,130.7 45.8,135.2 49.7,139.7 54.1,144.2 58.7,148.7 63.6,153.1 68.8,157.4 74.3,161.6 80.1,165.8 86.1,169.8 92.3,173.8 98.7,177.6 105.4,181.2 112.2,184.7 119.1,188.1 126.2,191.3 133.4,194.3 140.8,197.1 148.1,199.8 155.6,202.2 163.1,204.4 170.6,206.4 178.0,208.2 185.5,209.8 192.9,211.1 200.2,212.3 207.5,213.1 214.6,213.8 221.6,214.2 228.5,214.3 235.2,214.3 241.7,213.9 248.0,213.4 254.1,212.6 259.9,211.5 265.5,210.3 270.8,208.8 275.8,207.1 280.5,205.1 284.9,203.0 289.0,200.6 292.7,198.0 296.1,195.3 299.2,192.3 301.8,189.2 304.1,185.9 306.1,182.4 307.6,178.8" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
-    <circle cx="168.0" cy="128.0" r="4" fill="#4e79a7"/><text x="176.0" y="112.0" font-size="12" fill="#4e79a7" text-anchor="start" stroke="#fff" stroke-width="3" paint-order="stroke">mínimo de J</text>
-    <circle cx="134.7" cy="194.8" r="6" fill="#c0392b"/>
-    <line x1="139.7" y1="197.8" x2="182.0" y2="242.0" stroke="#c0392b" stroke-width="1"/>
-    <text x="184.0" y="252.0" font-size="12" fill="#c0392b" text-anchor="start">solución: ambos</text>
-    <text x="184.0" y="267.0" font-size="12" fill="#c0392b" text-anchor="start">pesos distintos de cero</text>
-    <text x="272.0" y="226.0" font-size="12" fill="#666">w₁</text><text x="132.0" y="56.0" font-size="12" fill="#666">w₂</text>
+    <line x1="60.0" y1="222" x2="310.0" y2="222" stroke="#bbb"/><line x1="120" y1="284.0" x2="120" y2="40" stroke="#bbb"/>
+    <circle cx="120" cy="222" r="54" fill="#dcecdc" stroke="#3a8c4f" stroke-width="2"/>
+    <polygon points="181.7,135.4 180.4,134.5 179.1,133.6 177.8,132.8 176.4,132.0 175.1,131.3 173.7,130.6 172.4,129.9 171.0,129.3 169.7,128.7 168.4,128.2 167.0,127.7 165.7,127.3 164.5,126.9 163.2,126.6 162.0,126.4 160.8,126.2 159.7,126.0 158.6,125.9 157.5,125.9 156.5,125.9 155.5,126.0 154.6,126.1 153.7,126.3 152.9,126.6 152.2,126.8 151.5,127.2 150.8,127.6 150.3,128.1 149.8,128.6 149.3,129.1 148.9,129.7 148.6,130.4 148.4,131.1 148.2,131.8 148.2,132.6 148.1,133.4 148.2,134.2 148.3,135.1 148.5,136.0 148.8,137.0 149.1,137.9 149.5,138.9 150.0,139.9 150.5,140.9 151.1,142.0 151.7,143.0 152.5,144.1 153.2,145.2 154.1,146.2 155.0,147.3 155.9,148.4 156.9,149.5 157.9,150.5 159.0,151.6 160.1,152.6 161.3,153.6 162.5,154.6 163.7,155.6 165.0,156.5 166.3,157.4 167.6,158.3 168.9,159.2 170.2,160.0 171.6,160.8 172.9,161.5 174.3,162.2 175.6,162.9 177.0,163.5 178.3,164.1 179.6,164.6 181.0,165.1 182.3,165.5 183.5,165.9 184.8,166.2 186.0,166.4 187.2,166.6 188.3,166.8 189.4,166.9 190.5,166.9 191.5,166.9 192.5,166.8 193.4,166.7 194.3,166.5 195.1,166.2 195.8,166.0 196.5,165.6 197.2,165.2 197.7,164.7 198.2,164.2 198.7,163.7 199.1,163.1 199.4,162.4 199.6,161.7 199.8,161.0 199.8,160.2 199.9,159.4 199.8,158.6 199.7,157.7 199.5,156.8 199.2,155.8 198.9,154.9 198.5,153.9 198.0,152.9 197.5,151.9 196.9,150.8 196.3,149.8 195.5,148.7 194.8,147.6 193.9,146.6 193.0,145.5 192.1,144.4 191.1,143.3 190.1,142.3 189.0,141.2 187.9,140.2 186.7,139.2 185.5,138.2 184.3,137.2 183.0,136.3 181.7,135.4" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="189.0,125.0 186.4,123.3 183.9,121.6 181.3,120.1 178.7,118.5 176.1,117.1 173.5,115.7 170.8,114.4 168.2,113.3 165.6,112.2 163.1,111.2 160.5,110.2 158.0,109.4 155.6,108.7 153.1,108.1 150.8,107.6 148.5,107.2 146.3,106.9 144.1,106.8 142.1,106.7 140.1,106.7 138.2,106.9 136.4,107.1 134.7,107.5 133.2,108.0 131.7,108.5 130.4,109.2 129.1,110.0 128.0,110.9 127.0,111.9 126.2,112.9 125.5,114.1 124.9,115.3 124.4,116.7 124.1,118.1 124.0,119.6 123.9,121.2 124.0,122.8 124.2,124.5 124.6,126.3 125.1,128.1 125.8,130.0 126.5,131.9 127.4,133.8 128.5,135.8 129.6,137.8 130.9,139.9 132.3,141.9 133.8,144.0 135.4,146.1 137.1,148.2 139.0,150.3 140.9,152.3 142.9,154.4 145.0,156.4 147.2,158.4 149.4,160.4 151.7,162.3 154.1,164.2 156.6,166.0 159.0,167.8 161.6,169.5 164.1,171.2 166.7,172.7 169.3,174.3 171.9,175.7 174.5,177.1 177.2,178.4 179.8,179.5 182.4,180.6 184.9,181.6 187.5,182.6 190.0,183.4 192.4,184.1 194.9,184.7 197.2,185.2 199.5,185.6 201.7,185.9 203.9,186.0 205.9,186.1 207.9,186.1 209.8,185.9 211.6,185.7 213.3,185.3 214.8,184.8 216.3,184.3 217.6,183.6 218.9,182.8 220.0,181.9 221.0,180.9 221.8,179.9 222.5,178.7 223.1,177.5 223.6,176.1 223.9,174.7 224.0,173.2 224.1,171.6 224.0,170.0 223.8,168.3 223.4,166.5 222.9,164.7 222.2,162.8 221.5,160.9 220.6,159.0 219.5,157.0 218.4,155.0 217.1,152.9 215.7,150.9 214.2,148.8 212.6,146.7 210.9,144.6 209.0,142.5 207.1,140.5 205.1,138.4 203.0,136.4 200.8,134.4 198.6,132.4 196.3,130.5 193.9,128.6 191.4,126.8 189.0,125.0" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="196.3,114.5 192.6,112.0 188.7,109.5 184.9,107.1 181.0,104.9 177.1,102.7 173.2,100.7 169.3,98.8 165.4,97.0 161.5,95.4 157.7,93.9 153.9,92.5 150.2,91.3 146.5,90.2 142.9,89.3 139.4,88.6 136.0,88.0 132.7,87.6 129.5,87.3 126.4,87.2 123.4,87.3 120.6,87.5 118.0,87.9 115.5,88.4 113.1,89.1 110.9,90.0 108.9,91.0 107.1,92.1 105.5,93.4 104.0,94.9 102.7,96.5 101.7,98.2 100.8,100.1 100.1,102.1 99.7,104.2 99.4,106.5 99.3,108.8 99.5,111.2 99.8,113.8 100.4,116.4 101.1,119.1 102.1,121.9 103.2,124.8 104.6,127.7 106.1,130.6 107.8,133.7 109.7,136.7 111.8,139.8 114.1,142.9 116.5,146.0 119.0,149.1 121.8,152.1 124.6,155.2 127.6,158.3 130.8,161.3 134.0,164.3 137.4,167.2 140.8,170.1 144.4,172.9 148.0,175.6 151.7,178.3 155.4,180.8 159.3,183.3 163.1,185.7 167.0,187.9 170.9,190.1 174.8,192.1 178.7,194.0 182.6,195.8 186.5,197.4 190.3,198.9 194.1,200.3 197.8,201.5 201.5,202.6 205.1,203.5 208.6,204.2 212.0,204.8 215.3,205.2 218.5,205.5 221.6,205.6 224.6,205.5 227.4,205.3 230.0,204.9 232.5,204.4 234.9,203.7 237.1,202.8 239.1,201.8 240.9,200.7 242.5,199.4 244.0,197.9 245.3,196.3 246.3,194.6 247.2,192.7 247.9,190.7 248.3,188.6 248.6,186.3 248.7,184.0 248.5,181.6 248.2,179.0 247.6,176.4 246.9,173.7 245.9,170.9 244.8,168.0 243.4,165.1 241.9,162.2 240.2,159.1 238.3,156.1 236.2,153.0 233.9,149.9 231.5,146.8 229.0,143.7 226.2,140.7 223.4,137.6 220.4,134.5 217.2,131.5 214.0,128.5 210.6,125.6 207.2,122.7 203.6,119.9 200.0,117.2 196.3,114.5" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <circle cx="174.0" cy="146.4" r="4" fill="#4e79a7"/><text x="182.0" y="136.4" font-size="12" fill="#4e79a7" text-anchor="start" stroke="#fff" stroke-width="3" paint-order="stroke">mínimo de J</text>
+    <circle cx="151.1" cy="177.9" r="6" fill="#c0392b"/>
+    <line x1="155.1" y1="181.9" x2="218.0" y2="244.0" stroke="#c0392b" stroke-width="1"/>
+    <text x="220.0" y="254.0" font-size="12" fill="#c0392b" text-anchor="start">solución: ambos</text>
+    <text x="220.0" y="269.0" font-size="12" fill="#c0392b" text-anchor="start">pesos distintos de cero</text>
+    <text x="306.0" y="216" font-size="12" fill="#666">w₁</text><text x="132" y="48" font-size="12" fill="#666">w₂</text>
+    <text x="190" y="296" font-size="12" fill="#555">la elipse toca el círculo en un punto cualquiera</text>
     <text x="560.0" y="18" font-size="14" font-weight="bold">L1: región ‖w‖₁ ≤ t</text>
-    <line x1="436.0" y1="232" x2="656.0" y2="232" stroke="#bbb"/><line x1="500" y1="292.0" x2="500" y2="48.0" stroke="#bbb"/>
-    <polygon points="540.0,232.0 500.0,192.0 460.0,232.0 500.0,272.0" fill="#dcecdc" stroke="#3a8c4f" stroke-width="2"/>
-    <polygon points="596.5,145.7 596.9,144.4 597.2,143.0 597.3,141.6 597.3,140.2 597.1,138.7 596.8,137.2 596.4,135.7 595.9,134.2 595.2,132.6 594.3,131.0 593.4,129.5 592.3,127.9 591.1,126.3 589.8,124.7 588.4,123.1 586.8,121.6 585.1,120.0 583.4,118.5 581.5,117.0 579.6,115.6 577.5,114.2 575.4,112.8 573.2,111.4 570.9,110.1 568.6,108.9 566.2,107.7 563.8,106.6 561.3,105.5 558.7,104.5 556.2,103.5 553.6,102.6 551.0,101.8 548.4,101.1 545.8,100.4 543.2,99.8 540.6,99.3 538.1,98.9 535.5,98.6 533.0,98.3 530.6,98.1 528.2,98.0 525.8,98.0 523.5,98.1 521.3,98.2 519.1,98.5 517.1,98.8 515.1,99.2 513.2,99.7 511.4,100.2 509.7,100.9 508.1,101.6 506.7,102.4 505.3,103.2 504.1,104.1 502.9,105.1 501.9,106.2 501.1,107.3 500.3,108.5 499.7,109.7 499.3,111.0 498.9,112.3 498.8,113.7 498.7,115.1 498.8,116.5 499.0,118.0 499.3,119.5 499.8,121.1 500.5,122.6 501.2,124.2 502.1,125.8 503.1,127.3 504.3,128.9 505.5,130.5 506.9,132.1 508.4,133.6 510.0,135.2 511.7,136.7 513.5,138.2 515.4,139.7 517.4,141.1 519.5,142.5 521.7,143.9 523.9,145.2 526.2,146.5 528.6,147.7 531.0,148.9 533.5,150.0 536.0,151.0 538.5,152.0 541.1,152.9 543.7,153.8 546.3,154.6 548.9,155.3 551.5,155.9 554.1,156.4 556.7,156.9 559.2,157.3 561.7,157.6 564.2,157.8 566.6,157.9 569.0,158.0 571.3,158.0 573.6,157.9 575.8,157.7 577.9,157.4 579.9,157.0 581.9,156.6 583.7,156.1 585.5,155.5 587.1,154.8 588.6,154.0 590.0,153.2 591.3,152.3 592.5,151.4 593.6,150.3 594.5,149.3 595.3,148.1 596.0,146.9 596.5,145.7" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
-    <polygon points="640.0,161.5 640.8,159.0 641.3,156.5 641.5,153.8 641.5,151.1 641.2,148.3 640.7,145.5 639.9,142.6 638.8,139.7 637.5,136.7 635.9,133.8 634.1,130.8 632.1,127.8 629.8,124.7 627.3,121.8 624.6,118.8 621.6,115.8 618.5,112.9 615.1,110.0 611.6,107.2 607.9,104.4 604.0,101.7 600.0,99.1 595.8,96.6 591.5,94.1 587.1,91.7 582.5,89.5 577.9,87.3 573.2,85.3 568.4,83.3 563.5,81.5 558.6,79.9 553.7,78.3 548.8,76.9 543.8,75.7 538.9,74.6 534.0,73.6 529.2,72.8 524.3,72.1 519.6,71.6 514.9,71.3 510.4,71.1 505.9,71.1 501.6,71.2 497.3,71.5 493.3,72.0 489.3,72.6 485.6,73.3 482.0,74.2 478.6,75.3 475.4,76.5 472.3,77.9 469.5,79.3 467.0,81.0 464.6,82.7 462.5,84.6 460.6,86.6 459.0,88.7 457.6,91.0 456.4,93.3 455.6,95.7 454.9,98.2 454.6,100.8 454.5,103.5 454.6,106.3 455.0,109.1 455.7,111.9 456.6,114.8 457.8,117.8 459.2,120.8 460.9,123.7 462.9,126.7 465.0,129.8 467.4,132.8 470.0,135.7 472.9,138.7 475.9,141.6 479.2,144.5 482.6,147.4 486.2,150.2 490.0,152.9 494.0,155.6 498.1,158.2 502.3,160.7 506.7,163.1 511.2,165.4 515.8,167.6 520.5,169.7 525.2,171.7 530.0,173.6 534.9,175.3 539.8,176.9 544.7,178.4 549.7,179.7 554.6,180.9 559.5,181.9 564.4,182.8 569.3,183.5 574.0,184.1 578.7,184.5 583.4,184.8 587.9,184.9 592.3,184.9 596.6,184.7 600.7,184.3 604.7,183.8 608.6,183.1 612.3,182.2 615.8,181.3 619.1,180.1 622.2,178.8 625.1,177.4 627.8,175.9 630.2,174.2 632.5,172.3 634.5,170.4 636.2,168.3 637.8,166.2 639.0,163.9 640.0,161.5" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
-    <polygon points="693.5,181.0 694.7,177.1 695.5,173.0 695.9,168.8 695.8,164.5 695.4,160.1 694.5,155.7 693.3,151.1 691.6,146.5 689.5,141.8 687.0,137.1 684.2,132.4 681.0,127.6 677.4,122.9 673.4,118.1 669.1,113.4 664.4,108.7 659.4,104.1 654.2,99.6 648.6,95.1 642.7,90.7 636.6,86.5 630.2,82.3 623.6,78.3 616.8,74.4 609.8,70.7 602.6,67.1 595.3,63.7 587.8,60.4 580.2,57.4 572.6,54.5 564.8,51.9 557.0,49.5 549.2,47.3 541.4,45.3 533.6,43.5 525.9,42.0 518.2,40.7 510.6,39.7 503.1,38.9 495.7,38.3 488.5,38.1 481.4,38.0 474.6,38.2 467.9,38.7 461.4,39.4 455.2,40.3 449.3,41.5 443.6,43.0 438.2,44.7 433.1,46.6 428.4,48.7 424.0,51.1 419.9,53.6 416.2,56.4 412.8,59.4 409.8,62.6 407.2,65.9 405.0,69.4 403.2,73.1 401.8,77.0 400.8,81.0 400.3,85.1 400.1,89.3 400.3,93.6 401.0,98.1 402.0,102.6 403.5,107.2 405.4,111.8 407.7,116.5 410.3,121.3 413.4,126.0 416.8,130.8 420.6,135.5 424.7,140.2 429.2,144.9 434.0,149.6 439.2,154.1 444.6,158.7 450.3,163.1 456.3,167.4 462.6,171.6 469.1,175.7 475.8,179.7 482.7,183.5 489.8,187.2 497.1,190.6 504.5,194.0 512.0,197.1 519.6,200.1 527.3,202.8 535.1,205.3 542.9,207.7 550.7,209.8 558.5,211.6 566.2,213.3 574.0,214.7 581.6,215.8 589.2,216.7 596.6,217.4 603.9,217.8 611.1,218.0 618.0,217.9 624.8,217.6 631.4,217.0 637.7,216.2 643.8,215.1 649.6,213.8 655.1,212.2 660.4,210.4 665.3,208.4 669.9,206.1 674.1,203.7 678.0,201.0 681.6,198.1 684.7,195.0 687.5,191.8 689.9,188.3 691.9,184.7 693.5,181.0" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
-    <circle cx="548.0" cy="128.0" r="4" fill="#4e79a7"/><text x="556.0" y="112.0" font-size="12" fill="#4e79a7" text-anchor="start" stroke="#fff" stroke-width="3" paint-order="stroke">mínimo de J</text>
-    <circle cx="500.0" cy="192.0" r="6" fill="#c0392b"/>
-    <line x1="505.0" y1="195.0" x2="562.0" y2="242.0" stroke="#c0392b" stroke-width="1"/>
-    <text x="564.0" y="252.0" font-size="12" fill="#c0392b" text-anchor="start">solución en una esquina:</text>
-    <text x="564.0" y="267.0" font-size="12" fill="#c0392b" text-anchor="start">w₁ = 0</text>
-    <text x="652.0" y="226.0" font-size="12" fill="#666">w₁</text><text x="512.0" y="56.0" font-size="12" fill="#666">w₂</text>
-    <text x="190" y="292" font-size="12" fill="#555">la elipse toca el círculo en un punto cualquiera</text>
-    <text x="570" y="292" font-size="12" fill="#555">la elipse toca el rombo en una esquina</text>
-  </g></svg></div>
+    <line x1="440.0" y1="222" x2="690.0" y2="222" stroke="#bbb"/><line x1="500" y1="284.0" x2="500" y2="40" stroke="#bbb"/>
+    <polygon points="554,222 500,168 446,222 500,276" fill="#dcecdc" stroke="#3a8c4f" stroke-width="2"/>
+    <polygon points="564.1,132.0 562.4,130.9 560.7,129.7 558.9,128.7 557.2,127.6 555.4,126.7 553.6,125.8 551.9,124.9 550.1,124.1 548.4,123.4 546.6,122.7 544.9,122.1 543.2,121.5 541.6,121.0 540.0,120.6 538.4,120.3 536.8,120.0 535.3,119.8 533.9,119.7 532.5,119.7 531.2,119.7 529.9,119.8 528.7,120.0 527.6,120.2 526.5,120.5 525.5,120.9 524.6,121.4 523.8,121.9 523.1,122.5 522.4,123.1 521.8,123.9 521.3,124.7 520.9,125.5 520.6,126.4 520.4,127.4 520.3,128.4 520.3,129.4 520.4,130.5 520.5,131.7 520.8,132.9 521.1,134.1 521.5,135.3 522.0,136.6 522.7,137.9 523.3,139.3 524.1,140.6 525.0,142.0 525.9,143.4 526.9,144.8 528.0,146.2 529.2,147.6 530.4,149.0 531.7,150.4 533.1,151.8 534.5,153.1 535.9,154.5 537.5,155.8 539.0,157.1 540.6,158.4 542.3,159.6 543.9,160.8 545.6,161.9 547.3,163.1 549.1,164.1 550.8,165.2 552.6,166.1 554.4,167.0 556.1,167.9 557.9,168.7 559.6,169.4 561.4,170.1 563.1,170.7 564.8,171.3 566.4,171.8 568.0,172.2 569.6,172.5 571.2,172.8 572.7,173.0 574.1,173.1 575.5,173.1 576.8,173.1 578.1,173.0 579.3,172.8 580.4,172.6 581.5,172.3 582.5,171.9 583.4,171.4 584.2,170.9 584.9,170.3 585.6,169.7 586.2,168.9 586.7,168.1 587.1,167.3 587.4,166.4 587.6,165.4 587.7,164.4 587.7,163.4 587.6,162.3 587.5,161.1 587.2,159.9 586.9,158.7 586.5,157.5 586.0,156.2 585.3,154.9 584.7,153.5 583.9,152.2 583.0,150.8 582.1,149.4 581.1,148.0 580.0,146.6 578.8,145.2 577.6,143.8 576.3,142.4 574.9,141.0 573.5,139.7 572.1,138.3 570.5,137.0 569.0,135.7 567.4,134.4 565.7,133.2 564.1,132.0" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="573.5,118.5 570.2,116.3 566.9,114.1 563.5,112.1 560.1,110.1 556.7,108.2 553.3,106.4 549.9,104.8 546.5,103.2 543.1,101.8 539.7,100.5 536.4,99.3 533.2,98.2 530.0,97.3 526.8,96.5 523.7,95.8 520.8,95.3 517.9,95.0 515.1,94.7 512.4,94.6 509.8,94.7 507.3,94.9 505.0,95.2 502.8,95.7 500.8,96.3 498.9,97.0 497.1,97.9 495.5,99.0 494.1,100.1 492.8,101.4 491.7,102.8 490.8,104.3 490.0,105.9 489.4,107.7 489.0,109.5 488.8,111.5 488.7,113.5 488.8,115.7 489.1,117.9 489.6,120.2 490.3,122.5 491.1,125.0 492.1,127.5 493.3,130.0 494.6,132.6 496.1,135.3 497.8,137.9 499.6,140.6 501.6,143.3 503.7,146.0 506.0,148.7 508.3,151.4 510.8,154.1 513.5,156.8 516.2,159.4 519.0,162.0 522.0,164.6 525.0,167.1 528.1,169.6 531.3,171.9 534.5,174.3 537.8,176.5 541.1,178.7 544.5,180.7 547.9,182.7 551.3,184.6 554.7,186.4 558.1,188.0 561.5,189.6 564.9,191.0 568.3,192.3 571.6,193.5 574.8,194.6 578.0,195.5 581.2,196.3 584.3,197.0 587.2,197.5 590.1,197.8 592.9,198.1 595.6,198.2 598.2,198.1 600.7,197.9 603.0,197.6 605.2,197.1 607.2,196.5 609.1,195.8 610.9,194.9 612.5,193.8 613.9,192.7 615.2,191.4 616.3,190.0 617.2,188.5 618.0,186.9 618.6,185.1 619.0,183.3 619.2,181.3 619.3,179.3 619.2,177.1 618.9,174.9 618.4,172.6 617.7,170.3 616.9,167.8 615.9,165.3 614.7,162.8 613.4,160.2 611.9,157.5 610.2,154.9 608.4,152.2 606.4,149.5 604.3,146.8 602.0,144.1 599.7,141.4 597.2,138.7 594.5,136.0 591.8,133.4 589.0,130.8 586.0,128.2 583.0,125.7 579.9,123.2 576.7,120.9 573.5,118.5" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <polygon points="583.1,104.9 578.2,101.5 573.2,98.3 568.2,95.2 563.1,92.2 558.1,89.4 553.0,86.8 547.9,84.3 542.8,82.0 537.7,79.9 532.7,77.9 527.8,76.1 522.9,74.6 518.2,73.2 513.5,72.0 508.9,71.0 504.4,70.3 500.1,69.7 496.0,69.4 491.9,69.2 488.1,69.3 484.4,69.6 481.0,70.1 477.7,70.8 474.7,71.7 471.8,72.8 469.2,74.1 466.8,75.7 464.7,77.4 462.8,79.3 461.1,81.4 459.7,83.6 458.6,86.1 457.7,88.7 457.1,91.4 456.8,94.3 456.7,97.4 456.9,100.6 457.3,103.9 458.0,107.3 459.0,110.8 460.3,114.5 461.8,118.2 463.5,122.0 465.5,125.9 467.8,129.8 470.2,133.8 472.9,137.8 475.9,141.8 479.0,145.8 482.4,149.9 485.9,153.9 489.7,157.9 493.6,161.9 497.6,165.8 501.9,169.7 506.2,173.5 510.7,177.3 515.4,180.9 520.1,184.5 524.9,187.9 529.8,191.3 534.8,194.5 539.8,197.6 544.9,200.6 549.9,203.4 555.0,206.0 560.1,208.5 565.2,210.8 570.3,212.9 575.3,214.9 580.2,216.7 585.1,218.2 589.8,219.6 594.5,220.8 599.1,221.8 603.6,222.5 607.9,223.1 612.0,223.4 616.1,223.6 619.9,223.5 623.6,223.2 627.0,222.7 630.3,222.0 633.3,221.1 636.2,220.0 638.8,218.7 641.2,217.1 643.3,215.4 645.2,213.5 646.9,211.4 648.3,209.2 649.4,206.7 650.3,204.1 650.9,201.4 651.2,198.5 651.3,195.4 651.1,192.2 650.7,188.9 650.0,185.5 649.0,182.0 647.7,178.3 646.2,174.6 644.5,170.8 642.5,166.9 640.2,163.0 637.8,159.0 635.1,155.0 632.1,151.0 629.0,147.0 625.6,142.9 622.1,138.9 618.3,134.9 614.4,130.9 610.4,127.0 606.1,123.1 601.8,119.3 597.3,115.5 592.6,111.9 587.9,108.3 583.1,104.9" fill="none" stroke="#4e79a7" stroke-width="1.6"/>
+    <circle cx="554.0" cy="146.4" r="4" fill="#4e79a7"/><text x="562.0" y="136.4" font-size="12" fill="#4e79a7" text-anchor="start" stroke="#fff" stroke-width="3" paint-order="stroke">mínimo de J</text>
+    <circle cx="500.0" cy="168.0" r="6" fill="#c0392b"/>
+    <line x1="504.0" y1="172.0" x2="598.0" y2="244.0" stroke="#c0392b" stroke-width="1"/>
+    <text x="600.0" y="254.0" font-size="12" fill="#c0392b" text-anchor="start">solución en una esquina:</text>
+    <text x="600.0" y="269.0" font-size="12" fill="#c0392b" text-anchor="start">w₁ = 0</text>
+    <text x="686.0" y="216" font-size="12" fill="#666">w₁</text><text x="512" y="48" font-size="12" fill="#666">w₂</text>
+    <text x="570" y="296" font-size="12" fill="#555">la elipse toca el rombo en una esquina</text>
+    </g></svg></div>
 </section>
 
 <section>
@@ -477,17 +550,47 @@ $$w = \operatorname{signo}(z)\,\max\big(|z| - \lambda,\ 0\big)$$
 
 <section>
 <div class="section-label">§ 3 · Detenerse a tiempo</div>
-<h2>Paso 1 · El descenso de gradiente también encoge por dirección</h2>
-<ul><li>En la misma aproximación cuadrática, partiendo de $w^{(0)} = 0$ con tasa $\eta$, después de $\tau$ pasos la componente en cada autovector de $H$ es:</li></ul>
+<h2>¿Por qué detenerse antes se parece a penalizar?</h2>
+<ul>
+<li>En § 1, L2 multiplicaba la componente de $w^*$ en cada autovector $q_i$ del hessiano (la dirección con curvatura $h_i$) por el factor $h_i/(h_i + \lambda)$.</li>
+<li>Se calcula qué factor aplica el descenso de gradiente si se detiene después de $\tau$ pasos, partiendo de $w^{(0)} = 0$ con tasa $\eta$, y se comparan los dos.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Detenerse a tiempo</div>
+<h2>Paso 1 · Un paso de gradiente sobre la cuadrática</h2>
+<ul><li>En la aproximación cuadrática, el gradiente es $H(w - w^*)$, así que un paso $w^{(t)} = w^{(t-1)} - \eta H (w^{(t-1)} - w^*)$ queda:</li></ul>
+$$w^{(t)} - w^* = (I - \eta H)\,\big(w^{(t-1)} - w^*\big)$$
+<p class="note">En palabras: en cada paso, la distancia al mínimo se multiplica por la matriz I − ηH.</p>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Detenerse a tiempo</div>
+<h2>Paso 2 · En cada dirección, la distancia se multiplica por un número</h2>
+<ul>
+<li>En la dirección $q_i$, la matriz $I - \eta H$ solo multiplica por $1 - \eta h_i$, y como $w^{(0)} = 0$, la distancia inicial es $-q_i^\top w^*$.</li>
+<li>Después de $\tau$ pasos queda $q_i^\top(w^{(\tau)} - w^*) = -(1 - \eta h_i)^\tau\, q_i^\top w^*$; despejando:</li>
+</ul>
 $$q_i^\top w^{(\tau)} = \Big[1 - (1 - \eta h_i)^{\tau}\Big]\; q_i^\top w^*$$
 </section>
 
 <section>
 <div class="section-label">§ 3 · Detenerse a tiempo</div>
-<h2>Paso 2 · Detenerse equivale a L2 con λ ≈ 1/(ητ)</h2>
-<ul><li>Si $h_i$ es grande, ambos factores valen casi uno; si es pequeño, el de la detención vale $\approx \eta h_i \tau$ y el de L2 $\approx h_i / \lambda$. Coinciden cuando:</li></ul>
+<h2>Paso 3 · Los dos factores, lado a lado</h2>
+$$\underbrace{\frac{h_i}{h_i + \lambda}}_{\text{L2}} \qquad \text{y} \qquad \underbrace{1 - (1 - \eta h_i)^{\tau}}_{\text{detención en el paso } \tau}$$
+<ul>
+<li>Ambos están entre 0 y 1. Si $h_i$ es grande, los dos valen casi uno: las direcciones que los datos determinan bien no se tocan.</li>
+<li>Si $h_i$ es pequeño, el de L2 vale $\approx h_i / \lambda$ y el de la detención $\approx \eta h_i \tau$, porque $(1 - x)^\tau \approx 1 - \tau x$ para $x$ chico.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 3 · Detenerse a tiempo</div>
+<h2>Paso 4 · Detenerse equivale a L2 con λ ≈ 1/(ητ)</h2>
+<ul><li>Igualando $h_i / \lambda$ con $\eta h_i \tau$, los dos factores coinciden cuando:</li></ul>
 $$\lambda \approx \frac{1}{\eta\, \tau}$$
-<p class="note">En palabras: entrenar más tiempo es regularizar menos; la paciencia hace el papel de λ.</p>
+<p class="note">En palabras: entrenar más tiempo es regularizar menos; el número de pasos τ hace el papel de 1/λ.</p>
 </section>
 
 <!-- ============ § 4 ============ -->
@@ -495,21 +598,38 @@ $$\lambda \approx \frac{1}{\eta\, \tau}$$
 <div class="section-label">§ 4 · Dropout</div>
 <h2>¿Por qué apagar neuronas al azar mejora a la red?</h2>
 <ul><li>Srivastava et al. (2014): en cada paso de entrenamiento, cada neurona oculta se <strong>apaga</strong>, como si no existiera, con probabilidad $p$.</li></ul>
+<div class="viz" data-viz="dropout">
+  <div class="ctrl">
+    <label>p <input type="range" name="k" min="0" max="7" step="1" value="3"><span class="val">0.3</span></label>
+    <button type="button" class="pausa" onclick="const v=this.closest('.viz'); v.dataset.pausa = v.dataset.pausa === '1' ? '0' : '1'; this.textContent = v.dataset.pausa === '1' ? 'continuar' : 'pausar';">pausar</button>
+  </div>
+  <canvas data-ratio="0.36"></canvas>
+  <div class="lect"></div>
+</div>
 </section>
 
 <section>
 <div class="section-label">§ 4 · Dropout</div>
-<h2>Dropout invertido: apagar y reescalar al entrenar</h2>
-<ul><li>Con $a$ las activaciones de una capa y una máscara $m_j \sim \text{Bernoulli}(1 - p)$, independiente en cada paso:</li></ul>
+<h2>El dropout original: apagar al entrenar, escalar al predecir</h2>
+<ul>
+<li>Con $a$ las activaciones de una capa y una máscara $m_j \sim \text{Bernoulli}(1 - p)$, sorteada en cada paso, la capa entrega $a \odot m$: solo sobrevive una fracción $1 - p$ de la señal.</li>
+<li>Al predecir no se apaga nada, así que la siguiente capa recibiría más señal que al entrenar; para compensar, Srivastava et al. multiplicaban las activaciones por $1 - p$ al predecir.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 4 · Dropout</div>
+<h2>Dropout invertido: escalar al entrenar, predecir sin cambios</h2>
+<ul><li>Se invierte dónde va la corrección: en vez de multiplicar por $1 - p$ al predecir, se divide por $1 - p$ al entrenar:</li></ul>
 $$\tilde{a} = \frac{a \odot m}{1 - p}, \qquad \mathbb{E}[\tilde{a}] = a$$
-<p class="note">En palabras: dividir por 1 − p compensa las neuronas apagadas; al usar la red entrenada no se apaga ni se reescala nada.</p>
+<p class="note">En palabras: la siguiente capa recibe en promedio la misma señal al entrenar y al predecir, y la red entrenada se usa tal cual. Es la versión que implementan las bibliotecas actuales.</p>
 </section>
 
 <section>
 <div class="section-label">§ 4 · Dropout</div>
 <h2>Es entrenar a la vez un ensamble de subredes</h2>
 <ul>
-<li>Cada máscara define una subred; con $H$ neuronas hay $2^H$, todas compartiendo los mismos pesos, y la red completa aproxima su promedio.</li>
+<li>Cada máscara define una subred; con $N$ neuronas ocultas hay $2^N$, todas compartiendo los mismos pesos, y la red completa aproxima su promedio.</li>
 <li>Ninguna neurona puede depender de que otra esté presente: se evita la <strong>coadaptación</strong>.</li>
 </ul>
 </section>
@@ -730,8 +850,17 @@ $$w^{\dagger} = X^\top (X X^\top)^{-1} y = X^{+} y$$
 
 <section>
 <div class="section-label">§ 6 · Regularización implícita</div>
-<h2>Verificado: desde cero, el descenso llega exactamente a X⁺y</h2>
-<ul><li>20 ecuaciones y 100 incógnitas; desde un punto al azar también ajusta los datos, pero cae en otra solución, con norma 8.28 en vez de 0.465.</li></ul>
+<h2>Un experimento: 20 ecuaciones y 100 incógnitas</h2>
+<ul>
+<li>Una regresión lineal con $n = 20$ observaciones y $p = 100$ coeficientes: hay infinitos $w$ que cumplen $Xw = y$ exactamente.</li>
+<li>Se corre el descenso de gradiente dos veces, 20&nbsp;000 pasos cada una, partiendo de $w = 0$ y de un $w$ al azar, y se compara cada resultado con la solución de norma mínima $X^{+}y$, de norma 0.465.</li>
+</ul>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización implícita</div>
+<h2>Desde cero, el descenso llega exactamente a X⁺y</h2>
+<ul><li>Cada punto es uno de los 100 coeficientes: en horizontal, su valor en $X^{+}y$; en vertical, el que encontró el descenso desde $w = 0$. Todos sobre la diagonal: son la misma solución.</li></ul>
 <div class="svg-holder"><svg viewBox="0 0 760 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <g font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#222">
   <rect x="250.0" y="20.0" width="220.0" height="220.0" fill="#fff" stroke="#ccc" stroke-width="1"/>
@@ -860,6 +989,17 @@ $$w^{\dagger} = X^\top (X X^\top)^{-1} y = X^{+} y$$
 
 <section>
 <div class="section-label">§ 6 · Regularización implícita</div>
+<h2>Desde un punto al azar, cae en otra solución</h2>
+<ul>
+<li>El gradiente solo suma combinaciones de las filas de $X$: la parte de $w^{(0)}$ ortogonal a ellas nunca cambia y se arrastra hasta el final.</li>
+<li>El resultado también cumple $Xw = y$, pero es $X^{+}y$ más esa parte: norma 8.28 en vez de 0.465, a distancia 8.27 de $X^{+}y$, fuera de la escala del gráfico.</li>
+</ul>
+$$w^{(\infty)} = X^{+}y + \big(I - X^{+}X\big)\,w^{(0)}$$
+<p class="note">En palabras: el término de la derecha es la proyección de w⁽⁰⁾ sobre las direcciones que los datos no ven; desde w⁽⁰⁾ = 0 desaparece.</p>
+</section>
+
+<section>
+<div class="section-label">§ 6 · Regularización implícita</div>
 <h2>El optimizador también decide qué se aprende</h2>
 <ul>
 <li>La inicialización, el tamaño de los minilotes y la tasa de aprendizaje eligen cuál de las muchas soluciones se encuentra.</li>
@@ -940,6 +1080,48 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => vizR
 
 
 
+// ======== dropout: cada paso sortea una subred ========
+const DROP_P = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7], DROP_CAPAS = [3, 6, 6, 1];
+VIZ.dropout = function (el) {
+  const cv = el.querySelector('canvas'); if (!cv.clientWidth) return;
+  const { g, w, h, C } = vizSetup(cv);
+  const p = DROP_P[+el.querySelector('[name=k]').value];
+  el.querySelector('.val').textContent = p;
+  if (!el._mask || el._p !== p) {
+    el._p = p; el._paso = (el._paso || 0) + 1;
+    el._mask = DROP_CAPAS.map((n, c) => Array.from({ length: n }, () => (c === 0 || c === DROP_CAPAS.length - 1) ? 1 : (Math.random() >= p ? 1 : 0)));
+  }
+  const M = el._mask;
+  g.fillStyle = C.fondo; g.fillRect(0, 0, w, h);
+  const xs = DROP_CAPAS.map((_, c) => w * (0.14 + 0.72 * c / (DROP_CAPAS.length - 1)));
+  const pos = DROP_CAPAS.map((n, c) => Array.from({ length: n }, (_, i) => [xs[c], 26 + (h - 80) * (n === 1 ? 0.5 : i / (n - 1))]));
+  const r = Math.min(16, h / 22);
+  for (let c = 0; c < DROP_CAPAS.length - 1; c++)
+    pos[c].forEach((a, i) => pos[c + 1].forEach((b, j) => {
+      const on = M[c][i] && M[c + 1][j];
+      g.strokeStyle = on ? C.grupos[0] : C.eje; g.globalAlpha = on ? 0.75 : 0.18;
+      g.lineWidth = on ? 1.8 : 1; g.setLineDash(on ? [] : [3, 4]);
+      g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+    }));
+  g.globalAlpha = 1; g.setLineDash([]);
+  pos.forEach((capa, c) => capa.forEach(([x, y], i) => {
+    const on = M[c][i];
+    g.beginPath(); g.arc(x, y, r, 0, 7);
+    g.fillStyle = on ? (c === 0 || c === DROP_CAPAS.length - 1 ? C.grupos[2] : C.grupos[0]) : C.fondo; g.fill();
+    g.strokeStyle = on ? C.tinta : C.gris; g.lineWidth = 1.5; g.stroke();
+    if (!on) { g.strokeStyle = '#c0392b'; g.lineWidth = 2.5; const d = r * 0.6;
+      g.beginPath(); g.moveTo(x - d, y - d); g.lineTo(x + d, y + d); g.moveTo(x + d, y - d); g.lineTo(x - d, y + d); g.stroke(); }
+  }));
+  g.fillStyle = C.texto; g.font = '15px Helvetica, Arial'; g.textAlign = 'center';
+  ['entrada', 'oculta 1', 'oculta 2', 'salida'].forEach((t, c) => g.fillText(t, xs[c], h - 10));
+  const apag = M.slice(1, -1).flat().filter(v => !v).length, tot = M.slice(1, -1).flat().length;
+  el.querySelector('.lect').innerHTML = `paso ${el._paso}: ${apag} de ${tot} neuronas ocultas apagadas, con sus conexiones · en cada paso se sortea otra subred`;
+};
+setInterval(() => document.querySelectorAll('.viz[data-viz=dropout]').forEach(el => {
+  if (el.dataset.pausa === '1' || !el.querySelector('canvas').clientWidth) return;
+  el._mask = null; VIZ.dropout(el);
+}), 1500);
+
 // ======== utilidades de ejes ========
 function marcoEjes(g, C, P, X0, X1, Y0, Y1, xt, yt, xlab, ylab, fx, fy) {
   const px = v => P.x + (v - X0) / (X1 - X0) * P.w, py = v => P.y + P.h - (v - Y0) / (Y1 - Y0) * P.h;
@@ -987,6 +1169,119 @@ VIZ.lambda = function (el) {
     `<span style="color:${C.grupos[0]}">azul: entrenamiento</span>, <span style="color:${C.grupos[1]}">naranjo: validación</span>, punteada: ruido 0.09`;
 };
 
+</script>
+<script>
+(function () {
+const PAL = { paper: '#faf7eb', ink: '#222', soft: '#555', blue: '#4e79a7', green: '#3a8c4f', greenF: '#dcecdc', red: '#c0392b' };
+// J(w) = ½ (w − w*)ᵀ A (w − w*), con A = R diag(1, 4) Rᵀ girada −35°
+const WS = [1.0, 1.4], ANG = -35 * Math.PI / 180, L = [1, 4];
+const c = Math.cos(ANG), s = Math.sin(ANG);
+const A = [[L[0] * c * c + L[1] * s * s, (L[0] - L[1]) * c * s], [(L[0] - L[1]) * c * s, L[0] * s * s + L[1] * c * c]];
+const Jf = w => { const d = [w[0] - WS[0], w[1] - WS[1]]; return 0.5 * (d[0] * (A[0][0] * d[0] + A[0][1] * d[1]) + d[1] * (A[1][0] * d[0] + A[1][1] * d[1])); };
+const norma = (w, tipo) => tipo === 'L2' ? Math.hypot(w[0], w[1]) : Math.abs(w[0]) + Math.abs(w[1]);
+function resolver(tipo, t) {
+  if (norma(WS, tipo) <= t) return { w: WS.slice(), dentro: true };
+  let best = null, bJ = Infinity;
+  for (let i = 0; i < 4000; i++) {
+    const u = 2 * Math.PI * i / 4000; let w;
+    if (tipo === 'L2') w = [t * Math.cos(u), t * Math.sin(u)];
+    else { const q = Math.floor(i / 1000), r = (i % 1000) / 1000; const V = [[t, 0], [0, t], [-t, 0], [0, -t], [t, 0]];
+           w = [V[q][0] + (V[q + 1][0] - V[q][0]) * r, V[q][1] + (V[q + 1][1] - V[q][1]) * r]; }
+    const j = Jf(w); if (j < bJ) { bJ = j; best = w; }
+  }
+  return { w: best, dentro: false };
+}
+function crear(root) {
+  root.className += ' viz'; root.innerHTML = '';
+  const ctrl = document.createElement('div'); ctrl.className = 'ctrl'; ctrl.style.fontSize = '1.3em'; ctrl.style.gap = '1em'; root.appendChild(ctrl);
+  const bst = 'font-size:0.85em; padding:0.1em 0.6em; cursor:pointer';
+  const S = { tipo: 'L1', t: 1.0, t0: 0, raf: null };
+  const bt = ['L2', 'L1'].map(k => { const b = document.createElement('button'); b.textContent = k === 'L2' ? 'L2: círculo' : 'L1: rombo'; b.style.cssText = bst;
+    b.addEventListener('click', e => { e.stopPropagation(); S.tipo = k; reiniciar(); }); ctrl.appendChild(b); return [k, b]; });
+  const lab = document.createElement('label'); lab.innerHTML = 'presupuesto t ';
+  const inp = document.createElement('input'); Object.assign(inp, { type: 'range', min: 0.3, max: 2.6, step: 0.05, value: 1.0 });
+  const val = document.createElement('span'); val.className = 'val'; lab.appendChild(inp); lab.appendChild(val); ctrl.appendChild(lab);
+  const br = document.createElement('button'); br.textContent = '↺ repetir'; br.style.cssText = bst; ctrl.appendChild(br);
+  br.addEventListener('click', e => { e.stopPropagation(); reiniciar(); });
+  inp.addEventListener('input', reiniciar);
+  const cv = document.createElement('canvas'); root.appendChild(cv);
+  const lect = document.createElement('div'); lect.className = 'lect'; lect.style.fontSize = '1.25em'; root.appendChild(lect);
+  ['mousedown', 'touchstart', 'keydown', 'pointerdown'].forEach(t => root.addEventListener(t, e => e.stopPropagation()));
+  function reiniciar() {
+    S.t = +inp.value; val.textContent = S.t.toFixed(2);
+    bt.forEach(([k, b]) => { const on = k === S.tipo; b.style.background = on ? PAL.blue : ''; b.style.color = on ? '#fff' : ''; });
+    S.sol = resolver(S.tipo, S.t); S.Jsol = Jf(S.sol.w);
+    S.t0 = performance.now(); if (S.raf) cancelAnimationFrame(S.raf);
+    const loop = ts => { const done = dibujar(Math.max(0, (ts - S.t0) / 1800)); S.raf = done ? null : requestAnimationFrame(loop); };
+    S.raf = requestAnimationFrame(loop);
+  }
+  function dibujar(p) {
+    p = Math.max(0, p || 0);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth || 1100, h = Math.round(w * 0.40);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + 'px';
+    const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+    const fs = Math.max(13, w / 62);
+    const txt = (s, x, y, col, al, sz, b) => { g.fillStyle = col || PAL.ink; g.font = (b ? 'bold ' : '') + (sz || fs) + 'px Helvetica, Arial'; g.textAlign = al || 'center'; g.fillText(s, x, y); };
+    // plano de pesos: cuadrado a la izquierda
+    const side = 0.92 * h, X0 = 0.04 * w, Y0 = 0.04 * h, R = 2.8, sc = side / (2 * R);
+    const px = a => X0 + side / 2 + a * sc, py = b => Y0 + side / 2 - b * sc;
+    g.fillStyle = '#fff'; g.fillRect(X0, Y0, side, side);
+    g.save(); g.beginPath(); g.rect(X0, Y0, side, side); g.clip();
+    g.strokeStyle = '#ccc'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(X0, py(0)); g.lineTo(X0 + side, py(0)); g.moveTo(px(0), Y0); g.lineTo(px(0), Y0 + side); g.stroke();
+    // región
+    g.fillStyle = PAL.greenF; g.strokeStyle = PAL.green; g.lineWidth = 2.5; g.beginPath();
+    if (S.tipo === 'L2') g.arc(px(0), py(0), S.t * sc, 0, 7);
+    else { g.moveTo(px(S.t), py(0)); g.lineTo(px(0), py(S.t)); g.lineTo(px(-S.t), py(0)); g.lineTo(px(0), py(-S.t)); g.closePath(); }
+    g.fill(); g.stroke();
+    // elipses de referencia (tenues) y la que se infla
+    const elipse = (cJ, col, lw, dash) => { if (cJ <= 0) return; g.strokeStyle = col; g.lineWidth = lw; g.setLineDash(dash || []); g.beginPath();
+      g.ellipse(px(WS[0]), py(WS[1]), Math.sqrt(2 * cJ / L[0]) * sc, Math.sqrt(2 * cJ / L[1]) * sc, -ANG, 0, 7); g.stroke(); g.setLineDash([]); };
+    [0.05, 0.3, 1.0, 2.5, 5].forEach(cJ => elipse(cJ, '#c9d9e8', 1.2));
+    const fin = p >= 1, u = Math.min(1, p), cJ = S.Jsol * u * u;
+    if (!S.sol.dentro) elipse(cJ, PAL.blue, 2.8);
+    g.fillStyle = PAL.blue; g.beginPath(); g.arc(px(WS[0]), py(WS[1]), 5, 0, 7); g.fill();
+    if (fin || S.sol.dentro) { g.fillStyle = PAL.red; g.beginPath(); g.arc(px(S.sol.w[0]), py(S.sol.w[1]), 8, 0, 7); g.fill(); }
+    g.restore();
+    g.strokeStyle = '#ccc'; g.strokeRect(X0, Y0, side, side);
+    txt('w₁', X0 + side - 0.6 * fs, py(0) - 0.4 * fs, PAL.soft); txt('w₂', px(0) + 0.8 * fs, Y0 + 1.2 * fs, PAL.soft);
+    txt('mínimo de J', px(WS[0]) + 0.6 * fs, py(WS[1]) - 0.5 * fs, PAL.blue, 'left', fs * 0.9);
+    // panel de texto a la derecha
+    const tx = X0 + side + 0.05 * w; let ty = Y0 + 1.6 * fs; const lh = 1.55 * fs;
+    const linea = (s, col, b) => { txt(s, tx, ty, col, 'left', fs * 1.05, b); ty += lh; };
+    linea('región permitida: ' + (S.tipo === 'L2' ? 'w₁² + w₂² ≤ t²' : '|w₁| + |w₂| ≤ t'), PAL.green, true);
+    linea('mínimo de J: w = (1.00, 1.40), J = 0', PAL.blue);
+    ty += 0.4 * lh;
+    if (S.sol.dentro) {
+      linea('El mínimo queda dentro de la región:', PAL.ink, true);
+      linea('es la solución, y regularizar no cambia nada.', PAL.ink);
+    } else if (!fin) {
+      linea('Elipse inflándose: J = ' + cJ.toFixed(3), PAL.blue, true);
+      linea('todavía no toca la región: ningún', PAL.ink);
+      linea('modelo permitido tiene un error tan bajo.', PAL.ink);
+    } else {
+      const sw = S.sol.w, cero = Math.min(Math.abs(sw[0]), Math.abs(sw[1])) < 1e-3;
+      linea('Primer contacto: la solución', PAL.red, true);
+      linea('w = (' + sw[0].toFixed(2) + ', ' + sw[1].toFixed(2) + '),  J = ' + S.Jsol.toFixed(3), PAL.red);
+      linea('Se paga J = ' + S.Jsol.toFixed(3) + ' de error de entrenamiento', PAL.ink);
+      linea('a cambio de pesos dentro del presupuesto.', PAL.ink);
+      ty += 0.4 * lh;
+      linea(cero ? 'Toca en una esquina: un peso vale exactamente 0.' : 'Toca en un punto del borde: ambos pesos ≠ 0.', cero ? PAL.red : PAL.ink, true);
+    }
+    lect.textContent = S.tipo === 'L1' ? 'Con L1, para t hasta cerca de 1 el contacto cae en la esquina (0, t) y w₁ = 0 exacto; con más presupuesto toca un lado y ambos pesos son distintos de cero.'
+                                       : 'Con L2, al achicar t el contacto se desliza por el borde del círculo: los pesos se encogen, pero ninguno llega a cero.';
+    return p >= 1.15;
+  }
+  root._play = reiniciar;
+  reiniciar();
+}
+document.querySelectorAll('.reg-inflar').forEach(crear);
+if (window.Reveal && Reveal.on) {
+  const re = e => e.currentSlide && e.currentSlide.querySelectorAll('.reg-inflar').forEach(r => r._play && r._play());
+  Reveal.on('ready', re); Reveal.on('slidechanged', re);
+}
+})();
 </script>
 </body>
 </html>

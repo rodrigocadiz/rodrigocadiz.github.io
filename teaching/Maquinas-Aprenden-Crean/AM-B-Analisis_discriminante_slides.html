@@ -340,7 +340,7 @@ $$\delta_k(x) \;\equiv\; \log p(x \mid y=k) + \log \pi_k, \qquad \hat{y} = \arg\
 <div class="section-label">§ 3 · Lineal o cuadrático</div>
 <h2>Paso 3: adentro va la densidad gaussiana</h2>
 $$p(x \mid y=k) = \frac{1}{(2\pi)^{d/2}\,|\Sigma_k|^{1/2}} \exp\!\Big(-\tfrac{1}{2}(x-\mu_k)^\top \Sigma_k^{-1}(x-\mu_k)\Big)$$
-<p class="note">Es el supuesto del § 2, escrito entero. Todo lo que viene es álgebra sobre esta expresión: no hay ninguna elección adicional.</p>
+<p class="note">Es el supuesto de que los datos de cada clase siguen una gaussiana, escrito entero. Todo lo que viene es álgebra sobre esta expresión: no hay ninguna elección adicional.</p>
 </section>
 
 <section>
@@ -623,7 +623,7 @@ $$\hat\Sigma_k(\lambda) = \frac{(1-\lambda)\,n_k\hat\Sigma_k + \lambda\,n\hat\Si
 <div class="section-label">§ 5 · Relación con lo anterior</div>
 <h2>Y se ve reusando la resta de discriminantes</h2>
 $$\log\frac{p(y=1 \mid x)}{p(y=0 \mid x)} = \delta_1(x) - \delta_0(x) = \underbrace{(\mu_1-\mu_0)^\top \Sigma^{-1}}_{w^\top} x + \underbrace{\log\tfrac{\pi_1}{\pi_0} - \tfrac{1}{2}\big(\mu_1^\top \Sigma^{-1}\mu_1 - \mu_0^\top \Sigma^{-1}\mu_0\big)}_{b}$$
-<p class="note">Es la misma cuenta del § 3, sin igualar a cero: el logaritmo de la razón de posteriores es exactamente lineal en $x$.</p>
+<p class="note">Es la misma resta de discriminantes que dio la frontera lineal, sin igualar a cero: el logaritmo de la razón de posteriores es exactamente lineal en $x$.</p>
 </section>
 
 <section>

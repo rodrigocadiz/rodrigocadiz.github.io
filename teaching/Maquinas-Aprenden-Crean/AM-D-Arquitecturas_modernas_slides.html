@@ -218,7 +218,7 @@ $$H(x) = \mathcal{F}(x) + x$$
 <section>
 <div class="section-label">§ 1 · Degradación y conexiones residuales</div>
 <h2>Dos variantes del bloque residual</h2>
-<ul><li>La línea punteada verde es el atajo que suma la entrada; BN es la normalización por lotes (§ 2).</li></ul>
+<ul><li>La línea punteada verde es el atajo que suma la entrada; BN es la normalización por lotes.</li></ul>
 <div class="svg-holder"><svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
     <marker id="rd" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
@@ -370,7 +370,7 @@ $$\underbrace{2 \cdot (3 \cdot 3 \cdot 256 \cdot 256)}_{\text{básico: } 1\,179\
 <h2>Con el atajo limpio se entrenan redes de más de mil capas</h2>
 <ul>
 <li>La pre-activación (He et al., 2016b) permitió entrenar de forma estable redes de más de mil capas, y hoy es la disposición por omisión, incluso en los transformers, donde se llama <em>pre-norm</em>.</li>
-<li>Falta controlar otra fuente de inestabilidad: la escala de las activaciones de capa en capa (§ 2).</li>
+<li>Falta controlar otra fuente de inestabilidad: la escala de las activaciones de capa en capa.</li>
 </ul>
 </section>
 
@@ -516,7 +516,7 @@ $$\mu_{\text{glob}} \leftarrow (1 - \alpha)\,\mu_{\text{glob}} + \alpha\,\mu_B, 
 <h2>Elegir la normalización decide qué información se descarta</h2>
 <ul>
 <li>La normalización por instancia ayuda en estilo y perjudica en clasificación, donde el contraste es informativo; la por lotes mezcla información entre las muestras del lote.</li>
-<li>Con el entrenamiento estabilizado, la pregunta siguiente es cómo crecer sin que el costo explote (§ 3).</li>
+<li>Con el entrenamiento estabilizado, la pregunta siguiente es cómo crecer sin que el costo explote.</li>
 </ul>
 </section>
 
@@ -607,7 +607,7 @@ $$d = \alpha^{\phi}, \quad w = \beta^{\phi}, \quad r = \gamma^{\phi}, \qquad \al
 <section>
 <div class="section-label">§ 3 · Arquitecturas eficientes</div>
 <h2>Con la arquitectura definida, falta cómo entrenarla</h2>
-<ul><li>El hiperparámetro que más pesa en el resultado es la tasa de aprendizaje, y la forma en que cambia durante el entrenamiento (§ 4).</li></ul>
+<ul><li>El hiperparámetro que más pesa en el resultado es la tasa de aprendizaje, y la forma en que cambia durante el entrenamiento.</li></ul>
 </section>
 
 <!-- ============ § 4 ============ -->
@@ -734,7 +734,7 @@ $$\text{si } \|g\|_2 > c: \quad g \leftarrow g\, \frac{c}{\|g\|_2}$$
 <section>
 <div class="section-label">§ 4 · Optimización práctica</div>
 <h2>Queda el recurso que más rinde: los datos</h2>
-<ul><li>Con la optimización bajo control, ¿qué hacer cuando faltan ejemplos para entrenar (§ 5)?</li></ul>
+<ul><li>Con la optimización bajo control, ¿qué hacer cuando faltan ejemplos para entrenar?</li></ul>
 </section>
 
 <!-- ============ § 5 ============ -->
