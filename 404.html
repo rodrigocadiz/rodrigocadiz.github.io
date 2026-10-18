@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" data-title-en="Page not found · Rodrigo F. Cádiz" data-title-es="Página no encontrada · Rodrigo F. Cádiz">
+<head>
+<meta charset="utf-8">
+<base href="/">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Page not found · Rodrigo F. Cádiz</title>
+<meta name="description" content="Rodrigo F. Cádiz, composer. Around seventy works for orchestra, chamber ensembles, voice, loudspeakers, new instruments and installation.">
+<meta property="og:title" content="Page not found · Rodrigo F. Cádiz">
+<meta property="og:image" content="assets/portrait/stage-hero.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23fbfaf8'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' text-anchor='middle' fill='%239a2b25'%3EC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
+</head>
+<body>
+<script>
+(function(){
+  var p=location.pathname, q=location.search+location.hash, m, R=[
+    [/^\/(IIE-Notebooks|SD-Notebooks|SS-Notebooks)(\/.*)?$/, function(m){return '/teaching/'+m[1]+(m[2]||'/');}],
+    [/^\/ML-Notebooks(\/.*)?$/, function(m){return '/teaching/Maquinas-Aprenden-Crean'+(m[1]||'/');}],
+    [/^\/fme-evaluacion(\/.*)?$/, function(m){return '/uc/fme-evaluacion'+(m[1]||'/');}],
+    [/^\/software\/?$/i, function(){return '/sitemap.html#software';}],
+    [/^\/(works|music|compositions|catalog|catalogue)\/?$/i, function(){return '/music/';}],
+    [/^\/(discography|recordings)\/?$/i, function(){return '/discography/';}],
+    [/^\/(publications|papers)\/?$/i, function(){return '/publications/';}],
+    [/^\/research\/?$/i, function(){return '/research/';}],
+    [/^\/(innovation|arcontinuo)\/?$/i, function(){return '/innovation.html';}],
+    [/^\/(events|agenda|concerts)\/?$/i, function(){return '/concerts/';}],
+    [/^\/press\/?$/i, function(){return '/press/';}],
+    [/^\/(about|bio|contact)\/?$/i, function(){return '/biography/';}],
+    [/^\/(sitemap|links)\/?$/i, function(){return '/sitemap.html';}]
+  ];
+  for(var i=0;i<R.length;i++){ if((m=p.match(R[i][0]))){ var t=R[i][1](m); if(t!==p){ location.replace(t.indexOf('#')<0?t+q:t); return; } } }
+})();
+</script>
+<nav class="nav">
+  <a class="brand" href="index.html">Rodrigo F. Cádiz</a>
+  <button class="navtoggle" aria-label="Menu">☰</button>
+  <div class="navlinks">
+    <a class="n" href="composer.html"><span data-l="en">Composer</span><span data-l="es">Compositor</span></a>
+    <a class="n" href="research/"><span data-l="en">Researcher</span><span data-l="es">Investigador</span></a>
+    <a class="n" href="innovation.html"><span data-l="en">Innovator</span><span data-l="es">Innovador</span></a>
+    <a class="n" href="teaching.html"><span data-l="en">Professor</span><span data-l="es">Profesor</span></a>
+    <a class="n" href="concerts/"><span data-l="en">Concerts</span><span data-l="es">Conciertos</span></a>
+    <a class="n" href="press/"><span data-l="en">Press</span><span data-l="es">Prensa</span></a>
+    <a class="n" href="biography/"><span data-l="en">Bio</span><span data-l="es">Bio</span></a>
+    <button class="langbtn">ES</button>
+  </div>
+</nav>
+<header class="phead"><div class="wide">
+  <h1><span data-l="en">Page not found</span><span data-l="es">Página no encontrada</span></h1>
+  <div class="btnrow" style="margin-top:22px">
+    <a class="btn" href="index.html"><span data-l="en">Home</span><span data-l="es">Inicio</span></a>
+    <a class="btn" href="sitemap.html"><span data-l="en">Site map</span><span data-l="es">Mapa del sitio</span></a>
+  </div>
+</div></header>
+<footer><div class="wrap fgrid">
+  <div>
+    <div style="font-family:var(--display);font-size:19px;color:var(--ink);margin-bottom:5px">Rodrigo F. Cádiz</div>
+    <div data-l="en">Full Professor, Institute of Music &amp; Department of Electrical Engineering, Pontificia Universidad Católica de Chile</div><div data-l="es">Profesor Titular, Instituto de Música y Departamento de Ingeniería Eléctrica, Pontificia Universidad Católica de Chile</div>
+  </div>
+  <div>
+    <a href="https://soundcloud.com/rcadiz" target="_blank" rel="noopener">SoundCloud</a>
+    <a href="https://www.youtube.com/@rcadiz" target="_blank" rel="noopener">YouTube</a>
+    <a href="https://open.spotify.com/album/3ONOklmSomDoRwunZ2KuPf" target="_blank" rel="noopener">Spotify</a>
+    <a href="https://www.babelscores.com/RodrigoCadiz" target="_blank" rel="noopener">BabelScores</a>
+    <a href="mailto:rcadiz@uc.cl">Email</a>
+    <a href="talks/index.html"><span data-l="en">Talks</span><span data-l="es">Charlas</span></a>
+    <a href="sitemap.html"><span data-l="en">Site map</span><span data-l="es">Mapa del sitio</span></a>
+  </div>
+</div></footer>
+<script src="assets/app.js"></script>
+
+</body></html>
