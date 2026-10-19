@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agentes, Entornos y Funciones de Valor</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 
 <style>
 :root {
@@ -94,6 +94,8 @@
 .reveal a { color: var(--pluto-blue); text-decoration: none; }
 
 .reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+/* KaTeX escala las fórmulas en línea a 1.21em; con Alegreya Sans se ven desproporcionadas */
+.reveal :not(.katex-display) > .katex { font-size: 1.02em; }
 
 p.note {
   font-size: 1.3em;
@@ -121,13 +123,35 @@ p.note {
 .slide-num { display: none; }
 .reveal .controls { color: var(--ink-faint); }
 .reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
+.viz { width:100%; margin-top:0.3em; }
+.viz .ctrl { display:flex; gap:1.6em; align-items:center; justify-content:center; font-size:0.95em; color:var(--ink-soft); margin-bottom:0.45em; }
+.viz .ctrl label { display:flex; gap:0.5em; align-items:center; white-space:nowrap; }
+.viz input[type=range] { width:14em; height:1.1em; accent-color:var(--pluto-blue); }
+.viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:1.6em; }
+.viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
+.viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft); font-variant-numeric:tabular-nums; margin-top:0.35em; }
+
+/* --- tabla de política --- */
+.reveal table.ptab { border-collapse: collapse; margin: 0.2em auto 0; font-size: 26px; }
+.reveal table.ptab th, .reveal table.ptab td { border-bottom: 1px solid #d8d2bf; padding: 3px 22px; text-align: center; }
+.reveal table.ptab th { color: #4a6f9c; font-weight: 700; border-bottom: 2px solid #4a6f9c; }
+.reveal table.ptab td.cas { text-align: left; }
+.reveal table.ptab td.cas span { color: #888; font-size: 0.8em; margin-left: 0.5em; }
+.reveal table.ptab td.uno { background: #fde3cf; color: #c24400; font-weight: 700; }
+.reveal table.ptab td.dots { color: #999; }
+.reveal table.ptab th.ar { font-family: Arial, Helvetica, sans-serif; font-size: 1.1em; }
+
+/* --- widgets del mundo del acantilado --- */
+.reveal .rlw { font-size: 17px; margin: 0.3em auto 0; }
+.reveal .rlw-read { font-size: 1em; text-align: left; }
+.reveal .rlw button, .reveal .rlw select { font-family: Helvetica, Arial, sans-serif; }
 </style>
 </head>
 <body>
-<div class="reveal">
-<div class="slides">
 
-<!-- PORTADA -->
+<div class="reveal"><div class="slides">
+
 <section>
 <div class="title-slide">
   <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
@@ -136,374 +160,926 @@ p.note {
   <div class="byline">Pontificia Universidad Católica de Chile</div>
 </div>
 </section>
-
-<!-- APERTURA -->
 <section>
-<h2>El aprendizaje reforzado rompe el supuesto de los datos estáticos</h2>
-<ul>
-<li>No hay un conjunto de respuestas correctas ni un maestro: un <strong>agente</strong> descubre por prueba y error qué hacer para alcanzar un objetivo.</li>
-</ul>
+<h2>Aprender a decidir cuando las consecuencias llegan tarde</h2>
+<p>En el aprendizaje reforzado nadie entrega respuestas correctas: un agente actúa, recibe una recompensa numérica y debe descubrir qué secuencia de decisiones la hace más grande a largo plazo.</p>
 </section>
-
 <section>
-<h2>De reconocer patrones a tomar decisiones secuenciales</h2>
-<ul>
-<li>El agente actúa, cambia el mundo y recibe una recompensa escalar; su meta es maximizar la recompensa <em>acumulada</em>, no acertar una etiqueta.</li>
-</ul>
-<p class="note">Es la teoría tras los agentes que ganan en Go y ajedrez, el control de robots y el ajuste de modelos de lenguaje por refuerzo.</p>
+<h2>Go, robots y modelos de lenguaje comparten esta estructura</h2>
+<p>Los agentes que vencen en Go, los controladores de robots y el ajuste de modelos de lenguaje con retroalimentación humana (RLHF, <em>reinforcement learning from human feedback</em>) eligen acciones cuyo efecto se ve después.</p>
 </section>
-
-<!-- §1 CICLO -->
 <section>
-<div class="section-label">§ 1 · El ciclo agente-entorno</div>
-<h2>¿Cómo se formaliza "aprender actuando"?</h2>
+<div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
+<h2>Un robot debe cruzar junto a un acantilado</h2>
 <ul>
-<li>La dinámica central es un bucle temporal entre dos entidades: el agente que decide y el entorno que responde.</li>
+  <li>Cuadrícula de 4 filas y 8 columnas: sale de S y el episodio termina al llegar a G.</li>
 </ul>
-</section>
-
-<section>
-<div class="section-label">§ 1 · El ciclo agente-entorno</div>
-<h2>El lazo de percepción y acción</h2>
-<ul>
-<li>En el paso $t$ el agente observa $s_t$ y elige $a_t$; el entorno transita a $s_{t+1}$ y emite una recompensa $r_{t+1}$, y el ciclo se repite.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 1 · El ciclo agente-entorno</div>
-<h2>El bucle agente-entorno</h2>
-<ul><li>El agente envía la acción $a_t$; el entorno devuelve el nuevo estado $s_{t+1}$ y la recompensa $r_{t+1}$.</li></ul>
 <div class="svg-holder">
-<svg viewBox="0 0 640 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <linearGradient id="abismo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1d12"/><stop offset="1" stop-color="#000"/></linearGradient>
+    <linearGradient id="roca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b59a76"/><stop offset="1" stop-color="#0d0905"/></linearGradient>
+    <linearGradient id="rocaL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9c8160"/><stop offset="1" stop-color="#0d0905"/></linearGradient>
+    <linearGradient id="rocaR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7ad88"/><stop offset="1" stop-color="#0d0905"/></linearGradient>
+    <marker id="mb" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#e65100"/></marker>
+    <marker id="ms" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1565c0"/></marker>
+  </defs>
+  <polygon points="90.0,170.0 390.0,170.0 390.0,254.0 90.0,254.0" fill="url(#abismo)"/><polygon points="111.4,120.0 368.6,120.0 368.6,192.0 111.4,192.0" fill="url(#roca)" stroke="#6b5a44" stroke-width="1"/><polygon points="111.4,120.0 90.0,170.0 90.0,254.0 111.4,192.0" fill="url(#rocaL)" stroke="#6b5a44" stroke-width="1"/><polygon points="368.6,120.0 390.0,170.0 390.0,254.0 368.6,192.0" fill="url(#rocaR)" stroke="#6b5a44" stroke-width="1"/><polygon points="40.0,170.0 90.0,170.0 90.0,254.0 40.0,254.0" fill="url(#roca)" stroke="#6b5a44" stroke-width="1"/><polygon points="390.0,170.0 440.0,170.0 440.0,254.0 390.0,254.0" fill="url(#roca)" stroke="#6b5a44" stroke-width="1"/><polygon points="120.0,30.0 150.0,30.0 140.0,53.3 106.7,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="150.0,30.0 180.0,30.0 173.3,53.3 140.0,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="180.0,30.0 210.0,30.0 206.7,53.3 173.3,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="210.0,30.0 240.0,30.0 240.0,53.3 206.7,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="240.0,30.0 270.0,30.0 273.3,53.3 240.0,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="270.0,30.0 300.0,30.0 306.7,53.3 273.3,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="300.0,30.0 330.0,30.0 340.0,53.3 306.7,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="330.0,30.0 360.0,30.0 373.3,53.3 340.0,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="106.7,53.3 140.0,53.3 127.5,82.5 90.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="140.0,53.3 173.3,53.3 165.0,82.5 127.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="173.3,53.3 206.7,53.3 202.5,82.5 165.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="206.7,53.3 240.0,53.3 240.0,82.5 202.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="240.0,53.3 273.3,53.3 277.5,82.5 240.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="273.3,53.3 306.7,53.3 315.0,82.5 277.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="306.7,53.3 340.0,53.3 352.5,82.5 315.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="340.0,53.3 373.3,53.3 390.0,82.5 352.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="90.0,82.5 127.5,82.5 111.4,120.0 68.6,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="127.5,82.5 165.0,82.5 154.3,120.0 111.4,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="165.0,82.5 202.5,82.5 197.1,120.0 154.3,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="202.5,82.5 240.0,82.5 240.0,120.0 197.1,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="240.0,82.5 277.5,82.5 282.9,120.0 240.0,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="277.5,82.5 315.0,82.5 325.7,120.0 282.9,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="315.0,82.5 352.5,82.5 368.6,120.0 325.7,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="352.5,82.5 390.0,82.5 411.4,120.0 368.6,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="68.6,120.0 111.4,120.0 90.0,170.0 40.0,170.0" fill="#d6e6fb" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="368.6,120.0 411.4,120.0 440.0,170.0 390.0,170.0" fill="#cfeccf" stroke="#b8ad8c" stroke-width="0.8"/><path d="M82.9 123.7 L95.2 100.0 L112.2 67.1 L125.7 41.1 L157.3 41.1 L188.8 41.1 L220.4 41.1 L252.0 41.1 L283.6 41.1 L315.2 41.1 L346.7 41.1 L359.3 67.1 L375.2 100.0 L383.5 123.7" fill="none" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4" stroke-linejoin="round" marker-end="url(#ms)"/><path d="M93.4 123.7 L104.8 100.0 L144.8 100.0 L184.8 100.0 L224.8 100.0 L264.8 100.0 L304.8 100.0 L344.8 100.0 L384.8 100.0 L393.7 123.7" fill="none" stroke="#e65100" stroke-width="3" stroke-linejoin="round" marker-end="url(#mb)"/><g transform="translate(77.2,145.6)">
+    <ellipse cx="0" cy="2" rx="13" ry="4" fill="#000" opacity="0.18"/>
+    <rect x="-9" y="-24" width="18" height="22" rx="4" fill="#4e79a7" stroke="#1a3a5c" stroke-width="1.2"/>
+    <rect x="-7" y="-38" width="14" height="12" rx="3" fill="#a9c4e4" stroke="#1a3a5c" stroke-width="1.2"/>
+    <circle cx="-3" cy="-32" r="1.6" fill="#1a3a5c"/><circle cx="3" cy="-32" r="1.6" fill="#1a3a5c"/>
+    <line x1="0" y1="-38" x2="0" y2="-44" stroke="#1a3a5c" stroke-width="1.2"/><circle cx="0" cy="-45" r="2" fill="#e65100"/>
+  </g><g transform="translate(406.6,133.4)">
+    <line x1="0" y1="2" x2="0" y2="-44" stroke="#3b3b3b" stroke-width="2"/>
+    <path d="M0,-44 L20,-38 L0,-32 Z" fill="#2e7d32"/>
+  </g><text x="65.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">S</text><text x="415.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">G</text><text x="240.0" y="216.2" text-anchor="middle" font-size="15" font-weight="bold" fill="#f4cccc">acantilado</text><text x="240.0" y="22.0" text-anchor="middle" font-size="12" fill="#555">8 columnas × 4 filas, vistas en perspectiva</text>
+  <line x1="484" y1="66" x2="514" y2="66" stroke="#e65100" stroke-width="3"/><text x="524" y="70" font-size="13" fill="#1a1a1a">ruta del borde: 9 pasos</text><line x1="484" y1="96" x2="514" y2="96" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4"/><text x="524" y="100" font-size="13" fill="#1a1a1a">ruta segura: 13 pasos</text><rect x="488" y="119" width="22" height="14" fill="#3a2a1a"/><text x="524" y="130" font-size="13" fill="#1a1a1a">acantilado: −100 y vuelta a S</text><text x="484" y="160" font-size="13" fill="#1a1a1a">cada paso: recompensa −1</text><text x="484" y="190" font-size="13" fill="#1a1a1a">resbalón: con prob. p, acción al azar</text>
+</svg>
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
+<h2>Cada paso cuesta −1 y caer cuesta −100</h2>
+<ul>
+  <li>En cada casilla el robot elige arriba, abajo, izquierda o derecha; contra un borde, se queda donde está.</li>
+  <li>Cada movimiento recibe una recompensa de $-1$, así que conviene llegar pronto; caer al acantilado cuesta $-100$ y devuelve al robot a S.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
+<h2>Pero el suelo resbala</h2>
+<ul>
+  <li>Con probabilidad $p$ la acción elegida se reemplaza por una de las cuatro al azar.</li>
+  <li>Junto al borde, cada paso termina en el vacío con probabilidad $p/4$: el azar elige "abajo" una de cada cuatro veces.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
+<h2>Hay dos maneras naturales de cruzar</h2>
+<ul>
+  <li><strong>Ruta del borde</strong>: sube una fila y avanza pegada al vacío; 9 pasos, la más corta.</li>
+  <li><strong>Ruta segura</strong>: sube hasta la fila superior, la recorre y baja; 13 pasos, lejos del vacío.</li>
+  <li>Cuál conviene depende de $p$, y responderlo con precisión exige las herramientas que siguen.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 2 · El ciclo agente-entorno</div>
+<h2>El robot y el mundo intercambian tres cosas</h2>
+<ul>
+  <li>El agente ve el estado $s_t$ y elige la acción $a_t$; el entorno responde con $s_{t+1}$ y la recompensa $r_{t+1}$.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
     <marker id="ra" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
   </defs>
   <rect x="60" y="95" width="180" height="56" rx="9" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
   <text x="150" y="120" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a3a5c">Agente</text>
-  <text x="150" y="138" text-anchor="middle" font-size="11" fill="#3a6a8c">política π(a | s)</text>
+  <text x="150" y="138" text-anchor="middle" font-size="11" fill="#3a6a8c">política <tspan font-family="serif" font-style="italic">π(</tspan><tspan font-family="serif" font-style="italic">a</tspan> | <tspan font-family="serif" font-style="italic">s</tspan>)</text>
   <rect x="400" y="95" width="180" height="56" rx="9" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/>
   <text x="490" y="120" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a4d1a">Entorno</text>
   <text x="490" y="138" text-anchor="middle" font-size="11" fill="#2d6b2d">dinámica del sistema</text>
+  <!-- accion (arriba) -->
   <path d="M240 110 C 310 70, 330 70, 400 110" fill="none" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#ra)"/>
-  <text x="320" y="66" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">acción a_t</text>
+  <text x="320" y="66" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">acción <tspan font-family="serif" font-style="italic">a</tspan><tspan dy="4.0" font-size="9.0"><tspan font-family="serif" font-style="italic">t</tspan></tspan></text>
+  <!-- estado y recompensa (abajo) -->
   <path d="M400 138 C 330 178, 310 178, 240 138" fill="none" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#ra)"/>
-  <text x="320" y="196" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">estado s_{t+1}, recompensa r_{t+1}</text>
+  <text x="320" y="196" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a1a1a">estado <tspan font-family="serif" font-style="italic">s</tspan><tspan dy="4.0" font-size="9.0"><tspan font-family="serif" font-style="italic">t</tspan>+1</tspan><tspan dy="-4.0">, recompensa </tspan><tspan font-family="serif" font-style="italic">r</tspan><tspan dy="4.0" font-size="9.0"><tspan font-family="serif" font-style="italic">t</tspan>+1</tspan></text>
 </svg>
 </div>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 1 · El ciclo agente-entorno</div>
-<h2>La hipótesis de la recompensa</h2>
+<div class="section-label">§ 2 · El ciclo agente-entorno</div>
+<h2>Toda meta se expresa como una suma de recompensas</h2>
 <ul>
-<li>Todo objetivo puede entenderse como maximizar el valor esperado de una suma de recompensas escalares (Sutton).</li>
-<li>Una señal mal especificada induce conductas que la maximizan al pie de la letra: <em>reward hacking</em>.</li>
+  <li>Hipótesis de la recompensa: cualquier objetivo puede escribirse como maximizar la suma esperada de una señal escalar.</li>
+  <li>En el acantilado, $-1$ por paso dice "llega pronto" y $-100$ dice "no caigas".</li>
+  <li>La recompensa es el único canal por el que el diseñador comunica qué quiere; el agente no conoce la intención, solo la cifra.</li>
 </ul>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 1 · El ciclo agente-entorno</div>
-<h2>Dos distinciones de modelado</h2>
+<div class="section-label">§ 2 · El ciclo agente-entorno</div>
+<h2>Una recompensa mal diseñada se cumple al pie de la letra</h2>
 <ul>
-<li><strong>Estado vs observación</strong>: si el agente solo percibe parte del estado, el problema es un MDP parcialmente observable (POMDP).</li>
-<li><strong>Episódica vs continua</strong>: con o sin final natural; condiciona cómo se define el retorno.</li>
+  <li>Supóngase que cada paso valiera $+1$ en vez de $-1$, con la intención de premiar "avanzar".</li>
+  <li>Llegar a G en 9 pasos suma $1 + 0.95 + \dots + 0.95^8 \approx 7.4$; vagar sin llegar nunca suma $20$.</li>
+  <li>La mejor política deja de buscar la meta: maximiza la cifra y traiciona la intención. Esto se llama <em>reward hacking</em>.</li>
 </ul>
-<p class="note">Para razonar con rigor sobre esta interacción hace falta una estructura formal. → §2</p>
-</section>
+<p class="note">Con $-1$ por paso, cada paso extra resta: la única forma de dejar de perder es llegar.</p>
 
-<!-- §2 MDP -->
+</section>
 <section>
-<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
-<h2>¿Qué estructura vuelve tratable el problema?</h2>
+<div class="section-label">§ 2 · El ciclo agente-entorno</div>
+<h2>Algunas tareas terminan y otras no</h2>
 <ul>
-<li>El marco estándar del RL es el proceso de decisión de Markov (MDP, <em>Markov decision process</em>).</li>
+  <li>Cruzar el acantilado es <strong>episódico</strong>: termina en G y vuelve a empezar.</li>
+  <li>Regular una planta industrial es <strong>continuo</strong>: no termina nunca.</li>
 </ul>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
-<h2>Un MDP es una tupla de cinco elementos</h2>
-$$(\mathcal{S}, \mathcal{A}, P, R, \gamma)$$
+<div class="section-label">§ 2 · El ciclo agente-entorno</div>
+<h2>En una tarea continua, sumar todo deja de servir</h2>
 <ul>
-<li>Estados $\mathcal{S}$, acciones $\mathcal{A}$, dinámica $P(s_{t+1}\mid s_t,a_t)$, recompensa $R$, descuento $\gamma$.</li>
+  <li>Supóngase que un controlador gana $+1$ por hora y otro, mejor, $+2$ por hora, para siempre.</li>
+  <li>Sumadas sin fin, ambas dan infinito: $1 + 1 + 1 + \cdots = \infty$ y $2 + 2 + 2 + \cdots = \infty$. La suma ya no distingue cuál es mejor.</li>
+  <li>La salida es pesar menos lo lejano: si la hora $k$ pesa $0.95^k$, las sumas valen $20$ y $40$, finitas y comparables.</li>
 </ul>
-<p class="note">En el caso interesante, el del aprendizaje, el agente <strong>no conoce</strong> $P$ ni $R$: debe aprender de la experiencia.</p>
-</section>
+<p class="note">Ese peso decreciente es el descuento; aparece formalmente al definir el retorno.</p>
 
-<section>
-<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
-<h2>La propiedad de Markov</h2>
-$$\Pr(s_{t+1} \mid s_t, a_t) = \Pr(s_{t+1} \mid s_1, a_1, \dots, s_t, a_t)$$
-<p class="note">En palabras: el estado actual resume todo el pasado relevante; la historia es irrelevante una vez conocido el presente. Esto habilita las recursiones de Bellman.</p>
 </section>
-
 <section>
-<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
-<h2>La interacción produce una trayectoria</h2>
-<ul><li>Secuencia de estados, acciones y recompensas: cada acción provoca una transición y emite una recompensa.</li></ul>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>Un proceso de decisión de Markov describe el mundo con cinco objetos</h2>
+$$
+(\mathcal{S},\ \mathcal{A},\ P,\ R,\ \gamma)
+$$
+<ul>
+  <li>Un proceso de decisión de Markov (MDP, <em>Markov decision process</em>) reúne estados $\mathcal{S}$, acciones $\mathcal{A}$, dinámica $P(s_{t+1} \mid s_t, a_t)$, recompensa $R(s_t, a_t)$ y factor de descuento $\gamma$.</li>
+</ul>
+<p class="note">En palabras: qué situaciones hay, qué se puede hacer, qué pasa al hacerlo, cuánto se gana y cuánto pesa el futuro. La <strong>dinámica</strong> $P$ es el "qué pasa": la probabilidad de cada estado siguiente.</p>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>En el acantilado hay 25 estados y 4 acciones</h2>
+<ul>
+  <li>Los estados son las casillas donde el robot puede estar: 32 menos las 6 del acantilado y la meta, que es terminal.</li>
+  <li>Las acciones son $\mathcal{A} = \{\uparrow, \downarrow, \leftarrow, \rightarrow\}$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>Tres símbolos describen un movimiento</h2>
+<ul>
+  <li>$s$: la casilla donde está el robot; $a$: la acción que elige.</li>
+  <li>$s'$: la casilla donde queda después; la prima se lee "la siguiente".</li>
+</ul>
+<p class="note">S y G, en mayúscula, no son variables: son los nombres de dos casillas fijas, la salida y la meta.</p>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>La función f dice adónde lleva cada acción</h2>
+<ul>
+  <li>$f(s,a)$ es la casilla a la que llega el robot si ejecuta $a$ desde $s$ sin resbalar.</li>
+  <li>Contra un borde se queda donde está: $f(s,a) = s$.</li>
+  <li>Si el movimiento cae al acantilado, vuelve a la salida: $f(s,a) = \mathrm{S}$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>El indicador vale 1 cuando algo se cumple</h2>
+$$
+\mathbf{1}[\text{condición}] = \begin{cases} 1 & \text{si la condición se cumple} \\ 0 & \text{si no} \end{cases}
+$$
+<ul>
+  <li>$\mathbf{1}[s' = f(s,a)]$ vale 1 solo para la casilla adonde apunta la acción $a$, y 0 para todas las demás.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>Hay dos maneras de terminar en s'</h2>
+<ul>
+  <li><strong>No resbala</strong> (probabilidad $1-p$): ejecuta $a$ y llega a $s'$ si $f(s,a) = s'$.</li>
+  <li><strong>Resbala</strong> (probabilidad $p$): el azar elige una de las cuatro acciones $b$, cada una con probabilidad $\tfrac14$; aporta $\tfrac{p}{4}$ por cada $b$ que lleve a $s'$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>Al sumar las dos maneras se obtiene la dinámica</h2>
+$$
+P(s' \mid s, a) = \underbrace{(1-p)\, \mathbf{1}[s' = f(s,a)]}_{\text{no resbala}} \;+\; \underbrace{\frac{p}{4} \sum_{b \in \mathcal{A}} \mathbf{1}[s' = f(s,b)]}_{\text{resbala}}
+$$
 <div class="svg-holder">
-<svg viewBox="0 0 700 170" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
-    <marker id="rt" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+    <pattern id="hatch3" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#f4cccc"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c0392b" stroke-width="2" opacity="0.5"/>
+    </pattern>
+    <marker id="m1" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#e65100"/></marker>
+    <marker id="m2" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker>
+    <marker id="m3" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c0392b"/></marker>
   </defs>
-  <circle cx="70" cy="78" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
-  <text x="70" y="83" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">s_t</text>
-  <circle cx="270" cy="78" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
-  <text x="270" y="83" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a3a5c">s_{t+1}</text>
-  <circle cx="470" cy="78" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
-  <text x="470" y="83" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a3a5c">s_{t+2}</text>
-  <circle cx="640" cy="78" r="22" fill="#eceff1" stroke="#90a4ae" stroke-width="1.4"/>
-  <text x="640" y="84" text-anchor="middle" font-size="14" fill="#546e7a">...</text>
-  <line x1="96" y1="78" x2="242" y2="78" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rt)"/>
-  <line x1="296" y1="78" x2="442" y2="78" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rt)"/>
-  <line x1="496" y1="78" x2="616" y2="78" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rt)"/>
-  <text x="169" y="58" text-anchor="middle" font-size="12" font-weight="bold" fill="#7b1fa2">acción a_t</text>
-  <text x="169" y="102" text-anchor="middle" font-size="11" fill="#388e3c">recompensa r_{t+1}</text>
-  <text x="369" y="58" text-anchor="middle" font-size="12" font-weight="bold" fill="#7b1fa2">acción a_{t+1}</text>
-  <text x="369" y="102" text-anchor="middle" font-size="11" fill="#388e3c">recompensa r_{t+2}</text>
-  <text x="556" y="58" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#7b1fa2">a_{t+2}</text>
-  <text x="556" y="102" text-anchor="middle" font-size="11" fill="#388e3c">r_{t+3}</text>
-  <text x="350" y="148" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1a1a1a">trayectoria: (s_t, a_t, r_{t+1}), (s_{t+1}, a_{t+1}, r_{t+2}), ...</text>
+  <rect x="40" y="30" width="70" height="70" fill="#fffdf5" stroke="#b8b2a0"/><rect x="110" y="30" width="70" height="70" fill="#fffdf5" stroke="#b8b2a0"/><rect x="180" y="30" width="70" height="70" fill="#fffdf5" stroke="#b8b2a0"/><rect x="40" y="100" width="70" height="70" fill="#fffdf5" stroke="#b8b2a0"/><rect x="110" y="100" width="70" height="70" fill="#fffdf5" stroke="#b8b2a0"/><rect x="180" y="100" width="70" height="70" fill="#fffdf5" stroke="#b8b2a0"/><rect x="40" y="170" width="70" height="70" fill="url(#hatch3)" stroke="#b8b2a0"/><rect x="110" y="170" width="70" height="70" fill="url(#hatch3)" stroke="#b8b2a0"/><rect x="180" y="170" width="70" height="70" fill="url(#hatch3)" stroke="#b8b2a0"/><text x="145.0" y="210.0" text-anchor="middle" font-size="13" font-weight="bold" fill="#7a1a1a">acantilado</text><line x1="161.0" y1="135.0" x2="201.0" y2="135.0" stroke="#e65100" stroke-width="6" marker-end="url(#m1)"/><text x="180.0" y="115.0" text-anchor="middle" font-size="13" font-weight="bold" fill="#e65100">0.925</text><line x1="145.0" y1="119.0" x2="145.0" y2="79.0" stroke="#555" stroke-width="2.2" marker-end="url(#m2)"/><text x="153.0" y="91.6" text-anchor="start" font-size="13" font-weight="bold" fill="#555">0.025</text><line x1="129.0" y1="135.0" x2="89.0" y2="135.0" stroke="#555" stroke-width="2.2" marker-end="url(#m2)"/><text x="101.6" y="125.0" text-anchor="middle" font-size="13" font-weight="bold" fill="#555">0.025</text><line x1="145.0" y1="151.0" x2="145.0" y2="191.0" stroke="#c0392b" stroke-width="2.2" marker-end="url(#m3)"/><text x="153.0" y="173.5" text-anchor="start" font-size="13" font-weight="bold" fill="#c0392b">0.025</text><circle cx="145.0" cy="135.0" r="12" fill="#7b1fa2" stroke="#fff" stroke-width="2"/><text x="145.0" y="20" text-anchor="middle" font-size="12" fill="#555">ejemplo con p = 0.1: el robot elige →</text><text x="330" y="52" font-size="14" fill="#e65100" xml:space="preserve"><tspan font-weight="bold">No resbala</tspan> (prob. 1 − p = 0.9): ejecuta →</text><text x="330" y="78" font-size="14" fill="#1a1a1a" xml:space="preserve"><tspan font-weight="bold">Resbala</tspan> (prob. p = 0.1): el azar elige ↑, ↓, ← o →,</text><text x="330" y="104" font-size="14" fill="#1a1a1a" xml:space="preserve">      cada una con prob. p/4 = 0.025</text><text x="330" y="156" font-size="14" fill="#e65100" xml:space="preserve">→ : 0.9 + 0.025 = 0.925  (no resbala, o resbala hacia →)</text><text x="330" y="182" font-size="14" fill="#555" xml:space="preserve">↑ , ← : 0.025 cada una</text><text x="330" y="208" font-size="14" fill="#c0392b" xml:space="preserve">↓ : 0.025, cae al acantilado y vuelve a S con −100</text><text x="330" y="234" font-size="14" fill="#1a1a1a" xml:space="preserve">total: 0.925 + 3 × 0.025 = 1</text>
 </svg>
 </div>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 2 · Procesos de decisión de Markov</div>
-<h2>Markov es un supuesto, no un hecho dado</h2>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>El presente basta: la propiedad de Markov</h2>
+$$
+\Pr(s_{t+1} \mid s_t, a_t) = \Pr(s_{t+1} \mid s_1, a_1, \dots, s_t, a_t)
+$$
 <ul>
-<li>Si la representación omite información relevante, deja de ser de Markov y los métodos pierden sus garantías.</li>
+  <li>La casilla actual lo resume todo: cómo llegó el robot hasta ella no cambia lo que puede pasar después.</li>
 </ul>
-<p class="note">Un cuadro de un videojuego no revela velocidad; en E.3 el estado apila varios cuadros para recuperarla. → §3</p>
-</section>
 
-<!-- §3 POLÍTICAS -->
+</section>
 <section>
-<div class="section-label">§ 3 · Políticas y el objetivo del agente</div>
-<h2>¿Qué optimiza exactamente el agente?</h2>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>Cuando el estado no basta, deja de ser de Markov</h2>
 <ul>
-<li>Su comportamiento se define mediante una política, el objeto que el RL busca optimizar.</li>
+  <li>Un solo cuadro de un videojuego no muestra velocidades; por eso se apilan varios cuadros.</li>
+  <li>Si el agente solo observa parte del estado, el problema es un MDP parcialmente observable (POMDP).</li>
 </ul>
-</section>
-
-<section>
-<div class="section-label">§ 3 · Políticas y el objetivo del agente</div>
-<h2>La política asigna acciones a estados</h2>
-$$\pi(a_t \mid s_t)$$
-<ul>
-<li>Determinista ($a_t = \pi(s_t)$) o estocástica; la aleatoriedad es el mecanismo más simple para explorar.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 3 · Políticas y el objetivo del agente</div>
-<h2>De la tabla a la aproximación de funciones</h2>
-<ul>
-<li>En problemas pequeños la política es una tabla; en problemas reales, una red neuronal con pesos ajustables.</li>
-</ul>
-<p class="note">Ese salto separa el RL tabular del RL profundo. El objetivo no es la recompensa inmediata, sino el retorno. → §4</p>
-</section>
-
-<!-- §4 RETORNO -->
-<section>
-<div class="section-label">§ 4 · Recompensas y el retorno descontado</div>
-<h2>¿Cómo sumar las recompensas a lo largo del tiempo?</h2>
-<ul>
-<li>El retorno $G_t$ es la suma acumulada y descontada de las recompensas futuras.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 4 · Recompensas y el retorno descontado</div>
-<h2>El retorno descontado</h2>
-$$G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2\, r_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^{k}\, r_{t+k+1}$$
-<p class="note">En palabras: una recompensa $k$ pasos en el futuro se pondera por $\gamma^k$, que decae con la distancia temporal.</p>
-</section>
-
-<section>
-<div class="section-label">§ 4 · Recompensas y el retorno descontado</div>
-<h2>El factor de descuento γ cumple tres funciones</h2>
-<ul>
-<li>Garantiza la <strong>convergencia</strong> de la suma infinita; modela la <strong>incertidumbre</strong> del futuro; expresa una <strong>preferencia temporal</strong>.</li>
-<li>El horizonte efectivo es $1/(1-\gamma)$: con $\gamma=0.99$, unos 100 pasos.</li>
-</ul>
-<p class="note">El retorno es aleatorio cada vez que se visita el mismo estado: hay que tomar su esperanza. → §5</p>
-</section>
-
-<!-- §5 FUNCIONES DE VALOR -->
-<section>
-<div class="section-label">§ 5 · Funciones de valor</div>
-<h2>¿Cómo medir qué tan bueno es un estado o una acción?</h2>
-<ul>
-<li>No por un retorno concreto, sino por el <strong>retorno esperado</strong>: de ahí las dos funciones de valor centrales.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 5 · Funciones de valor</div>
-<h2>Valor de estado: retorno esperado desde s</h2>
-$$v_\pi(s_t) = \mathbb{E}_\pi\!\left[\, G_t \mid s_t \,\right]$$
-<p class="note">En palabras: qué tan deseable es una situación bajo $\pi$. Mira el largo plazo: un estado de recompensa nula puede valer mucho si conduce a recompensas altas.</p>
-</section>
-
-<section>
-<div class="section-label">§ 5 · Funciones de valor</div>
-<h2>Valor de acción (Q-value): empezar tomando a</h2>
-$$q_\pi(s_t, a_t) = \mathbb{E}_\pi\!\left[\, G_t \mid s_t, a_t \,\right]$$
-<p class="note">Más útil para decidir que $v$, porque compara directamente las acciones disponibles en un mismo estado. Es el objeto central de Q-Learning.</p>
-</section>
-
-<section>
-<div class="section-label">§ 5 · Funciones de valor</div>
-<h2>El valor del estado es el promedio de los valores de acción</h2>
-<ul><li>$v_\pi(s) = \sum_a \pi(a\mid s)\, q_\pi(s,a)$: promedio de los $q$ ponderado por la política.</li></ul>
 <div class="svg-holder">
-<svg viewBox="0 0 620 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs><marker id="pk2" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#b5651d"/></marker></defs>
+  <text x="151.0" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">Un cuadro</text><rect x="60" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="60" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="60" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="60" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="60" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="86" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="86" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="86" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="86" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="86" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="112" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="112" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="112" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="112" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="112" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="138" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="138" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="138" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="138" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="138" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="164" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="164" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="164" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="164" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="164" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="216" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="216" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="216" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="216" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="216" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="245" y="79.0" width="9" height="52" rx="2" fill="#4e79a7"/><circle cx="151.0" cy="105.0" r="8" fill="#f2b705" stroke="#7a5c00" opacity="1"/><line x1="151.0" y1="105.0" x2="203.0" y2="53.0" stroke="#b5651d" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#pk2)"/><line x1="151.0" y1="105.0" x2="203.0" y2="157.0" stroke="#b5651d" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#pk2)"/><text x="151.0" y="192" text-anchor="middle" font-size="12.5" fill="#1a1a1a">¿sube o baja? las dos son posibles:</text><text x="151.0" y="210" text-anchor="middle" font-size="12.5" fill="#1a1a1a">la foto no basta para decidir</text><text x="200" y="104" font-size="20" font-weight="bold" fill="#c0392b">?</text><text x="541.0" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a1a">Dos cuadros apilados</text><rect x="450" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="450" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="450" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="450" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="450" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="476" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="476" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="476" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="476" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="476" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="502" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="502" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="502" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="502" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="502" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="528" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="528" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="528" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="528" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="528" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="554" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="554" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="554" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="554" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="554" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="580" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="580" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="580" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="580" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="580" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="606" y="40" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="606" y="66" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="606" y="92" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="606" y="118" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="606" y="144" width="26" height="26" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="635" y="79.0" width="9" height="52" rx="2" fill="#4e79a7"/><circle cx="489.0" cy="157.0" r="8" fill="#f2b705" stroke="#7a5c00" opacity="0.35"/><circle cx="515.0" cy="131.0" r="8" fill="#f2b705" stroke="#7a5c00" opacity="0.6"/><circle cx="541.0" cy="105.0" r="8" fill="#f2b705" stroke="#7a5c00" opacity="1"/><line x1="541.0" y1="105.0" x2="593.0" y2="53.0" stroke="#b5651d" stroke-width="2" marker-end="url(#pk2)"/><text x="541.0" y="192" text-anchor="middle" font-size="12.5" fill="#1a1a1a">la posición anterior revela la velocidad:</text><text x="541.0" y="210" text-anchor="middle" font-size="12.5" fill="#1a1a1a">la pelota sube; el estado vuelve a ser de Markov</text>
+  <line x1="330" y1="105" x2="420" y2="105" stroke="#555" stroke-width="2" marker-end="url(#pk3)"/>
+  <defs><marker id="pk3" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker></defs>
+  <text x="375" y="95" text-anchor="middle" font-size="11.5" fill="#555">agregar los</text>
+  <text x="375" y="125" text-anchor="middle" font-size="11.5" fill="#555">cuadros previos</text>
+</svg>
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
+<h2>En Pong, una foto de la cancha no basta</h2>
+<ul>
+  <li>En un Pong simplificado, una paleta debe devolver una pelota que rebota en una cancha de casillas.</li>
+  <li>La posición de la pelota no dice si sube o baja: el estado de Markov debe incluir su velocidad.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 4 · Políticas</div>
+<h2>Una manera de cruzar es una política π(a | s)</h2>
+<ul>
+  <li>La política $\pi(a \mid s)$ da la probabilidad de cada acción en cada estado; si es determinista se escribe $a = \pi(s)$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 4 · Políticas</div>
+<h2>Las dos rutas son políticas deterministas</h2>
+<ul>
+  <li>Cada política pone una flecha en cada una de las 25 casillas: es una tabla que a cada estado le asigna una acción.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
-    <marker id="vq" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+    <pattern id="hatch2" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#f4cccc"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c0392b" stroke-width="2" opacity="0.5"/>
+    </pattern>
+    <marker id="pae65100" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#e65100"/></marker><marker id="pge65100" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a8a8a"/></marker><marker id="pa1565c0" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1565c0"/></marker><marker id="pg1565c0" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a8a8a"/></marker><marker id="pr" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c0392b"/></marker>
   </defs>
-  <text x="72" y="58" text-anchor="middle" font-size="12" font-style="italic" fill="#555">v(s)</text>
-  <circle cx="72" cy="112" r="30" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.7"/>
-  <text x="72" y="117" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a3a5c">s</text>
-  <line x1="102" y1="104" x2="296" y2="58" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#vq)"/>
-  <line x1="104" y1="112" x2="296" y2="120" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#vq)"/>
-  <line x1="102" y1="120" x2="296" y2="182" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#vq)"/>
-  <text x="188" y="74" text-anchor="middle" font-size="10" fill="#7b1fa2">π(a | s)</text>
-  <text x="190" y="108" text-anchor="middle" font-size="10" fill="#7b1fa2">π(a' | s)</text>
-  <text x="188" y="160" text-anchor="middle" font-size="10" fill="#7b1fa2">π(a'' | s)</text>
-  <rect x="300" y="41" width="170" height="34" rx="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
-  <text x="385" y="63" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5c1a5c">q(s, a)</text>
-  <rect x="300" y="103" width="170" height="34" rx="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
-  <text x="385" y="125" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5c1a5c">q(s, a')</text>
-  <rect x="300" y="165" width="170" height="34" rx="7" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
-  <text x="385" y="187" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#5c1a5c">q(s, a'')</text>
-  <text x="555" y="117" text-anchor="middle" font-size="11" fill="#1a4d1a">valores</text>
-  <text x="555" y="132" text-anchor="middle" font-size="11" fill="#1a4d1a">de acción</text>
-  <text x="310" y="226" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1a1a1a">v(s) = Σ π(a | s) · q(s, a)   (promedio sobre la política)</text>
+  <text x="182" y="30" text-anchor="middle" font-size="14" font-weight="bold" fill="#e65100">Política del borde</text><rect x="30" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="49.0" y1="48.4" x2="49.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="68" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="87.0" y1="48.4" x2="87.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="106" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="125.0" y1="48.4" x2="125.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="144" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="163.0" y1="48.4" x2="163.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="182" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="201.0" y1="48.4" x2="201.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="220" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="239.0" y1="48.4" x2="239.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="258" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="277.0" y1="48.4" x2="277.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="296" y="40" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="315.0" y1="48.4" x2="315.0" y2="69.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="30" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="49.0" y1="86.4" x2="49.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="68" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="87.0" y1="86.4" x2="87.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="106" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="125.0" y1="86.4" x2="125.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="144" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="163.0" y1="86.4" x2="163.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="182" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="201.0" y1="86.4" x2="201.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="220" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="239.0" y1="86.4" x2="239.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="258" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="277.0" y1="86.4" x2="277.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="296" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="315.0" y1="86.4" x2="315.0" y2="107.6" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pge65100)"/><rect x="30" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="38.4" y1="135.0" x2="59.6" y2="135.0" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="68" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="76.4" y1="135.0" x2="97.6" y2="135.0" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="106" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="114.4" y1="135.0" x2="135.6" y2="135.0" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="144" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="152.4" y1="135.0" x2="173.6" y2="135.0" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="182" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="190.4" y1="135.0" x2="211.6" y2="135.0" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="220" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="228.4" y1="135.0" x2="249.6" y2="135.0" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="258" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="266.4" y1="135.0" x2="287.6" y2="135.0" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="296" y="116" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="315.0" y1="124.4" x2="315.0" y2="145.6" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="30" y="154" width="38" height="38" fill="#fde3cf" stroke="#b8b2a0"/><line x1="49.0" y1="183.6" x2="49.0" y2="162.4" stroke="#e65100" stroke-width="2.4" marker-end="url(#pae65100)"/><rect x="68" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="106" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="144" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="182" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="220" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="258" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="296" y="154" width="38" height="38" fill="#d9efd9" stroke="#b8b2a0"/><text x="315.0" y="178.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a4d1a">G</text><text x="36" y="167" font-size="11" font-weight="bold" fill="#1a3a5c">S</text><text x="182" y="178.0" text-anchor="middle" font-size="12" font-weight="bold" fill="#7a1a1a">acantilado</text><rect x="145.5" y="79.5" width="35" height="35" fill="none" stroke="#c0392b" stroke-width="2.5" rx="3"/><path d="M175.16 135.0 Q191.16 116.0 177.16 91.0" fill="none" stroke="#c0392b" stroke-width="1.8" stroke-dasharray="3,2" marker-end="url(#pr)"/><text x="552" y="30" text-anchor="middle" font-size="14" font-weight="bold" fill="#1565c0">Política segura</text><rect x="400" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="408.4" y1="59.0" x2="429.6" y2="59.0" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="438" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="446.4" y1="59.0" x2="467.6" y2="59.0" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="476" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="484.4" y1="59.0" x2="505.6" y2="59.0" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="514" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="522.4" y1="59.0" x2="543.6" y2="59.0" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="552" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="560.4" y1="59.0" x2="581.6" y2="59.0" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="590" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="598.4" y1="59.0" x2="619.6" y2="59.0" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="628" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="636.4" y1="59.0" x2="657.6" y2="59.0" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="666" y="40" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="685.0" y1="48.4" x2="685.0" y2="69.6" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="400" y="78" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="419.0" y1="107.6" x2="419.0" y2="86.4" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="438" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="457.0" y1="107.6" x2="457.0" y2="86.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="476" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="495.0" y1="107.6" x2="495.0" y2="86.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="514" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="533.0" y1="107.6" x2="533.0" y2="86.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="552" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="571.0" y1="107.6" x2="571.0" y2="86.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="590" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="609.0" y1="107.6" x2="609.0" y2="86.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="628" y="78" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="647.0" y1="107.6" x2="647.0" y2="86.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="666" y="78" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="685.0" y1="86.4" x2="685.0" y2="107.6" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="400" y="116" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="419.0" y1="145.6" x2="419.0" y2="124.4" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="438" y="116" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="457.0" y1="145.6" x2="457.0" y2="124.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="476" y="116" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="495.0" y1="145.6" x2="495.0" y2="124.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="514" y="116" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="533.0" y1="145.6" x2="533.0" y2="124.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="552" y="116" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="571.0" y1="145.6" x2="571.0" y2="124.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="590" y="116" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="609.0" y1="145.6" x2="609.0" y2="124.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="628" y="116" width="38" height="38" fill="#fffdf5" stroke="#b8b2a0"/><line x1="647.0" y1="145.6" x2="647.0" y2="124.4" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#pg1565c0)"/><rect x="666" y="116" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="685.0" y1="124.4" x2="685.0" y2="145.6" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="400" y="154" width="38" height="38" fill="#d6e6fb" stroke="#b8b2a0"/><line x1="419.0" y1="183.6" x2="419.0" y2="162.4" stroke="#1565c0" stroke-width="2.4" marker-end="url(#pa1565c0)"/><rect x="438" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="476" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="514" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="552" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="590" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="628" y="154" width="38" height="38" fill="url(#hatch2)" stroke="#b8b2a0"/><rect x="666" y="154" width="38" height="38" fill="#d9efd9" stroke="#b8b2a0"/><text x="685.0" y="178.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a4d1a">G</text><text x="406" y="167" font-size="11" font-weight="bold" fill="#1a3a5c">S</text><text x="552" y="178.0" text-anchor="middle" font-size="12" font-weight="bold" fill="#7a1a1a">acantilado</text><rect x="515.5" y="79.5" width="35" height="35" fill="none" stroke="#c0392b" stroke-width="2.5" rx="3"/><path d="M545.16 59.0 Q561.16 78.0 547.16 103.0" fill="none" stroke="#c0392b" stroke-width="1.8" stroke-dasharray="3,2" marker-end="url(#pr)"/>
+  <text x="30" y="215" font-size="12" fill="#1a1a1a">casillas de color: la ruta; flechas grises: qué hacer fuera de ella</text>
+  <text x="30" y="235" font-size="12" fill="#c0392b">marco rojo: el robot resbaló y quedó fuera de la ruta; la flecha de esa casilla le dice cómo seguir</text>
 </svg>
 </div>
-</section>
 
-<section>
-<div class="section-label">§ 5 · Funciones de valor</div>
-<h2>La función de ventaja: cuánto mejor que el promedio</h2>
-$$A_\pi(s, a) = q_\pi(s, a) - v_\pi(s)$$
-<p class="note">Positiva para las acciones mejores que la media. Separar valor del estado y ventaja motiva Dueling DQN y está en el corazón de los métodos actor-crítico.</p>
 </section>
-
-<!-- §6 ÓPTIMOS -->
 <section>
-<div class="section-label">§ 6 · Políticas y valores óptimos</div>
-<h2>¿Qué define la "mejor" política?</h2>
+<div class="section-label">§ 4 · Políticas</div>
+<h2>La política también cubre las casillas fuera de la ruta</h2>
 <ul>
-<li>Para los MDP siempre existe una política óptima $\pi_*$, mejor o igual que todas las demás en todos los estados.</li>
+  <li>La ruta es solo el recorrido cuando nada falla.</li>
+  <li>Al resbalar, el robot puede quedar en una casilla que la ruta no pisa; ahí también necesita saber qué hacer.</li>
+  <li>Por eso una política se define en <em>todo</em> estado: las flechas grises de las casillas sin color devuelven al robot a su camino.</li>
 </ul>
-</section>
 
-<section>
-<div class="section-label">§ 6 · Políticas y valores óptimos</div>
-<h2>Las funciones de valor óptimas</h2>
-$$v_*(s_t) = \max_{\pi}\, v_\pi(s_t), \qquad q_*(s_t, a_t) = \max_{\pi}\, q_\pi(s_t, a_t)$$
-<p class="note">En palabras: el mejor retorno alcanzable desde cada estado (o estado-acción) sobre todas las políticas posibles.</p>
 </section>
-
 <section>
-<div class="section-label">§ 6 · Políticas y valores óptimos</div>
-<h2>Conocer q* vuelve trivial decidir</h2>
-$$\pi_*(s_t) = \arg\max_{a_t}\, q_*(s_t, a_t)$$
+<div class="section-label">§ 4 · Políticas</div>
+<h2>La política del borde, escrita como tabla</h2>
+<table class="ptab">
+<tr><th>casilla (fila, col.)</th><th class="ar">↑</th><th class="ar">↓</th><th class="ar">←</th><th class="ar">→</th></tr>
+<tr><td class="cas">(4, 1)<span>S, la salida</span></td><td class="uno">1</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td class="cas">(3, 1)</td><td>0</td><td>0</td><td>0</td><td class="uno">1</td></tr>
+<tr><td class="cas">(3, 2)</td><td>0</td><td>0</td><td>0</td><td class="uno">1</td></tr>
+<tr><td class="cas dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td></tr>
+<tr><td class="cas">(3, 7)</td><td>0</td><td>0</td><td>0</td><td class="uno">1</td></tr>
+<tr><td class="cas">(3, 8)</td><td>0</td><td class="uno">1</td><td>0</td><td>0</td></tr>
+<tr><td class="cas">(2, 4)<span>fuera de la ruta</span></td><td>0</td><td class="uno">1</td><td>0</td><td>0</td></tr>
+<tr><td class="cas">(1, 4)<span>fuera de la ruta</span></td><td>0</td><td class="uno">1</td><td>0</td><td>0</td></tr>
+<tr><td class="cas dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td></tr>
+</table><p class="note">Una fila por casilla (25 en total) y una columna por acción; cada entrada es $\pi(a \mid s)$. Al ser determinista, cada fila tiene un solo 1.</p>
+
+</section>
+<section>
+<div class="section-label">§ 4 · Políticas</div>
+<h2>Con azar, cada fila reparte la probabilidad</h2>
 <ul>
-<li>Basta con ser <strong>codicioso</strong> (<em>greedy</em>) respecto a $q_*$; y a diferencia de $v_*$, no se necesita el modelo $P$.</li>
+  <li>Con probabilidad 0.2 el robot ignora la tabla y elige una de las cuatro acciones al azar.</li>
 </ul>
-<p class="note">Por eso muchos algoritmos estiman $q_*$. La optimalidad se expresa como una ecuación recursiva. → §7</p>
-</section>
+<table class="ptab">
+<tr><th>casilla (fila, col.)</th><th class="ar">↑</th><th class="ar">↓</th><th class="ar">←</th><th class="ar">→</th></tr>
+<tr><td class="cas">(4, 1)<span>S, la salida</span></td><td class="uno">0.85</td><td>0.05</td><td>0.05</td><td>0.05</td></tr>
+<tr><td class="cas">(3, 1)</td><td>0.05</td><td>0.05</td><td>0.05</td><td class="uno">0.85</td></tr>
+<tr><td class="cas">(3, 2)</td><td>0.05</td><td>0.05</td><td>0.05</td><td class="uno">0.85</td></tr>
+<tr><td class="cas dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td></tr>
+<tr><td class="cas">(3, 7)</td><td>0.05</td><td>0.05</td><td>0.05</td><td class="uno">0.85</td></tr>
+<tr><td class="cas">(3, 8)</td><td>0.05</td><td class="uno">0.85</td><td>0.05</td><td>0.05</td></tr>
+<tr><td class="cas">(2, 4)<span>fuera de la ruta</span></td><td>0.05</td><td class="uno">0.85</td><td>0.05</td><td>0.05</td></tr>
+<tr><td class="cas">(1, 4)<span>fuera de la ruta</span></td><td>0.05</td><td class="uno">0.85</td><td>0.05</td><td>0.05</td></tr>
+<tr><td class="cas dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td><td class="dots">⋮</td></tr>
+</table><p class="note">La acción del borde recibe 0.8 + 0.2/4 = 0.85 y cada otra 0.2/4 = 0.05; cada fila sigue sumando 1. Este azar lo decide el agente; el resbalón, en cambio, lo impone el suelo.</p>
 
-<!-- §7 BELLMAN -->
+</section>
 <section>
-<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>¿Cómo se relaciona el valor de un estado con el del siguiente?</h2>
+<div class="section-label">§ 4 · Políticas</div>
+<h2>El azar sirve para explorar</h2>
 <ul>
-<li>Las funciones de valor satisfacen relaciones <strong>recursivas</strong>: la columna vertebral de casi todos los métodos de RL.</li>
+  <li>Una política estocástica prueba acciones que todavía no conoce bien.</li>
+  <li>En problemas pequeños la política es una tabla; en problemas grandes se representa con una red neuronal.</li>
+  <li>Para comparar políticas hace falta, primero, medir cuánto rinde un recorrido.</li>
 </ul>
-</section>
 
-<section>
-<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>La ecuación de Bellman para v</h2>
-$$v_\pi(s_t) = \sum_{a_t} \pi(a_t \mid s_t)\!\left( r(s_t, a_t) + \gamma \sum_{s_{t+1}} P(s_{t+1} \mid s_t, a_t)\, v_\pi(s_{t+1}) \right)$$
-<p class="note">En palabras: el valor de un estado es la recompensa esperada al salir de él más el valor descontado del estado al que se llega.</p>
 </section>
-
 <section>
-<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>El valor se construye desde los sucesores</h2>
-<ul><li>Promedio, sobre acciones (política) y transiciones (entorno), de la recompensa más $\gamma\, v(s')$.</li></ul>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>Un recorrido se mide por su retorno</h2>
+$$
+G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2\, r_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^{k}\, r_{t+k+1}
+$$
+<p class="note">En palabras: la suma de las recompensas futuras, cada una con un peso γᵏ que decae con la distancia.</p>
+
+</section>
+<section>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>El factor γ decide cuánto importa el futuro</h2>
+<ul>
+  <li>Con $\gamma = 1$ todo pesa igual; con $\gamma &lt; 1$ una recompensa a $k$ pasos pesa $\gamma^{k}$.</li>
+  <li>La suma de los pesos, $1/(1-\gamma)$, es el horizonte efectivo: 20 pasos con $\gamma = 0.95$, el valor que se usa en el acantilado.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>Descontar asegura sumas finitas y prefiere lo inmediato</h2>
+<ul>
+  <li>Con recompensas acotadas y $\gamma &lt; 1$ la serie converge, aunque la tarea no termine.</li>
+  <li>También expresa que el futuro es incierto, como una tasa de interés.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>Paso 1: sin resbalón, el borde paga nueve veces −1</h2>
+$$
+G = -\left(1 + 0.95 + 0.95^2 + \cdots + 0.95^{8}\right)
+$$
+
+</section>
+<section>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>Paso 2: la suma geométrica da −7.40</h2>
+$$
+G = -\frac{1 - 0.95^{9}}{1 - 0.95} \approx -7.40
+$$
+<ul>
+  <li>Con el mismo cálculo y 13 pasos, la ruta segura obtiene $-9.73$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>Cuatro pasos extra cuestan 2.33, no 4</h2>
+<ul>
+  <li>Llegan tarde, y el descuento los pesa menos.</li>
+  <li>Sin resbalón, el borde gana.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>Con resbalón, el mismo recorrido varía</h2>
+<ul>
+  <li>Cada fila de la tabla: paso $t$, casilla (fila, columna), acción, $r$, término $\gamma^t r$ y retorno acumulado $G$.</li>
+</ul>
+<div data-rlw="trayectoria" data-valor="no" style="max-width:1060px"></div>
+
+</section>
+<section>
+<div class="section-label">§ 6 · Funciones de valor</div>
+<h2>Si el retorno es aleatorio, se resume por su promedio</h2>
+$$
+v_\pi(s) = \mathbb{E}_\pi\left[\, G_t \mid s_t = s \,\right]
+$$
+<p class="note">En palabras: el valor de un estado es el retorno que se obtiene, en promedio, partiendo de él y siguiendo la política π.</p>
+
+</section>
+<section>
+<div class="section-label">§ 6 · Funciones de valor</div>
+<h2>El valor es, literalmente, el retorno promedio</h2>
+<ul>
+  <li>La línea negra punteada es el valor exacto $v_\pi(\mathrm{S})$: se calcula sin simular y no cambia.</li>
+  <li>La línea roja es el promedio de los retornos simulados: es aleatorio, por eso se mueve. Cada clic en +1000 episodios se suma a los anteriores y la roja se acerca a la negra.</li>
+</ul>
+<div data-rlw="trayectoria" style="max-width:1060px"></div>
+
+</section>
+<section>
+<div class="section-label">§ 6 · Funciones de valor</div>
+<h2>Con p = 0.1, el borde vale −24.71 y la segura −13.41</h2>
+<ul>
+  <li>Junto al vacío, cada paso cae con probabilidad $0.1/4 = 0.025$.</li>
+  <li>El 82% de los episodios del borde termina cerca de $-7.4$ y el 16% cae y queda bajo $-80$: el promedio no se parece a ningún episodio.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 6 · Funciones de valor</div>
+<h2>Las dos rutas empatan en p ≈ 0.019</h2>
+<ul>
+  <li>Curvas: valor exacto; puntos: promedio de 500 episodios; gris: el mejor valor posible.</li>
+</ul>
 <div class="svg-holder">
-<svg viewBox="0 0 600 290" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4000 1720">
+<defs>
+  <clipPath id="vpclip940">
+    <rect x="0" y="0" width="4000" height="1720"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#vpclip940)" d="M0 1720 L4000 1720 L4000 2.66454e-14 L0 2.66454e-14  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="vpclip941">
+    <rect x="800" y="0" width="2801" height="1720"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#vpclip940)" d="M342.717 1488.07 L3889.76 1488.07 L3889.76 110.236 L342.717 110.236  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="vpclip942">
+    <rect x="342" y="110" width="3548" height="1379"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="342.717,1488.07 342.717,110.236 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="933.891,1488.07 933.891,110.236 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="1525.07,1488.07 1525.07,110.236 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2116.24,1488.07 2116.24,110.236 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2707.41,1488.07 2707.41,110.236 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="3298.59,1488.07 3298.59,110.236 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="342.717,1488.07 3889.76,1488.07 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="342.717,1143.61 3889.76,1143.61 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="342.717,799.153 3889.76,799.153 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="342.717,454.695 3889.76,454.695 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="342.717,110.236 3889.76,110.236 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,1488.07 3889.76,1488.07 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,1488.07 342.717,1469.17 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="933.891,1488.07 933.891,1469.17 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1525.07,1488.07 1525.07,1469.17 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2116.24,1488.07 2116.24,1469.17 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2707.41,1488.07 2707.41,1469.17 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="3298.59,1488.07 3298.59,1469.17 "/>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 342.717, 1583.8)" x="342.717" y="1583.8">0.00</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 933.891, 1583.8)" x="933.891" y="1583.8">0.05</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 1525.07, 1583.8)" x="1525.07" y="1583.8">0.10</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2116.24, 1583.8)" x="2116.24" y="1583.8">0.15</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2707.41, 1583.8)" x="2707.41" y="1583.8">0.20</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 3298.59, 1583.8)" x="3298.59" y="1583.8">0.25</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(0, 2116.24, 1704.83)" x="2116.24" y="1704.83">resbalón p</text>
+</g>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,1488.07 342.717,110.236 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,1488.07 361.615,1488.07 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,1143.61 361.615,1143.61 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,799.153 361.615,799.153 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,454.695 361.615,454.695 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="342.717,110.236 361.615,110.236 "/>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 222.502, 1514.07)" x="222.502" y="1514.07">−80</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 222.502, 1169.61)" x="222.502" y="1169.61">−60</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 222.502, 825.153)" x="222.502" y="825.153">−40</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 222.502, 480.695)" x="222.502" y="480.695">−20</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 262.645, 136.236)" x="262.645" y="136.236">0</text>
+</g>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(-90, 85.9745, 799.153)" x="85.9745" y="799.153">v(S)</text>
+</g>
+<polyline clip-path="url(#vpclip942)" style="stroke:#ff8c00; stroke-linecap:round; stroke-linejoin:round; stroke-width:12; stroke-opacity:1; fill:none" points="342.717,237.6 401.834,250.888 460.952,264.334 520.069,277.942 579.187,291.712 638.304,305.647 697.422,319.748 756.539,334.018 815.657,348.46 874.774,363.074 933.891,377.863 993.009,392.829 1052.13,407.974 1111.24,423.3 1170.36,438.81 1229.48,454.505 1288.6,470.387 1347.71,486.459 1406.83,502.722 1465.95,519.179 1525.07,535.832 1584.18,552.683 1643.3,569.733 1702.42,586.984 1761.54,604.44 1820.65,622.101 1879.77,639.97 1938.89,658.048 1998.01,676.338 2057.12,694.842 2116.24,713.56 2175.36,732.495 2234.48,751.649 2293.59,771.023 2352.71,790.62 2411.83,810.44 2470.95,830.485 2530.06,850.757 2589.18,871.257 2648.3,891.986 2707.41,912.946 2766.53,934.138 2825.65,955.563 2884.77,977.221 2943.88,999.115 3003,1021.24 3062.12,1043.61 3121.24,1066.21 3180.35,1089.05 3239.47,1112.13 3298.59,1135.45 3357.71,1159 3416.82,1182.8 3475.94,1206.83 3535.06,1231.1 3594.18,1255.6 3653.29,1280.35 3712.41,1305.33 3771.53,1330.54 3830.65,1355.99 3889.76,1381.66 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:12; stroke-opacity:1; fill:none" points="342.717,277.87 401.834,280.693 460.952,283.548 520.069,286.437 579.187,289.36 638.304,292.317 697.422,295.309 756.539,298.337 815.657,301.401 874.774,304.502 933.891,307.64 993.009,310.816 1052.13,314.031 1111.24,317.285 1170.36,320.579 1229.48,323.914 1288.6,327.291 1347.71,330.709 1406.83,334.171 1465.95,337.676 1525.07,341.226 1584.18,344.82 1643.3,348.461 1702.42,352.149 1761.54,355.884 1820.65,359.667 1879.77,363.5 1938.89,367.384 1998.01,371.318 2057.12,375.304 2116.24,379.344 2175.36,383.437 2234.48,387.585 2293.59,391.789 2352.71,396.05 2411.83,400.369 2470.95,404.747 2530.06,409.186 2589.18,413.685 2648.3,418.247 2707.41,422.873 2766.53,427.564 2825.65,432.32 2884.77,437.144 2943.88,442.036 3003,446.998 3062.12,452.031 3121.24,457.137 3180.35,462.317 3239.47,467.572 3298.59,472.904 3357.71,478.314 3416.82,483.804 3475.94,489.375 3535.06,495.029 3594.18,500.768 3653.29,506.593 3712.41,512.507 3771.53,518.51 3830.65,524.604 3889.76,530.792 "/>
+<polyline clip-path="url(#vpclip942)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:8; stroke-opacity:1; fill:none" stroke-dasharray="32, 20" points="342.717,237.6 401.834,250.835 460.952,264.123 520.069,267.267 579.187,270.26 638.304,273.31 697.422,276.421 756.539,279.592 815.657,282.811 874.774,286.092 933.891,289.436 993.009,292.843 1052.13,296.314 1111.24,299.85 1170.36,303.451 1229.48,307.096 1288.6,310.803 1347.71,314.574 1406.83,318.41 1465.95,322.312 1525.07,326.28 1584.18,330.316 1643.3,334.419 1702.42,338.591 1761.54,342.832 1820.65,347.144 1879.77,351.528 1938.89,355.983 1998.01,360.511 2057.12,365.113 2116.24,369.79 2175.36,374.542 2234.48,379.372 2293.59,384.279 2352.71,389.265 2411.83,394.33 2470.95,399.171 2530.06,403.61 2589.18,408.124 2648.3,412.712 2707.41,417.378 2766.53,422.013 2825.65,426.716 2884.77,431.493 2943.88,436.346 3003,441.276 3062.12,446.262 3121.24,451.298 3180.35,456.413 3239.47,461.607 3298.59,466.883 3357.71,472.241 3416.82,477.684 3475.94,483.213 3535.06,488.813 3594.18,494.472 3653.29,500.219 3712.41,506.058 3771.53,511.988 3830.65,518.013 3889.76,524.134 "/>
+<circle clip-path="url(#vpclip942)" cx="342.717" cy="237.6" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="697.422" cy="325.329" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="1052.13" cy="402.835" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="1406.83" cy="492.693" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="1761.54" cy="582.482" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="2116.24" cy="682.463" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="2470.95" cy="770.149" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="2825.65" cy="1063.6" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="3180.35" cy="1105.47" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="3535.06" cy="1298.4" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<circle clip-path="url(#vpclip942)" cx="3889.76" cy="1327.85" r="21.6" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M342.717 253.87 L318.717 277.87 L342.717 301.87 L366.717 277.87 L342.717 253.87 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M697.422 261.978 L673.422 285.978 L697.422 309.978 L721.422 285.978 L697.422 261.978 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M1052.13 299.409 L1028.13 323.409 L1052.13 347.409 L1076.13 323.409 L1052.13 299.409 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M1406.83 297.029 L1382.83 321.029 L1406.83 345.029 L1430.83 321.029 L1406.83 297.029 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M1761.54 328.986 L1737.54 352.986 L1761.54 376.986 L1785.54 352.986 L1761.54 328.986 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M2116.24 348.33 L2092.24 372.33 L2116.24 396.33 L2140.24 372.33 L2116.24 348.33 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M2470.95 349.19 L2446.95 373.19 L2470.95 397.19 L2494.95 373.19 L2470.95 349.19 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M2825.65 422.46 L2801.65 446.46 L2825.65 470.46 L2849.65 446.46 L2825.65 422.46 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M3180.35 403.256 L3156.35 427.256 L3180.35 451.256 L3204.35 427.256 L3180.35 403.256 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M3535.06 483.697 L3511.06 507.697 L3535.06 531.697 L3559.06 507.697 L3535.06 483.697 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip942)" d="M3889.76 540.57 L3865.76 564.57 L3889.76 588.57 L3913.76 564.57 L3889.76 540.57 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.44"/>
+<path clip-path="url(#vpclip940)" d="M460.952 1442.14 L1541.99 1442.14 L1541.99 989.445 L460.952 989.445  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="460.952,1442.14 1541.99,1442.14 1541.99,989.445 460.952,989.445 460.952,1442.14 "/>
+<polyline clip-path="url(#vpclip940)" style="stroke:#ff8c00; stroke-linecap:round; stroke-linejoin:round; stroke-width:18; stroke-opacity:1; fill:none" points="500.363,1064.89 736.833,1064.89 "/>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 776.245, 1090.89)" x="776.245" y="1090.89">ruta del borde (exacto)</text>
+</g>
+<polyline clip-path="url(#vpclip940)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:18; stroke-opacity:1; fill:none" points="500.363,1140.34 736.833,1140.34 "/>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 776.245, 1166.34)" x="776.245" y="1166.34">ruta segura (exacto)</text>
+</g>
+<polyline clip-path="url(#vpclip940)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:12; stroke-opacity:1; fill:none" stroke-dasharray="48, 30" points="500.363,1215.79 736.833,1215.79 "/>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 776.245, 1241.79)" x="776.245" y="1241.79">óptimo v*(S)</text>
+</g>
+<circle clip-path="url(#vpclip940)" cx="618.598" cy="1291.24" r="31.9015" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="5.08062"/>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 776.245, 1317.24)" x="776.245" y="1317.24">borde (Monte Carlo)</text>
+</g>
+<path clip-path="url(#vpclip940)" d="M618.598 1331.25 L583.152 1366.69 L618.598 1402.14 L654.045 1366.69 L618.598 1331.25 Z" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="5.08062"/>
+<g clip-path="url(#vpclip940)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 776.245, 1392.69)" x="776.245" y="1392.69">segura (Monte Carlo)</text>
+</g>
+</svg>
+
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 6 · Funciones de valor</div>
+<h2>q(s, a) evalúa una acción y luego sigue π</h2>
+$$
+q_\pi(s, a) = \mathbb{E}_\pi\left[\, G_t \mid s_t = s,\, a_t = a \,\right]
+$$
+<ul>
+  <li>Compara directamente las acciones disponibles en un mismo estado.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 6 · Funciones de valor</div>
+<h2>v promedia los q según la política</h2>
+$$
+v_\pi(s) = \sum_a \pi(a \mid s)\, q_\pi(s, a)
+$$
+<ul>
+  <li>La ventaja $A_\pi(s,a) = q_\pi(s,a) - v_\pi(s)$ dice cuánto mejor que el promedio es cada acción.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>¿Se puede calcular v sin simular episodios?</h2>
+<ul>
+  <li>Sí: el retorno tiene una estructura recursiva, y el valor la hereda.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Paso 1: el retorno es un paso más el resto</h2>
+$$
+G_t = r_{t+1} + \gamma \left( r_{t+2} + \gamma\, r_{t+3} + \cdots \right) = r_{t+1} + \gamma\, G_{t+1}
+$$
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Paso 2: el promedio del resto es el valor siguiente</h2>
+$$
+v_\pi(s) = \mathbb{E}_\pi\left[\, r_{t+1} + \gamma\, v_\pi(s_{t+1}) \mid s_t = s \,\right]
+$$
+<p class="note">En palabras: por la propiedad de Markov, lo que se espera ganar después de llegar a s_{t+1} es exactamente v_π(s_{t+1}).</p>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Paso 3: abrir una esperanza es escribirla como suma</h2>
+$$
+\mathbb{E}[X] = \sum_x \Pr(X = x)\, x
+$$
+<ul>
+  <li>La esperanza de una variable aleatoria es el promedio de sus valores posibles, cada uno pesado por su probabilidad.</li>
+  <li>Ejemplo: un dado justo da $\mathbb{E}[X] = \tfrac{1}{6}(1 + 2 + \cdots + 6) = 3.5$.</li>
+  <li><b>Abrir</b> la esperanza es reemplazar el símbolo $\mathbb{E}$ por esa suma explícita: el valor no cambia, pero las probabilidades quedan a la vista.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Paso 4: la esperanza de una suma se separa</h2>
+$$
+v_\pi(s) = \mathbb{E}_\pi\left[\, r_{t+1} \mid s_t = s \,\right] + \gamma\, \mathbb{E}_\pi\left[\, v_\pi(s_{t+1}) \mid s_t = s \,\right]
+$$
+<ul>
+  <li>El promedio de una suma es la suma de los promedios, y la constante γ sale fuera del promedio.</li>
+  <li>Quedan dos esperanzas por abrir: la de la recompensa inmediata y la del valor del estado siguiente.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Paso 5: en un paso hay dos sorteos</h2>
+<ul>
+  <li>Primero la política sortea la acción: $a$ ocurre con probabilidad $\pi(a \mid s)$.</li>
+  <li>Después el entorno sortea el estado siguiente: $s'$ ocurre con probabilidad $P(s' \mid s, a)$.</li>
+  <li>Abrir cada esperanza significa sumar sobre ambos sorteos, en ese orden.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Paso 6: la recompensa promedio de una acción se llama r(s, a)</h2>
+$$
+r(s, a) = \mathbb{E}\left[\, r_{t+1} \mid s_t = s,\, a_t = a \,\right]
+$$
+<ul>
+  <li>Es lo que el robot espera recibir en el paso inmediato si está en $s$ y elige $a$, promediando los resbalones.</li>
+  <li>Ejemplo con $p = 0.1$: en la casilla (3, 2), justo sobre el acantilado, la acción → resbala hacia ↓ con probabilidad $0.025$, de modo que $r = 0.975 \cdot (-1) + 0.025 \cdot (-100) = -3.475$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>Paso 7: abrir ambas esperanzas da la ecuación de Bellman</h2>
+$$
+v_\pi(s) = \sum_{a} \pi(a \mid s) \Big( r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, v_\pi(s') \Big)
+$$
+<ul>
+  <li>La suma exterior abre el sorteo de la política, sobre las acciones.</li>
+  <li>La suma interior abre el sorteo del entorno, sobre los estados siguientes, y pesa el valor de cada uno.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
+<h2>El valor promedia sobre acciones y sucesores</h2>
+<ul>
+  <li>Cada acción aporta $r(s, a)$ más el promedio, pesado por $P$, de $\gamma\, v_\pi$ en sus sucesores.</li>
+  <li>El valor de $s$ es el promedio, pesado por $\pi$, de lo que aportan sus acciones.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
-    <marker id="rb" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+    <marker id="bkp" markerWidth="9" markerHeight="9" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#7b1fa2"/></marker>
+    <marker id="bkg" markerWidth="9" markerHeight="9" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#2e7d32"/></marker>
   </defs>
-  <text x="300" y="26" text-anchor="middle" font-size="12" font-style="italic" fill="#555">v(s_t)</text>
-  <circle cx="300" cy="66" r="22" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/>
-  <text x="300" y="71" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">s_t</text>
-  <line x1="284" y1="82" x2="190" y2="126" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#rb)"/>
-  <line x1="316" y1="82" x2="410" y2="126" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#rb)"/>
-  <text x="222" y="106" text-anchor="middle" font-size="10.5" fill="#7b1fa2">π(a | s)</text>
-  <circle cx="180" cy="144" r="16" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
-  <text x="180" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#5c1a5c">a</text>
-  <circle cx="420" cy="144" r="16" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
-  <text x="420" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#5c1a5c">a'</text>
-  <line x1="170" y1="159" x2="120" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
-  <line x1="190" y1="159" x2="245" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
-  <line x1="415" y1="159" x2="360" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
-  <line x1="428" y1="159" x2="485" y2="211" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rb)"/>
-  <text x="148" y="194" text-anchor="middle" font-size="10" fill="#388e3c">P, r</text>
-  <circle cx="115" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
-  <text x="115" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
-  <circle cx="250" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
-  <text x="250" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
-  <circle cx="355" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
-  <text x="355" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
-  <circle cx="490" cy="228" r="18" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
-  <text x="490" y="232" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
-  <text x="300" y="272" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1a1a1a">v(s_t) = promedio de [ recompensa + γ · v(s') ]</text>
-</svg>
+  <line x1="352.8" y1="86.8" x2="235.5" y2="159.2" stroke="#7b1fa2" stroke-width="2.4" marker-end="url(#bkp)"/>
+  <line x1="407.2" y1="86.8" x2="524.5" y2="159.2" stroke="#7b1fa2" stroke-width="2.4" marker-end="url(#bkp)"/>
+  <line x1="193.4" y1="195.0" x2="133.5" y2="267.6" stroke="#2e7d32" stroke-width="2.4" marker-end="url(#bkg)"/>
+  <line x1="226.6" y1="195.0" x2="286.5" y2="267.6" stroke="#2e7d32" stroke-width="2.4" marker-end="url(#bkg)"/>
+  <line x1="533.4" y1="195.0" x2="473.5" y2="267.6" stroke="#2e7d32" stroke-width="2.4" marker-end="url(#bkg)"/>
+  <line x1="566.6" y1="195.0" x2="626.5" y2="267.6" stroke="#2e7d32" stroke-width="2.4" marker-end="url(#bkg)"/>
+  <text x="272" y="112" font-size="17" fill="#7b1fa2" text-anchor="end" font-family="serif"><tspan font-style="italic">π</tspan><tspan>(</tspan><tspan font-style="italic">a</tspan><tspan dy="5.1" font-size="11.9">1</tspan><tspan dy="-5.1"> | </tspan><tspan font-style="italic">s</tspan><tspan>)</tspan></text>
+  <text x="488" y="112" font-size="17" fill="#7b1fa2" text-anchor="start" font-family="serif"><tspan font-style="italic">π</tspan><tspan>(</tspan><tspan font-style="italic">a</tspan><tspan dy="5.1" font-size="11.9">2</tspan><tspan dy="-5.1"> | </tspan><tspan font-style="italic">s</tspan><tspan>)</tspan></text>
+  <text x="150" y="228" font-size="15" fill="#2e7d32" text-anchor="end" font-family="serif"><tspan font-style="italic">P</tspan><tspan>(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.5" font-size="10.5">1</tspan><tspan dy="-4.5"> | </tspan><tspan font-style="italic">s</tspan><tspan>, </tspan><tspan font-style="italic">a</tspan><tspan dy="4.5" font-size="10.5">1</tspan><tspan dy="-4.5">)</tspan></text>
+  <text x="270" y="228" font-size="15" fill="#2e7d32" text-anchor="start" font-family="serif"><tspan font-style="italic">P</tspan><tspan>(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.5" font-size="10.5">2</tspan><tspan dy="-4.5"> | </tspan><tspan font-style="italic">s</tspan><tspan>, </tspan><tspan font-style="italic">a</tspan><tspan dy="4.5" font-size="10.5">1</tspan><tspan dy="-4.5">)</tspan></text>
+  <text x="490" y="228" font-size="15" fill="#2e7d32" text-anchor="end" font-family="serif"><tspan font-style="italic">P</tspan><tspan>(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.5" font-size="10.5">3</tspan><tspan dy="-4.5"> | </tspan><tspan font-style="italic">s</tspan><tspan>, </tspan><tspan font-style="italic">a</tspan><tspan dy="4.5" font-size="10.5">2</tspan><tspan dy="-4.5">)</tspan></text>
+  <text x="610" y="228" font-size="15" fill="#2e7d32" text-anchor="start" font-family="serif"><tspan font-style="italic">P</tspan><tspan>(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.5" font-size="10.5">4</tspan><tspan dy="-4.5"> | </tspan><tspan font-style="italic">s</tspan><tspan>, </tspan><tspan font-style="italic">a</tspan><tspan dy="4.5" font-size="10.5">2</tspan><tspan dy="-4.5">)</tspan></text>
+  <circle cx="380" cy="70" r="32" fill="#e8f0fe" stroke="#3b5b92" stroke-width="2.5"/><text x="380" y="77.92" font-size="24" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">s</tspan></text>
+  <circle cx="210" cy="175" r="26" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2.5"/><text x="210" y="181.6" font-size="20" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">a</tspan><tspan dy="6.0" font-size="14.0">1</tspan></text>
+  <circle cx="550" cy="175" r="26" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2.5"/><text x="550" y="181.6" font-size="20" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">a</tspan><tspan dy="6.0" font-size="14.0">2</tspan></text>
+  <circle cx="115" cy="290" r="25" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5"/><text x="115" y="296.27" font-size="19" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="5.7" font-size="13.3">1</tspan></text>
+  <circle cx="305" cy="290" r="25" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5"/><text x="305" y="296.27" font-size="19" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="5.7" font-size="13.3">2</tspan></text>
+  <circle cx="455" cy="290" r="25" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5"/><text x="455" y="296.27" font-size="19" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="5.7" font-size="13.3">3</tspan></text>
+  <circle cx="645" cy="290" r="25" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5"/><text x="645" y="296.27" font-size="19" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="5.7" font-size="13.3">4</tspan></text>
+  <text x="210" y="237" font-size="15" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">r</tspan><tspan>(</tspan><tspan font-style="italic">s</tspan><tspan>, </tspan><tspan font-style="italic">a</tspan><tspan dy="4.5" font-size="10.5">1</tspan><tspan dy="-4.5">)</tspan></text>
+  <text x="550" y="237" font-size="15" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">r</tspan><tspan>(</tspan><tspan font-style="italic">s</tspan><tspan>, </tspan><tspan font-style="italic">a</tspan><tspan dy="4.5" font-size="10.5">2</tspan><tspan dy="-4.5">)</tspan></text>
+  <text x="424" y="76" font-size="18" fill="#3b5b92" text-anchor="start" font-family="serif"><tspan font-style="italic">v</tspan><tspan dy="5.4" font-size="12.6"><tspan font-style="italic">π</tspan></tspan><tspan dy="-5.4">(</tspan><tspan font-style="italic">s</tspan><tspan>)</tspan></text>
+  <text x="115" y="339" font-size="16" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">γ</tspan><tspan> </tspan><tspan font-style="italic">v</tspan><tspan dy="4.8" font-size="11.2"><tspan font-style="italic">π</tspan></tspan><tspan dy="-4.8">(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.8" font-size="11.2">1</tspan><tspan dy="-4.8">)</tspan></text>
+  <text x="305" y="339" font-size="16" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">γ</tspan><tspan> </tspan><tspan font-style="italic">v</tspan><tspan dy="4.8" font-size="11.2"><tspan font-style="italic">π</tspan></tspan><tspan dy="-4.8">(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.8" font-size="11.2">2</tspan><tspan dy="-4.8">)</tspan></text>
+  <text x="455" y="339" font-size="16" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">γ</tspan><tspan> </tspan><tspan font-style="italic">v</tspan><tspan dy="4.8" font-size="11.2"><tspan font-style="italic">π</tspan></tspan><tspan dy="-4.8">(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.8" font-size="11.2">3</tspan><tspan dy="-4.8">)</tspan></text>
+  <text x="645" y="339" font-size="16" fill="#1a1a1a" text-anchor="middle" font-family="serif"><tspan font-style="italic">γ</tspan><tspan> </tspan><tspan font-style="italic">v</tspan><tspan dy="4.8" font-size="11.2"><tspan font-style="italic">π</tspan></tspan><tspan dy="-4.8">(</tspan><tspan font-style="italic">s</tspan><tspan>′</tspan><tspan dy="4.8" font-size="11.2">4</tspan><tspan dy="-4.8">)</tspan></text>
+  <line x1="70" y1="363" x2="104" y2="363" stroke="#7b1fa2" stroke-width="2.4" marker-end="url(#bkp)"/>
+  <text x="114" y="368" font-size="14" fill="#1a1a1a" text-anchor="start" font-family="sans-serif">la política elige la acción, con estas probabilidades</text>
+  <line x1="70" y1="391" x2="104" y2="391" stroke="#2e7d32" stroke-width="2.4" marker-end="url(#bkg)"/>
+  <text x="114" y="396" font-size="14" fill="#1a1a1a" text-anchor="start" font-family="sans-serif">el entorno elige el estado siguiente y entrega la recompensa</text>
+  </svg>
 </div>
-</section>
 
+</section>
 <section>
 <div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>La autoconsistencia es la idea central</h2>
+<h2>Con la política fija, Bellman es un sistema lineal</h2>
+$$
+\mathbf{v}_\pi = \mathbf{r}_\pi + \gamma\, \mathbf{P}_\pi \mathbf{v}_\pi \quad\Longrightarrow\quad \mathbf{v}_\pi = (\mathbf{I} - \gamma\, \mathbf{P}_\pi)^{-1}\, \mathbf{r}_\pi
+$$
 <ul>
-<li>Si un algoritmo cambia una estimación, la ecuación deja de cumplirse y fuerza a los valores vecinos a reajustarse.</li>
+  <li>En el acantilado son 25 ecuaciones con 25 incógnitas; $\mathbf{P}_\pi$ son las transiciones bajo la política y $\mathbf{r}_\pi$ las recompensas esperadas.</li>
+  <li>Su solución son las curvas exactas que los episodios simulados confirmaron.</li>
 </ul>
-<p class="note">Q-Learning, SARSA y las redes profundas no son más que maneras distintas de hacer cumplir Bellman desde la experiencia.</p>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>Contracción y punto fijo garantizan la convergencia</h2>
+<div class="section-label">§ 8 · Valores y políticas óptimos</div>
+<h2>La mejor ruta maximiza el valor en todos los estados</h2>
+$$
+v_*(s) = \max_\pi\, v_\pi(s), \qquad q_*(s, a) = \max_\pi\, q_\pi(s, a)
+$$
 <ul>
-<li>Con descuento, el operador de Bellman es una <strong>contracción</strong>: por el teorema de Banach converge a una solución única.</li>
+  <li>Todo MDP tiene una política óptima $\pi_*$ determinista, mejor o igual que todas en cada estado.</li>
 </ul>
-<p class="note">Esta propiedad asegura los métodos tabulares; su pérdida al introducir redes es la raíz de la inestabilidad de E.3. → §8</p>
-</section>
 
-<!-- §8 MAPA -->
+</section>
 <section>
-<div class="section-label">§ 8 · Un mapa de los métodos de RL</div>
-<h2>¿Dónde encaja cada algoritmo?</h2>
+<div class="section-label">§ 8 · Valores y políticas óptimos</div>
+<h2>Para la política óptima, el promedio se vuelve un máximo</h2>
+$$
+q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, \max_{a'} q_*(s', a')
+$$
+<p class="note">En palabras: una acción vale lo que paga ahora más lo mejor que se puede hacer desde donde deja al robot.</p>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Valores y políticas óptimos</div>
+<h2>De q* se obtiene la política óptima</h2>
+$$
+\pi_*(s) = \arg\max_{a}\, q_*(s, a)
+$$
 <ul>
-<li>Unas pocas distinciones ubican cada método del curso dentro de un panorama común.</li>
+  <li>Lo que se obtiene es una <b>política</b>: la regla $\pi_*$ que asigna a cada estado $s$ la acción que el robot debe tomar.</li>
+  <li>$\arg\max_a$ no entrega el valor máximo, sino la acción $a$ que lo alcanza.</li>
+  <li>Elegir siempre la acción de mayor $q_*$ se llama actuar de forma <b>codiciosa</b>; respecto de $q_*$, eso es óptimo.</li>
 </ul>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 8 · Un mapa de los métodos de RL</div>
-<h2>Las familias del aprendizaje reforzado</h2>
-<ul><li>Basado en modelo vs libre de modelo; dentro de este, basado en valor vs en política.</li></ul>
+<div class="section-label">§ 8 · Valores y políticas óptimos</div>
+<h2>Con v* también se obtiene, pero hace falta el modelo</h2>
+$$
+\pi_*(s) = \arg\max_{a}\, \Big( r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, v_*(s') \Big)
+$$
+<ul>
+  <li>$v_*$ solo dice cuánto vale cada estado; para comparar acciones hay que mirar un paso adelante y saber adónde lleva cada una.</li>
+  <li>Eso exige conocer $P$ y $r$. Con $q_*$ la comparación ya está hecha: no se necesita el modelo, y por eso los métodos sin modelo aprenden $q$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Iteración de valor</div>
+<h2>¿Cómo se resuelve una ecuación con un máximo adentro?</h2>
+<ul>
+  <li>Ya no es lineal; la idea es aplicarla repetidamente, partiendo de $v_0 = 0$.</li>
+</ul>
+$$
+v_{k+1} = T v_k, \qquad (T v)(s) = \max_a \Big[ r(s,a) + \gamma \sum_{s'} P(s' \mid s, a)\, v(s') \Big]
+$$
+
+</section>
+<section>
+<div class="section-label">§ 9 · Iteración de valor</div>
+<h2>Paso 1: dos máximos no se alejan más que sus funciones</h2>
+$$
+\big|\max_a f(a) - \max_a g(a)\big| \le \max_a \big|f(a) - g(a)\big|
+$$
+<ul>
+  <li>Si $\max f \ge \max g$ y $a^\star$ maximiza $f$: $\;0 \le \max f - \max g \le f(a^\star) - g(a^\star)$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Iteración de valor</div>
+<h2>Paso 2: T acerca dos estimaciones por un factor γ</h2>
+$$
+|(Tv)(s) - (Tw)(s)| \le \max_a \gamma \sum_{s'} P(s' \mid s,a)\, |v(s') - w(s')| \le \gamma\, \|v - w\|_\infty
+$$
+<ul>
+  <li>La recompensa se cancela y las probabilidades suman uno; $\|v\|_\infty = \max_s |v(s)|$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Iteración de valor</div>
+<h2>Paso 3: el error cae como γᵏ desde cualquier inicio</h2>
+$$
+\|v_k - v_*\|_\infty \le \gamma^{k}\, \|v_0 - v_*\|_\infty
+$$
+<p class="note">En palabras: T es una contracción; su único punto fijo es v*, y cada barrido recorta el error al menos en un factor γ.</p>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Iteración de valor</div>
+<h2>Iteración de valor, barrido a barrido</h2>
+<ul>
+  <li>Color y número: $v_k(s)$; flechas: acción codiciosa; derecha: cambio máximo frente a $\gamma^k$.</li>
+</ul>
+<div data-rlw="iteracionValor" style="max-width:1120px"></div>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Iteración de valor</div>
+<h2>El valor se propaga desde la meta</h2>
+<ul>
+  <li>Sin resbalón, una casilla por barrido: S recibe su valor $-7.40$ en el noveno.</li>
+  <li>La ruta óptima es el borde si $p &lt; 0.0125$, la segunda fila hasta $p \approx 0.18$ y la fila superior después.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Mejora de la política</div>
+<h2>Mejorar una política: elegir de forma codiciosa según su q</h2>
+$$
+\pi'(s) = \arg\max_{a}\, q_\pi(s, a)
+$$
+<ul>
+  <li>Se parte de una política $\pi$ ya evaluada: se conoce $q_\pi(s,a)$, lo que rinde tomar $a$ en $s$ y <b>después seguir con</b> $\pi$.</li>
+  <li>La política nueva $\pi'$ toma en cada estado la acción de mayor $q_\pi$. Se llama <b>codiciosa</b> porque elige lo que mejor rinde de inmediato según la información disponible, sin replanificar el resto del camino.</li>
+  <li>Ejemplo: si en la casilla sobre S la ruta del borde dice → pero $q_\pi$ es mayor para ↑, entonces $\pi'$ dice ↑ en esa casilla.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Mejora de la política</div>
+<h2>Teorema de mejora de la política</h2>
+$$
+q_\pi(s, \pi'(s)) \ge v_\pi(s) \;\;\text{en todo } s \quad\Longrightarrow\quad v_{\pi'}(s) \ge v_\pi(s) \;\;\text{en todo } s
+$$
+<ul>
+  <li>Hipótesis: dar <b>un</b> paso con $\pi'$ y luego volver a $\pi$ nunca es peor que seguir $\pi$.</li>
+  <li>Conclusión: entonces seguir $\pi'$ <b>siempre</b> tampoco es peor.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Mejora de la política</div>
+<h2>La política codiciosa cumple la hipótesis</h2>
+$$
+q_\pi(s, \pi'(s)) = \max_{a}\, q_\pi(s, a) \;\ge\; \sum_{a} \pi(a \mid s)\, q_\pi(s, a) = v_\pi(s)
+$$
+<ul>
+  <li>El máximo de unos números nunca es menor que un promedio pesado de ellos.</li>
+  <li>Por lo tanto, volverse codicioso respecto de la propia función de valor nunca empeora una política.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Mejora de la política</div>
+<h2>Demostración: aplicar la hipótesis paso a paso</h2>
+$$
+\begin{aligned}
+v_\pi(s) &\le q_\pi(s, \pi'(s)) = \mathbb{E}\big[ r_{t+1} + \gamma\, v_\pi(s_{t+1}) \mid s_t = s,\, a_t = \pi'(s) \big] \\
+&\le \mathbb{E}_{\pi'}\big[ r_{t+1} + \gamma\, r_{t+2} + \gamma^2\, v_\pi(s_{t+2}) \mid s_t = s \big] \\
+&\le \cdots \le \mathbb{E}_{\pi'}\big[ r_{t+1} + \gamma\, r_{t+2} + \gamma^2\, r_{t+3} + \cdots \mid s_t = s \big] = v_{\pi'}(s)
+\end{aligned}
+$$
+<p class="note">En palabras: cada desigualdad reemplaza la acción de π por la de π′ un paso más adelante.</p>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Mejora de la política</div>
+<h2>Si la mejora ya no cambia nada, la política es óptima</h2>
+<ul>
+  <li>Entonces $v_\pi(s) = \max_a q_\pi(s,a)$ en todo estado: la ecuación de optimalidad.</li>
+  <li>Alternar evaluación y mejora es la <strong>iteración de políticas</strong>.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Mejora de la política</div>
+<h2>En el acantilado, dos mejoras llevan del borde al óptimo</h2>
+<ul>
+  <li>Con $p = 0.1$ el borde vale $-24.71$; la primera mejora hace subir en la casilla sobre S, y la política vale $-13.41$.</li>
+  <li>La segunda la lleva por la segunda fila: $-12.54 = v_*(S)$; una tercera ya no cambia nada.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 11 · Un mapa de los métodos</div>
+<h2>Los métodos se ordenan según qué saben y qué aprenden</h2>
+<ul>
+  <li>Con modelo se conoce o aprende $P$; sin modelo se aprende de la experiencia, estimando valores o la política.</li>
+</ul>
 <div class="svg-holder">
-<svg viewBox="0 0 700 270" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
     <marker id="rc" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
   </defs>
@@ -529,64 +1105,171 @@ $$v_\pi(s_t) = \sum_{a_t} \pi(a_t \mid s_t)\!\left( r(s_t, a_t) + \gamma \sum_{s
   <text x="350" y="258" text-anchor="middle" font-size="11.5" font-weight="bold" font-style="italic" fill="#1a1a1a">on-policy (SARSA) vs off-policy (Q-Learning)</text>
 </svg>
 </div>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 8 · Un mapa de los métodos de RL</div>
-<h2>Dónde se ubica este curso</h2>
+<div class="section-label">§ 11 · Un mapa de los métodos</div>
+<h2>Al aprender hay dos políticas en juego</h2>
 <ul>
-<li>E.2 y E.3 recorren la rama <strong>libre de modelo, basada en valor</strong>: Q-Learning y SARSA tabulares, luego DQN con redes.</li>
+  <li>La <b>política de comportamiento</b> es la que realmente mueve al robot y genera la experiencia. Debe explorar: por ejemplo, con probabilidad $\varepsilon = 0.1$ da un paso al azar.</li>
+  <li>La <b>política objetivo</b> es aquella cuyo valor se quiere aprender.</li>
+  <li><b>On-policy</b>: ambas son la misma. <b>Off-policy</b>: se aprende el valor de una política distinta de la que actúa.</li>
 </ul>
-<p class="note">Las ramas de política y actor-crítico (PPO, RLHF) quedan como extensión natural de estos cimientos. → §9</p>
-</section>
 
-<!-- §9 DESAFÍOS -->
+</section>
 <section>
-<div class="section-label">§ 9 · Desafíos fundamentales</div>
-<h2>¿Qué hace difícil el aprendizaje reforzado?</h2>
+<div class="section-label">§ 11 · Un mapa de los métodos</div>
+<h2>En el acantilado, la diferencia cambia la ruta aprendida</h2>
 <ul>
-<li>Obstáculos que no existen en el aprendizaje supervisado y que reaparecen en todos los algoritmos del curso.</li>
+  <li>SARSA (on-policy) aprende el valor del robot que explora, con sus pasos al azar incluidos: junto al borde esos pasos pueden hacerlo caer, así que aprende una ruta alejada del acantilado.</li>
+  <li>Q-Learning (off-policy) explora igual, pero aprende el valor del robot que ya no exploraría y siempre elegiría la mejor acción: aprende la ruta del borde.</li>
+  <li>Ambos algoritmos se desarrollan en el capítulo siguiente.</li>
 </ul>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 9 · Desafíos fundamentales</div>
-<h2>Asignación de crédito temporal</h2>
+<div class="section-label">§ 11 · Un mapa de los métodos</div>
+<h2>Las otras ramas: aprender la política directamente</h2>
 <ul>
-<li>La recompensa llega mucho después de la acción que la causó; hay que atribuirla a la jugada decisiva entre muchas irrelevantes.</li>
+  <li>Los métodos <b>basados en valor</b> aprenden $q$ y actúan de forma codiciosa respecto de él. Los <b>basados en política</b> ajustan directamente las probabilidades $\pi(a \mid s)$ en la dirección que aumenta el retorno.</li>
+  <li>Los métodos <b>actor-crítico</b> combinan ambos: el actor es la política y el crítico estima valores para juzgar sus acciones.</li>
+  <li>PPO (<em>Proximal Policy Optimization</em>) es un actor-crítico que limita cuánto cambia la política en cada actualización. Es el método usado en RLHF (<em>Reinforcement Learning from Human Feedback</em>): un modelo de lenguaje es la política y la recompensa la da otro modelo, entrenado con las preferencias de personas entre pares de respuestas.</li>
 </ul>
-<p class="note">Las funciones de valor son, en el fondo, la herramienta inventada para resolver esto.</p>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 9 · Desafíos fundamentales</div>
-<h2>Exploración frente a explotación</h2>
+<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<h2>La recompensa llega tarde</h2>
 <ul>
-<li>Quien solo explota se estanca en óptimos locales; quien solo explora nunca capitaliza lo aprendido.</li>
+  <li>La $-100$ llega en el paso 6, junto a una acción razonable que resbaló; la elección que hizo probable la caída fue la del paso 2.</li>
 </ul>
-<p class="note">Ningún esquema fijo lo resuelve; todo algoritmo adopta una política de exploración, como la ε-greedy de E.2.</p>
-</section>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <pattern id="hcr" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#f4cccc"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c0392b" stroke-width="2" opacity="0.5"/></pattern>
+    <marker id="crA" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#e65100"/></marker>
+    <marker id="crB" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1565c0"/></marker>
+  </defs>
+  <rect x="16" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="66" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="116" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="166" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="216" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="266" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="316" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="366" y="30" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="16" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="66" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="116" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="166" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="216" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="266" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="316" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="366" y="80" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="16" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="66" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="116" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="166" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="216" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="266" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="316" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="366" y="130" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/>
+  <rect x="16" y="180" width="50" height="50" fill="#e8f0fe" stroke="#b8b2a0"/>
+  <rect x="66" y="180" width="50" height="50" fill="url(#hcr)" stroke="#b8b2a0"/>
+  <rect x="116" y="180" width="50" height="50" fill="url(#hcr)" stroke="#b8b2a0"/>
+  <rect x="166" y="180" width="50" height="50" fill="url(#hcr)" stroke="#b8b2a0"/>
+  <rect x="216" y="180" width="50" height="50" fill="url(#hcr)" stroke="#b8b2a0"/>
+  <rect x="266" y="180" width="50" height="50" fill="url(#hcr)" stroke="#b8b2a0"/>
+  <rect x="316" y="180" width="50" height="50" fill="url(#hcr)" stroke="#b8b2a0"/>
+  <rect x="366" y="180" width="50" height="50" fill="#d9efd9" stroke="#b8b2a0"/>
+  <text x="41.0" y="211.0" text-anchor="middle" font-size="16" font-weight="bold" fill="#1a3a5c">S</text>
+  <text x="391.0" y="211.0" text-anchor="middle" font-size="16" font-weight="bold" fill="#1a4d1a">G</text>
+  <path d="M41.0 143.0 L41.0 63.0" stroke="#1565c0" stroke-width="2.5" stroke-dasharray="6,4" fill="none" marker-end="url(#crB)"/>
+  <path d="M41.0 191.0 L41.0 155.0 L241.0 155.0" stroke="#e65100" stroke-width="3.2" fill="none"/>
+  <path d="M241.0 155.0 L241.0 191.0" stroke="#c0392b" stroke-width="3" stroke-dasharray="4,3" fill="none" marker-end="url(#crA)"/>
+  <path d="M232.0 196.0 L250.0 214.0 M250.0 196.0 L232.0 214.0" stroke="#b71c1c" stroke-width="3.5"/>
+  <circle cx="41.0" cy="155.0" r="5" fill="#e65100"/>
+  <circle cx="91.0" cy="155.0" r="5" fill="#e65100"/>
+  <circle cx="141.0" cy="155.0" r="5" fill="#e65100"/>
+  <circle cx="191.0" cy="155.0" r="5" fill="#e65100"/>
+  <circle cx="241.0" cy="155.0" r="5" fill="#e65100"/>
+  <circle cx="41.0" cy="155.0" r="15" fill="none" stroke="#6a1b9a" stroke-width="2.5"/>
+  <text x="53.0" y="60.0" font-size="12" fill="#1565c0">alternativa: alejarse del borde</text>
+  <text x="440" y="48" font-size="13.5" font-weight="bold" fill="#1a1a1a">paso 1</text>
+  <text x="532" y="48" font-size="13.5" fill="#1a1a1a">sube desde S</text>
+  <text x="440" y="70" font-size="13.5" font-weight="bold" fill="#6a1b9a">paso 2</text>
+  <text x="532" y="70" font-size="13.5" fill="#6a1b9a">en la casilla sobre S elige →:</text>
+  <text x="532" y="92" font-size="13.5" fill="#6a1b9a">caminar pegado al acantilado</text>
+  <text x="440" y="114" font-size="13.5" font-weight="bold" fill="#e65100">pasos 3 a 5</text>
+  <text x="532" y="114" font-size="13.5" fill="#e65100">junto al borde, −1 cada uno</text>
+  <text x="440" y="136" font-size="13.5" font-weight="bold" fill="#b71c1c">paso 6</text>
+  <text x="532" y="136" font-size="13.5" fill="#b71c1c">resbala hacia ↓, cae: −100</text>
+  <text x="440" y="170" font-size="13.5" font-weight="bold" fill="#1a1a1a">¿la causa?</text>
+  <text x="532" y="170" font-size="13.5" fill="#1a1a1a">la −100 llega en el paso 6,</text>
+  <text x="532" y="192" font-size="13.5" fill="#1a1a1a">pero la elección que la hizo</text>
+  <text x="532" y="214" font-size="13.5" fill="#1a1a1a">probable fue la del paso 2</text>
+  </svg>
+</div>
 
+</section>
 <section>
-<div class="section-label">§ 9 · Desafíos fundamentales</div>
-<h2>Recompensas escasas y datos no estacionarios</h2>
+<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<h2>Repartir la culpa hacia atrás</h2>
 <ul>
-<li>A veces hay que encadenar miles de acciones antes de una sola recompensa; y los entornos son estocásticos.</li>
-<li>El agente genera sus propios datos correlacionados: un blanco móvil que se agrava con redes neuronales.</li>
+  <li>El agente solo ve la secuencia de recompensas: $-1, -1, -1, -1, -1, -100$. Nada le dice cuál de sus decisiones causó la caída.</li>
+  <li>Atribuir un resultado a las acciones que lo provocaron, aunque hayan ocurrido varios pasos antes, es la <strong>asignación de crédito temporal</strong>.</li>
+  <li>Las funciones de valor la resuelven: con Bellman, el $-100$ baja el valor de la casilla de la caída, luego el de la anterior, y así hasta la casilla del paso 2.</li>
 </ul>
-<p class="note">Estos retos motivan las técnicas de estabilización de E.3. → E.2</p>
-</section>
 
-<!-- CIERRE -->
+</section>
+<section>
+<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<h2>Explorar o aprovechar</h2>
+<ul>
+  <li>Aprovechar usa lo que parece mejor; explorar prueba lo desconocido.</li>
+  <li>Sin explorar el agente se estanca; sin aprovechar nunca cobra lo aprendido.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<h2>Recompensas escasas, azar y datos que cambian</h2>
+<ul>
+  <li>A veces hay que encadenar muchas acciones antes de ver una recompensa distinta de cero.</li>
+  <li>Los datos los genera el propio agente: cambian al mejorar la política y son consecutivos, no independientes.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<h2>Todo lo anterior supuso conocer P</h2>
+$$
+P(s' \mid s, a) = \text{probabilidad de llegar a } s' \text{ si en } s \text{ se elige } a
+$$
+<ul>
+  <li>$P$ es la <b>dinámica</b> del mundo. En el acantilado con $p = 0.1$: la dirección elegida ocurre con probabilidad $0.925$ y cada una de las otras tres con $0.025$.</li>
+  <li>La ecuación de Bellman, la evaluación exacta, la iteración de valor y la política obtenida desde $v_*$ usan $P$ y $r$ explícitamente.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<h2>Sin modelo, se aprende de la experiencia</h2>
+<ul>
+  <li>Un robot real no conoce $P$: no sabe con qué probabilidad resbala ni adónde lo lleva cada acción.</li>
+  <li>Solo observa transiciones: estaba en $s$, eligió $a$, recibió $r$ y llegó a $s'$.</li>
+  <li>Estimar los valores a partir de esas transiciones, sin conocer $P$, es lo que hacen los métodos de <b>diferencia temporal</b> del capítulo siguiente.</li>
+</ul>
+
+</section>
 <section>
 <div class="close-slide">
-<h1>El valor de un estado es la recompensa que espero más el valor de a dónde voy; todo el RL es hacer cumplir esa autoconsistencia de Bellman.</h1>
-<div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Decidir bien es saber cuánto vale, en promedio, cada lugar del mundo; la ecuación de Bellman lo vuelve calculable.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
 </div>
 </section>
 
-</div>
-</div>
+</div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
@@ -606,6 +1289,932 @@ Reveal.initialize({
   },
   plugins: [ RevealMath.KaTeX ]
 });
+</script>
+<script>
+// Biblioteca de animaciones del mundo del acantilado (la misma de los notebooks)
+(function () {
+if (window.RLW) return;
+const RLW = window.RLW = {};
+
+// ---------------- estilos y utilidades ----------------
+const PAL = { paper: '#faf7eb', ink: '#222', soft: '#555', faint: '#999', blue: '#4e79a7', orange: '#e8743b',
+              green: '#3a8c4f', red: '#c0392b', purple: '#7b1fa2', grid: '#cfc9b3', cliff: '#e6b0a4' };
+const CSS = `
+.rlw { background:${PAL.paper}; color:${PAL.ink}; border-radius:8px; padding:10px 12px; margin:6px 0;
+       font-family: Helvetica, Arial, sans-serif; font-size:14px; line-height:1.3; text-align:left; box-sizing:border-box; }
+.rlw * { box-sizing:border-box; }
+.rlw-bar { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:6px; }
+.rlw-bar select, .rlw-bar button { font-size:0.95em; padding:1px 6px; cursor:pointer; }
+.rlw-sl { display:flex; align-items:center; gap:6px; white-space:nowrap; margin:0; }
+.rlw-sl input[type=range] { width:9em; accent-color:${PAL.blue}; margin:0; }
+.rlw-val { min-width:2.6em; text-align:right; font-variant-numeric:tabular-nums; color:${PAL.blue}; font-weight:600; }
+.rlw-row { display:flex; gap:12px; align-items:flex-start; }
+.rlw canvas { display:block; width:100%; min-width:0; touch-action:none; }
+.rlw-read { margin-top:6px; color:${PAL.soft}; font-variant-numeric:tabular-nums; }
+.rlw-read b { color:${PAL.ink}; }
+.rlw-tab { font-family: Menlo, Consolas, monospace; font-size:0.86em; line-height:1.35; white-space:pre; color:${PAL.ink};
+           background:#fffdf5; border:1px solid ${PAL.grid}; border-radius:6px; padding:6px 8px; overflow:hidden; }
+.rlw-chk { display:flex; align-items:center; gap:4px; white-space:nowrap; cursor:pointer; }
+`;
+function injectCSS() {
+  if (document.getElementById('rlw-style')) return;
+  const s = document.createElement('style'); s.id = 'rlw-style'; s.textContent = CSS; document.head.appendChild(s);
+}
+function el(tag, attrs, parent) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'html') e.innerHTML = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function slider(parent, label, min, max, step, val, dig, onInput) {
+  const lab = el('label', { class: 'rlw-sl' }, parent);
+  el('span', { html: label }, lab);
+  const inp = el('input', { type: 'range', min, max, step, value: val }, lab);
+  const out = el('span', { class: 'rlw-val', text: (+val).toFixed(dig) }, lab);
+  inp.addEventListener('input', () => { out.textContent = (+inp.value).toFixed(dig); onInput(+inp.value); });
+  return inp;
+}
+function button(parent, txt, onClick) {
+  const b = el('button', { text: txt }, parent);
+  b.addEventListener('click', e => { e.stopPropagation(); onClick(); });
+  return b;
+}
+function check(parent, txt, val, onChange) {
+  const lab = el('label', { class: 'rlw-chk' }, parent);
+  const c = el('input', { type: 'checkbox' }, lab); c.checked = val;
+  el('span', { text: txt }, lab);
+  c.addEventListener('change', () => onChange(c.checked));
+  return c;
+}
+function fit(cv, ratio) {
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 600, h = Math.round(w * ratio);
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+  return { g, w, h };
+}
+function onResize(root, f) {
+  let lastW = -1;
+  const go = () => { const w = root.clientWidth; if (w && w !== lastW) { lastW = w; f(); } };
+  if (window.ResizeObserver) new ResizeObserver(go).observe(root);
+  window.addEventListener('resize', go);
+}
+function aislar(root) {        // evita que Reveal.js capture teclas y clics del widget
+  ['mousedown', 'touchstart', 'keydown', 'pointerdown', 'wheel'].forEach(t => root.addEventListener(t, e => e.stopPropagation()));
+}
+function mulberry32(a) {
+  return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function gauss(rnd) { let u = 0, v = 0; while (u === 0) u = rnd(); while (v === 0) v = rnd();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function txt(g, s, x, y, col, al, sz, bold) {
+  g.fillStyle = col || PAL.ink; g.font = (bold ? 'bold ' : '') + (sz || 12) + 'px Helvetica, Arial';
+  g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); g.textBaseline = 'alphabetic';
+}
+
+// ---------------- el mundo del acantilado ----------------
+// Filas 0..3 (la fila 3 es la de abajo), columnas 0..7. Inicio S abajo a la izquierda,
+// meta G abajo a la derecha, acantilado entre ambos: caer cuesta -100 y devuelve a S.
+const NR = 4, NC = 8, S0 = [3, 0];
+const DR = [-1, 1, 0, 0], DC = [0, 0, -1, 1];
+const esAcant = (r, c) => r === 3 && c >= 1 && c <= 6;
+const esMeta = (r, c) => r === 3 && c === 7;
+function mover(r, c, a) {
+  const nr = Math.min(NR - 1, Math.max(0, r + DR[a])), nc = Math.min(NC - 1, Math.max(0, c + DC[a]));
+  if (esAcant(nr, nc)) return [S0[0], S0[1], -100, true];
+  return [nr, nc, -1, false];
+}
+function pasoResbalon(r, c, a, p, rnd) {   // con probabilidad p la acción se reemplaza por una al azar
+  const b = rnd() < p ? Math.floor(rnd() * 4) : a;
+  return mover(r, c, b).concat([b]);       // el quinto elemento es la acción ejecutada
+}
+const zerosV = () => Array.from({ length: NR }, () => new Array(NC).fill(0));
+function qModelo(V, r, c, a, gam, p) {
+  let q = 0;
+  for (let b = 0; b < 4; b++) {
+    const pb = (b === a ? 1 - p : 0) + p / 4; if (pb === 0) continue;
+    const [nr, nc, rw] = mover(r, c, b);
+    q += pb * (rw + gam * (esMeta(nr, nc) ? 0 : V[nr][nc]));
+  }
+  return q;
+}
+function barrido(V, gam, p) {               // un barrido de iteración de valor (ecuación de optimalidad)
+  const Vn = zerosV(); let d = 0;
+  for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+    if (esMeta(r, c) || esAcant(r, c)) continue;
+    let m = -Infinity; for (let a = 0; a < 4; a++) m = Math.max(m, qModelo(V, r, c, a, gam, p));
+    Vn[r][c] = m; d = Math.max(d, Math.abs(m - V[r][c]));
+  }
+  return [Vn, d];
+}
+function evaluaPolitica(pol, gam, p) {        // pol(r,c) -> acción, o null para la política al azar
+  let V = zerosV();
+  for (let it = 0; it < 5000; it++) {
+    const Vn = zerosV(); let d = 0;
+    for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+      if (esMeta(r, c) || esAcant(r, c)) continue;
+      let v = 0;
+      if (pol) v = qModelo(V, r, c, pol(r, c), gam, p);
+      else for (let a = 0; a < 4; a++) v += 0.25 * qModelo(V, r, c, a, gam, p);
+      Vn[r][c] = v; d = Math.max(d, Math.abs(v - V[r][c]));
+    }
+    V = Vn; if (d < 1e-10) break;
+  }
+  return V;
+}
+function accionCodiciosa(V, r, c, gam, p) {
+  let best = -Infinity, ba = -1, worst = Infinity;
+  for (let a = 0; a < 4; a++) { const q = qModelo(V, r, c, a, gam, p); if (q > best + 1e-12) { best = q; ba = a; } worst = Math.min(worst, q); }
+  return best - worst < 1e-9 ? -1 : ba;      // -1: todas empatan, no hay preferencia
+}
+function rutaDesde(accion) {                  // ruta determinista que sigue una política codiciosa
+  let r = S0[0], c = S0[1]; const camino = [[r, c]];
+  for (let k = 0; k < 30; k++) {
+    const a = accion(r, c); if (a < 0) break;
+    const [nr, nc, , cae] = mover(r, c, a);
+    if (cae) { camino.push([3, Math.min(NC - 1, Math.max(0, c + DC[a]))]); camino.cae = true; break; }
+    r = nr; c = nc; camino.push([r, c]);
+    if (esMeta(r, c)) { camino.llega = true; break; }
+  }
+  return camino;
+}
+
+// paleta secuencial: valores bajos oscuros (azul), cercanos a 0 claros (amarillo)
+const STOPS = [[49, 54, 149], [69, 117, 180], [116, 173, 209], [171, 217, 233], [254, 224, 144], [253, 245, 200]];
+function colorValor(v, vmin) {
+  let t = 1 - Math.min(1, Math.max(0, v / vmin)); t = Math.max(0, Math.min(1, t));
+  const x = t * (STOPS.length - 1), i = Math.min(STOPS.length - 2, Math.floor(x)), f = x - i;
+  const c = STOPS[i].map((v0, k) => Math.round(v0 + (STOPS[i + 1][k] - v0) * f));
+  return { css: `rgb(${c[0]},${c[1]},${c[2]})`, oscuro: t < 0.45 };
+}
+// Dibuja la cuadrícula. o: {V, vmin, numeros, flechas(r,c)->a, ruta, rutaCol, robot:[r,c], estela}
+function dibujaMundo(g, X, Y, cs, o) {
+  const fs = Math.max(10, cs * 0.26);
+  for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+    const x = X + c * cs, y = Y + r * cs;
+    if (esAcant(r, c)) {
+      g.fillStyle = PAL.cliff; g.fillRect(x, y, cs, cs);
+      g.save(); g.beginPath(); g.rect(x, y, cs, cs); g.clip(); g.strokeStyle = 'rgba(192,57,43,0.45)'; g.lineWidth = 1.2;
+      for (let k = -cs; k < cs; k += 9) { g.beginPath(); g.moveTo(x + k, y + cs); g.lineTo(x + k + cs, y); g.stroke(); }
+      g.restore();
+    } else if (esMeta(r, c)) {
+      g.fillStyle = '#d9efd9'; g.fillRect(x, y, cs, cs);
+    } else if (o.V) {
+      const col = colorValor(o.V[r][c], o.vmin || -25); g.fillStyle = col.css; g.fillRect(x, y, cs, cs);
+    } else { g.fillStyle = '#fffdf5'; g.fillRect(x, y, cs, cs); }
+  }
+  g.strokeStyle = PAL.grid; g.lineWidth = 1;
+  for (let r = 0; r <= NR; r++) { g.beginPath(); g.moveTo(X, Y + r * cs); g.lineTo(X + NC * cs, Y + r * cs); g.stroke(); }
+  for (let c = 0; c <= NC; c++) { g.beginPath(); g.moveTo(X + c * cs, Y); g.lineTo(X + c * cs, Y + NR * cs); g.stroke(); }
+  txt(g, 'acantilado  (−100, vuelve a S)', X + 4 * cs, Y + 3.5 * cs, '#7a1a1a', 'center', fs * 1.05, true);
+  txt(g, '★', X + 7.5 * cs, Y + 3.42 * cs, PAL.green, 'center', cs * 0.5);
+  txt(g, 'G', X + 7.5 * cs, Y + 3.82 * cs, PAL.green, 'center', fs * 0.9, true);
+  for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+    if (esAcant(r, c) || esMeta(r, c)) continue;
+    const x = X + c * cs, y = Y + r * cs;
+    const oscuro = o.V ? colorValor(o.V[r][c], o.vmin || -25).oscuro : false;
+    const tinta = oscuro ? '#fff' : PAL.ink;
+    if (o.numeros && o.V) txt(g, o.V[r][c].toFixed(1), x + cs / 2, y + cs * 0.78, tinta, 'center', fs * 0.95);
+    if (o.flechas) {
+      const a = o.flechas(r, c);
+      if (a >= 0) {
+        const cx = x + cs / 2, cy = y + cs * (o.numeros ? 0.38 : 0.5), L = cs * 0.2;
+        const ux = DC[a], uy = DR[a];
+        g.strokeStyle = tinta; g.fillStyle = tinta; g.lineWidth = Math.max(1.5, cs * 0.04);
+        g.beginPath(); g.moveTo(cx - ux * L, cy - uy * L); g.lineTo(cx + ux * L * 0.4, cy + uy * L * 0.4); g.stroke();
+        g.beginPath(); g.moveTo(cx + ux * L, cy + uy * L);
+        g.lineTo(cx + ux * L * 0.2 - uy * L * 0.55, cy + uy * L * 0.2 + ux * L * 0.55);
+        g.lineTo(cx + ux * L * 0.2 + uy * L * 0.55, cy + uy * L * 0.2 - ux * L * 0.55); g.closePath(); g.fill();
+      }
+    }
+  }
+  txt(g, 'S', X + 0.18 * cs, Y + 3.18 * cs, PAL.green, 'center', fs * 0.95, true);
+  const linea = (pts, col, w, dash) => {
+    if (!pts || pts.length < 2) return;
+    g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.lineJoin = 'round'; g.beginPath();
+    let nuevo = true;                    // null en la lista corta la línea (la caída no es un movimiento)
+    pts.forEach(p => {
+      if (!p) { nuevo = true; return; }
+      const x = X + (p[1] + 0.5) * cs, y = Y + (p[0] + 0.5) * cs;
+      nuevo ? g.moveTo(x, y) : g.lineTo(x, y); nuevo = false;
+    });
+    g.stroke(); g.setLineDash([]);
+    pts.forEach(p => {                   // p[2] marca la casilla del acantilado donde cayó
+      if (!p || !p[2]) return;
+      const x = X + (p[1] + 0.5) * cs, y = Y + (p[0] + 0.5) * cs, k = cs * 0.16;
+      g.strokeStyle = PAL.red; g.lineWidth = Math.max(2.5, cs * 0.07);
+      g.beginPath(); g.moveTo(x - k, y - k); g.lineTo(x + k, y + k); g.moveTo(x + k, y - k); g.lineTo(x - k, y + k); g.stroke();
+    });
+  };
+  if (o.estela) linea(o.estela, 'rgba(123,31,162,0.55)', Math.max(2, cs * 0.06), [5, 4]);
+  if (o.ruta) linea(o.ruta, o.rutaCol || PAL.orange, Math.max(3, cs * 0.09));
+  if (o.robot) {
+    const [r, c] = o.robot, x = X + (c + 0.5) * cs, y = Y + (r + 0.5) * cs;
+    g.fillStyle = o.cayendo ? PAL.red : (o.robotCol || PAL.purple); g.strokeStyle = '#fff'; g.lineWidth = 2;
+    g.beginPath(); g.arc(x, y, cs * (o.cayendo ? 0.13 : 0.2), 0, 2 * Math.PI); g.fill(); g.stroke();
+    if (o.cayendo) txt(g, '¡cae! −100', Math.min(Math.max(x, X + 1.1 * cs), X + (NC - 1.1) * cs), y - cs * 0.3, PAL.red, 'center', fs * 1.1, true);
+    if (o.rescate) txt(g, 'vuelve a S', x + cs * 0.5, y - cs * 0.62, PAL.red, 'left', fs * 1.0, true);
+  }
+}
+function ejes(g, P, X0, X1, Y0, Y1, xt, yt, xlab, ylab, fs) {
+  const px = v => P.x + (v - X0) / (X1 - X0) * P.w, py = v => P.y + P.h - (Math.min(Y1, Math.max(Y0, v)) - Y0) / (Y1 - Y0) * P.h;
+  g.fillStyle = '#fffdf5'; g.fillRect(P.x, P.y, P.w, P.h);
+  g.strokeStyle = 'rgba(0,0,0,0.10)'; g.lineWidth = 1;
+  yt.forEach(([v]) => { g.beginPath(); g.moveTo(P.x, py(v)); g.lineTo(P.x + P.w, py(v)); g.stroke(); });
+  g.strokeStyle = PAL.faint; g.strokeRect(P.x, P.y, P.w, P.h);
+  xt.forEach(v => txt(g, String(v), px(v), P.y + P.h + fs * 0.9, PAL.soft, 'center', fs * 0.85));
+  yt.forEach(([v, s]) => txt(g, s, P.x - 4, py(v), PAL.soft, 'right', fs * 0.85));
+  txt(g, xlab, P.x + P.w / 2, P.y + P.h + fs * 2.0, PAL.soft, 'center', fs * 0.9);
+  g.save(); g.translate(P.x - fs * 2.9, P.y + P.h / 2); g.rotate(-Math.PI / 2); txt(g, ylab, 0, 0, PAL.soft, 'center', fs * 0.9); g.restore();
+  return [px, py];
+}
+function curva(g, xs, ys, px, py, col, w, dash) {
+  if (ys.length < 2) return;
+  g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.beginPath();
+  ys.forEach((y, i) => { const X = px(xs[i]), Y = py(y); i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.stroke(); g.setLineDash([]);
+}
+function fsDe(root) { return parseFloat(getComputedStyle(root).fontSize) || 14; }
+
+// políticas fijas para el widget de trayectorias
+const POLITICAS = {
+  borde:  { nombre: 'ruta del borde', f: (r, c) => c === 7 ? 1 : (r === 3 ? 0 : (r < 2 ? 1 : 3)) },
+  segura: { nombre: 'ruta segura', f: (r, c) => c === 7 ? 1 : (r > 0 ? 0 : 3) },
+  azar:   { nombre: 'al azar', f: null },
+};
+const FLECHA = ['↑', '↓', '←', '→'];
+
+// ======================== 1. UNA TRAYECTORIA Y SU RETORNO ========================
+RLW.trayectoria = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const GAM = 0.95;
+  const S = { pol: 'borde', p: 0.1, anim: null, rnd: mulberry32(7), estela: [], filas: [], robot: S0.slice(), G: 0, res: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  const lab = el('label', { class: 'rlw-sl', html: 'política ' }, bar);
+  const sel = el('select', {}, lab);
+  Object.keys(POLITICAS).forEach(k => el('option', { value: k, text: POLITICAS[k].nombre }, sel));
+  sel.addEventListener('change', () => { S.pol = sel.value; reinicia(); });
+  slider(bar, 'resbalón p', 0, 0.3, 0.01, S.p, 2, v => { S.p = v; reinicia(); });
+  button(bar, '▶ un episodio', () => episodioAnimado());
+  button(bar, '▶▶ +1000 episodios', () => muchos());
+  el('span', { class: 'rlw-read', html: 'γ = 0.95' }, bar);
+  const row = el('div', { class: 'rlw-row' }, root);
+  const cv = el('canvas', {}, row); cv.style.flex = '1.55';
+  const tab = el('div', { class: 'rlw-tab' }, row); tab.style.flex = '1';
+  const read = el('div', { class: 'rlw-read' }, root);
+
+  function vExacto() { return evaluaPolitica(POLITICAS[S.pol].f, GAM, S.p)[S0[0]][S0[1]]; }
+  function limpia() {
+    if (S.anim) { clearInterval(S.anim); S.anim = null; }
+    S.estela = []; S.filas = []; S.robot = S0.slice(); S.G = 0; S.cayendo = false; S.rescate = false;
+  }
+  function reinicia() { limpia(); S.res = null; dibuja(); }
+  function accion(r, c) { const f = POLITICAS[S.pol].f; return f ? f(r, c) : Math.floor(S.rnd() * 4); }
+  function episodioAnimado() {
+    limpia();
+    let r = S0[0], c = S0[1], t = 0; S.estela = [[r, c]];
+    S.anim = setInterval(() => {
+      if (S.cayendo) {                     // segundo tiempo de la caída: reaparece en S
+        S.cayendo = false; S.rescate = true; r = S0[0]; c = S0[1];
+        S.estela.push(null, [r, c]); S.robot = [r, c]; dibuja(); return;
+      }
+      S.rescate = false;
+      const a = accion(r, c); const [nr, nc, rw, cae, b] = pasoResbalon(r, c, a, S.p, S.rnd);
+      const peso = Math.pow(GAM, t); S.G += peso * rw;
+      S.filas.push(`${String(t).padStart(2)}  (${r + 1},${c + 1})  ${FLECHA[a]}  ${String(rw).padStart(4)}  ${(peso * rw).toFixed(2).padStart(7)}  ${S.G.toFixed(2).padStart(7)}${cae ? '  cae' : (b !== a ? '  resbala ' + FLECHA[b] : '')}`);
+      if (cae) {                           // primer tiempo: el robot queda sobre el vacío
+        const cc = Math.min(NC - 1, Math.max(0, c + DC[b]));
+        S.estela.push([3, cc, true]); S.robot = [3, cc]; S.cayendo = true; t++; dibuja(); return;
+      }
+      r = nr; c = nc; t++; S.estela.push([r, c]); S.robot = [r, c];
+      if (esMeta(r, c) || t >= 60) { clearInterval(S.anim); S.anim = null; if (!esMeta(r, c)) S.filas.push('... (episodio truncado en 60 pasos)'); }
+      dibuja();
+    }, 230);
+  }
+  function muchos() {
+    limpia();
+    // los episodios se acumulan entre clics: el promedio converge al valor exacto
+    const A = S.res || { Gs: [], caidas: 0, hist: [] }, Gs = A.Gs; let caidas = A.caidas;
+    for (let e = 0; e < 1000; e++) {
+      let r = S0[0], c = S0[1], G = 0, w = 1, cayo = false;
+      for (let t = 0; t < 400; t++) {
+        const [nr, nc, rw, cae] = pasoResbalon(r, c, accion(r, c), S.p, S.rnd);
+        G += w * rw; w *= GAM; cayo = cayo || cae; r = nr; c = nc; if (esMeta(r, c)) break;
+      }
+      Gs.push(G); if (cayo) caidas++;
+    }
+    const N = Gs.length, m = Gs.reduce((a, b) => a + b, 0) / N;
+    const sd = Math.sqrt(Gs.reduce((a, b) => a + (b - m) * (b - m), 0) / (N - 1));
+    S.res = { m, sd, ee: sd / Math.sqrt(N), caidas, N, Gs, hist: A.hist.concat([m]) };
+    dibuja();
+  }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.52);
+    const cs = Math.min((w - 8) / NC, (h - 8) / NR * (S.res ? 0.62 : 1));
+    const X = (w - NC * cs) / 2, Y = 4;
+    dibujaMundo(g, X, Y, cs, { flechas: POLITICAS[S.pol].f, estela: S.estela, robot: S.robot, cayendo: S.cayendo, rescate: S.rescate });
+    if (S.res) {                                   // histograma de retornos
+      const P = { x: fs * 4, y: Y + NR * cs + fs * 0.8, w: w - fs * 5, h: h - (Y + NR * cs) - fs * 3.2 };
+      const lo = -120, hi = 0, nb = 40, cnt = new Array(nb).fill(0);
+      S.res.Gs.forEach(G => { const b = Math.min(nb - 1, Math.max(0, Math.floor((G - lo) / (hi - lo) * nb))); cnt[b]++; });
+      const mx = Math.max(...cnt);
+      const [px, py] = ejes(g, P, lo, hi, 0, mx, [-120, -100, -80, -60, -40, -20, 0], [], 'retorno G de cada episodio', '', fs * 0.9);
+      g.fillStyle = 'rgba(78,121,167,0.75)';
+      cnt.forEach((n, b) => { const x0 = px(lo + b * (hi - lo) / nb), x1 = px(lo + (b + 1) * (hi - lo) / nb); g.fillRect(x0 + 1, py(n), x1 - x0 - 2, py(0) - py(n)); });
+      const xm = px(Math.max(lo, S.res.m)), xv = px(Math.max(lo, vExacto()));
+      if (root.dataset.valor !== 'no') {         // valor exacto: fijo, no depende de la simulación
+        g.strokeStyle = PAL.ink; g.lineWidth = 2; g.setLineDash([6, 4]);
+        g.beginPath(); g.moveTo(xv, P.y); g.lineTo(xv, P.y + P.h); g.stroke(); g.setLineDash([]);
+      }
+      g.strokeStyle = PAL.red; g.lineWidth = 2.5; g.beginPath(); g.moveTo(xm, P.y); g.lineTo(xm, P.y + P.h); g.stroke();
+      const izq = xm < xv;                          // rótulos hacia afuera para que no se tapen
+      txt(g, 'promedio', xm + (izq ? -4 : 4), P.y + fs * 0.7, PAL.red, izq ? 'right' : 'left', fs * 0.85, true);
+      if (root.dataset.valor !== 'no') txt(g, 'exacto', xv + (izq ? 4 : -4), P.y + fs * 0.7, PAL.ink, izq ? 'left' : 'right', fs * 0.85, true);
+    }
+    const enc = ' t  estado  a     r    γᵗ·r        G\n';
+    tab.textContent = enc + (S.filas.length ? S.filas.slice(-14).join('\n') : '(pulse ▶ para simular un episodio)');
+    const vx = vExacto();
+    const conValor = root.dataset.valor !== 'no';   // data-valor="no" oculta v antes de definirla
+    let s = conValor ? `Valor exacto de la política en S, calculado sin simular: <b>v<sub>π</sub>(S) = ${vx.toFixed(2)}</b>.` : '';
+    if (S.filas.length) s += ` &nbsp;Retorno de este episodio: <b>G = ${S.G.toFixed(2)}</b>.`;
+    if (S.res) {
+      const R = S.res, hs = R.hist.slice(-6).map(v => v.toFixed(2)).join(' → ');
+      s += `<br>${R.N} episodios: retorno medio <b style="color:${PAL.red}">${R.m.toFixed(2)}</b> ± ${(1.96 * R.ee).toFixed(2)} (IC 95%), desviación estándar ${R.sd.toFixed(1)}, cae al acantilado al menos una vez en el <b>${(100 * R.caidas / R.N).toFixed(0)}%</b> de los episodios.`;
+      s += `<br>La línea roja es el promedio de los episodios simulados hasta ahora: es aleatorio y cambia con cada tanda` +
+        (conValor ? `. La línea negra punteada es v<sub>π</sub>(S), que no cambia. Cada tanda se suma a las anteriores y la roja se acerca a la negra` : '') +
+        (R.hist.length > 1 ? `: ${hs}.` : '.');
+    }
+    read.innerHTML = s;
+  }
+  onResize(root, dibuja); dibuja();
+};
+
+// ======================== 2. ITERACIÓN DE VALOR ANIMADA ========================
+RLW.iteracionValor = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const S = { gam: 0.95, p: 0.0, V: zerosV(), k: 0, hist: [], anim: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'γ', 0.5, 0.99, 0.01, S.gam, 2, v => { S.gam = v; reinicia(); });
+  slider(bar, 'resbalón p', 0, 0.3, 0.01, S.p, 2, v => { S.p = v; reinicia(); });
+  button(bar, '1 barrido', () => { para(); un(); dibuja(); });
+  const bPlay = button(bar, '▶ reproducir', () => S.anim ? para() : play());
+  button(bar, '↺ reiniciar', () => reinicia());
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function un() { if (S.k >= 120) return; const [Vn, d] = barrido(S.V, S.gam, S.p); S.V = Vn; S.k++; S.hist.push(d); }
+  function para() { if (S.anim) clearInterval(S.anim); S.anim = null; bPlay.textContent = '▶ reproducir'; }
+  function play() {
+    bPlay.textContent = '⏸ pausa';
+    S.anim = setInterval(() => { un(); dibuja(); const d = S.hist[S.hist.length - 1]; if (S.k >= 120 || d < 1e-6) para(); }, S.k < 15 ? 420 : 160);
+  }
+  function reinicia() { para(); S.V = zerosV(); S.k = 0; S.hist = []; dibuja(); }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.36);
+    const cs = Math.min((w * 0.56) / NC, (h - 8) / NR), X = 4, Y = 4;
+    const flechas = S.k ? (r, c) => accionCodiciosa(S.V, r, c, S.gam, S.p) : null;
+    const ruta = S.k ? rutaDesde((r, c) => accionCodiciosa(S.V, r, c, S.gam, S.p)) : null;
+    dibujaMundo(g, X, Y, cs, { V: S.V, vmin: -25, numeros: true, flechas, ruta });
+    const P = { x: X + NC * cs + fs * 4.2, y: fs * 0.6, w: w - (X + NC * cs + fs * 4.2) - fs * 1.6, h: h - fs * 3.6 };
+    const [px, py] = ejes(g, P, 0, 120, -6, 2, [0, 30, 60, 90, 120], [[2, '10²'], [0, '1'], [-2, '10⁻²'], [-4, '10⁻⁴'], [-6, '10⁻⁶']], 'barrido k', 'max |ΔV|', fs);
+    if (S.hist.length) {
+      const ks = S.hist.map((_, i) => i + 1);
+      const ref = ks.map(k => Math.log10(S.hist[0]) + (k - 1) * Math.log10(S.gam));
+      curva(g, ks, ref, px, py, PAL.faint, 2, [6, 5]);
+      curva(g, ks, S.hist.map(d => Math.log10(Math.max(d, 1e-7))), px, py, PAL.blue, 3);
+      txt(g, '- - -  cota γᵏ (contracción)', P.x + P.w - 6, P.y + fs * 0.9, PAL.soft, 'right', fs * 0.85);
+    }
+    const d = S.hist.length ? S.hist[S.hist.length - 1] : NaN;
+    let s = `Barrido <b>k = ${S.k}</b> · V(S) = <b>${S.V[3][0].toFixed(2)}</b>`;
+    if (S.k) s += ` · max |ΔV| = ${d.toExponential(1)}`;
+    if (ruta && ruta.llega) s += ` · la ruta codiciosa (naranja) llega a G en <b>${ruta.length - 1} pasos</b>`;
+    else if (S.k) s += ' · la ruta codiciosa todavía no llega a G';
+    read.innerHTML = s;
+  }
+  onResize(root, dibuja); dibuja();
+};
+
+// ======================== 3. SARSA Y Q-LEARNING EN VIVO ========================
+function agenteTD(metodo, semilla) {
+  return { metodo, rnd: mulberry32(semilla), Q: new Float64Array(NR * NC * 4), r: S0[0], c: S0[1], a: -1, t: 0, ret: 0, rets: [], estela: [[S0[0], S0[1]]] };
+}
+const qi = (r, c, a) => (r * NC + c) * 4 + a;
+function argmaxQ(Q, r, c, rnd) {
+  let m = -Infinity, best = []; for (let a = 0; a < 4; a++) { const q = Q[qi(r, c, a)]; if (q > m + 1e-12) { m = q; best = [a]; } else if (Math.abs(q - m) <= 1e-12) best.push(a); }
+  return best.length === 1 || !rnd ? best[0] : best[Math.floor(rnd() * best.length)];
+}
+const maxQ = (Q, r, c) => Math.max(Q[qi(r, c, 0)], Q[qi(r, c, 1)], Q[qi(r, c, 2)], Q[qi(r, c, 3)]);
+function pasoTD(A, eps, alfa, gam) {
+  const eg = (r, c) => A.rnd() < eps ? Math.floor(A.rnd() * 4) : argmaxQ(A.Q, r, c, A.rnd);
+  if (A.a < 0) A.a = eg(A.r, A.c);
+  const { r, c, a } = A; const [nr, nc, rw, cae] = mover(r, c, a); const fin = esMeta(nr, nc);
+  A.ret += rw; A.t++;
+  let objetivo, na = -1;
+  if (A.metodo === 'sarsa') { na = eg(nr, nc); objetivo = rw + (fin ? 0 : gam * A.Q[qi(nr, nc, na)]); }
+  else { objetivo = rw + (fin ? 0 : gam * maxQ(A.Q, nr, nc)); }
+  A.Q[qi(r, c, a)] += alfa * (objetivo - A.Q[qi(r, c, a)]);
+  if (cae) A.estela.push([3, Math.min(NC - 1, Math.max(0, c + DC[a])), true], null);
+  A.r = nr; A.c = nc; A.estela.push([nr, nc]);
+  A.a = A.metodo === 'sarsa' ? na : -1;
+  if (fin || A.t >= 500) { A.rets.push(A.ret); A.ret = 0; A.t = 0; A.r = S0[0]; A.c = S0[1]; A.a = -1; A.estela = [[S0[0], S0[1]]]; return true; }
+  if (A.estela.length > 40) A.estela.shift();
+  return false;
+}
+RLW.tdVivo = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const GAM = 0.95;
+  const S = { eps: 0.1, alfa: 0.5, vel: 1, corre: false, semilla: 1, ag: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'ε', 0.01, 0.3, 0.01, S.eps, 2, v => { S.eps = v; });
+  slider(bar, 'α', 0.05, 0.9, 0.05, S.alfa, 2, v => { S.alfa = v; });
+  const lab = el('label', { class: 'rlw-sl', html: 'velocidad ' }, bar);
+  const sel = el('select', {}, lab);
+  [['1', '1 paso por cuadro'], ['8', '8 pasos por cuadro'], ['-1', '1 episodio por cuadro'], ['-10', '10 episodios por cuadro']].forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+  sel.addEventListener('change', () => { S.vel = +sel.value; });
+  const bPlay = button(bar, '▶ entrenar', () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ entrenar'; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ reiniciar', () => { S.semilla++; nuevo(); dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function nuevo() { S.ag = [agenteTD('sarsa', 1000 + S.semilla), agenteTD('q', 2000 + S.semilla)]; }
+  function avanza() {
+    S.ag.forEach(A => {
+      if (S.vel > 0) { for (let k = 0; k < S.vel; k++) pasoTD(A, S.eps, S.alfa, GAM); }
+      else { for (let e = 0; e < -S.vel; e++) { let n = 0; while (!pasoTD(A, S.eps, S.alfa, GAM) && n++ < 600); } }
+    });
+  }
+  function loop() { if (!S.corre) return; avanza(); dibuja(); requestAnimationFrame(loop); }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.56);
+    const cs = Math.min((w / 2 - 18) / NC, h * 0.5 / NR), Y = fs * 1.6;
+    const cols = [PAL.blue, PAL.orange], nombres = ['SARSA (on-policy)', 'Q-Learning (off-policy)'];
+    S.ag.forEach((A, i) => {
+      const X = i * w / 2 + (w / 2 - NC * cs) / 2;
+      const V = Array.from({ length: NR }, (_, r) => Array.from({ length: NC }, (_, c) => maxQ(A.Q, r, c)));
+      const ruta = rutaDesde((r, c) => { const qs = [0, 1, 2, 3].map(a => A.Q[qi(r, c, a)]); return Math.max(...qs) - Math.min(...qs) < 1e-9 ? -1 : argmaxQ(A.Q, r, c); });
+      dibujaMundo(g, X, Y, cs, { V, vmin: -25, flechas: (r, c) => { const qs = [0, 1, 2, 3].map(a => A.Q[qi(r, c, a)]); return Math.max(...qs) - Math.min(...qs) < 1e-9 ? -1 : argmaxQ(A.Q, r, c); },
+                                 ruta, rutaCol: cols[i], robot: [A.r, A.c], estela: A.estela });
+      txt(g, nombres[i] + ' · episodio ' + A.rets.length, X + NC * cs / 2, fs * 0.75, cols[i], 'center', fs, true);
+    });
+    const P = { x: fs * 4.2, y: Y + NR * cs + fs * 1.0, w: w - fs * 6, h: h - (Y + NR * cs) - fs * 3.6 };
+    const n = Math.max(...S.ag.map(A => A.rets.length)), X1 = Math.max(300, Math.ceil(n / 100) * 100);
+    const [px, py] = ejes(g, P, 0, X1, -150, 0, [0, X1 / 3, 2 * X1 / 3, X1].map(Math.round), [[0, '0'], [-50, '−50'], [-100, '−100'], [-150, '−150']], 'episodio', 'recompensa', fs);
+    S.ag.forEach((A, i) => {
+      const m = A.rets.map((_, j) => { const a = Math.max(0, j - 19), sl = A.rets.slice(a, j + 1); return sl.reduce((x, y) => x + y, 0) / sl.length; });
+      curva(g, m.map((_, j) => j + 1), m, px, py, cols[i], 2.5);
+    });
+    const med = A => { const sl = A.rets.slice(-50); return sl.length ? (sl.reduce((x, y) => x + y, 0) / sl.length).toFixed(1) : 'n/d'; };
+    const largo = A => { const rr = rutaDesde((r, c) => argmaxQ(A.Q, r, c)); return rr.llega ? `${rr.length - 1} pasos` : 'aún no llega'; };
+    read.innerHTML = `Recompensa media de los últimos 50 episodios: SARSA <b>${med(S.ag[0])}</b>, Q-Learning <b>${med(S.ag[1])}</b>. ` +
+      `Ruta codiciosa aprendida: SARSA ${largo(S.ag[0])}, Q-Learning ${largo(S.ag[1])}. Curvas: promedio móvil de 20 episodios.`;
+  }
+  nuevo(); onResize(root, dibuja); dibuja();
+};
+
+// ======================== 4. DQN EN VIVO ========================
+// Red 2 -> H -> H -> 4 con ReLU, entrada = (fila, columna) normalizadas; Adam, pérdida de Huber.
+function redNueva(H, rnd) {
+  const n = (k, s) => { const a = new Float64Array(k); for (let i = 0; i < k; i++) a[i] = gauss(rnd) * s; return a; };
+  return { H, W1: n(H * 2, 1), b1: new Float64Array(H), W2: n(H * H, Math.sqrt(2 / H)), b2: new Float64Array(H), W3: n(4 * H, Math.sqrt(1 / H)), b3: new Float64Array(4) };
+}
+function redCopia(m) { return { H: m.H, W1: m.W1.slice(), b1: m.b1.slice(), W2: m.W2.slice(), b2: m.b2.slice(), W3: m.W3.slice(), b3: m.b3.slice() }; }
+const CLAVES = ['W1', 'b1', 'W2', 'b2', 'W3', 'b3'];
+function entradas(r, c) { return [r / 3, c / 7]; }
+function redFwd(m, x, cache) {
+  const H = m.H, z1 = new Float64Array(H), h1 = new Float64Array(H), z2 = new Float64Array(H), h2 = new Float64Array(H), y = new Float64Array(4);
+  for (let i = 0; i < H; i++) { const z = m.W1[2 * i] * x[0] + m.W1[2 * i + 1] * x[1] + m.b1[i]; z1[i] = z; h1[i] = z > 0 ? z : 0; }
+  for (let i = 0; i < H; i++) { let z = m.b2[i]; const o = i * H; for (let j = 0; j < H; j++) z += m.W2[o + j] * h1[j]; z2[i] = z; h2[i] = z > 0 ? z : 0; }
+  for (let i = 0; i < 4; i++) { let z = m.b3[i]; const o = i * H; for (let j = 0; j < H; j++) z += m.W3[o + j] * h2[j]; y[i] = z; }
+  if (cache) { cache.x = x; cache.z1 = z1; cache.h1 = h1; cache.z2 = z2; cache.h2 = h2; }
+  return y;
+}
+function dqnNuevo(semilla, H) {
+  const rnd = mulberry32(semilla); const m = redNueva(H, rnd);
+  const zeros = () => { const o = {}; CLAVES.forEach(k => o[k] = new Float64Array(m[k].length)); return o; };
+  return { rnd, m, mt: redCopia(m), M: zeros(), V2: zeros(), G: zeros(), tA: 0, t: 0, D: [], r: S0[0], c: S0[1], epT: 0, hist: [], llegadas: 0 };
+}
+const DQN = { pasos: 40000, B: 32, buf: 5000, K: 500, lr: 2e-3, gam: 0.95, escala: 10 };
+function dqnPaso(A, replay, target) {
+  const P = DQN; A.t++;
+  const eps = Math.max(0.1, 1 - A.t / (0.3 * P.pasos));
+  const a = A.rnd() < eps ? Math.floor(A.rnd() * 4) : (() => { const q = redFwd(A.m, entradas(A.r, A.c)); let b = 0; for (let k = 1; k < 4; k++) if (q[k] > q[b]) b = k; return b; })();
+  const [nr, nc, rw] = mover(A.r, A.c, a); const fin = esMeta(nr, nc);
+  const tr = [A.r, A.c, a, rw / P.escala, nr, nc, fin];
+  if (replay) { if (A.D.length < P.buf) A.D.push(tr); else A.D[Math.floor(A.rnd() * P.buf)] = tr; } else A.D = [tr];
+  A.r = nr; A.c = nc; A.epT++;
+  if (fin) A.llegadas++;
+  if (fin || A.epT >= 200) { A.r = S0[0]; A.c = S0[1]; A.epT = 0; }
+  if (!replay || A.D.length >= P.B) {
+    const B = replay ? P.B : 1; const m = A.m, H = m.H, G = A.G;
+    CLAVES.forEach(k => G[k].fill(0));
+    const cache = {}, d3 = new Float64Array(4), d2 = new Float64Array(H), d1 = new Float64Array(H);
+    for (let s = 0; s < B; s++) {
+      const [r, c, ac, rr, sr, sc, f] = replay ? A.D[Math.floor(A.rnd() * A.D.length)] : A.D[0];
+      const qn = redFwd(target ? A.mt : m, entradas(sr, sc));
+      const T = rr + (f ? 0 : P.gam * Math.max(qn[0], qn[1], qn[2], qn[3]));
+      const y = redFwd(m, entradas(r, c), cache);
+      const e = y[ac] - T; d3.fill(0); d3[ac] = Math.max(-1, Math.min(1, e)) / B;     // gradiente de Huber
+      G.b3[ac] += d3[ac]; for (let j = 0; j < H; j++) G.W3[ac * H + j] += d3[ac] * cache.h2[j];
+      for (let j = 0; j < H; j++) d2[j] = cache.z2[j] > 0 ? m.W3[ac * H + j] * d3[ac] : 0;
+      for (let i = 0; i < H; i++) { if (d2[i] === 0) continue; G.b2[i] += d2[i]; const o = i * H; for (let j = 0; j < H; j++) G.W2[o + j] += d2[i] * cache.h1[j]; }
+      for (let j = 0; j < H; j++) { let z = 0; if (cache.z1[j] > 0) for (let i = 0; i < H; i++) z += m.W2[i * H + j] * d2[i]; d1[j] = z; }
+      for (let i = 0; i < H; i++) { G.b1[i] += d1[i]; G.W1[2 * i] += d1[i] * cache.x[0]; G.W1[2 * i + 1] += d1[i] * cache.x[1]; }
+    }
+    A.tA++; const b1 = 0.9, b2 = 0.999, c1 = 1 - Math.pow(b1, A.tA), c2 = 1 - Math.pow(b2, A.tA);
+    CLAVES.forEach(k => { const p = m[k], g = G[k], M = A.M[k], V = A.V2[k];
+      for (let i = 0; i < p.length; i++) { M[i] = b1 * M[i] + (1 - b1) * g[i]; V[i] = b2 * V[i] + (1 - b2) * g[i] * g[i]; p[i] -= P.lr * (M[i] / c1) / (Math.sqrt(V[i] / c2) + 1e-8); } });
+  }
+  if (target && A.t % P.K === 0) A.mt = redCopia(A.m);
+  if (A.t % 100 === 0) { const q = redFwd(A.m, entradas(S0[0], S0[1])); A.hist.push(P.escala * Math.max(q[0], q[1], q[2], q[3])); }
+}
+function dqnRuta(A) { return rutaDesde((r, c) => { const q = redFwd(A.m, entradas(r, c)); let b = 0; for (let k = 1; k < 4; k++) if (q[k] > q[b]) b = k; return b; }); }
+RLW.dqnVivo = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const QSTAR = evaluaPolitica(POLITICAS.borde.f, DQN.gam, 0)[S0[0]][S0[1]];
+  const S = { replay: true, target: true, corre: false, semilla: 1, A: null, vel: 120 };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  check(bar, 'repetición de experiencia', S.replay, v => { S.replay = v; reinicia(); });
+  check(bar, 'red objetivo', S.target, v => { S.target = v; reinicia(); });
+  const bPlay = button(bar, '▶ entrenar', () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ entrenar'; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ otra semilla', () => { S.semilla++; reinicia(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function reinicia() { S.A = dqnNuevo(100 + S.semilla, 32); dibuja(); }
+  function loop() {
+    if (!S.corre) return;
+    const t0 = performance.now();
+    while (S.A.t < DQN.pasos && performance.now() - t0 < 28) for (let k = 0; k < 20; k++) dqnPaso(S.A, S.replay, S.target);
+    if (S.A.t >= DQN.pasos) { S.corre = false; bPlay.textContent = '▶ entrenar'; }
+    dibuja(); if (S.corre) requestAnimationFrame(loop);
+  }
+  function dibuja() {
+    const fs = fsDe(root), A = S.A;
+    const { g, w, h } = fit(cv, 0.36);
+    const cs = Math.min((w * 0.52) / NC, (h - 8) / NR), X = 4, Y = 4;
+    const qs = []; for (let r = 0; r < NR; r++) { qs.push([]); for (let c = 0; c < NC; c++) qs[r].push(redFwd(A.m, entradas(r, c))); }
+    const V = qs.map(f => f.map(q => DQN.escala * Math.max(q[0], q[1], q[2], q[3])));
+    const fl = (r, c) => { const q = qs[r][c]; let b = 0; for (let k = 1; k < 4; k++) if (q[k] > q[b]) b = k; return b; };
+    const ruta = dqnRuta(A);
+    dibujaMundo(g, X, Y, cs, { V, vmin: -25, numeros: true, flechas: fl, ruta, rutaCol: ruta.llega ? PAL.green : PAL.red });
+    const P = { x: X + NC * cs + fs * 4.2, y: fs * 0.6, w: w - (X + NC * cs + fs * 4.2) - fs * 1.6, h: h - fs * 3.6 };
+    const [px, py] = ejes(g, P, 0, DQN.pasos, -40, 40, [0, 10000, 20000, 30000, 40000], [[40, '40'], [20, '20'], [0, '0'], [-20, '−20'], [-40, '−40']], 'paso de interacción', 'Q(S) estimado', fs);
+    curva(g, [0, DQN.pasos], [QSTAR, QSTAR], px, py, PAL.green, 2, [6, 5]);
+    curva(g, A.hist.map((_, i) => (i + 1) * 100), A.hist, px, py, PAL.blue, 2.5);
+    txt(g, `- - -  q*(S) = ${QSTAR.toFixed(2)}`, P.x + P.w - 6, P.y + fs * 0.9, PAL.green, 'right', fs * 0.85);
+    const q = A.hist.length ? A.hist[A.hist.length - 1] : NaN, eps = Math.max(0.1, 1 - A.t / (0.3 * DQN.pasos));
+    let s = `Paso <b>${A.t}</b> de ${DQN.pasos} · ε = ${eps.toFixed(2)} · Q(S) = <b>${isNaN(q) ? 'n/d' : q.toFixed(2)}</b> (q*(S) = ${QSTAR.toFixed(2)})`;
+    s += ruta.llega ? ` · la ruta codiciosa (verde) <b>llega a G en ${ruta.length - 1} pasos</b>` : ' · la ruta codiciosa (roja) <b>no llega</b> a G';
+    if (Math.abs(q) > 40) s += ' · <b style="color:#c0392b">los valores divergen</b>';
+    read.innerHTML = s;
+  }
+  reinicia(); onResize(root, dibuja);
+};
+
+// ======================== 5. TD(0) EN LA CAMINATA ALEATORIA ========================
+// Estados A..E (1..5) en línea, terminales 0 (recompensa 0) y 6 (recompensa 1), γ = 1.
+RLW.td0Caminata = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const REAL = [1, 2, 3, 4, 5].map(k => k / 6);
+  const S = { alfa: 0.1, V: null, pos: 3, ep: 0, rms: [], delta: null, anim: null, rnd: mulberry32(3), estela: [] };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'α', 0.02, 0.3, 0.01, S.alfa, 2, v => { S.alfa = v; });
+  const bPlay = button(bar, '▶ episodios animados', () => S.anim ? para() : play());
+  button(bar, '▶▶ 100 episodios', () => { para(); for (let k = 0; k < 100; k++) episodio(); dibuja(); });
+  button(bar, '↺ reiniciar', () => { para(); nuevo(); dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function nuevo() { S.V = [0.5, 0.5, 0.5, 0.5, 0.5]; S.pos = 3; S.ep = 0; S.rms = []; S.delta = null; S.estela = []; }
+  const rms = () => Math.sqrt(S.V.reduce((a, v, i) => a + (v - REAL[i]) ** 2, 0) / 5);
+  function paso() {                              // un paso de la caminata con su actualización TD(0)
+    const s = S.pos, sp = s + (S.rnd() < 0.5 ? -1 : 1);
+    const r = sp === 6 ? 1 : 0, vsp = (sp === 0 || sp === 6) ? 0 : S.V[sp - 1];
+    S.delta = { s, sp, r, d: r + vsp - S.V[s - 1] };
+    S.V[s - 1] += S.alfa * S.delta.d;
+    S.pos = sp; S.estela.push(sp);
+    if (sp === 0 || sp === 6) { S.ep++; S.rms.push(rms()); return true; }
+    return false;
+  }
+  function episodio() { S.pos = 3; S.estela = [3]; while (!paso()); S.pos = 3; }
+  function para() { if (S.anim) clearInterval(S.anim); S.anim = null; bPlay.textContent = '▶ episodios animados'; }
+  function play() {
+    bPlay.textContent = '⏸ pausa'; if (S.pos === 0 || S.pos === 6) S.pos = 3; S.estela = [S.pos];
+    S.anim = setInterval(() => { if (paso()) { S.pos = 3; S.estela = [3]; } dibuja(); }, 260);
+  }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.42);
+    // cadena de estados arriba
+    const y0 = fs * 2.9, xs = k => w * 0.06 + k * (w * 0.5) / 6, rr = fs * 1.1;
+    g.strokeStyle = PAL.faint; g.lineWidth = 2; g.beginPath(); g.moveTo(xs(0), y0); g.lineTo(xs(6), y0); g.stroke();
+    for (let k = 0; k <= 6; k++) {
+      const term = k === 0 || k === 6;
+      g.fillStyle = term ? '#e9e4d0' : '#e8f0fe'; g.strokeStyle = term ? PAL.faint : PAL.blue; g.lineWidth = 1.8;
+      g.beginPath(); if (term) g.rect(xs(k) - rr * 0.8, y0 - rr * 0.8, rr * 1.6, rr * 1.6); else g.arc(xs(k), y0, rr, 0, 7); g.fill(); g.stroke();
+      txt(g, term ? (k === 0 ? '0' : '1') : 'ABCDE'[k - 1], xs(k), y0, PAL.ink, 'center', fs, true);
+    }
+    txt(g, 'recompensa', xs(0), y0 + rr * 1.7, PAL.soft, 'center', fs * 0.8);
+    txt(g, 'recompensa', xs(6), y0 + rr * 1.7, PAL.soft, 'center', fs * 0.8);
+    if (S.anim || S.delta) { g.fillStyle = PAL.purple; g.beginPath(); g.arc(xs(S.pos), y0 - rr * 1.6, rr * 0.45, 0, 7); g.fill(); }
+    // barras de V
+    const P = { x: w * 0.06 + fs * 1.5, y: y0 + rr * 2.6, w: w * 0.5 - fs * 1.5, h: h - (y0 + rr * 2.6) - fs * 2.2 };
+    const [, py] = ejes(g, P, 0, 5, 0, 1, [], [[0, '0'], [0.5, '0.5'], [1, '1']], '', 'v(s)', fs);
+    const bw = P.w / 5;
+    S.V.forEach((v, i) => {
+      const x = P.x + i * bw;
+      g.fillStyle = S.delta && S.delta.s === i + 1 ? PAL.orange : 'rgba(78,121,167,0.8)';
+      g.fillRect(x + bw * 0.18, py(v), bw * 0.64, py(0) - py(v));
+      g.strokeStyle = PAL.ink; g.setLineDash([5, 4]); g.lineWidth = 2;
+      g.beginPath(); g.moveTo(x + bw * 0.08, py(REAL[i])); g.lineTo(x + bw * 0.92, py(REAL[i])); g.stroke(); g.setLineDash([]);
+      txt(g, 'ABCDE'[i], x + bw / 2, P.y + P.h + fs * 0.9, PAL.soft, 'center', fs * 0.9);
+    });
+    // error RMS a la derecha
+    const Q = { x: w * 0.62 + fs * 3, y: fs * 0.8, w: w * 0.38 - fs * 4.2, h: h - fs * 3.6 };
+    const X1 = Math.max(100, Math.ceil(S.ep / 100) * 100);
+    const [qx, qy] = ejes(g, Q, 0, X1, 0, 0.25, [0, X1 / 2, X1], [[0, '0'], [0.1, '0.1'], [0.2, '0.2']], 'episodio', 'error RMS', fs);
+    curva(g, S.rms.map((_, i) => i + 1), S.rms, qx, qy, PAL.blue, 2.5);
+    let s = `Episodios: <b>${S.ep}</b> · error RMS frente al valor verdadero: <b>${rms().toFixed(3)}</b>`;
+    if (S.delta) {
+      const n = k => k === 0 || k === 6 ? `terminal (r = ${k === 6 ? 1 : 0})` : 'ABCDE'[k - 1];
+      s += `<br>Último paso: ${n(S.delta.s)} → ${n(S.delta.sp)}, error TD δ = r + v(s′) − v(s) = <b>${S.delta.d.toFixed(3)}</b>; la barra naranja se movió α·δ = ${(S.alfa * S.delta.d).toFixed(3)}.`;
+    } else s += '<br>Las barras parten en 0.5; la línea punteada es el valor verdadero k/6.';
+    read.innerHTML = s;
+  }
+  nuevo(); onResize(root, dibuja); dibuja();
+};
+
+// ======================== 6. TRÍADA MORTAL: EL EJEMPLO w, 2w ========================
+RLW.triada = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const ALFA = 0.1, T = 150;
+  const S = { gam: 0.99, K: 20, t: 0, anim: null, a: [], b: [] };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'γ', 0.3, 0.99, 0.01, S.gam, 2, v => { S.gam = v; reinicia(); });
+  slider(bar, 'K', 1, 40, 1, S.K, 0, v => { S.K = v; reinicia(); });
+  const bPlay = button(bar, '▶ 150 pasos', () => { reinicia(); play(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function calcula() {                         // trayectorias completas de ambos esquemas
+    let w = 1; S.a = [1];
+    for (let t = 1; t <= T; t++) { w += ALFA * (2 * S.gam * w - w); S.a.push(w); }
+    let u = 1, uc = 1; S.b = [1];
+    for (let t = 1; t <= T; t++) { u += ALFA * (2 * S.gam * uc - u); if (t % S.K === 0) uc = u; S.b.push(u); }
+  }
+  function reinicia() { if (S.anim) clearInterval(S.anim); S.anim = null; calcula(); S.t = 0; dibuja(); }
+  function play() { S.anim = setInterval(() => { S.t = Math.min(T, S.t + 2); dibuja(); if (S.t >= T) { clearInterval(S.anim); S.anim = null; } }, 30); }
+  function nodo(g, x, y, r, etq, val, col) {
+    g.fillStyle = '#e8f0fe'; g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.stroke();
+    txt(g, etq, x, y - r * 0.28, PAL.ink, 'center', r * 0.42, true);
+    txt(g, val, x, y + r * 0.32, col, 'center', r * 0.36, true);
+  }
+  const fmt = v => Math.abs(v) >= 1e4 ? v.toExponential(1) : v.toFixed(2);
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.38);
+    const r = Math.min(h * 0.13, w * 0.045), X0 = w * 0.07, X1 = w * 0.3;
+    const filas = [['sin red objetivo', S.a, PAL.orange, h * 0.27], ['con red objetivo', S.b, PAL.blue, h * 0.7]];
+    filas.forEach(([nom, arr, col, y]) => {
+      const wv = arr[S.t];
+      txt(g, nom, (X0 + X1) / 2, y - r * 1.55, col, 'center', fs, true);
+      nodo(g, X0, y, r, 'w', fmt(wv), col); nodo(g, X1, y, r, '2w', fmt(2 * wv), col);
+      arrowLine(g, X0 + r + 4, y, X1 - r - 4, y, PAL.ink);
+      txt(g, 'r = 0', (X0 + X1) / 2, y - fs * 0.7, PAL.soft, 'center', fs * 0.85);
+    });
+    const P = { x: w * 0.43, y: fs * 0.8, w: w * 0.55 - fs * 0.6, h: h - fs * 3.6 };
+    const [px, py] = ejes(g, P, 0, T, -3, 7, [0, 50, 100, 150], [[7, '10⁷'], [5, '10⁵'], [3, '10³'], [1, '10'], [-1, '0.1'], [-3, '10⁻³']], 'paso', '|w|', fs);
+    const lg = v => Math.log10(Math.max(1e-6, Math.abs(v)));
+    const ts = Array.from({ length: S.t + 1 }, (_, i) => i);
+    curva(g, ts, ts.map(i => lg(S.a[i])), px, py, PAL.orange, 3);
+    curva(g, ts, ts.map(i => lg(S.b[i])), px, py, PAL.blue, 3);
+    g.strokeStyle = 'rgba(78,121,167,0.35)'; g.lineWidth = 1;
+    for (let t = S.K; t <= S.t; t += S.K) { g.beginPath(); g.moveTo(px(t), P.y + P.h); g.lineTo(px(t), P.y + P.h - 8); g.stroke(); }
+    const f1 = 1 + ALFA * (2 * S.gam - 1), fK = 2 * S.gam - (2 * S.gam - 1) * Math.pow(1 - ALFA, S.K);
+    read.innerHTML = `α = 0.1. Factor por paso sin red objetivo: 1 + α(2γ − 1) = <b>${f1.toFixed(3)}</b>, es decir <b>${Math.pow(f1, S.K).toFixed(2)}</b> cada ${S.K} pasos. ` +
+      `Con red objetivo, factor por sincronización: 2γ − (2γ − 1)(1 − α)ᴷ = <b>${fK.toFixed(3)}</b>. Las marcas azules del eje son las sincronizaciones.`;
+  }
+  reinicia();
+  onResize(root, dibuja);
+};
+function arrowLine(g, x0, y0, x1, y1, col) {
+  g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1 - 8, y1); g.stroke();
+  g.beginPath(); g.moveTo(x1, y1); g.lineTo(x1 - 10, y1 - 5); g.lineTo(x1 - 10, y1 + 5); g.closePath(); g.fill();
+}
+
+
+// ======================== 7. PONG SIMPLIFICADO ========================
+// Cancha de 10 columnas × 8 filas; la paleta (2 casillas) está en la columna 10 y sube, queda o baja.
+// Golpear la pelota da +1; dejarla pasar da -1 y termina el episodio (también termina tras 20 golpes).
+const PX = 10, PY = 8, PL = 2, PNP = PY - PL + 1, PMAXG = 20, PGAM = 0.95;
+function pongSaque(rnd) { return [1 + Math.floor(rnd() * 3), 1 + Math.floor(rnd() * PY), 1, Math.floor(rnd() * 3) - 1, 1 + Math.floor(rnd() * PNP)]; }
+function pongPaso(s, a) {                 // a ∈ {0,1,2}: subir, quedarse, bajar
+  let [x, y, vx, vy, p] = s;
+  p = Math.min(PNP, Math.max(1, p + a - 1));
+  let nx = x + vx, ny = y + vy;
+  if (ny < 1) { ny = 2 - ny; vy = -vy; }
+  if (ny > PY) { ny = 2 * PY - ny; vy = -vy; }
+  if (nx < 1) { nx = 2 - nx; vx = 1; }
+  if (nx === PX) {
+    if (ny >= p && ny <= p + PL - 1) return [[nx, ny, -1, ny === p ? -1 : 1, p], 1, false];
+    return [[nx, ny, vx, vy, p], -1, true];
+  }
+  return [[nx, ny, vx, vy, p], 0, false];
+}
+const pongIdx = s => (((((s[0] - 1) * PY + s[1] - 1) * 2 + (s[2] === 1 ? 1 : 0)) * 3 + s[3] + 1) * PNP + s[4] - 1);
+const PNS = PX * PY * 2 * 3 * PNP;
+const pongSigue = s => s[1] < s[4] ? 0 : (s[1] > s[4] + PL - 1 ? 2 : 1);
+function pongEvalua(pol, n) {             // golpes promedio de la política codiciosa en n partidos fijos
+  const rnd = mulberry32(4242); let tot = 0;
+  for (let k = 0; k < n; k++) { let s = pongSaque(rnd), g = 0;
+    for (let t = 0; t < 2000; t++) { const [s2, r, fin] = pongPaso(s, pol(s)); if (r > 0) g++; if (fin || g >= PMAXG) break; s = s2; }
+    tot += g; }
+  return tot / n;
+}
+function dibujaCancha(g, X, Y, cs, s, estela, colPaleta) {
+  g.fillStyle = '#0f2a1d'; g.fillRect(X, Y, PX * cs, PY * cs);
+  g.strokeStyle = 'rgba(255,255,255,0.25)'; g.setLineDash([4, 6]); g.lineWidth = 1;
+  g.beginPath(); g.moveTo(X + PX * cs / 2, Y); g.lineTo(X + PX * cs / 2, Y + PY * cs); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#d9d9d9'; g.fillRect(X - 5, Y - 5, 5, PY * cs + 10); g.fillRect(X - 5, Y - 5, PX * cs + 5, 5); g.fillRect(X - 5, Y + PY * cs, PX * cs + 5, 5);
+  if (!s) return;
+  const cx = x => X + (x - 0.5) * cs, cy = y => Y + (y - 0.5) * cs;
+  (estela || []).forEach(([x, y], i, arr) => { g.fillStyle = `rgba(255,214,102,${0.12 + 0.5 * i / arr.length})`; g.beginPath(); g.arc(cx(x), cy(y), cs * 0.18, 0, 7); g.fill(); });
+  g.fillStyle = '#ffd666'; g.beginPath(); g.arc(cx(s[0]), cy(s[1]), cs * 0.3, 0, 7); g.fill();
+  g.fillStyle = colPaleta || '#8ecae6'; g.fillRect(X + (PX - 1) * cs + cs * 0.55, Y + (s[4] - 1) * cs + 2, cs * 0.35, PL * cs - 4);
+}
+function pongJuego(root, cfg) {           // armazón común de los dos widgets de Pong
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const S = { corre: false, vel: 1, s: null, estela: [], golpes: 0, partido: 0, rnd: mulberry32(cfg.semilla || 5), hist: [], marca: '' };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  cfg.controles(bar, S);
+  const lab = el('label', { class: 'rlw-sl', html: 'velocidad ' }, bar);
+  const sel = el('select', {}, lab);
+  cfg.velocidades.forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+  sel.addEventListener('change', () => { S.vel = +sel.value; });
+  S.vel = +cfg.velocidades[0][0];
+  const bPlay = button(bar, '▶ ' + cfg.verbo, () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ ' + cfg.verbo; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ reiniciar', () => { cfg.reinicia(S); S.s = null; S.golpes = 0; S.partido = 0; S.estela = []; dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  S.pasoJuego = () => {                    // un paso del partido que se muestra
+    if (!S.s) { S.s = pongSaque(S.rnd); S.golpes = 0; S.estela = []; }
+    const a = cfg.accion(S, S.s);
+    const [s2, r, fin] = pongPaso(S.s, a);
+    cfg.aprende && cfg.aprende(S, S.s, a, r, s2, fin);
+    if (r > 0) S.golpes++;
+    S.estela.push([s2[0], s2[1]]); if (S.estela.length > 7) S.estela.shift();
+    S.visible = s2;
+    if (fin || S.golpes >= PMAXG) { S.partido++; cfg.finPartido && cfg.finPartido(S, S.golpes); S.marca = fin ? `partido ${S.partido}: falló tras ${S.golpes} golpes` : `partido ${S.partido}: devolvió las ${PMAXG}`; S.s = null; return true; }
+    S.s = s2; return false;
+  };
+  function loop() {
+    if (!S.corre) return;
+    const t0 = performance.now();
+    if (S.vel > 0) for (let k = 0; k < S.vel; k++) S.pasoJuego();
+    else { let n = 0; while (n < -S.vel && performance.now() - t0 < 30) { if (S.pasoJuego()) n++; } }
+    if (cfg.alto && cfg.alto(S)) { S.corre = false; bPlay.textContent = '▶ ' + cfg.verbo; }
+    dibuja(); if (S.corre) setTimeout(() => requestAnimationFrame(loop), S.vel === 1 ? 90 : 0);
+  }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.4);
+    const cs = Math.min((w * 0.42) / PX, (h - fs * 2.2) / PY), X = 10, Y = fs * 1.6;
+    txt(g, S.marca || 'partido en curso', X + PX * cs / 2, fs * 0.7, PAL.soft, 'center', fs * 0.9);
+    dibujaCancha(g, X, Y, cs, S.s || S.visible, S.estela, cfg.colorPaleta);
+    const P = { x: X + PX * cs + fs * 4.4, y: fs * 0.6, w: w - (X + PX * cs + fs * 4.4) - fs * 1.6, h: h - fs * 3.6 };
+    cfg.grafico(g, P, fs, S);
+    read.innerHTML = cfg.lectura(S);
+  }
+  S.dibuja = dibuja; root._S = S;
+  cfg.reinicia(S); S.visible = pongSaque(mulberry32(3)); onResize(root, dibuja); dibuja();
+  return S;
+}
+function lineasRef(g, P, px, py, X1, refs, fs) {
+  refs.forEach(([v, col, etq]) => { curva(g, [0, X1], [v, v], px, py, col, 1.8, [6, 5]); txt(g, etq, P.x + P.w - 6, py(v) - fs * 0.6, col, 'right', fs * 0.8); });
+}
+RLW.pongQ = function (root) {
+  const REF_AZAR = pongEvalua(s => Math.floor(Math.random() * 3), 200), REF_SIGUE = pongEvalua(pongSigue, 200);
+  let jugador = 'q', eps = 0.1;
+  pongJuego(root, {
+    verbo: 'jugar', semilla: 7, colorPaleta: '#8ecae6',
+    velocidades: [['1', '1 paso por cuadro'], ['-1', '1 partido por cuadro'], ['-25', '25 partidos por cuadro'], ['-200', '200 partidos por cuadro']],
+    controles(bar, S) {
+      const lab = el('label', { class: 'rlw-sl', html: 'jugador ' }, bar);
+      const sel = el('select', {}, lab);
+      [['q', 'Q-Learning (aprende)'], ['sigue', 'seguir la pelota'], ['azar', 'al azar']].forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+      sel.addEventListener('change', () => { jugador = sel.value; S.marca = ''; S.dibuja(); });
+      slider(bar, 'ε', 0.01, 0.3, 0.01, eps, 2, v => { eps = v; });
+    },
+    reinicia(S) { S.Q = new Float64Array(PNS * 3); S.hist = []; S.marca = ''; S.rnd = mulberry32(7); },
+    accion(S, s) {
+      if (jugador === 'sigue') return pongSigue(s);
+      if (jugador === 'azar') return Math.floor(S.rnd() * 3);
+      if (S.rnd() < eps) return Math.floor(S.rnd() * 3);
+      const i = pongIdx(s) * 3; let b = 0; for (let k = 1; k < 3; k++) if (S.Q[i + k] > S.Q[i + b]) b = k; return b;
+    },
+    aprende(S, s, a, r, s2, fin) {
+      if (jugador !== 'q') return;
+      const i = pongIdx(s) * 3 + a, j = pongIdx(s2) * 3;
+      const obj = r + (fin ? 0 : PGAM * Math.max(S.Q[j], S.Q[j + 1], S.Q[j + 2]));
+      S.Q[i] += 0.5 * (obj - S.Q[i]);
+    },
+    finPartido(S) {
+      if (jugador === 'q' && S.partido % 50 === 0) {
+        const Q = S.Q; S.hist.push([S.partido, pongEvalua(s => { const i = pongIdx(s) * 3; let b = 0; for (let k = 1; k < 3; k++) if (Q[i + k] > Q[i + b]) b = k; return b; }, 40)]);
+      }
+    },
+    grafico(g, P, fs, S) {
+      const n = S.hist.length ? S.hist[S.hist.length - 1][0] : 0, X1 = Math.max(2000, Math.ceil(n / 1000) * 1000);
+      const [px, py] = ejes(g, P, 0, X1, 0, 21, [0, X1 / 2, X1], [[0, '0'], [5, '5'], [10, '10'], [15, '15'], [20, '20']], 'partidos de entrenamiento', 'golpes por partido', fs);
+      lineasRef(g, P, px, py, X1, [[REF_SIGUE, PAL.orange, 'seguir la pelota'], [REF_AZAR, PAL.faint, '']], fs);
+      curva(g, S.hist.map(z => z[0]), S.hist.map(z => z[1]), px, py, PAL.blue, 2.5);
+    },
+    lectura(S) {
+      let vis = 0; for (let i = 0; i < PNS; i++) if (S.Q[3 * i] || S.Q[3 * i + 1] || S.Q[3 * i + 2]) vis++;
+      const ult = S.hist.length ? S.hist[S.hist.length - 1][1].toFixed(1) : 'n/d';
+      return `Jugador: <b>${jugador === 'q' ? 'Q-Learning' : jugador === 'sigue' ? 'seguir la pelota' : 'al azar'}</b> · partidos jugados: ${S.partido} · ` +
+        `golpes por partido de la política codiciosa: <b>${ult}</b> (máximo ${PMAXG}; seguir la pelota: ${REF_SIGUE.toFixed(2)}, al azar: ${REF_AZAR.toFixed(2)}) · ` +
+        `estados con algún valor aprendido: ${vis} de ${PNS}.`;
+    },
+  });
+};
+RLW.pongDQN = function (root) {
+  let replay = true, target = true;
+  const PASOS = 30000, H = 32, LR = 1e-3, B = 32, CAP = 10000, K = 500;
+  const ent = s => [(s[0] - 1) / (PX - 1), (s[1] - 1) / (PY - 1), (s[2] + 1) / 2, (s[3] + 1) / 2, (s[4] - 1) / (PNP - 1)];
+  function nueva(rnd) {
+    const n = (k, sd) => { const a = new Float64Array(k); for (let i = 0; i < k; i++) a[i] = gauss(rnd) * sd; return a; };
+    return { W1: n(H * 5, Math.sqrt(2 / 5)), b1: new Float64Array(H), W2: n(H * H, Math.sqrt(2 / H)), b2: new Float64Array(H), W3: n(3 * H, Math.sqrt(1 / H)), b3: new Float64Array(3) };
+  }
+  const KS = ['W1', 'b1', 'W2', 'b2', 'W3', 'b3'];
+  const copia = m => { const o = {}; KS.forEach(k => o[k] = m[k].slice()); return o; };
+  function fwd(m, x, c) {
+    const z1 = new Float64Array(H), h1 = new Float64Array(H), z2 = new Float64Array(H), h2 = new Float64Array(H), y = new Float64Array(3);
+    for (let i = 0; i < H; i++) { let z = m.b1[i]; for (let j = 0; j < 5; j++) z += m.W1[i * 5 + j] * x[j]; z1[i] = z; h1[i] = z > 0 ? z : 0; }
+    for (let i = 0; i < H; i++) { let z = m.b2[i]; for (let j = 0; j < H; j++) z += m.W2[i * H + j] * h1[j]; z2[i] = z; h2[i] = z > 0 ? z : 0; }
+    for (let i = 0; i < 3; i++) { let z = m.b3[i]; for (let j = 0; j < H; j++) z += m.W3[i * H + j] * h2[j]; y[i] = z; }
+    if (c) Object.assign(c, { x, z1, h1, z2, h2 });
+    return y;
+  }
+  const argm = y => (y[1] > y[0] ? (y[2] > y[1] ? 2 : 1) : (y[2] > y[0] ? 2 : 0));
+  function entrenaPaso(S, tr) {
+    if (replay) { if (S.D.length < CAP) S.D.push(tr); else S.D[Math.floor(S.rnd() * CAP)] = tr; } else S.D = [tr];
+    if (replay && S.D.length < B) return;
+    const nb = replay ? B : 1, m = S.m, G = {}; KS.forEach(k => G[k] = new Float64Array(m[k].length));
+    const c = {}, d2 = new Float64Array(H), d1 = new Float64Array(H);
+    for (let b = 0; b < nb; b++) {
+      const [x, a, r, x2, fin] = replay ? S.D[Math.floor(S.rnd() * S.D.length)] : S.D[0];
+      const qn = fwd(target ? S.mt : m, x2), T = r + (fin ? 0 : PGAM * Math.max(qn[0], qn[1], qn[2]));
+      const y = fwd(m, x, c), e = Math.max(-1, Math.min(1, y[a] - T)) / nb;
+      G.b3[a] += e; for (let j = 0; j < H; j++) { G.W3[a * H + j] += e * c.h2[j]; d2[j] = c.z2[j] > 0 ? m.W3[a * H + j] * e : 0; }
+      for (let i = 0; i < H; i++) { if (!d2[i]) continue; G.b2[i] += d2[i]; for (let j = 0; j < H; j++) G.W2[i * H + j] += d2[i] * c.h1[j]; }
+      for (let j = 0; j < H; j++) { let z = 0; if (c.z1[j] > 0) for (let i = 0; i < H; i++) z += m.W2[i * H + j] * d2[i]; d1[j] = z; }
+      for (let i = 0; i < H; i++) { G.b1[i] += d1[i]; for (let j = 0; j < 5; j++) G.W1[i * 5 + j] += d1[i] * c.x[j]; }
+    }
+    S.tA++; const c1 = 1 - Math.pow(0.9, S.tA), c2 = 1 - Math.pow(0.999, S.tA);
+    KS.forEach(k => { const p = m[k], g = G[k], M = S.M[k], V = S.V[k];
+      for (let i = 0; i < p.length; i++) { M[i] = 0.9 * M[i] + 0.1 * g[i]; V[i] = 0.999 * V[i] + 0.001 * g[i] * g[i]; p[i] -= LR * (M[i] / c1) / (Math.sqrt(V[i] / c2) + 1e-8); } });
+  }
+  pongJuego(root, {
+    verbo: 'entrenar', semilla: 11, colorPaleta: '#f4a261',
+    velocidades: [['40', '40 pasos por cuadro'], ['1', '1 paso por cuadro'], ['200', '200 pasos por cuadro']],
+    controles(bar) {
+      check(bar, 'repetición de experiencia', replay, v => { replay = v; });
+      check(bar, 'red objetivo', target, v => { target = v; });
+    },
+    reinicia(S) {
+      S.rnd = mulberry32(11 + (S.sem = (S.sem || 0) + 1)); S.m = nueva(S.rnd); S.mt = copia(S.m);
+      S.M = {}; S.V = {}; KS.forEach(k => { S.M[k] = new Float64Array(S.m[k].length); S.V[k] = new Float64Array(S.m[k].length); });
+      S.D = []; S.t = 0; S.tA = 0; S.hist = []; S.marca = '';
+    },
+    accion(S, s) {
+      const eps = Math.max(0.05, 1 - S.t / (0.3 * PASOS));
+      return S.rnd() < eps ? Math.floor(S.rnd() * 3) : argm(fwd(S.m, ent(s)));
+    },
+    aprende(S, s, a, r, s2, fin) {
+      S.t++; entrenaPaso(S, [ent(s), a, r, ent(s2), fin]);
+      if (target && S.t % K === 0) S.mt = copia(S.m);
+      if (S.t % 2000 === 0) S.hist.push([S.t, pongEvalua(z => argm(fwd(S.m, ent(z))), 20)]);
+    },
+    alto: S => S.t >= PASOS,
+    grafico(g, P, fs, S) {
+      const [px, py] = ejes(g, P, 0, PASOS, 0, 21, [0, 10000, 20000, 30000], [[0, '0'], [5, '5'], [10, '10'], [15, '15'], [20, '20']], 'paso de interacción', 'golpes por partido', fs);
+      curva(g, S.hist.map(z => z[0]), S.hist.map(z => z[1]), px, py, PAL.orange, 2.5);
+    },
+    lectura(S) {
+      const ult = S.hist.length ? S.hist[S.hist.length - 1][1].toFixed(1) : 'n/d', eps = Math.max(0.05, 1 - S.t / (0.3 * PASOS));
+      return `Paso <b>${S.t}</b> de ${PASOS} · ε = ${eps.toFixed(2)} · golpes por partido de la política codiciosa: <b>${ult}</b> de ${PMAXG} ` +
+        `(evaluada cada 2000 pasos en 20 partidos). Los interruptores rigen desde el paso actual; reiniciar entrena una red nueva.`;
+    },
+  });
+};
+RLW._pong = { pongPaso, pongSaque, pongEvalua, pongSigue, PNS };
+
+})();
+
+</script>
+<script>
+document.querySelectorAll('[data-rlw]').forEach(el => RLW[el.dataset.rlw](el));
 </script>
 </body>
 </html>

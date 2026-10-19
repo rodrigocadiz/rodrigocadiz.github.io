@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diferencia Temporal, Q-Learning y SARSA</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 
 <style>
 :root {
@@ -94,6 +94,8 @@
 .reveal a { color: var(--pluto-blue); text-decoration: none; }
 
 .reveal .katex-display { margin: 0.4em 0; font-size: 1.4em; }
+/* KaTeX escala las fórmulas en línea a 1.21em; con Alegreya Sans se ven desproporcionadas */
+.reveal :not(.katex-display) > .katex { font-size: 1.02em; }
 
 p.note {
   font-size: 1.3em;
@@ -121,13 +123,25 @@ p.note {
 .slide-num { display: none; }
 .reveal .controls { color: var(--ink-faint); }
 .reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
+/* --- visualizaciones interactivas --- */
+.viz { width:100%; margin-top:0.3em; }
+.viz .ctrl { display:flex; gap:1.6em; align-items:center; justify-content:center; font-size:0.95em; color:var(--ink-soft); margin-bottom:0.45em; }
+.viz .ctrl label { display:flex; gap:0.5em; align-items:center; white-space:nowrap; }
+.viz input[type=range] { width:14em; height:1.1em; accent-color:var(--pluto-blue); }
+.viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:1.6em; }
+.viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
+.viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft); font-variant-numeric:tabular-nums; margin-top:0.35em; }
+
+/* --- widgets del mundo del acantilado --- */
+.reveal .rlw { font-size: 17px; margin: 0.3em auto 0; }
+.reveal .rlw-read { font-size: 1em; text-align: left; }
+.reveal .rlw button, .reveal .rlw select { font-family: Helvetica, Arial, sans-serif; }
 </style>
 </head>
 <body>
-<div class="reveal">
-<div class="slides">
 
-<!-- PORTADA -->
+<div class="reveal"><div class="slides">
+
 <section>
 <div class="title-slide">
   <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
@@ -136,290 +150,766 @@ p.note {
   <div class="byline">Pontificia Universidad Católica de Chile</div>
 </div>
 </section>
-
-<!-- APERTURA -->
 <section>
-<h2>Falta el ingrediente práctico</h2>
+<h2>Aprender cuánto vale cada situación sin saber cómo funciona el mundo</h2>
+<p>Un agente que no conoce la dinámica de su entorno puede, aun así, aprender cuánto vale cada situación corrigiendo una predicción con la siguiente.</p>
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<h2>Un robot debe cruzar junto a un acantilado</h2>
 <ul>
-<li>E.1 dio el objetivo (estimar valores y derivar la política) y la relación recursiva (Bellman); falta cómo estimar esos valores sin conocer el modelo, solo desde la experiencia.</li>
+  <li>Cuadrícula de 4 filas y 8 columnas: sale de S y el episodio termina al llegar a G.</li>
 </ul>
-</section>
-
-<section>
-<h2>Entre dos extremos: DP y Monte Carlo</h2>
-<ul>
-<li>La programación dinámica resuelve Bellman exacto, pero exige conocer $P$ y $R$.</li>
-<li>Monte Carlo aprende sin modelo, pero espera al final del episodio y tiene alta varianza.</li>
-</ul>
-<p class="note">La diferencia temporal (TD) combina lo mejor de ambos: sin modelo y sin esperar al final.</p>
-</section>
-
-<!-- §1 ERROR TD -->
-<section>
-<div class="section-label">§ 1 · El error de diferencia temporal</div>
-<h2>¿Cómo aprender de un paso sin esperar el final del episodio?</h2>
-<ul>
-<li>La idea: corregir la creencia actual comparándola con lo que se observa un instante después.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 1 · El error de diferencia temporal</div>
-<h2>El error de diferencia temporal</h2>
-$$\delta_t = \underbrace{r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1})}_{\text{objetivo TD}} \; - \; \underbrace{q(s_t, a_t)}_{\text{estimación actual}}$$
-<p class="note">En palabras: cuánto se desvía la estimación actual de un objetivo formado con la recompensa real más el valor estimado del paso siguiente. Se actualiza con $q \leftarrow q + \alpha\,\delta_t$.</p>
-</section>
-
-<section>
-<div class="section-label">§ 1 · El error de diferencia temporal</div>
-<h2>Bootstrapping: estimar a partir de una estimación</h2>
-<ul>
-<li>El objetivo usa la <strong>propia estimación</strong> $q(s_{t+1}, a_{t+1})$, no el retorno real hasta el final.</li>
-</ul>
-<p class="note">Es lo que permite actualizar en cada paso, pero también lo que introduce sesgo: el objetivo es solo tan bueno como la estimación en que se apoya.</p>
-</section>
-
-<section>
-<div class="section-label">§ 1 · El error de diferencia temporal</div>
-<h2>Tres familias de respaldo</h2>
-<ul>
-<li><strong>DP</strong>: esperanza completa sobre todos los sucesores, pero necesita el modelo.</li>
-<li><strong>Monte Carlo</strong>: trayectoria completa, insesgado pero de alta varianza.</li>
-<li><strong>TD</strong>: un paso muestreado más la estimación del resto; baja varianza, algo de sesgo.</li>
-</ul>
-<p class="note">Primero usemos TD para evaluar una política fija. → §2</p>
-</section>
-
-<!-- §2 TD(0) -->
-<section>
-<div class="section-label">§ 2 · Predicción con TD(0)</div>
-<h2>¿Cuánto vale seguir una política dada?</h2>
-<ul>
-<li>El problema de <strong>predicción</strong>: estimar $v_\pi$ de una política fija, antes de buscar la óptima.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 2 · Predicción con TD(0)</div>
-<h2>La regla de actualización de TD(0)</h2>
-$$v(s_t) \leftarrow v(s_t) + \alpha \left( r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t) \right)$$
-<p class="note">En palabras: empuja el valor de un estado hacia la recompensa inmediata más el valor del sucesor. $\alpha$ es la tasa de aprendizaje.</p>
-</section>
-
-<section>
-<div class="section-label">§ 2 · Predicción con TD(0)</div>
-<h2>El valor gotea hacia atrás por la cadena de estados</h2>
-<ul>
-<li>Episodio tras episodio, la información de las recompensas se filtra hacia atrás hasta que toda la función de valor es consistente con Bellman.</li>
-</ul>
-<p class="note">De evaluar a mejorar: para el control se trabaja con valores de acción $q$. → §3</p>
-</section>
-
-<!-- §3 SARSA -->
-<section>
-<div class="section-label">§ 3 · SARSA: aprendizaje on-policy</div>
-<h2>¿Y si aprendo sobre la misma política que uso para explorar?</h2>
-<ul>
-<li>SARSA es <strong>on-policy</strong>: evalúa y mejora la política que está usando.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 3 · SARSA: aprendizaje on-policy</div>
-<h2>La regla de SARSA</h2>
-$$q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \left( r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1}) - q(s_t, a_t) \right)$$
-<p class="note">El nombre describe la tupla que necesita: estado, acción, recompensa, estado siguiente y la <em>siguiente acción</em> $a_{t+1}$ elegida según la política actual.</p>
-</section>
-
-<section>
-<div class="section-label">§ 3 · SARSA: aprendizaje on-policy</div>
-<h2>SARSA aprende valores conscientes del riesgo</h2>
-<ul>
-<li>Usa la acción que <strong>efectivamente tomará</strong>, incluida su componente exploratoria, así que el riesgo de explorar queda reflejado en las estimaciones.</li>
-</ul>
-<p class="note">Expected SARSA reduce la varianza usando la esperanza sobre la política en vez de una sola acción muestreada. → §4</p>
-</section>
-
-<!-- §4 Q-LEARNING -->
-<section>
-<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
-<h2>¿Puedo aprender lo óptimo explorando subóptimamente?</h2>
-<ul>
-<li>Q-Learning (Watkins, 1989) es <strong>off-policy</strong>: aprende la política óptima mientras se mueve con otra más exploratoria.</li>
-</ul>
-</section>
-
-<section>
-<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
-<h2>La regla de Q-Learning</h2>
-$$q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \left( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a) - q(s_t, a_t) \right)$$
-<p class="note">Reemplaza la acción tomada por el <strong>máximo</strong> sobre las acciones del estado siguiente: exactamente el de la optimalidad de Bellman, lo que lleva a $q_*$.</p>
-</section>
-
-<section>
-<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
-<h2>Política de comportamiento y política objetivo</h2>
-<ul>
-<li>La <strong>de comportamiento</strong> genera los datos (ε-greedy); la <strong>objetivo</strong> es la que se aprende (codiciosa respecto a $q$).</li>
-</ul>
-<p class="note">Aprender sobre una política mientras se sigue otra es lo que más adelante permite reutilizar experiencia con un búfer de repetición.</p>
-</section>
-
-<section>
-<div class="section-label">§ 4 · Q-Learning: aprendizaje off-policy</div>
-<h2>SARSA y Q-Learning difieren en el estado siguiente</h2>
-<ul><li>SARSA usa la acción que la política elige; Q-Learning, la mejor acción posible.</li></ul>
 <div class="svg-holder">
-<svg viewBox="0 0 660 220" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <linearGradient id="abismo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1d12"/><stop offset="1" stop-color="#000"/></linearGradient>
+    <linearGradient id="roca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b59a76"/><stop offset="1" stop-color="#0d0905"/></linearGradient>
+    <linearGradient id="rocaL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9c8160"/><stop offset="1" stop-color="#0d0905"/></linearGradient>
+    <linearGradient id="rocaR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7ad88"/><stop offset="1" stop-color="#0d0905"/></linearGradient>
+    <marker id="mb" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#e65100"/></marker>
+    <marker id="ms" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1565c0"/></marker>
+  </defs>
+  <polygon points="90.0,170.0 390.0,170.0 390.0,254.0 90.0,254.0" fill="url(#abismo)"/><polygon points="111.4,120.0 368.6,120.0 368.6,192.0 111.4,192.0" fill="url(#roca)" stroke="#6b5a44" stroke-width="1"/><polygon points="111.4,120.0 90.0,170.0 90.0,254.0 111.4,192.0" fill="url(#rocaL)" stroke="#6b5a44" stroke-width="1"/><polygon points="368.6,120.0 390.0,170.0 390.0,254.0 368.6,192.0" fill="url(#rocaR)" stroke="#6b5a44" stroke-width="1"/><polygon points="40.0,170.0 90.0,170.0 90.0,254.0 40.0,254.0" fill="url(#roca)" stroke="#6b5a44" stroke-width="1"/><polygon points="390.0,170.0 440.0,170.0 440.0,254.0 390.0,254.0" fill="url(#roca)" stroke="#6b5a44" stroke-width="1"/><polygon points="120.0,30.0 150.0,30.0 140.0,53.3 106.7,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="150.0,30.0 180.0,30.0 173.3,53.3 140.0,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="180.0,30.0 210.0,30.0 206.7,53.3 173.3,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="210.0,30.0 240.0,30.0 240.0,53.3 206.7,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="240.0,30.0 270.0,30.0 273.3,53.3 240.0,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="270.0,30.0 300.0,30.0 306.7,53.3 273.3,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="300.0,30.0 330.0,30.0 340.0,53.3 306.7,53.3" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="330.0,30.0 360.0,30.0 373.3,53.3 340.0,53.3" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="106.7,53.3 140.0,53.3 127.5,82.5 90.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="140.0,53.3 173.3,53.3 165.0,82.5 127.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="173.3,53.3 206.7,53.3 202.5,82.5 165.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="206.7,53.3 240.0,53.3 240.0,82.5 202.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="240.0,53.3 273.3,53.3 277.5,82.5 240.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="273.3,53.3 306.7,53.3 315.0,82.5 277.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="306.7,53.3 340.0,53.3 352.5,82.5 315.0,82.5" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="340.0,53.3 373.3,53.3 390.0,82.5 352.5,82.5" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="90.0,82.5 127.5,82.5 111.4,120.0 68.6,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="127.5,82.5 165.0,82.5 154.3,120.0 111.4,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="165.0,82.5 202.5,82.5 197.1,120.0 154.3,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="202.5,82.5 240.0,82.5 240.0,120.0 197.1,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="240.0,82.5 277.5,82.5 282.9,120.0 240.0,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="277.5,82.5 315.0,82.5 325.7,120.0 282.9,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="315.0,82.5 352.5,82.5 368.6,120.0 325.7,120.0" fill="#fbf6e4" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="352.5,82.5 390.0,82.5 411.4,120.0 368.6,120.0" fill="#f6efd6" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="68.6,120.0 111.4,120.0 90.0,170.0 40.0,170.0" fill="#d6e6fb" stroke="#b8ad8c" stroke-width="0.8"/><polygon points="368.6,120.0 411.4,120.0 440.0,170.0 390.0,170.0" fill="#cfeccf" stroke="#b8ad8c" stroke-width="0.8"/><path d="M82.9 123.7 L95.2 100.0 L112.2 67.1 L125.7 41.1 L157.3 41.1 L188.8 41.1 L220.4 41.1 L252.0 41.1 L283.6 41.1 L315.2 41.1 L346.7 41.1 L359.3 67.1 L375.2 100.0 L383.5 123.7" fill="none" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4" stroke-linejoin="round" marker-end="url(#ms)"/><path d="M93.4 123.7 L104.8 100.0 L144.8 100.0 L184.8 100.0 L224.8 100.0 L264.8 100.0 L304.8 100.0 L344.8 100.0 L384.8 100.0 L393.7 123.7" fill="none" stroke="#e65100" stroke-width="3" stroke-linejoin="round" marker-end="url(#mb)"/><g transform="translate(77.2,145.6)">
+    <ellipse cx="0" cy="2" rx="13" ry="4" fill="#000" opacity="0.18"/>
+    <rect x="-9" y="-24" width="18" height="22" rx="4" fill="#4e79a7" stroke="#1a3a5c" stroke-width="1.2"/>
+    <rect x="-7" y="-38" width="14" height="12" rx="3" fill="#a9c4e4" stroke="#1a3a5c" stroke-width="1.2"/>
+    <circle cx="-3" cy="-32" r="1.6" fill="#1a3a5c"/><circle cx="3" cy="-32" r="1.6" fill="#1a3a5c"/>
+    <line x1="0" y1="-38" x2="0" y2="-44" stroke="#1a3a5c" stroke-width="1.2"/><circle cx="0" cy="-45" r="2" fill="#e65100"/>
+  </g><g transform="translate(406.6,133.4)">
+    <line x1="0" y1="2" x2="0" y2="-44" stroke="#3b3b3b" stroke-width="2"/>
+    <path d="M0,-44 L20,-38 L0,-32 Z" fill="#2e7d32"/>
+  </g><text x="65.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">S</text><text x="415.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">G</text><text x="240.0" y="216.2" text-anchor="middle" font-size="15" font-weight="bold" fill="#f4cccc">acantilado</text><text x="240.0" y="22.0" text-anchor="middle" font-size="12" fill="#555">8 columnas × 4 filas, vistas en perspectiva</text>
+  <line x1="484" y1="66" x2="514" y2="66" stroke="#e65100" stroke-width="3"/><text x="524" y="70" font-size="13" fill="#1a1a1a">ruta del borde: 9 pasos</text><line x1="484" y1="96" x2="514" y2="96" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4"/><text x="524" y="100" font-size="13" fill="#1a1a1a">ruta segura: 13 pasos</text><rect x="488" y="119" width="22" height="14" fill="#3a2a1a"/><text x="524" y="130" font-size="13" fill="#1a1a1a">acantilado: −100 y vuelta a S</text><text x="484" y="160" font-size="13" fill="#1a1a1a">cada paso: recompensa −1</text><text x="484" y="190" font-size="13" fill="#1a1a1a">resbalón: con prob. p, acción al azar</text>
+</svg>
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<h2>Cada paso cuesta −1 y caer cuesta −100</h2>
+<ul>
+  <li>Cuatro acciones: arriba, abajo, izquierda y derecha; contra un borde, el robot se queda donde está.</li>
+  <li>Caer al acantilado cuesta $-100$ y devuelve a S. Las recompensas futuras se descuentan con $\gamma = 0.95$.</li>
+  <li>En este deck el suelo no resbala: cada acción hace exactamente lo que dice.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<h2>Esta vez el robot no conoce las reglas</h2>
+<ul>
+  <li>Solo observa la casilla en que está y la recompensa que recibe.</li>
+  <li>No sabe dónde está el vacío hasta que cae en él.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<h2>Lo que hay que aprender: el valor de cada acción</h2>
+$$
+q(s, a) = \mathbb{E}\left[\, G_t \mid s_t = s,\, a_t = a \,\right], \qquad G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots
+$$
+<ul>
+  <li>$G_t$ es el retorno descontado; $q(s,a)$ dice cuánto se gana en promedio tomando $a$ en la casilla $s$.</li>
+  <li>Si se conoce $q$, actuar bien es elegir en cada casilla la acción de mayor $q$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<h2>Con el modelo, Bellman entrega q directamente</h2>
+$$
+q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, \max_{a'} q_*(s', a')
+$$
+<ul>
+  <li>Sin conocer las probabilidades de transición $P(s' \mid s,a)$ esa suma no se puede evaluar: hay que reemplazarla por experiencia.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<h2>Dos extremos: programación dinámica y Monte Carlo</h2>
+<ul>
+  <li>La programación dinámica resuelve Bellman exactamente, pero exige conocer $P$.</li>
+  <li>Monte Carlo promedia retornos reales sin modelo, pero espera el final del episodio y su estimación varía mucho.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<h2>Diferencia temporal: corregir una predicción con la siguiente</h2>
+$$
+\delta_t = \underbrace{r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1})}_{\text{objetivo TD}} - \underbrace{q(s_t, a_t)}_{\text{estimación actual}}
+$$
+<p class="note">En palabras: lo que se observó un paso después, recompensa más estimación siguiente, menos lo que se esperaba.</p>
+
+</section>
+<section>
+<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<h2>La estimación avanza una fracción α hacia el objetivo</h2>
+$$
+q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha\, \delta_t
+$$
+<ul>
+  <li>$\alpha$ es la tasa de aprendizaje.</li>
+  <li>Si las estimaciones fueran exactas, $\delta_t$ valdría cero en promedio: es el residuo de Bellman medido con una sola muestra.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<h2>Bootstrapping: estimar a partir de otra estimación</h2>
+<ul>
+  <li>El objetivo usa $q(s_{t+1}, a_{t+1})$ en lugar del retorno real.</li>
+  <li>Así se puede actualizar en cada paso, pero el objetivo hereda los errores de la estimación en que se apoya.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<h2>TD tiene sesgo y poca varianza; Monte Carlo, al revés</h2>
+<ul>
+  <li>$G_t$ acumula el azar de toda la trayectoria; $r_{t+1} + \gamma\, v(s_{t+1})$, el de un solo paso.</li>
+  <li>En la práctica, la menor varianza hace que TD suela aprender más rápido.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<h2>Primero, evaluar una política fija</h2>
+$$
+v(s_t) \leftarrow v(s_t) + \alpha \big( r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t) \big)
+$$
+<ul>
+  <li>Es TD(0): estima el valor $v_\pi(s)$ de una política dada. Buscar la mejor política, el <strong>control</strong>, viene después.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<h2>Caso de ejemplo: la caminata aleatoria</h2>
+<ul>
+  <li>Cinco estados en línea; salir por la derecha paga 1, por la izquierda 0; sin descuento ($\gamma = 1$).</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<defs><marker id="rw" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
+<marker id="rw2" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6 Z" fill="#1a1a1a"/></marker></defs>
+<line x1="88" y1="70" x2="132" y2="70" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rw)" marker-start="url(#rw2)"/><line x1="188" y1="70" x2="232" y2="70" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rw)" marker-start="url(#rw2)"/><line x1="288" y1="70" x2="332" y2="70" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rw)" marker-start="url(#rw2)"/><line x1="388" y1="70" x2="432" y2="70" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rw)" marker-start="url(#rw2)"/><line x1="488" y1="70" x2="532" y2="70" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rw)" marker-start="url(#rw2)"/><line x1="588" y1="70" x2="632" y2="70" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#rw)" marker-start="url(#rw2)"/><rect x="36" y="46" width="48" height="48" rx="4" fill="#eceff1" stroke="#90a4ae" stroke-width="1.6"/><text x="60" y="77" text-anchor="middle" font-size="17" font-weight="bold" fill="#37474f">0</text><text x="60" y="118" text-anchor="middle" font-size="13" fill="#555">sale: r = 0</text><circle cx="160" cy="70" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.8"/><text x="160" y="77" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a5c">A</text><circle cx="260" cy="70" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.8"/><text x="260" y="77" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a5c">B</text><circle cx="360" cy="70" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.8"/><text x="360" y="77" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a5c">C</text><circle cx="460" cy="70" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.8"/><text x="460" y="77" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a5c">D</text><circle cx="560" cy="70" r="26" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.8"/><text x="560" y="77" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a5c">E</text><rect x="636" y="46" width="48" height="48" rx="4" fill="#eceff1" stroke="#90a4ae" stroke-width="1.6"/><text x="660" y="77" text-anchor="middle" font-size="17" font-weight="bold" fill="#37474f">1</text><text x="660" y="118" text-anchor="middle" font-size="13" fill="#555">sale: r = 1</text>
+<text x="360" y="22" text-anchor="middle" font-size="14" fill="#7b1fa2">se parte en C · cada paso: izquierda o derecha con probabilidad 1/2</text>
+</svg>
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<h2>El valor verdadero crece linealmente de A a E</h2>
+$$
+v(A), \dots, v(E) = \tfrac{1}{6},\ \tfrac{2}{6},\ \tfrac{3}{6},\ \tfrac{4}{6},\ \tfrac{5}{6}
+$$
+<ul>
+  <li>Es la probabilidad de salir por la derecha partiendo de cada estado; TD(0) debe descubrirla sin conocerla.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<h2>TD(0) filtra el valor hacia atrás</h2>
+<ul>
+  <li>Barras: estimación, partiendo de 0.5; línea punteada: valor verdadero; derecha: error medio.</li>
+</ul>
+<div data-rlw="td0Caminata" style="max-width:1100px"></div>
+
+</section>
+<section>
+<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<h2>Cada actualización empuja un estado hacia su sucesor</h2>
+<ul>
+  <li>La información de las salidas viaja hacia el centro una casilla por visita.</li>
+  <li>Con unas decenas de episodios las barras rondan la recta; con $\alpha$ fijo siguen oscilando alrededor de ella.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 4 · SARSA: aprendizaje on-policy</div>
+<h2>Para elegir acciones, se aprende q en lugar de v</h2>
+<ul>
+  <li>SARSA usa la tupla $(s_t, a_t, r_{t+1}, s_{t+1}, a_{t+1})$, de donde viene su nombre: <em>State, Action, Reward, State, Action</em>.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 4 · SARSA: aprendizaje on-policy</div>
+<h2>SARSA usa la acción que de verdad tomará</h2>
+$$
+q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \big( r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1}) - q(s_t, a_t) \big)
+$$
+<p class="note">En palabras: el objetivo incluye la acción siguiente elegida por la misma política que explora, errores incluidos.</p>
+
+</section>
+<section>
+<div class="section-label">§ 4 · SARSA: aprendizaje on-policy</div>
+<h2>On-policy: evalúa la política que ejecuta</h2>
+<ul>
+  <li>Si la política explora cerca del vacío, el riesgo de caer queda escrito en sus valores.</li>
+  <li><em>Expected SARSA</em> reemplaza $q(s_{t+1}, a_{t+1})$ por su promedio bajo la política y reduce la varianza.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 5 · Q-Learning: aprendizaje off-policy</div>
+<h2>Q-Learning supone que después actuará de forma óptima</h2>
+$$
+q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a) - q(s_t, a_t) \big)
+$$
+<p class="note">En palabras: el objetivo usa la mejor acción posible en el estado siguiente, no la que se tomará (Watkins, 1989).</p>
+
+</section>
+<section>
+<div class="section-label">§ 5 · Q-Learning: aprendizaje off-policy</div>
+<h2>La única diferencia está en el objetivo</h2>
+<ul>
+  <li>SARSA: el valor de la acción $a'$ que elige la política; Q-Learning: el máximo sobre las acciones en $s'$.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 660 220" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
     <marker id="td" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
   </defs>
+  <!-- SARSA -->
   <text x="165" y="24" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">SARSA (on-policy)</text>
   <circle cx="60" cy="80" r="20" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
   <text x="60" y="84" text-anchor="middle" font-size="11" fill="#1a3a5c">s,a</text>
   <line x1="80" y1="80" x2="135" y2="80" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#td)"/>
   <text x="107" y="70" text-anchor="middle" font-size="10" fill="#388e3c">r</text>
   <circle cx="160" cy="80" r="20" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
-  <text x="160" y="84" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <text x="160" y="84" text-anchor="middle" font-size="11" fill="#1a4d1a"><tspan font-family="serif" font-style="italic">s</tspan>′</text>
   <line x1="170" y1="98" x2="200" y2="140" stroke="#7b1fa2" stroke-width="1.6" marker-end="url(#td)"/>
   <circle cx="210" cy="158" r="18" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.6"/>
-  <text x="210" y="162" text-anchor="middle" font-size="10.5" fill="#5c1a5c">a' ~ π</text>
+  <text x="210" y="162" text-anchor="middle" font-size="10.5" fill="#5c1a5c"><tspan font-family="serif" font-style="italic">a</tspan>′ ~ π</text>
   <text x="165" y="205" text-anchor="middle" font-size="10.5" font-style="italic" fill="#5c1a5c">usa la acción que la política elige</text>
+  <!-- separador -->
   <line x1="335" y1="30" x2="335" y2="200" stroke="#ccc" stroke-width="1" stroke-dasharray="4,4"/>
+  <!-- Q-Learning -->
   <text x="500" y="24" text-anchor="middle" font-size="13" font-weight="bold" fill="#7a1a1a">Q-Learning (off-policy)</text>
   <circle cx="395" cy="80" r="20" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
   <text x="395" y="84" text-anchor="middle" font-size="11" fill="#1a3a5c">s,a</text>
   <line x1="415" y1="80" x2="470" y2="80" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#td)"/>
   <text x="442" y="70" text-anchor="middle" font-size="10" fill="#388e3c">r</text>
   <circle cx="495" cy="80" r="20" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
-  <text x="495" y="84" text-anchor="middle" font-size="11" fill="#1a4d1a">s'</text>
+  <text x="495" y="84" text-anchor="middle" font-size="11" fill="#1a4d1a"><tspan font-family="serif" font-style="italic">s</tspan>′</text>
   <line x1="513" y1="92" x2="545" y2="140" stroke="#c0392b" stroke-width="1.6" marker-end="url(#td)"/>
   <circle cx="555" cy="158" r="20" fill="#fdecea" stroke="#c0392b" stroke-width="1.6"/>
   <text x="555" y="162" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#7a1a1a">max a</text>
   <text x="500" y="205" text-anchor="middle" font-size="10.5" font-style="italic" fill="#7a1a1a">usa la mejor acción posible</text>
 </svg>
 </div>
-</section>
 
-<!-- §5 EXPLORACIÓN -->
+</section>
 <section>
-<div class="section-label">§ 5 · Exploración: políticas ε-greedy y alternativas</div>
-<h2>¿Cómo se decide entre explotar y explorar?</h2>
+<div class="section-label">§ 5 · Q-Learning: aprendizaje off-policy</div>
+<h2>Off-policy: aprende una política mientras sigue otra</h2>
 <ul>
-<li>SARSA depende de que la política explore; incluso Q-Learning necesita visitar todos los pares estado-acción.</li>
+  <li>La <strong>política de comportamiento</strong>, que explora, genera los datos.</li>
+  <li>La <strong>política objetivo</strong>, codiciosa respecto de $q$, es la que se aprende.</li>
 </ul>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 5 · Exploración: políticas ε-greedy y alternativas</div>
-<h2>La política ε-greedy</h2>
+<div class="section-label">§ 6 · Exploración</div>
+<h2>Sin explorar, el robot no conoce otras rutas</h2>
 <ul>
-<li>Con probabilidad $\varepsilon$ una acción aleatoria; con $1-\varepsilon$ la de mayor valor conocido.</li>
+  <li>$\varepsilon$-greedy: con probabilidad $\varepsilon$ elige una de las cuatro acciones al azar; si no, la de mayor $q$.</li>
 </ul>
-<p class="note">Simple y eficaz, pero trata por igual a todas las acciones no codiciosas, sin distinguir una mala de una solo ligeramente peor.</p>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 5 · Exploración: políticas ε-greedy y alternativas</div>
-<h2>Decrecer ε y la condición GLIE</h2>
+<div class="section-label">§ 6 · Exploración</div>
+<h2>La exploración debe apagarse en el límite</h2>
 <ul>
-<li>Un $\varepsilon$ fijo nunca deja de explorar; decrecerlo permite converger a la política codiciosa.</li>
-<li>GLIE: explorar infinitas veces cada par, pero volverse codicioso en el límite.</li>
+  <li>GLIE (<em>greedy in the limit with infinite exploration</em>): visitar infinitas veces cada par y volverse codicioso, por ejemplo con $\varepsilon_t = 1/t$.</li>
+  <li>Alternativas: elegir con probabilidad proporcional a $e^{q/\tau}$ (softmax) o partir con valores optimistas.</li>
 </ul>
-<p class="note">Alternativas: exploración softmax (Boltzmann) e inicialización optimista. El contraste on/off-policy produce conductas distintas ante el riesgo. → §6</p>
-</section>
 
-<!-- §6 SARSA VS Q -->
+</section>
 <section>
-<div class="section-label">§ 6 · SARSA frente a Q-Learning</div>
-<h2>¿Por qué importa la diferencia en la práctica?</h2>
+<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
+<h2>Junto al vacío, explorar es peligroso</h2>
 <ul>
-<li>Q-Learning asume que en el siguiente paso actuará perfecto; SARSA usa la acción que realmente tomará.</li>
+  <li>Con $\varepsilon = 0.1$, cada paso por el borde elige "abajo" al azar con probabilidad $0.1/4 = 0.025$.</li>
 </ul>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 6 · SARSA frente a Q-Learning</div>
-<h2>SARSA toma la ruta segura; Q-Learning camina por el borde</h2>
+<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
+<h2>SARSA y Q-Learning aprendiendo el acantilado</h2>
 <ul>
-<li>Si la ruta óptima pasa junto a un precipicio, SARSA sabe que su propia ε-greedy puede hacerlo caer, y prefiere un camino más seguro.</li>
-<li>Q-Learning ignora el riesgo de sus acciones aleatorias y aprende a caminar por el borde.</li>
+  <li>Color: $\max_a q(s,a)$; gruesa: ruta codiciosa; abajo: recompensa por episodio.</li>
 </ul>
-</section>
+<div data-rlw="tdVivo" data-ratio="0.43" style="max-width:1000px"></div>
 
+</section>
 <section>
-<div class="section-label">§ 6 · SARSA frente a Q-Learning</div>
-<h2>¿Cuál elegir?</h2>
+<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
+<h2>Q-Learning aprende el borde; SARSA, una ruta alejada</h2>
 <ul>
-<li>Q-Learning aprende lo óptimo y, por ser off-policy, es la base del Deep RL; SARSA da políticas más prudentes durante el aprendizaje.</li>
+  <li>Con $\varepsilon = 0.1$, Q-Learning traza el borde de 9 pasos y SARSA suele ir por la fila superior, en 13.</li>
+  <li>Mientras aprenden, SARSA gana más: unos $-19$ por episodio frente a $-30$, porque Q-Learning cae al explorar.</li>
 </ul>
-<p class="note">Si $\varepsilon \to 0$ de forma apropiada, ambos convergen a la misma política óptima. Ambos son casos de un espectro más amplio. → §7</p>
-</section>
 
-<!-- §7 N PASOS -->
+</section>
 <section>
-<div class="section-label">§ 7 · Entre TD y Monte Carlo: métodos de n pasos</div>
-<h2>¿Hay algo entre un paso y el episodio completo?</h2>
+<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
+<h2>¿La ruta de SARSA es un accidente?</h2>
 <ul>
-<li>TD(0) respalda con un paso real más una estimación; Monte Carlo, con la trayectoria completa. Entre ambos hay un espectro.</li>
+  <li>¿O es la solución exacta de algún problema? Para responder hay que ver dónde se detiene cada algoritmo.</li>
 </ul>
-</section>
 
-<section>
-<div class="section-label">§ 7 · Entre TD y Monte Carlo: métodos de n pasos</div>
-<h2>Retornos de n pasos</h2>
-$$r_{t+1} + \gamma\, r_{t+2} + \cdots + \gamma^{n-1} r_{t+n} + \gamma^{n}\, v(s_{t+n})$$
-<p class="note">Con $n=1$ se recupera TD(0); con $n$ todo el episodio, Monte Carlo. Los valores intermedios suelen rendir mejor que cualquiera de los extremos.</p>
 </section>
-
 <section>
-<div class="section-label">§ 7 · Entre TD y Monte Carlo: métodos de n pasos</div>
-<h2>TD(λ) y trazas de elegibilidad</h2>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Un punto fijo es donde la actualización media es cero</h2>
+$$
+\mathbb{E}\left[\, \delta_t \mid s_t = s,\, a_t = a \,\right] = 0 \quad \text{para todo } (s, a)
+$$
 <ul>
-<li>En vez de un único $n$, promedia todos los horizontes con pesos que decaen según $\lambda \in [0,1]$.</li>
-<li>Las trazas de elegibilidad reparten el error TD entre los estados visitados recientemente.</li>
+  <li>Si el algoritmo llega ahí, en promedio ya no se mueve.</li>
 </ul>
-<p class="note">¿Bajo qué condiciones convergen todos estos métodos? → §8</p>
-</section>
 
-<!-- §8 CONVERGENCIA -->
+</section>
 <section>
-<div class="section-label">§ 8 · Convergencia</div>
-<h2>¿Cuándo está garantizado que funcionen?</h2>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Proposición: el punto fijo de Q-Learning es q*</h2>
+$$
+\mathbb{E}[\delta_t \mid s, a] = r(s,a) + \gamma \sum_{s'} P(s' \mid s,a) \max_{a'} q(s',a') - q(s,a)
+$$
 <ul>
-<li>Las actualizaciones son <strong>mapeos de contracción</strong> en el espacio de valores: convergen a los valores óptimos bajo ciertas condiciones.</li>
+  <li>Anularlo en todo $(s,a)$ es la ecuación de optimalidad de Bellman, $q = Tq$.</li>
 </ul>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 8 · Convergencia</div>
-<h2>Las condiciones de Robbins-Monro</h2>
-$$\sum_t \alpha_t = \infty, \qquad \sum_t \alpha_t^2 &lt; \infty$$
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Demostración: T es una contracción</h2>
+$$
+\|Tq - Tq'\|_\infty \le \gamma\, \|q - q'\|_\infty
+$$
 <ul>
-<li>Y visitar <strong>infinitas veces</strong> cada par estado-acción.</li>
+  <li>Porque $|\max q - \max q'| \le \max |q - q'|$ y las probabilidades suman uno.</li>
+  <li>Una contracción tiene un único punto fijo, $q_*$, cualquiera sea la política que explora.</li>
 </ul>
-<p class="note">En palabras: la tasa debe permitir mover los valores lo necesario, pero también promediar y eliminar el ruido de las muestras.</p>
-</section>
 
+</section>
 <section>
-<div class="section-label">§ 8 · Convergencia</div>
-<h2>Toda la teoría descansa sobre la exploración</h2>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>SARSA promedia la acción siguiente según ε-greedy</h2>
+$$
+(M_\varepsilon q)(s) = (1-\varepsilon) \max_a q(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_a q(s,a)
+$$
 <ul>
-<li>Sin visitar todo par estado-acción, regiones enteras quedan sin estimar y las garantías se derrumban.</li>
+  <li>Es el valor esperado de la acción siguiente cuando, con probabilidad $\varepsilon$, se elige al azar entre las $|\mathcal{A}|$ acciones.</li>
 </ul>
-<p class="note">Todo se sostiene mientras los estados quepan en una tabla. Cuando son demasiados, hay que aproximar con una red. → E.3</p>
-</section>
 
-<!-- CIERRE -->
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Paso 1: el punto fijo de SARSA cumple su propia ecuación</h2>
+$$
+q(s,a) = r(s,a) + \gamma \sum_{s'} P(s' \mid s,a)\, (M_\varepsilon q)(s')
+$$
+<ul>
+  <li>Es la ecuación de Bellman con $M_\varepsilon$ en el lugar del máximo.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Paso 2: un robot que resbala con probabilidad ε</h2>
+$$
+\rho(b \mid a) = (1-\varepsilon)\, \mathbf{1}[b = a] + \frac{\varepsilon}{|\mathcal{A}|}
+$$
+<ul>
+  <li>Elegir $a$ ejecuta $b$ con probabilidad $\rho(b \mid a)$. Sea $\tilde v$ el valor óptimo de ese mundo y $u(s,b) = r(s,b) + \gamma \sum_{s'} P(s' \mid s,b)\, \tilde v(s')$ el valor de <em>ejecutar</em> $b$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Paso 3: elegir vale un promedio de ejecutar</h2>
+$$
+\tilde q(s,a) = (1-\varepsilon)\, u(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_b u(s,b) \quad\Longrightarrow\quad \tilde v(s) = \max_a \tilde q(s,a) = (M_\varepsilon u)(s)
+$$
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Paso 4: u cumple la misma ecuación que SARSA</h2>
+$$
+u(s,b) = r(s,b) + \gamma \sum_{s'} P(s' \mid s,b)\, (M_\varepsilon u)(s')
+$$
+<ul>
+  <li>$M_\varepsilon$ combina un máximo y un promedio, ambos no expansivos: la ecuación tiene una sola solución.</li>
+  <li>Entonces $q_{\text{SARSA}} = u$, y como $\tilde q$ crece con $u$, ambos eligen la misma acción.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>SARSA resuelve con exactitud el problema del robot que resbala</h2>
+<ul>
+  <li>Su prudencia no es miedo: optimiza un mundo en que su propia exploración es parte del entorno.</li>
+  <li>Con $\varepsilon \to 0$ ese mundo se vuelve el original y los dos algoritmos coinciden.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Verificación: cada algoritmo llega a su punto fijo</h2>
+<ul>
+  <li>100 000 episodios, $\alpha = 1/N(s,a)^{0.8}$, $\varepsilon = 0.1$: puntos sobre la diagonal; ruta de SARSA (azul) = óptima con resbalón (gris).</li>
+</ul>
+<div class="svg-holder">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4400 1880">
+<defs>
+  <clipPath id="pfclip970">
+    <rect x="0" y="0" width="4400" height="1880"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#pfclip970)" d="M0 1880 L4400 1880 L4400 1.06581e-13 L0 1.06581e-13  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="pfclip971">
+    <rect x="880" y="0" width="3081" height="1880"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#pfclip970)" d="M469.835 1646.93 L2006.53 1646.93 L2006.53 110.236 L469.835 110.236  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="pfclip972">
+    <rect x="469" y="110" width="1538" height="1538"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="469.835,1646.93 469.835,110.236 "/>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="982.067,1646.93 982.067,110.236 "/>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="1494.3,1646.93 1494.3,110.236 "/>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2006.53,1646.93 2006.53,110.236 "/>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="469.835,1646.93 2006.53,1646.93 "/>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="469.835,1134.7 2006.53,1134.7 "/>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="469.835,622.469 2006.53,622.469 "/>
+<polyline clip-path="url(#pfclip972)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="469.835,110.236 2006.53,110.236 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="469.835,1646.93 2006.53,1646.93 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="469.835,1646.93 469.835,1628.04 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="982.067,1646.93 982.067,1628.04 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1494.3,1646.93 1494.3,1628.04 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2006.53,1646.93 2006.53,1628.04 "/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 469.835, 1745.86)" x="469.835" y="1745.86">−30</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 982.067, 1745.86)" x="982.067" y="1745.86">−20</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 1494.3, 1745.86)" x="1494.3" y="1745.86">−10</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2006.53, 1745.86)" x="2006.53" y="1745.86">0</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(0, 1238.18, 1869.69)" x="1238.18" y="1869.69">valor predicho por la teoría</text>
+</g>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="469.835,1646.93 469.835,110.236 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="469.835,1646.93 486.118,1646.93 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="469.835,1134.7 486.118,1134.7 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="469.835,622.469 486.118,622.469 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="469.835,110.236 486.118,110.236 "/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 343.62, 1672.93)" x="343.62" y="1672.93">−30</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 343.62, 1160.7)" x="343.62" y="1160.7">−20</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 343.62, 648.469)" x="343.62" y="648.469">−10</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 383.763, 136.236)" x="383.763" y="136.236">0</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(-90, 201.093, 878.585)" x="201.093" y="878.585">valor aprendido</text>
+</g>
+<polyline clip-path="url(#pfclip972)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="16, 10" points="469.835,1646.93 2006.53,110.236 "/>
+<circle clip-path="url(#pfclip972)" cx="1562.79" cy="549.925" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1595.69" cy="519.668" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1631.3" cy="485.487" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1668.87" cy="448.062" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1708.45" cy="408.785" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1750.16" cy="366.826" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1794.08" cy="324.07" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1840.31" cy="277.101" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1568.24" cy="549.263" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1602.77" cy="514.82" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1643.76" cy="472.808" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1687.58" cy="429.798" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1734.23" cy="382.42" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1783.89" cy="332.824" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1836.72" cy="280.872" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1890.4" cy="226.819" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1529.99" cy="588.113" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1434.38" cy="687.961" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1469.09" cy="641.981" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1509.44" cy="602.945" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1552.54" cy="564.446" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1600.64" cy="528.954" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1745.43" cy="372.168" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1944.89" cy="172.155" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<circle clip-path="url(#pfclip972)" cx="1363.99" cy="751.109" r="21.6" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1595.45 465.38 L1575.45 485.38 L1595.45 505.38 L1615.45 485.38 L1595.45 465.38 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1627.74 452.414 L1607.74 472.414 L1627.74 492.414 L1647.74 472.414 L1627.74 452.414 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1661.72 428.743 L1641.72 448.743 L1661.72 468.743 L1681.72 448.743 L1661.72 428.743 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1697.49 397.385 L1677.49 417.385 L1697.49 437.385 L1717.49 417.385 L1697.49 397.385 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1735.14 361.213 L1715.14 381.213 L1735.14 401.213 L1755.14 381.213 L1735.14 361.213 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1774.78 321.914 L1754.78 341.914 L1774.78 361.914 L1794.78 341.914 L1774.78 321.914 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1816.5 280.259 L1796.5 300.259 L1816.5 320.259 L1836.5 300.259 L1816.5 280.259 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1860.42 236.35 L1840.42 256.35 L1860.42 276.35 L1880.42 256.35 L1860.42 236.35 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1627.74 469.012 L1607.74 489.012 L1627.74 509.012 L1647.74 489.012 L1627.74 469.012 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1661.72 435.048 L1641.72 455.048 L1661.72 475.048 L1681.72 455.048 L1661.72 435.048 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1697.49 399.279 L1677.49 419.279 L1697.49 439.279 L1717.49 419.279 L1697.49 399.279 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1735.14 361.625 L1715.14 381.625 L1735.14 401.625 L1755.14 381.625 L1735.14 361.625 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1774.78 321.99 L1754.78 341.99 L1774.78 361.99 L1794.78 341.99 L1774.78 321.99 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1816.5 280.268 L1796.5 300.268 L1816.5 320.268 L1836.5 300.268 L1816.5 280.268 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1860.42 236.35 L1840.42 256.35 L1860.42 276.35 L1880.42 256.35 L1860.42 236.35 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1906.65 190.122 L1886.65 210.122 L1906.65 230.122 L1926.65 210.122 L1906.65 190.122 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1661.72 435.05 L1641.72 455.05 L1661.72 475.05 L1681.72 455.05 L1661.72 435.05 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1697.49 399.279 L1677.49 419.279 L1697.49 439.279 L1717.49 419.279 L1697.49 399.279 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1735.14 361.625 L1715.14 381.625 L1735.14 401.625 L1755.14 381.625 L1735.14 361.625 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1774.78 321.99 L1754.78 341.99 L1774.78 361.99 L1794.78 341.99 L1774.78 321.99 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1816.5 280.268 L1796.5 300.268 L1816.5 320.268 L1836.5 300.268 L1816.5 280.268 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1860.42 236.35 L1840.42 256.35 L1860.42 276.35 L1880.42 256.35 L1860.42 236.35 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1906.65 190.122 L1886.65 210.122 L1906.65 230.122 L1926.65 210.122 L1906.65 190.122 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1955.31 141.459 L1935.31 161.459 L1955.31 181.459 L1975.31 161.459 L1955.31 141.459 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip972)" d="M1627.74 469.033 L1607.74 489.033 L1627.74 509.033 L1647.74 489.033 L1627.74 469.033 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="3.76"/>
+<path clip-path="url(#pfclip970)" d="M529.283 387.808 L1632.59 387.808 L1632.59 161.459 L529.283 161.459  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="529.283,387.808 1632.59,387.808 1632.59,161.459 529.283,161.459 529.283,387.808 "/>
+<circle clip-path="url(#pfclip970)" cx="608.548" cy="236.909" r="31.9015" fill="#4682b4" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="5.55323"/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 687.812, 262.909)" x="687.812" y="262.909">SARSA vs ṽ (resbalón p = ε)</text>
+</g>
+<path clip-path="url(#pfclip970)" d="M608.548 277.45 L573.639 312.359 L608.548 347.268 L643.457 312.359 L608.548 277.45 Z" fill="#ffa500" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="6.56291"/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 687.812, 338.359)" x="687.812" y="338.359">Q-Learning vs v*</text>
+</g>
+<path clip-path="url(#pfclip970)" d="M2506.32 1084.29 L4289.76 1084.29 L4289.76 150.1 L2506.32 150.1  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="pfclip973">
+    <rect x="2506" y="150" width="1784" height="935"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2867.25,150.1 2867.25,1084.29 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="3291.88,150.1 3291.88,1084.29 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="3716.51,150.1 3716.51,1084.29 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="4141.14,150.1 4141.14,1084.29 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2506.32,298.72 4289.76,298.72 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2506.32,511.036 4289.76,511.036 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2506.32,723.351 4289.76,723.351 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2506.32,935.666 4289.76,935.666 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2506.32,1084.29 4289.76,1084.29 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2867.25,1084.29 2867.25,1072.8 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="3291.88,1084.29 3291.88,1072.8 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="3716.51,1084.29 3716.51,1072.8 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="4141.14,1084.29 4141.14,1072.8 "/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2867.25, 1183.21)" x="2867.25" y="1183.21">2</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 3291.88, 1183.21)" x="3291.88" y="1183.21">4</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 3716.51, 1183.21)" x="3716.51" y="1183.21">6</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 4141.14, 1183.21)" x="4141.14" y="1183.21">8</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(0, 3398.04, 1307.05)" x="3398.04" y="1307.05">columna</text>
+</g>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2506.32,150.1 2506.32,1084.29 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2506.32,298.72 2525.21,298.72 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2506.32,511.036 2525.21,511.036 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2506.32,723.351 2525.21,723.351 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2506.32,935.666 2525.21,935.666 "/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2420.24, 324.72)" x="2420.24" y="324.72">1</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2420.24, 537.036)" x="2420.24" y="537.036">2</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2420.24, 749.351)" x="2420.24" y="749.351">3</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2420.24, 961.666)" x="2420.24" y="961.666">4</text>
+</g>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(-90, 2317.86, 617.193)" x="2317.86" y="617.193">fila</text>
+</g>
+<path clip-path="url(#pfclip973)" d="M2761.09 829.508 L4034.99 829.508 L4034.99 1041.82 L2761.09 1041.82 L2761.09 829.508  Z" fill="#b22222" fill-rule="evenodd" fill-opacity="0.22"/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:0; stroke-opacity:0.22; fill:none" points="2761.09,829.508 4034.99,829.508 4034.99,1041.82 2761.09,1041.82 2761.09,829.508 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#d3d3d3; stroke-linecap:round; stroke-linejoin:round; stroke-width:36; stroke-opacity:1; fill:none" points="2654.94,935.666 2654.94,723.351 2654.94,511.036 2867.25,511.036 3079.57,511.036 3291.88,511.036 3504.2,511.036 3716.51,511.036 3928.83,511.036 4141.14,511.036 4141.14,723.351 4141.14,935.666 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:12; stroke-opacity:1; fill:none" points="2654.94,935.666 2654.94,723.351 2654.94,511.036 2867.25,511.036 3079.57,511.036 3291.88,511.036 3504.2,511.036 3716.51,511.036 3928.83,511.036 4141.14,511.036 4141.14,723.351 4141.14,935.666 "/>
+<polyline clip-path="url(#pfclip973)" style="stroke:#ffa500; stroke-linecap:round; stroke-linejoin:round; stroke-width:12; stroke-opacity:1; fill:none" points="2654.94,952.651 2654.94,740.336 2867.25,740.336 3079.57,740.336 3291.88,740.336 3504.2,740.336 3716.51,740.336 3928.83,740.336 4141.14,740.336 4141.14,952.651 "/>
+<path clip-path="url(#pfclip970)" d="M2892.49 1607.07 L3903.59 1607.07 L3903.59 1305.27 L2892.49 1305.27  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2892.49,1607.07 3903.59,1607.07 3903.59,1305.27 2892.49,1305.27 2892.49,1607.07 "/>
+<polyline clip-path="url(#pfclip970)" style="stroke:#d3d3d3; stroke-linecap:round; stroke-linejoin:round; stroke-width:30; stroke-opacity:1; fill:none" points="2912.3,1380.72 3031.2,1380.72 "/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 3051.02, 1406.72)" x="3051.02" y="1406.72">óptima con resbalón p = ε</text>
+</g>
+<polyline clip-path="url(#pfclip970)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:18; stroke-opacity:1; fill:none" points="2912.3,1456.17 3031.2,1456.17 "/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 3051.02, 1482.17)" x="3051.02" y="1482.17">SARSA: 11 pasos</text>
+</g>
+<polyline clip-path="url(#pfclip970)" style="stroke:#ffa500; stroke-linecap:round; stroke-linejoin:round; stroke-width:18; stroke-opacity:1; fill:none" points="2912.3,1531.62 3031.2,1531.62 "/>
+<g clip-path="url(#pfclip970)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 3051.02, 1557.62)" x="3051.02" y="1557.62">Q-Learning: 9 pasos</text>
+</g>
+</svg>
+
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>La ruta de SARSA sube a medida que crece ε</h2>
+<ul>
+  <li>$\varepsilon \le 0.15$: segunda fila, 11 pasos. $\varepsilon \ge 0.2$: fila superior, 13 pasos.</li>
+  <li>Q-Learning: siempre el borde, 9 pasos, el óptimo del mundo sin resbalón.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<h2>Un caso más cercano a un juego: Pong simplificado</h2>
+<ul>
+  <li>Un jugador contra una pared: la paleta, en la columna derecha, debe devolver la pelota.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs><marker id="pa" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#b5651d"/></marker>
+  <marker id="pk" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker></defs>
+  <rect x="40" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="40" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="40" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="40" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="40" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="40" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="40" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="40" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="70" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="100" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="130" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="160" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="190" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="220" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="250" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="280" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="22" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="52" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="82" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="112" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="142" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="172" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="202" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/><rect x="310" y="232" width="30" height="30" fill="#fffdf5" stroke="#d8d2bf" stroke-width="0.8"/>
+  <rect x="34" y="16" width="6" height="252" fill="#888"/><rect x="34" y="16" width="306" height="6" fill="#888"/><rect x="34" y="262" width="306" height="6" fill="#888"/>
+  <polyline points="85.0,187.0 115.0,217.0 145.0,247.0 175.0,217.0 205.0,187.0 235.0,157.0 265.0,127.0 295.0,97.0 325.0,67.0" fill="none" stroke="#b5651d" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#pa)"/>
+  <circle cx="85.0" cy="187.0" r="9" fill="#f2b705" stroke="#7a5c00"/>
+  <rect x="318" y="52" width="14" height="60" rx="3" fill="#4e79a7"/>
+  <line x1="354" y1="80" x2="354" y2="44" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#pk)"/>
+  <line x1="354" y1="86" x2="354" y2="122" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#pk)"/>
+  <text x="190" y="284" text-anchor="middle" font-size="12" fill="#555">10 columnas × 8 filas · la pelota rebota arriba, abajo y a la izquierda</text>
+  <text x="400" y="52" font-size="13" fill="#1a1a1a"><tspan font-weight="bold" fill="#4e79a7">paleta</tspan> de 2 casillas en la columna 10</text>
+  <text x="400" y="76" font-size="13" fill="#1a1a1a">acciones: subir, quedarse o bajar una casilla</text>
+  <text x="400" y="112" font-size="13" fill="#1a1a1a"><tspan font-weight="bold" fill="#b5651d">pelota</tspan>: avanza una casilla por paso</text>
+  <text x="400" y="136" font-size="13" fill="#1a1a1a">velocidad horizontal ±1, vertical −1, 0 o +1</text>
+  <text x="400" y="172" font-size="13" fill="#1a1a1a">golpea: recompensa +1 y la pelota vuelve</text>
+  <text x="400" y="196" font-size="13" fill="#1a1a1a">falla: recompensa −1 y termina el partido</text>
+  <text x="400" y="220" font-size="13" fill="#1a1a1a">el partido también termina tras 20 golpes</text>
+</svg>
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<h2>Subir, quedarse o bajar; +1 al golpear, −1 al fallar</h2>
+<ul>
+  <li>La pelota avanza una casilla por paso y rebota arriba, abajo y a la izquierda.</li>
+  <li>Golpear da $+1$ y la devuelve; fallar da $-1$ y termina el partido, que dura a lo más 20 golpes; $\gamma = 0.95$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<h2>El estado necesita la velocidad de la pelota</h2>
+$$
+s = (x,\ y,\ v_x,\ v_y,\ p)
+$$
+<ul>
+  <li>Posición y velocidad de la pelota y posición de la paleta: $10 \cdot 8 \cdot 2 \cdot 3 \cdot 7 = 3360$ estados y 3 acciones.</li>
+  <li>Sin la velocidad, una misma foto sirve para una pelota que sube y una que baja: el estado no sería de Markov.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<h2>Seguir la pelota casi nunca la devuelve</h2>
+<ul>
+  <li>Mover la paleta hacia la fila de la pelota logra menos de medio golpe por partido, casi lo mismo que moverla al azar.</li>
+  <li>Paleta y pelota van a la misma velocidad: si la pelota se aleja, la paleta nunca la alcanza. Hay que anticipar.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<h2>Q-Learning aprendiendo a jugar</h2>
+<ul>
+  <li>Izquierda: el partido en curso; derecha: golpes de la política codiciosa, medidos cada 50 partidos.</li>
+</ul>
+<div data-rlw="pongQ" style="max-width:1100px"></div>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<h2>Q-Learning aprende a anticipar sin que nadie se lo diga</h2>
+<ul>
+  <li>Solo recibe $+1$ y $-1$; el valor de golpear se propaga hacia atrás por la trayectoria de la pelota.</li>
+  <li>Más de 14 golpes de 20 en unos 500 partidos y los 20 hacia los 1500 a 2000, sin visitar ni la mitad de la tabla.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Métodos de n pasos</div>
+<h2>Entre TD y Monte Carlo hay un espectro</h2>
+$$
+G_t^{(n)} = r_{t+1} + \gamma\, r_{t+2} + \cdots + \gamma^{n-1} r_{t+n} + \gamma^{n}\, v(s_{t+n})
+$$
+<ul>
+  <li>$n = 1$ es TD(0); si $n$ llega al final del episodio es Monte Carlo. Los valores intermedios suelen rendir mejor.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Métodos de n pasos</div>
+<h2>TD(λ) promedia todos los horizontes</h2>
+<ul>
+  <li>Pesa el retorno de $n$ pasos con $(1-\lambda)\lambda^{n-1}$; $\lambda = 0$ es TD(0) y $\lambda = 1$, Monte Carlo.</li>
+  <li>Se implementa con <strong>trazas de elegibilidad</strong>, una memoria de qué estados se visitaron hace poco.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 11 · Convergencia</div>
+<h2>Converger exige visitar todo y pasos que decrezcan</h2>
+$$
+\sum_t \alpha_t = \infty, \qquad \sum_t \alpha_t^2 &lt; \infty
+$$
+<ul>
+  <li>Condiciones de Robbins y Monro: los pasos deben poder llegar lejos, pero su ruido debe extinguirse.</li>
+  <li>Con $\alpha$ constante las estimaciones siguen oscilando, como en la animación.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 11 · Convergencia</div>
+<h2>Una tabla por estado no escala</h2>
+<ul>
+  <li>Q-Learning tabular converge a $q_*$ (Watkins y Dayan, 1992), pero con millones de estados la tabla no cabe ni se llena.</li>
+  <li>Hace falta aproximar $q$ con una red neuronal.</li>
+</ul>
+
+</section>
 <section>
 <div class="close-slide">
-<h1>Actualizar una estimación con otra un paso después permite aprender sin modelo; quién provee esa estimación separa a SARSA de Q-Learning.</h1>
-<div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
+  <h1>Aprender es corregir una predicción con la siguiente; lo que se usa como «siguiente» decide qué problema se resuelve.</h1>
+  <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
 </div>
 </section>
 
-</div>
-</div>
+</div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
@@ -439,6 +929,932 @@ Reveal.initialize({
   },
   plugins: [ RevealMath.KaTeX ]
 });
+</script>
+<script>
+// Biblioteca de animaciones del mundo del acantilado (la misma de los notebooks)
+(function () {
+if (window.RLW) return;
+const RLW = window.RLW = {};
+
+// ---------------- estilos y utilidades ----------------
+const PAL = { paper: '#faf7eb', ink: '#222', soft: '#555', faint: '#999', blue: '#4e79a7', orange: '#e8743b',
+              green: '#3a8c4f', red: '#c0392b', purple: '#7b1fa2', grid: '#cfc9b3', cliff: '#e6b0a4' };
+const CSS = `
+.rlw { background:${PAL.paper}; color:${PAL.ink}; border-radius:8px; padding:10px 12px; margin:6px 0;
+       font-family: Helvetica, Arial, sans-serif; font-size:14px; line-height:1.3; text-align:left; box-sizing:border-box; }
+.rlw * { box-sizing:border-box; }
+.rlw-bar { display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:6px; }
+.rlw-bar select, .rlw-bar button { font-size:0.95em; padding:1px 6px; cursor:pointer; }
+.rlw-sl { display:flex; align-items:center; gap:6px; white-space:nowrap; margin:0; }
+.rlw-sl input[type=range] { width:9em; accent-color:${PAL.blue}; margin:0; }
+.rlw-val { min-width:2.6em; text-align:right; font-variant-numeric:tabular-nums; color:${PAL.blue}; font-weight:600; }
+.rlw-row { display:flex; gap:12px; align-items:flex-start; }
+.rlw canvas { display:block; width:100%; min-width:0; touch-action:none; }
+.rlw-read { margin-top:6px; color:${PAL.soft}; font-variant-numeric:tabular-nums; }
+.rlw-read b { color:${PAL.ink}; }
+.rlw-tab { font-family: Menlo, Consolas, monospace; font-size:0.86em; line-height:1.35; white-space:pre; color:${PAL.ink};
+           background:#fffdf5; border:1px solid ${PAL.grid}; border-radius:6px; padding:6px 8px; overflow:hidden; }
+.rlw-chk { display:flex; align-items:center; gap:4px; white-space:nowrap; cursor:pointer; }
+`;
+function injectCSS() {
+  if (document.getElementById('rlw-style')) return;
+  const s = document.createElement('style'); s.id = 'rlw-style'; s.textContent = CSS; document.head.appendChild(s);
+}
+function el(tag, attrs, parent) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'html') e.innerHTML = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function slider(parent, label, min, max, step, val, dig, onInput) {
+  const lab = el('label', { class: 'rlw-sl' }, parent);
+  el('span', { html: label }, lab);
+  const inp = el('input', { type: 'range', min, max, step, value: val }, lab);
+  const out = el('span', { class: 'rlw-val', text: (+val).toFixed(dig) }, lab);
+  inp.addEventListener('input', () => { out.textContent = (+inp.value).toFixed(dig); onInput(+inp.value); });
+  return inp;
+}
+function button(parent, txt, onClick) {
+  const b = el('button', { text: txt }, parent);
+  b.addEventListener('click', e => { e.stopPropagation(); onClick(); });
+  return b;
+}
+function check(parent, txt, val, onChange) {
+  const lab = el('label', { class: 'rlw-chk' }, parent);
+  const c = el('input', { type: 'checkbox' }, lab); c.checked = val;
+  el('span', { text: txt }, lab);
+  c.addEventListener('change', () => onChange(c.checked));
+  return c;
+}
+function fit(cv, ratio) {
+  const r = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.clientWidth || 600, h = Math.round(w * ratio);
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + 'px';
+  const g = cv.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  g.fillStyle = PAL.paper; g.fillRect(0, 0, w, h);
+  return { g, w, h };
+}
+function onResize(root, f) {
+  let lastW = -1;
+  const go = () => { const w = root.clientWidth; if (w && w !== lastW) { lastW = w; f(); } };
+  if (window.ResizeObserver) new ResizeObserver(go).observe(root);
+  window.addEventListener('resize', go);
+}
+function aislar(root) {        // evita que Reveal.js capture teclas y clics del widget
+  ['mousedown', 'touchstart', 'keydown', 'pointerdown', 'wheel'].forEach(t => root.addEventListener(t, e => e.stopPropagation()));
+}
+function mulberry32(a) {
+  return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function gauss(rnd) { let u = 0, v = 0; while (u === 0) u = rnd(); while (v === 0) v = rnd();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function txt(g, s, x, y, col, al, sz, bold) {
+  g.fillStyle = col || PAL.ink; g.font = (bold ? 'bold ' : '') + (sz || 12) + 'px Helvetica, Arial';
+  g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); g.textBaseline = 'alphabetic';
+}
+
+// ---------------- el mundo del acantilado ----------------
+// Filas 0..3 (la fila 3 es la de abajo), columnas 0..7. Inicio S abajo a la izquierda,
+// meta G abajo a la derecha, acantilado entre ambos: caer cuesta -100 y devuelve a S.
+const NR = 4, NC = 8, S0 = [3, 0];
+const DR = [-1, 1, 0, 0], DC = [0, 0, -1, 1];
+const esAcant = (r, c) => r === 3 && c >= 1 && c <= 6;
+const esMeta = (r, c) => r === 3 && c === 7;
+function mover(r, c, a) {
+  const nr = Math.min(NR - 1, Math.max(0, r + DR[a])), nc = Math.min(NC - 1, Math.max(0, c + DC[a]));
+  if (esAcant(nr, nc)) return [S0[0], S0[1], -100, true];
+  return [nr, nc, -1, false];
+}
+function pasoResbalon(r, c, a, p, rnd) {   // con probabilidad p la acción se reemplaza por una al azar
+  const b = rnd() < p ? Math.floor(rnd() * 4) : a;
+  return mover(r, c, b).concat([b]);       // el quinto elemento es la acción ejecutada
+}
+const zerosV = () => Array.from({ length: NR }, () => new Array(NC).fill(0));
+function qModelo(V, r, c, a, gam, p) {
+  let q = 0;
+  for (let b = 0; b < 4; b++) {
+    const pb = (b === a ? 1 - p : 0) + p / 4; if (pb === 0) continue;
+    const [nr, nc, rw] = mover(r, c, b);
+    q += pb * (rw + gam * (esMeta(nr, nc) ? 0 : V[nr][nc]));
+  }
+  return q;
+}
+function barrido(V, gam, p) {               // un barrido de iteración de valor (ecuación de optimalidad)
+  const Vn = zerosV(); let d = 0;
+  for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+    if (esMeta(r, c) || esAcant(r, c)) continue;
+    let m = -Infinity; for (let a = 0; a < 4; a++) m = Math.max(m, qModelo(V, r, c, a, gam, p));
+    Vn[r][c] = m; d = Math.max(d, Math.abs(m - V[r][c]));
+  }
+  return [Vn, d];
+}
+function evaluaPolitica(pol, gam, p) {        // pol(r,c) -> acción, o null para la política al azar
+  let V = zerosV();
+  for (let it = 0; it < 5000; it++) {
+    const Vn = zerosV(); let d = 0;
+    for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+      if (esMeta(r, c) || esAcant(r, c)) continue;
+      let v = 0;
+      if (pol) v = qModelo(V, r, c, pol(r, c), gam, p);
+      else for (let a = 0; a < 4; a++) v += 0.25 * qModelo(V, r, c, a, gam, p);
+      Vn[r][c] = v; d = Math.max(d, Math.abs(v - V[r][c]));
+    }
+    V = Vn; if (d < 1e-10) break;
+  }
+  return V;
+}
+function accionCodiciosa(V, r, c, gam, p) {
+  let best = -Infinity, ba = -1, worst = Infinity;
+  for (let a = 0; a < 4; a++) { const q = qModelo(V, r, c, a, gam, p); if (q > best + 1e-12) { best = q; ba = a; } worst = Math.min(worst, q); }
+  return best - worst < 1e-9 ? -1 : ba;      // -1: todas empatan, no hay preferencia
+}
+function rutaDesde(accion) {                  // ruta determinista que sigue una política codiciosa
+  let r = S0[0], c = S0[1]; const camino = [[r, c]];
+  for (let k = 0; k < 30; k++) {
+    const a = accion(r, c); if (a < 0) break;
+    const [nr, nc, , cae] = mover(r, c, a);
+    if (cae) { camino.push([3, Math.min(NC - 1, Math.max(0, c + DC[a]))]); camino.cae = true; break; }
+    r = nr; c = nc; camino.push([r, c]);
+    if (esMeta(r, c)) { camino.llega = true; break; }
+  }
+  return camino;
+}
+
+// paleta secuencial: valores bajos oscuros (azul), cercanos a 0 claros (amarillo)
+const STOPS = [[49, 54, 149], [69, 117, 180], [116, 173, 209], [171, 217, 233], [254, 224, 144], [253, 245, 200]];
+function colorValor(v, vmin) {
+  let t = 1 - Math.min(1, Math.max(0, v / vmin)); t = Math.max(0, Math.min(1, t));
+  const x = t * (STOPS.length - 1), i = Math.min(STOPS.length - 2, Math.floor(x)), f = x - i;
+  const c = STOPS[i].map((v0, k) => Math.round(v0 + (STOPS[i + 1][k] - v0) * f));
+  return { css: `rgb(${c[0]},${c[1]},${c[2]})`, oscuro: t < 0.45 };
+}
+// Dibuja la cuadrícula. o: {V, vmin, numeros, flechas(r,c)->a, ruta, rutaCol, robot:[r,c], estela}
+function dibujaMundo(g, X, Y, cs, o) {
+  const fs = Math.max(10, cs * 0.26);
+  for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+    const x = X + c * cs, y = Y + r * cs;
+    if (esAcant(r, c)) {
+      g.fillStyle = PAL.cliff; g.fillRect(x, y, cs, cs);
+      g.save(); g.beginPath(); g.rect(x, y, cs, cs); g.clip(); g.strokeStyle = 'rgba(192,57,43,0.45)'; g.lineWidth = 1.2;
+      for (let k = -cs; k < cs; k += 9) { g.beginPath(); g.moveTo(x + k, y + cs); g.lineTo(x + k + cs, y); g.stroke(); }
+      g.restore();
+    } else if (esMeta(r, c)) {
+      g.fillStyle = '#d9efd9'; g.fillRect(x, y, cs, cs);
+    } else if (o.V) {
+      const col = colorValor(o.V[r][c], o.vmin || -25); g.fillStyle = col.css; g.fillRect(x, y, cs, cs);
+    } else { g.fillStyle = '#fffdf5'; g.fillRect(x, y, cs, cs); }
+  }
+  g.strokeStyle = PAL.grid; g.lineWidth = 1;
+  for (let r = 0; r <= NR; r++) { g.beginPath(); g.moveTo(X, Y + r * cs); g.lineTo(X + NC * cs, Y + r * cs); g.stroke(); }
+  for (let c = 0; c <= NC; c++) { g.beginPath(); g.moveTo(X + c * cs, Y); g.lineTo(X + c * cs, Y + NR * cs); g.stroke(); }
+  txt(g, 'acantilado  (−100, vuelve a S)', X + 4 * cs, Y + 3.5 * cs, '#7a1a1a', 'center', fs * 1.05, true);
+  txt(g, '★', X + 7.5 * cs, Y + 3.42 * cs, PAL.green, 'center', cs * 0.5);
+  txt(g, 'G', X + 7.5 * cs, Y + 3.82 * cs, PAL.green, 'center', fs * 0.9, true);
+  for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+    if (esAcant(r, c) || esMeta(r, c)) continue;
+    const x = X + c * cs, y = Y + r * cs;
+    const oscuro = o.V ? colorValor(o.V[r][c], o.vmin || -25).oscuro : false;
+    const tinta = oscuro ? '#fff' : PAL.ink;
+    if (o.numeros && o.V) txt(g, o.V[r][c].toFixed(1), x + cs / 2, y + cs * 0.78, tinta, 'center', fs * 0.95);
+    if (o.flechas) {
+      const a = o.flechas(r, c);
+      if (a >= 0) {
+        const cx = x + cs / 2, cy = y + cs * (o.numeros ? 0.38 : 0.5), L = cs * 0.2;
+        const ux = DC[a], uy = DR[a];
+        g.strokeStyle = tinta; g.fillStyle = tinta; g.lineWidth = Math.max(1.5, cs * 0.04);
+        g.beginPath(); g.moveTo(cx - ux * L, cy - uy * L); g.lineTo(cx + ux * L * 0.4, cy + uy * L * 0.4); g.stroke();
+        g.beginPath(); g.moveTo(cx + ux * L, cy + uy * L);
+        g.lineTo(cx + ux * L * 0.2 - uy * L * 0.55, cy + uy * L * 0.2 + ux * L * 0.55);
+        g.lineTo(cx + ux * L * 0.2 + uy * L * 0.55, cy + uy * L * 0.2 - ux * L * 0.55); g.closePath(); g.fill();
+      }
+    }
+  }
+  txt(g, 'S', X + 0.18 * cs, Y + 3.18 * cs, PAL.green, 'center', fs * 0.95, true);
+  const linea = (pts, col, w, dash) => {
+    if (!pts || pts.length < 2) return;
+    g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.lineJoin = 'round'; g.beginPath();
+    let nuevo = true;                    // null en la lista corta la línea (la caída no es un movimiento)
+    pts.forEach(p => {
+      if (!p) { nuevo = true; return; }
+      const x = X + (p[1] + 0.5) * cs, y = Y + (p[0] + 0.5) * cs;
+      nuevo ? g.moveTo(x, y) : g.lineTo(x, y); nuevo = false;
+    });
+    g.stroke(); g.setLineDash([]);
+    pts.forEach(p => {                   // p[2] marca la casilla del acantilado donde cayó
+      if (!p || !p[2]) return;
+      const x = X + (p[1] + 0.5) * cs, y = Y + (p[0] + 0.5) * cs, k = cs * 0.16;
+      g.strokeStyle = PAL.red; g.lineWidth = Math.max(2.5, cs * 0.07);
+      g.beginPath(); g.moveTo(x - k, y - k); g.lineTo(x + k, y + k); g.moveTo(x + k, y - k); g.lineTo(x - k, y + k); g.stroke();
+    });
+  };
+  if (o.estela) linea(o.estela, 'rgba(123,31,162,0.55)', Math.max(2, cs * 0.06), [5, 4]);
+  if (o.ruta) linea(o.ruta, o.rutaCol || PAL.orange, Math.max(3, cs * 0.09));
+  if (o.robot) {
+    const [r, c] = o.robot, x = X + (c + 0.5) * cs, y = Y + (r + 0.5) * cs;
+    g.fillStyle = o.cayendo ? PAL.red : (o.robotCol || PAL.purple); g.strokeStyle = '#fff'; g.lineWidth = 2;
+    g.beginPath(); g.arc(x, y, cs * (o.cayendo ? 0.13 : 0.2), 0, 2 * Math.PI); g.fill(); g.stroke();
+    if (o.cayendo) txt(g, '¡cae! −100', Math.min(Math.max(x, X + 1.1 * cs), X + (NC - 1.1) * cs), y - cs * 0.3, PAL.red, 'center', fs * 1.1, true);
+    if (o.rescate) txt(g, 'vuelve a S', x + cs * 0.5, y - cs * 0.62, PAL.red, 'left', fs * 1.0, true);
+  }
+}
+function ejes(g, P, X0, X1, Y0, Y1, xt, yt, xlab, ylab, fs) {
+  const px = v => P.x + (v - X0) / (X1 - X0) * P.w, py = v => P.y + P.h - (Math.min(Y1, Math.max(Y0, v)) - Y0) / (Y1 - Y0) * P.h;
+  g.fillStyle = '#fffdf5'; g.fillRect(P.x, P.y, P.w, P.h);
+  g.strokeStyle = 'rgba(0,0,0,0.10)'; g.lineWidth = 1;
+  yt.forEach(([v]) => { g.beginPath(); g.moveTo(P.x, py(v)); g.lineTo(P.x + P.w, py(v)); g.stroke(); });
+  g.strokeStyle = PAL.faint; g.strokeRect(P.x, P.y, P.w, P.h);
+  xt.forEach(v => txt(g, String(v), px(v), P.y + P.h + fs * 0.9, PAL.soft, 'center', fs * 0.85));
+  yt.forEach(([v, s]) => txt(g, s, P.x - 4, py(v), PAL.soft, 'right', fs * 0.85));
+  txt(g, xlab, P.x + P.w / 2, P.y + P.h + fs * 2.0, PAL.soft, 'center', fs * 0.9);
+  g.save(); g.translate(P.x - fs * 2.9, P.y + P.h / 2); g.rotate(-Math.PI / 2); txt(g, ylab, 0, 0, PAL.soft, 'center', fs * 0.9); g.restore();
+  return [px, py];
+}
+function curva(g, xs, ys, px, py, col, w, dash) {
+  if (ys.length < 2) return;
+  g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.beginPath();
+  ys.forEach((y, i) => { const X = px(xs[i]), Y = py(y); i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.stroke(); g.setLineDash([]);
+}
+function fsDe(root) { return parseFloat(getComputedStyle(root).fontSize) || 14; }
+
+// políticas fijas para el widget de trayectorias
+const POLITICAS = {
+  borde:  { nombre: 'ruta del borde', f: (r, c) => c === 7 ? 1 : (r === 3 ? 0 : (r < 2 ? 1 : 3)) },
+  segura: { nombre: 'ruta segura', f: (r, c) => c === 7 ? 1 : (r > 0 ? 0 : 3) },
+  azar:   { nombre: 'al azar', f: null },
+};
+const FLECHA = ['↑', '↓', '←', '→'];
+
+// ======================== 1. UNA TRAYECTORIA Y SU RETORNO ========================
+RLW.trayectoria = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const GAM = 0.95;
+  const S = { pol: 'borde', p: 0.1, anim: null, rnd: mulberry32(7), estela: [], filas: [], robot: S0.slice(), G: 0, res: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  const lab = el('label', { class: 'rlw-sl', html: 'política ' }, bar);
+  const sel = el('select', {}, lab);
+  Object.keys(POLITICAS).forEach(k => el('option', { value: k, text: POLITICAS[k].nombre }, sel));
+  sel.addEventListener('change', () => { S.pol = sel.value; reinicia(); });
+  slider(bar, 'resbalón p', 0, 0.3, 0.01, S.p, 2, v => { S.p = v; reinicia(); });
+  button(bar, '▶ un episodio', () => episodioAnimado());
+  button(bar, '▶▶ +1000 episodios', () => muchos());
+  el('span', { class: 'rlw-read', html: 'γ = 0.95' }, bar);
+  const row = el('div', { class: 'rlw-row' }, root);
+  const cv = el('canvas', {}, row); cv.style.flex = '1.55';
+  const tab = el('div', { class: 'rlw-tab' }, row); tab.style.flex = '1';
+  const read = el('div', { class: 'rlw-read' }, root);
+
+  function vExacto() { return evaluaPolitica(POLITICAS[S.pol].f, GAM, S.p)[S0[0]][S0[1]]; }
+  function limpia() {
+    if (S.anim) { clearInterval(S.anim); S.anim = null; }
+    S.estela = []; S.filas = []; S.robot = S0.slice(); S.G = 0; S.cayendo = false; S.rescate = false;
+  }
+  function reinicia() { limpia(); S.res = null; dibuja(); }
+  function accion(r, c) { const f = POLITICAS[S.pol].f; return f ? f(r, c) : Math.floor(S.rnd() * 4); }
+  function episodioAnimado() {
+    limpia();
+    let r = S0[0], c = S0[1], t = 0; S.estela = [[r, c]];
+    S.anim = setInterval(() => {
+      if (S.cayendo) {                     // segundo tiempo de la caída: reaparece en S
+        S.cayendo = false; S.rescate = true; r = S0[0]; c = S0[1];
+        S.estela.push(null, [r, c]); S.robot = [r, c]; dibuja(); return;
+      }
+      S.rescate = false;
+      const a = accion(r, c); const [nr, nc, rw, cae, b] = pasoResbalon(r, c, a, S.p, S.rnd);
+      const peso = Math.pow(GAM, t); S.G += peso * rw;
+      S.filas.push(`${String(t).padStart(2)}  (${r + 1},${c + 1})  ${FLECHA[a]}  ${String(rw).padStart(4)}  ${(peso * rw).toFixed(2).padStart(7)}  ${S.G.toFixed(2).padStart(7)}${cae ? '  cae' : (b !== a ? '  resbala ' + FLECHA[b] : '')}`);
+      if (cae) {                           // primer tiempo: el robot queda sobre el vacío
+        const cc = Math.min(NC - 1, Math.max(0, c + DC[b]));
+        S.estela.push([3, cc, true]); S.robot = [3, cc]; S.cayendo = true; t++; dibuja(); return;
+      }
+      r = nr; c = nc; t++; S.estela.push([r, c]); S.robot = [r, c];
+      if (esMeta(r, c) || t >= 60) { clearInterval(S.anim); S.anim = null; if (!esMeta(r, c)) S.filas.push('... (episodio truncado en 60 pasos)'); }
+      dibuja();
+    }, 230);
+  }
+  function muchos() {
+    limpia();
+    // los episodios se acumulan entre clics: el promedio converge al valor exacto
+    const A = S.res || { Gs: [], caidas: 0, hist: [] }, Gs = A.Gs; let caidas = A.caidas;
+    for (let e = 0; e < 1000; e++) {
+      let r = S0[0], c = S0[1], G = 0, w = 1, cayo = false;
+      for (let t = 0; t < 400; t++) {
+        const [nr, nc, rw, cae] = pasoResbalon(r, c, accion(r, c), S.p, S.rnd);
+        G += w * rw; w *= GAM; cayo = cayo || cae; r = nr; c = nc; if (esMeta(r, c)) break;
+      }
+      Gs.push(G); if (cayo) caidas++;
+    }
+    const N = Gs.length, m = Gs.reduce((a, b) => a + b, 0) / N;
+    const sd = Math.sqrt(Gs.reduce((a, b) => a + (b - m) * (b - m), 0) / (N - 1));
+    S.res = { m, sd, ee: sd / Math.sqrt(N), caidas, N, Gs, hist: A.hist.concat([m]) };
+    dibuja();
+  }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.52);
+    const cs = Math.min((w - 8) / NC, (h - 8) / NR * (S.res ? 0.62 : 1));
+    const X = (w - NC * cs) / 2, Y = 4;
+    dibujaMundo(g, X, Y, cs, { flechas: POLITICAS[S.pol].f, estela: S.estela, robot: S.robot, cayendo: S.cayendo, rescate: S.rescate });
+    if (S.res) {                                   // histograma de retornos
+      const P = { x: fs * 4, y: Y + NR * cs + fs * 0.8, w: w - fs * 5, h: h - (Y + NR * cs) - fs * 3.2 };
+      const lo = -120, hi = 0, nb = 40, cnt = new Array(nb).fill(0);
+      S.res.Gs.forEach(G => { const b = Math.min(nb - 1, Math.max(0, Math.floor((G - lo) / (hi - lo) * nb))); cnt[b]++; });
+      const mx = Math.max(...cnt);
+      const [px, py] = ejes(g, P, lo, hi, 0, mx, [-120, -100, -80, -60, -40, -20, 0], [], 'retorno G de cada episodio', '', fs * 0.9);
+      g.fillStyle = 'rgba(78,121,167,0.75)';
+      cnt.forEach((n, b) => { const x0 = px(lo + b * (hi - lo) / nb), x1 = px(lo + (b + 1) * (hi - lo) / nb); g.fillRect(x0 + 1, py(n), x1 - x0 - 2, py(0) - py(n)); });
+      const xm = px(Math.max(lo, S.res.m)), xv = px(Math.max(lo, vExacto()));
+      if (root.dataset.valor !== 'no') {         // valor exacto: fijo, no depende de la simulación
+        g.strokeStyle = PAL.ink; g.lineWidth = 2; g.setLineDash([6, 4]);
+        g.beginPath(); g.moveTo(xv, P.y); g.lineTo(xv, P.y + P.h); g.stroke(); g.setLineDash([]);
+      }
+      g.strokeStyle = PAL.red; g.lineWidth = 2.5; g.beginPath(); g.moveTo(xm, P.y); g.lineTo(xm, P.y + P.h); g.stroke();
+      const izq = xm < xv;                          // rótulos hacia afuera para que no se tapen
+      txt(g, 'promedio', xm + (izq ? -4 : 4), P.y + fs * 0.7, PAL.red, izq ? 'right' : 'left', fs * 0.85, true);
+      if (root.dataset.valor !== 'no') txt(g, 'exacto', xv + (izq ? 4 : -4), P.y + fs * 0.7, PAL.ink, izq ? 'left' : 'right', fs * 0.85, true);
+    }
+    const enc = ' t  estado  a     r    γᵗ·r        G\n';
+    tab.textContent = enc + (S.filas.length ? S.filas.slice(-14).join('\n') : '(pulse ▶ para simular un episodio)');
+    const vx = vExacto();
+    const conValor = root.dataset.valor !== 'no';   // data-valor="no" oculta v antes de definirla
+    let s = conValor ? `Valor exacto de la política en S, calculado sin simular: <b>v<sub>π</sub>(S) = ${vx.toFixed(2)}</b>.` : '';
+    if (S.filas.length) s += ` &nbsp;Retorno de este episodio: <b>G = ${S.G.toFixed(2)}</b>.`;
+    if (S.res) {
+      const R = S.res, hs = R.hist.slice(-6).map(v => v.toFixed(2)).join(' → ');
+      s += `<br>${R.N} episodios: retorno medio <b style="color:${PAL.red}">${R.m.toFixed(2)}</b> ± ${(1.96 * R.ee).toFixed(2)} (IC 95%), desviación estándar ${R.sd.toFixed(1)}, cae al acantilado al menos una vez en el <b>${(100 * R.caidas / R.N).toFixed(0)}%</b> de los episodios.`;
+      s += `<br>La línea roja es el promedio de los episodios simulados hasta ahora: es aleatorio y cambia con cada tanda` +
+        (conValor ? `. La línea negra punteada es v<sub>π</sub>(S), que no cambia. Cada tanda se suma a las anteriores y la roja se acerca a la negra` : '') +
+        (R.hist.length > 1 ? `: ${hs}.` : '.');
+    }
+    read.innerHTML = s;
+  }
+  onResize(root, dibuja); dibuja();
+};
+
+// ======================== 2. ITERACIÓN DE VALOR ANIMADA ========================
+RLW.iteracionValor = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const S = { gam: 0.95, p: 0.0, V: zerosV(), k: 0, hist: [], anim: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'γ', 0.5, 0.99, 0.01, S.gam, 2, v => { S.gam = v; reinicia(); });
+  slider(bar, 'resbalón p', 0, 0.3, 0.01, S.p, 2, v => { S.p = v; reinicia(); });
+  button(bar, '1 barrido', () => { para(); un(); dibuja(); });
+  const bPlay = button(bar, '▶ reproducir', () => S.anim ? para() : play());
+  button(bar, '↺ reiniciar', () => reinicia());
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function un() { if (S.k >= 120) return; const [Vn, d] = barrido(S.V, S.gam, S.p); S.V = Vn; S.k++; S.hist.push(d); }
+  function para() { if (S.anim) clearInterval(S.anim); S.anim = null; bPlay.textContent = '▶ reproducir'; }
+  function play() {
+    bPlay.textContent = '⏸ pausa';
+    S.anim = setInterval(() => { un(); dibuja(); const d = S.hist[S.hist.length - 1]; if (S.k >= 120 || d < 1e-6) para(); }, S.k < 15 ? 420 : 160);
+  }
+  function reinicia() { para(); S.V = zerosV(); S.k = 0; S.hist = []; dibuja(); }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.36);
+    const cs = Math.min((w * 0.56) / NC, (h - 8) / NR), X = 4, Y = 4;
+    const flechas = S.k ? (r, c) => accionCodiciosa(S.V, r, c, S.gam, S.p) : null;
+    const ruta = S.k ? rutaDesde((r, c) => accionCodiciosa(S.V, r, c, S.gam, S.p)) : null;
+    dibujaMundo(g, X, Y, cs, { V: S.V, vmin: -25, numeros: true, flechas, ruta });
+    const P = { x: X + NC * cs + fs * 4.2, y: fs * 0.6, w: w - (X + NC * cs + fs * 4.2) - fs * 1.6, h: h - fs * 3.6 };
+    const [px, py] = ejes(g, P, 0, 120, -6, 2, [0, 30, 60, 90, 120], [[2, '10²'], [0, '1'], [-2, '10⁻²'], [-4, '10⁻⁴'], [-6, '10⁻⁶']], 'barrido k', 'max |ΔV|', fs);
+    if (S.hist.length) {
+      const ks = S.hist.map((_, i) => i + 1);
+      const ref = ks.map(k => Math.log10(S.hist[0]) + (k - 1) * Math.log10(S.gam));
+      curva(g, ks, ref, px, py, PAL.faint, 2, [6, 5]);
+      curva(g, ks, S.hist.map(d => Math.log10(Math.max(d, 1e-7))), px, py, PAL.blue, 3);
+      txt(g, '- - -  cota γᵏ (contracción)', P.x + P.w - 6, P.y + fs * 0.9, PAL.soft, 'right', fs * 0.85);
+    }
+    const d = S.hist.length ? S.hist[S.hist.length - 1] : NaN;
+    let s = `Barrido <b>k = ${S.k}</b> · V(S) = <b>${S.V[3][0].toFixed(2)}</b>`;
+    if (S.k) s += ` · max |ΔV| = ${d.toExponential(1)}`;
+    if (ruta && ruta.llega) s += ` · la ruta codiciosa (naranja) llega a G en <b>${ruta.length - 1} pasos</b>`;
+    else if (S.k) s += ' · la ruta codiciosa todavía no llega a G';
+    read.innerHTML = s;
+  }
+  onResize(root, dibuja); dibuja();
+};
+
+// ======================== 3. SARSA Y Q-LEARNING EN VIVO ========================
+function agenteTD(metodo, semilla) {
+  return { metodo, rnd: mulberry32(semilla), Q: new Float64Array(NR * NC * 4), r: S0[0], c: S0[1], a: -1, t: 0, ret: 0, rets: [], estela: [[S0[0], S0[1]]] };
+}
+const qi = (r, c, a) => (r * NC + c) * 4 + a;
+function argmaxQ(Q, r, c, rnd) {
+  let m = -Infinity, best = []; for (let a = 0; a < 4; a++) { const q = Q[qi(r, c, a)]; if (q > m + 1e-12) { m = q; best = [a]; } else if (Math.abs(q - m) <= 1e-12) best.push(a); }
+  return best.length === 1 || !rnd ? best[0] : best[Math.floor(rnd() * best.length)];
+}
+const maxQ = (Q, r, c) => Math.max(Q[qi(r, c, 0)], Q[qi(r, c, 1)], Q[qi(r, c, 2)], Q[qi(r, c, 3)]);
+function pasoTD(A, eps, alfa, gam) {
+  const eg = (r, c) => A.rnd() < eps ? Math.floor(A.rnd() * 4) : argmaxQ(A.Q, r, c, A.rnd);
+  if (A.a < 0) A.a = eg(A.r, A.c);
+  const { r, c, a } = A; const [nr, nc, rw, cae] = mover(r, c, a); const fin = esMeta(nr, nc);
+  A.ret += rw; A.t++;
+  let objetivo, na = -1;
+  if (A.metodo === 'sarsa') { na = eg(nr, nc); objetivo = rw + (fin ? 0 : gam * A.Q[qi(nr, nc, na)]); }
+  else { objetivo = rw + (fin ? 0 : gam * maxQ(A.Q, nr, nc)); }
+  A.Q[qi(r, c, a)] += alfa * (objetivo - A.Q[qi(r, c, a)]);
+  if (cae) A.estela.push([3, Math.min(NC - 1, Math.max(0, c + DC[a])), true], null);
+  A.r = nr; A.c = nc; A.estela.push([nr, nc]);
+  A.a = A.metodo === 'sarsa' ? na : -1;
+  if (fin || A.t >= 500) { A.rets.push(A.ret); A.ret = 0; A.t = 0; A.r = S0[0]; A.c = S0[1]; A.a = -1; A.estela = [[S0[0], S0[1]]]; return true; }
+  if (A.estela.length > 40) A.estela.shift();
+  return false;
+}
+RLW.tdVivo = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const GAM = 0.95;
+  const S = { eps: 0.1, alfa: 0.5, vel: 1, corre: false, semilla: 1, ag: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'ε', 0.01, 0.3, 0.01, S.eps, 2, v => { S.eps = v; });
+  slider(bar, 'α', 0.05, 0.9, 0.05, S.alfa, 2, v => { S.alfa = v; });
+  const lab = el('label', { class: 'rlw-sl', html: 'velocidad ' }, bar);
+  const sel = el('select', {}, lab);
+  [['1', '1 paso por cuadro'], ['8', '8 pasos por cuadro'], ['-1', '1 episodio por cuadro'], ['-10', '10 episodios por cuadro']].forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+  sel.addEventListener('change', () => { S.vel = +sel.value; });
+  const bPlay = button(bar, '▶ entrenar', () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ entrenar'; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ reiniciar', () => { S.semilla++; nuevo(); dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function nuevo() { S.ag = [agenteTD('sarsa', 1000 + S.semilla), agenteTD('q', 2000 + S.semilla)]; }
+  function avanza() {
+    S.ag.forEach(A => {
+      if (S.vel > 0) { for (let k = 0; k < S.vel; k++) pasoTD(A, S.eps, S.alfa, GAM); }
+      else { for (let e = 0; e < -S.vel; e++) { let n = 0; while (!pasoTD(A, S.eps, S.alfa, GAM) && n++ < 600); } }
+    });
+  }
+  function loop() { if (!S.corre) return; avanza(); dibuja(); requestAnimationFrame(loop); }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.56);
+    const cs = Math.min((w / 2 - 18) / NC, h * 0.5 / NR), Y = fs * 1.6;
+    const cols = [PAL.blue, PAL.orange], nombres = ['SARSA (on-policy)', 'Q-Learning (off-policy)'];
+    S.ag.forEach((A, i) => {
+      const X = i * w / 2 + (w / 2 - NC * cs) / 2;
+      const V = Array.from({ length: NR }, (_, r) => Array.from({ length: NC }, (_, c) => maxQ(A.Q, r, c)));
+      const ruta = rutaDesde((r, c) => { const qs = [0, 1, 2, 3].map(a => A.Q[qi(r, c, a)]); return Math.max(...qs) - Math.min(...qs) < 1e-9 ? -1 : argmaxQ(A.Q, r, c); });
+      dibujaMundo(g, X, Y, cs, { V, vmin: -25, flechas: (r, c) => { const qs = [0, 1, 2, 3].map(a => A.Q[qi(r, c, a)]); return Math.max(...qs) - Math.min(...qs) < 1e-9 ? -1 : argmaxQ(A.Q, r, c); },
+                                 ruta, rutaCol: cols[i], robot: [A.r, A.c], estela: A.estela });
+      txt(g, nombres[i] + ' · episodio ' + A.rets.length, X + NC * cs / 2, fs * 0.75, cols[i], 'center', fs, true);
+    });
+    const P = { x: fs * 4.2, y: Y + NR * cs + fs * 1.0, w: w - fs * 6, h: h - (Y + NR * cs) - fs * 3.6 };
+    const n = Math.max(...S.ag.map(A => A.rets.length)), X1 = Math.max(300, Math.ceil(n / 100) * 100);
+    const [px, py] = ejes(g, P, 0, X1, -150, 0, [0, X1 / 3, 2 * X1 / 3, X1].map(Math.round), [[0, '0'], [-50, '−50'], [-100, '−100'], [-150, '−150']], 'episodio', 'recompensa', fs);
+    S.ag.forEach((A, i) => {
+      const m = A.rets.map((_, j) => { const a = Math.max(0, j - 19), sl = A.rets.slice(a, j + 1); return sl.reduce((x, y) => x + y, 0) / sl.length; });
+      curva(g, m.map((_, j) => j + 1), m, px, py, cols[i], 2.5);
+    });
+    const med = A => { const sl = A.rets.slice(-50); return sl.length ? (sl.reduce((x, y) => x + y, 0) / sl.length).toFixed(1) : 'n/d'; };
+    const largo = A => { const rr = rutaDesde((r, c) => argmaxQ(A.Q, r, c)); return rr.llega ? `${rr.length - 1} pasos` : 'aún no llega'; };
+    read.innerHTML = `Recompensa media de los últimos 50 episodios: SARSA <b>${med(S.ag[0])}</b>, Q-Learning <b>${med(S.ag[1])}</b>. ` +
+      `Ruta codiciosa aprendida: SARSA ${largo(S.ag[0])}, Q-Learning ${largo(S.ag[1])}. Curvas: promedio móvil de 20 episodios.`;
+  }
+  nuevo(); onResize(root, dibuja); dibuja();
+};
+
+// ======================== 4. DQN EN VIVO ========================
+// Red 2 -> H -> H -> 4 con ReLU, entrada = (fila, columna) normalizadas; Adam, pérdida de Huber.
+function redNueva(H, rnd) {
+  const n = (k, s) => { const a = new Float64Array(k); for (let i = 0; i < k; i++) a[i] = gauss(rnd) * s; return a; };
+  return { H, W1: n(H * 2, 1), b1: new Float64Array(H), W2: n(H * H, Math.sqrt(2 / H)), b2: new Float64Array(H), W3: n(4 * H, Math.sqrt(1 / H)), b3: new Float64Array(4) };
+}
+function redCopia(m) { return { H: m.H, W1: m.W1.slice(), b1: m.b1.slice(), W2: m.W2.slice(), b2: m.b2.slice(), W3: m.W3.slice(), b3: m.b3.slice() }; }
+const CLAVES = ['W1', 'b1', 'W2', 'b2', 'W3', 'b3'];
+function entradas(r, c) { return [r / 3, c / 7]; }
+function redFwd(m, x, cache) {
+  const H = m.H, z1 = new Float64Array(H), h1 = new Float64Array(H), z2 = new Float64Array(H), h2 = new Float64Array(H), y = new Float64Array(4);
+  for (let i = 0; i < H; i++) { const z = m.W1[2 * i] * x[0] + m.W1[2 * i + 1] * x[1] + m.b1[i]; z1[i] = z; h1[i] = z > 0 ? z : 0; }
+  for (let i = 0; i < H; i++) { let z = m.b2[i]; const o = i * H; for (let j = 0; j < H; j++) z += m.W2[o + j] * h1[j]; z2[i] = z; h2[i] = z > 0 ? z : 0; }
+  for (let i = 0; i < 4; i++) { let z = m.b3[i]; const o = i * H; for (let j = 0; j < H; j++) z += m.W3[o + j] * h2[j]; y[i] = z; }
+  if (cache) { cache.x = x; cache.z1 = z1; cache.h1 = h1; cache.z2 = z2; cache.h2 = h2; }
+  return y;
+}
+function dqnNuevo(semilla, H) {
+  const rnd = mulberry32(semilla); const m = redNueva(H, rnd);
+  const zeros = () => { const o = {}; CLAVES.forEach(k => o[k] = new Float64Array(m[k].length)); return o; };
+  return { rnd, m, mt: redCopia(m), M: zeros(), V2: zeros(), G: zeros(), tA: 0, t: 0, D: [], r: S0[0], c: S0[1], epT: 0, hist: [], llegadas: 0 };
+}
+const DQN = { pasos: 40000, B: 32, buf: 5000, K: 500, lr: 2e-3, gam: 0.95, escala: 10 };
+function dqnPaso(A, replay, target) {
+  const P = DQN; A.t++;
+  const eps = Math.max(0.1, 1 - A.t / (0.3 * P.pasos));
+  const a = A.rnd() < eps ? Math.floor(A.rnd() * 4) : (() => { const q = redFwd(A.m, entradas(A.r, A.c)); let b = 0; for (let k = 1; k < 4; k++) if (q[k] > q[b]) b = k; return b; })();
+  const [nr, nc, rw] = mover(A.r, A.c, a); const fin = esMeta(nr, nc);
+  const tr = [A.r, A.c, a, rw / P.escala, nr, nc, fin];
+  if (replay) { if (A.D.length < P.buf) A.D.push(tr); else A.D[Math.floor(A.rnd() * P.buf)] = tr; } else A.D = [tr];
+  A.r = nr; A.c = nc; A.epT++;
+  if (fin) A.llegadas++;
+  if (fin || A.epT >= 200) { A.r = S0[0]; A.c = S0[1]; A.epT = 0; }
+  if (!replay || A.D.length >= P.B) {
+    const B = replay ? P.B : 1; const m = A.m, H = m.H, G = A.G;
+    CLAVES.forEach(k => G[k].fill(0));
+    const cache = {}, d3 = new Float64Array(4), d2 = new Float64Array(H), d1 = new Float64Array(H);
+    for (let s = 0; s < B; s++) {
+      const [r, c, ac, rr, sr, sc, f] = replay ? A.D[Math.floor(A.rnd() * A.D.length)] : A.D[0];
+      const qn = redFwd(target ? A.mt : m, entradas(sr, sc));
+      const T = rr + (f ? 0 : P.gam * Math.max(qn[0], qn[1], qn[2], qn[3]));
+      const y = redFwd(m, entradas(r, c), cache);
+      const e = y[ac] - T; d3.fill(0); d3[ac] = Math.max(-1, Math.min(1, e)) / B;     // gradiente de Huber
+      G.b3[ac] += d3[ac]; for (let j = 0; j < H; j++) G.W3[ac * H + j] += d3[ac] * cache.h2[j];
+      for (let j = 0; j < H; j++) d2[j] = cache.z2[j] > 0 ? m.W3[ac * H + j] * d3[ac] : 0;
+      for (let i = 0; i < H; i++) { if (d2[i] === 0) continue; G.b2[i] += d2[i]; const o = i * H; for (let j = 0; j < H; j++) G.W2[o + j] += d2[i] * cache.h1[j]; }
+      for (let j = 0; j < H; j++) { let z = 0; if (cache.z1[j] > 0) for (let i = 0; i < H; i++) z += m.W2[i * H + j] * d2[i]; d1[j] = z; }
+      for (let i = 0; i < H; i++) { G.b1[i] += d1[i]; G.W1[2 * i] += d1[i] * cache.x[0]; G.W1[2 * i + 1] += d1[i] * cache.x[1]; }
+    }
+    A.tA++; const b1 = 0.9, b2 = 0.999, c1 = 1 - Math.pow(b1, A.tA), c2 = 1 - Math.pow(b2, A.tA);
+    CLAVES.forEach(k => { const p = m[k], g = G[k], M = A.M[k], V = A.V2[k];
+      for (let i = 0; i < p.length; i++) { M[i] = b1 * M[i] + (1 - b1) * g[i]; V[i] = b2 * V[i] + (1 - b2) * g[i] * g[i]; p[i] -= P.lr * (M[i] / c1) / (Math.sqrt(V[i] / c2) + 1e-8); } });
+  }
+  if (target && A.t % P.K === 0) A.mt = redCopia(A.m);
+  if (A.t % 100 === 0) { const q = redFwd(A.m, entradas(S0[0], S0[1])); A.hist.push(P.escala * Math.max(q[0], q[1], q[2], q[3])); }
+}
+function dqnRuta(A) { return rutaDesde((r, c) => { const q = redFwd(A.m, entradas(r, c)); let b = 0; for (let k = 1; k < 4; k++) if (q[k] > q[b]) b = k; return b; }); }
+RLW.dqnVivo = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const QSTAR = evaluaPolitica(POLITICAS.borde.f, DQN.gam, 0)[S0[0]][S0[1]];
+  const S = { replay: true, target: true, corre: false, semilla: 1, A: null, vel: 120 };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  check(bar, 'repetición de experiencia', S.replay, v => { S.replay = v; reinicia(); });
+  check(bar, 'red objetivo', S.target, v => { S.target = v; reinicia(); });
+  const bPlay = button(bar, '▶ entrenar', () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ entrenar'; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ otra semilla', () => { S.semilla++; reinicia(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function reinicia() { S.A = dqnNuevo(100 + S.semilla, 32); dibuja(); }
+  function loop() {
+    if (!S.corre) return;
+    const t0 = performance.now();
+    while (S.A.t < DQN.pasos && performance.now() - t0 < 28) for (let k = 0; k < 20; k++) dqnPaso(S.A, S.replay, S.target);
+    if (S.A.t >= DQN.pasos) { S.corre = false; bPlay.textContent = '▶ entrenar'; }
+    dibuja(); if (S.corre) requestAnimationFrame(loop);
+  }
+  function dibuja() {
+    const fs = fsDe(root), A = S.A;
+    const { g, w, h } = fit(cv, 0.36);
+    const cs = Math.min((w * 0.52) / NC, (h - 8) / NR), X = 4, Y = 4;
+    const qs = []; for (let r = 0; r < NR; r++) { qs.push([]); for (let c = 0; c < NC; c++) qs[r].push(redFwd(A.m, entradas(r, c))); }
+    const V = qs.map(f => f.map(q => DQN.escala * Math.max(q[0], q[1], q[2], q[3])));
+    const fl = (r, c) => { const q = qs[r][c]; let b = 0; for (let k = 1; k < 4; k++) if (q[k] > q[b]) b = k; return b; };
+    const ruta = dqnRuta(A);
+    dibujaMundo(g, X, Y, cs, { V, vmin: -25, numeros: true, flechas: fl, ruta, rutaCol: ruta.llega ? PAL.green : PAL.red });
+    const P = { x: X + NC * cs + fs * 4.2, y: fs * 0.6, w: w - (X + NC * cs + fs * 4.2) - fs * 1.6, h: h - fs * 3.6 };
+    const [px, py] = ejes(g, P, 0, DQN.pasos, -40, 40, [0, 10000, 20000, 30000, 40000], [[40, '40'], [20, '20'], [0, '0'], [-20, '−20'], [-40, '−40']], 'paso de interacción', 'Q(S) estimado', fs);
+    curva(g, [0, DQN.pasos], [QSTAR, QSTAR], px, py, PAL.green, 2, [6, 5]);
+    curva(g, A.hist.map((_, i) => (i + 1) * 100), A.hist, px, py, PAL.blue, 2.5);
+    txt(g, `- - -  q*(S) = ${QSTAR.toFixed(2)}`, P.x + P.w - 6, P.y + fs * 0.9, PAL.green, 'right', fs * 0.85);
+    const q = A.hist.length ? A.hist[A.hist.length - 1] : NaN, eps = Math.max(0.1, 1 - A.t / (0.3 * DQN.pasos));
+    let s = `Paso <b>${A.t}</b> de ${DQN.pasos} · ε = ${eps.toFixed(2)} · Q(S) = <b>${isNaN(q) ? 'n/d' : q.toFixed(2)}</b> (q*(S) = ${QSTAR.toFixed(2)})`;
+    s += ruta.llega ? ` · la ruta codiciosa (verde) <b>llega a G en ${ruta.length - 1} pasos</b>` : ' · la ruta codiciosa (roja) <b>no llega</b> a G';
+    if (Math.abs(q) > 40) s += ' · <b style="color:#c0392b">los valores divergen</b>';
+    read.innerHTML = s;
+  }
+  reinicia(); onResize(root, dibuja);
+};
+
+// ======================== 5. TD(0) EN LA CAMINATA ALEATORIA ========================
+// Estados A..E (1..5) en línea, terminales 0 (recompensa 0) y 6 (recompensa 1), γ = 1.
+RLW.td0Caminata = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const REAL = [1, 2, 3, 4, 5].map(k => k / 6);
+  const S = { alfa: 0.1, V: null, pos: 3, ep: 0, rms: [], delta: null, anim: null, rnd: mulberry32(3), estela: [] };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'α', 0.02, 0.3, 0.01, S.alfa, 2, v => { S.alfa = v; });
+  const bPlay = button(bar, '▶ episodios animados', () => S.anim ? para() : play());
+  button(bar, '▶▶ 100 episodios', () => { para(); for (let k = 0; k < 100; k++) episodio(); dibuja(); });
+  button(bar, '↺ reiniciar', () => { para(); nuevo(); dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function nuevo() { S.V = [0.5, 0.5, 0.5, 0.5, 0.5]; S.pos = 3; S.ep = 0; S.rms = []; S.delta = null; S.estela = []; }
+  const rms = () => Math.sqrt(S.V.reduce((a, v, i) => a + (v - REAL[i]) ** 2, 0) / 5);
+  function paso() {                              // un paso de la caminata con su actualización TD(0)
+    const s = S.pos, sp = s + (S.rnd() < 0.5 ? -1 : 1);
+    const r = sp === 6 ? 1 : 0, vsp = (sp === 0 || sp === 6) ? 0 : S.V[sp - 1];
+    S.delta = { s, sp, r, d: r + vsp - S.V[s - 1] };
+    S.V[s - 1] += S.alfa * S.delta.d;
+    S.pos = sp; S.estela.push(sp);
+    if (sp === 0 || sp === 6) { S.ep++; S.rms.push(rms()); return true; }
+    return false;
+  }
+  function episodio() { S.pos = 3; S.estela = [3]; while (!paso()); S.pos = 3; }
+  function para() { if (S.anim) clearInterval(S.anim); S.anim = null; bPlay.textContent = '▶ episodios animados'; }
+  function play() {
+    bPlay.textContent = '⏸ pausa'; if (S.pos === 0 || S.pos === 6) S.pos = 3; S.estela = [S.pos];
+    S.anim = setInterval(() => { if (paso()) { S.pos = 3; S.estela = [3]; } dibuja(); }, 260);
+  }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.42);
+    // cadena de estados arriba
+    const y0 = fs * 2.9, xs = k => w * 0.06 + k * (w * 0.5) / 6, rr = fs * 1.1;
+    g.strokeStyle = PAL.faint; g.lineWidth = 2; g.beginPath(); g.moveTo(xs(0), y0); g.lineTo(xs(6), y0); g.stroke();
+    for (let k = 0; k <= 6; k++) {
+      const term = k === 0 || k === 6;
+      g.fillStyle = term ? '#e9e4d0' : '#e8f0fe'; g.strokeStyle = term ? PAL.faint : PAL.blue; g.lineWidth = 1.8;
+      g.beginPath(); if (term) g.rect(xs(k) - rr * 0.8, y0 - rr * 0.8, rr * 1.6, rr * 1.6); else g.arc(xs(k), y0, rr, 0, 7); g.fill(); g.stroke();
+      txt(g, term ? (k === 0 ? '0' : '1') : 'ABCDE'[k - 1], xs(k), y0, PAL.ink, 'center', fs, true);
+    }
+    txt(g, 'recompensa', xs(0), y0 + rr * 1.7, PAL.soft, 'center', fs * 0.8);
+    txt(g, 'recompensa', xs(6), y0 + rr * 1.7, PAL.soft, 'center', fs * 0.8);
+    if (S.anim || S.delta) { g.fillStyle = PAL.purple; g.beginPath(); g.arc(xs(S.pos), y0 - rr * 1.6, rr * 0.45, 0, 7); g.fill(); }
+    // barras de V
+    const P = { x: w * 0.06 + fs * 1.5, y: y0 + rr * 2.6, w: w * 0.5 - fs * 1.5, h: h - (y0 + rr * 2.6) - fs * 2.2 };
+    const [, py] = ejes(g, P, 0, 5, 0, 1, [], [[0, '0'], [0.5, '0.5'], [1, '1']], '', 'v(s)', fs);
+    const bw = P.w / 5;
+    S.V.forEach((v, i) => {
+      const x = P.x + i * bw;
+      g.fillStyle = S.delta && S.delta.s === i + 1 ? PAL.orange : 'rgba(78,121,167,0.8)';
+      g.fillRect(x + bw * 0.18, py(v), bw * 0.64, py(0) - py(v));
+      g.strokeStyle = PAL.ink; g.setLineDash([5, 4]); g.lineWidth = 2;
+      g.beginPath(); g.moveTo(x + bw * 0.08, py(REAL[i])); g.lineTo(x + bw * 0.92, py(REAL[i])); g.stroke(); g.setLineDash([]);
+      txt(g, 'ABCDE'[i], x + bw / 2, P.y + P.h + fs * 0.9, PAL.soft, 'center', fs * 0.9);
+    });
+    // error RMS a la derecha
+    const Q = { x: w * 0.62 + fs * 3, y: fs * 0.8, w: w * 0.38 - fs * 4.2, h: h - fs * 3.6 };
+    const X1 = Math.max(100, Math.ceil(S.ep / 100) * 100);
+    const [qx, qy] = ejes(g, Q, 0, X1, 0, 0.25, [0, X1 / 2, X1], [[0, '0'], [0.1, '0.1'], [0.2, '0.2']], 'episodio', 'error RMS', fs);
+    curva(g, S.rms.map((_, i) => i + 1), S.rms, qx, qy, PAL.blue, 2.5);
+    let s = `Episodios: <b>${S.ep}</b> · error RMS frente al valor verdadero: <b>${rms().toFixed(3)}</b>`;
+    if (S.delta) {
+      const n = k => k === 0 || k === 6 ? `terminal (r = ${k === 6 ? 1 : 0})` : 'ABCDE'[k - 1];
+      s += `<br>Último paso: ${n(S.delta.s)} → ${n(S.delta.sp)}, error TD δ = r + v(s′) − v(s) = <b>${S.delta.d.toFixed(3)}</b>; la barra naranja se movió α·δ = ${(S.alfa * S.delta.d).toFixed(3)}.`;
+    } else s += '<br>Las barras parten en 0.5; la línea punteada es el valor verdadero k/6.';
+    read.innerHTML = s;
+  }
+  nuevo(); onResize(root, dibuja); dibuja();
+};
+
+// ======================== 6. TRÍADA MORTAL: EL EJEMPLO w, 2w ========================
+RLW.triada = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const ALFA = 0.1, T = 150;
+  const S = { gam: 0.99, K: 20, t: 0, anim: null, a: [], b: [] };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'γ', 0.3, 0.99, 0.01, S.gam, 2, v => { S.gam = v; reinicia(); });
+  slider(bar, 'K', 1, 40, 1, S.K, 0, v => { S.K = v; reinicia(); });
+  const bPlay = button(bar, '▶ 150 pasos', () => { reinicia(); play(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function calcula() {                         // trayectorias completas de ambos esquemas
+    let w = 1; S.a = [1];
+    for (let t = 1; t <= T; t++) { w += ALFA * (2 * S.gam * w - w); S.a.push(w); }
+    let u = 1, uc = 1; S.b = [1];
+    for (let t = 1; t <= T; t++) { u += ALFA * (2 * S.gam * uc - u); if (t % S.K === 0) uc = u; S.b.push(u); }
+  }
+  function reinicia() { if (S.anim) clearInterval(S.anim); S.anim = null; calcula(); S.t = 0; dibuja(); }
+  function play() { S.anim = setInterval(() => { S.t = Math.min(T, S.t + 2); dibuja(); if (S.t >= T) { clearInterval(S.anim); S.anim = null; } }, 30); }
+  function nodo(g, x, y, r, etq, val, col) {
+    g.fillStyle = '#e8f0fe'; g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.stroke();
+    txt(g, etq, x, y - r * 0.28, PAL.ink, 'center', r * 0.42, true);
+    txt(g, val, x, y + r * 0.32, col, 'center', r * 0.36, true);
+  }
+  const fmt = v => Math.abs(v) >= 1e4 ? v.toExponential(1) : v.toFixed(2);
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, 0.38);
+    const r = Math.min(h * 0.13, w * 0.045), X0 = w * 0.07, X1 = w * 0.3;
+    const filas = [['sin red objetivo', S.a, PAL.orange, h * 0.27], ['con red objetivo', S.b, PAL.blue, h * 0.7]];
+    filas.forEach(([nom, arr, col, y]) => {
+      const wv = arr[S.t];
+      txt(g, nom, (X0 + X1) / 2, y - r * 1.55, col, 'center', fs, true);
+      nodo(g, X0, y, r, 'w', fmt(wv), col); nodo(g, X1, y, r, '2w', fmt(2 * wv), col);
+      arrowLine(g, X0 + r + 4, y, X1 - r - 4, y, PAL.ink);
+      txt(g, 'r = 0', (X0 + X1) / 2, y - fs * 0.7, PAL.soft, 'center', fs * 0.85);
+    });
+    const P = { x: w * 0.43, y: fs * 0.8, w: w * 0.55 - fs * 0.6, h: h - fs * 3.6 };
+    const [px, py] = ejes(g, P, 0, T, -3, 7, [0, 50, 100, 150], [[7, '10⁷'], [5, '10⁵'], [3, '10³'], [1, '10'], [-1, '0.1'], [-3, '10⁻³']], 'paso', '|w|', fs);
+    const lg = v => Math.log10(Math.max(1e-6, Math.abs(v)));
+    const ts = Array.from({ length: S.t + 1 }, (_, i) => i);
+    curva(g, ts, ts.map(i => lg(S.a[i])), px, py, PAL.orange, 3);
+    curva(g, ts, ts.map(i => lg(S.b[i])), px, py, PAL.blue, 3);
+    g.strokeStyle = 'rgba(78,121,167,0.35)'; g.lineWidth = 1;
+    for (let t = S.K; t <= S.t; t += S.K) { g.beginPath(); g.moveTo(px(t), P.y + P.h); g.lineTo(px(t), P.y + P.h - 8); g.stroke(); }
+    const f1 = 1 + ALFA * (2 * S.gam - 1), fK = 2 * S.gam - (2 * S.gam - 1) * Math.pow(1 - ALFA, S.K);
+    read.innerHTML = `α = 0.1. Factor por paso sin red objetivo: 1 + α(2γ − 1) = <b>${f1.toFixed(3)}</b>, es decir <b>${Math.pow(f1, S.K).toFixed(2)}</b> cada ${S.K} pasos. ` +
+      `Con red objetivo, factor por sincronización: 2γ − (2γ − 1)(1 − α)ᴷ = <b>${fK.toFixed(3)}</b>. Las marcas azules del eje son las sincronizaciones.`;
+  }
+  reinicia();
+  onResize(root, dibuja);
+};
+function arrowLine(g, x0, y0, x1, y1, col) {
+  g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1 - 8, y1); g.stroke();
+  g.beginPath(); g.moveTo(x1, y1); g.lineTo(x1 - 10, y1 - 5); g.lineTo(x1 - 10, y1 + 5); g.closePath(); g.fill();
+}
+
+
+// ======================== 7. PONG SIMPLIFICADO ========================
+// Cancha de 10 columnas × 8 filas; la paleta (2 casillas) está en la columna 10 y sube, queda o baja.
+// Golpear la pelota da +1; dejarla pasar da -1 y termina el episodio (también termina tras 20 golpes).
+const PX = 10, PY = 8, PL = 2, PNP = PY - PL + 1, PMAXG = 20, PGAM = 0.95;
+function pongSaque(rnd) { return [1 + Math.floor(rnd() * 3), 1 + Math.floor(rnd() * PY), 1, Math.floor(rnd() * 3) - 1, 1 + Math.floor(rnd() * PNP)]; }
+function pongPaso(s, a) {                 // a ∈ {0,1,2}: subir, quedarse, bajar
+  let [x, y, vx, vy, p] = s;
+  p = Math.min(PNP, Math.max(1, p + a - 1));
+  let nx = x + vx, ny = y + vy;
+  if (ny < 1) { ny = 2 - ny; vy = -vy; }
+  if (ny > PY) { ny = 2 * PY - ny; vy = -vy; }
+  if (nx < 1) { nx = 2 - nx; vx = 1; }
+  if (nx === PX) {
+    if (ny >= p && ny <= p + PL - 1) return [[nx, ny, -1, ny === p ? -1 : 1, p], 1, false];
+    return [[nx, ny, vx, vy, p], -1, true];
+  }
+  return [[nx, ny, vx, vy, p], 0, false];
+}
+const pongIdx = s => (((((s[0] - 1) * PY + s[1] - 1) * 2 + (s[2] === 1 ? 1 : 0)) * 3 + s[3] + 1) * PNP + s[4] - 1);
+const PNS = PX * PY * 2 * 3 * PNP;
+const pongSigue = s => s[1] < s[4] ? 0 : (s[1] > s[4] + PL - 1 ? 2 : 1);
+function pongEvalua(pol, n) {             // golpes promedio de la política codiciosa en n partidos fijos
+  const rnd = mulberry32(4242); let tot = 0;
+  for (let k = 0; k < n; k++) { let s = pongSaque(rnd), g = 0;
+    for (let t = 0; t < 2000; t++) { const [s2, r, fin] = pongPaso(s, pol(s)); if (r > 0) g++; if (fin || g >= PMAXG) break; s = s2; }
+    tot += g; }
+  return tot / n;
+}
+function dibujaCancha(g, X, Y, cs, s, estela, colPaleta) {
+  g.fillStyle = '#0f2a1d'; g.fillRect(X, Y, PX * cs, PY * cs);
+  g.strokeStyle = 'rgba(255,255,255,0.25)'; g.setLineDash([4, 6]); g.lineWidth = 1;
+  g.beginPath(); g.moveTo(X + PX * cs / 2, Y); g.lineTo(X + PX * cs / 2, Y + PY * cs); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#d9d9d9'; g.fillRect(X - 5, Y - 5, 5, PY * cs + 10); g.fillRect(X - 5, Y - 5, PX * cs + 5, 5); g.fillRect(X - 5, Y + PY * cs, PX * cs + 5, 5);
+  if (!s) return;
+  const cx = x => X + (x - 0.5) * cs, cy = y => Y + (y - 0.5) * cs;
+  (estela || []).forEach(([x, y], i, arr) => { g.fillStyle = `rgba(255,214,102,${0.12 + 0.5 * i / arr.length})`; g.beginPath(); g.arc(cx(x), cy(y), cs * 0.18, 0, 7); g.fill(); });
+  g.fillStyle = '#ffd666'; g.beginPath(); g.arc(cx(s[0]), cy(s[1]), cs * 0.3, 0, 7); g.fill();
+  g.fillStyle = colPaleta || '#8ecae6'; g.fillRect(X + (PX - 1) * cs + cs * 0.55, Y + (s[4] - 1) * cs + 2, cs * 0.35, PL * cs - 4);
+}
+function pongJuego(root, cfg) {           // armazón común de los dos widgets de Pong
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const S = { corre: false, vel: 1, s: null, estela: [], golpes: 0, partido: 0, rnd: mulberry32(cfg.semilla || 5), hist: [], marca: '' };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  cfg.controles(bar, S);
+  const lab = el('label', { class: 'rlw-sl', html: 'velocidad ' }, bar);
+  const sel = el('select', {}, lab);
+  cfg.velocidades.forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+  sel.addEventListener('change', () => { S.vel = +sel.value; });
+  S.vel = +cfg.velocidades[0][0];
+  const bPlay = button(bar, '▶ ' + cfg.verbo, () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ ' + cfg.verbo; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ reiniciar', () => { cfg.reinicia(S); S.s = null; S.golpes = 0; S.partido = 0; S.estela = []; dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  S.pasoJuego = () => {                    // un paso del partido que se muestra
+    if (!S.s) { S.s = pongSaque(S.rnd); S.golpes = 0; S.estela = []; }
+    const a = cfg.accion(S, S.s);
+    const [s2, r, fin] = pongPaso(S.s, a);
+    cfg.aprende && cfg.aprende(S, S.s, a, r, s2, fin);
+    if (r > 0) S.golpes++;
+    S.estela.push([s2[0], s2[1]]); if (S.estela.length > 7) S.estela.shift();
+    S.visible = s2;
+    if (fin || S.golpes >= PMAXG) { S.partido++; cfg.finPartido && cfg.finPartido(S, S.golpes); S.marca = fin ? `partido ${S.partido}: falló tras ${S.golpes} golpes` : `partido ${S.partido}: devolvió las ${PMAXG}`; S.s = null; return true; }
+    S.s = s2; return false;
+  };
+  function loop() {
+    if (!S.corre) return;
+    const t0 = performance.now();
+    if (S.vel > 0) for (let k = 0; k < S.vel; k++) S.pasoJuego();
+    else { let n = 0; while (n < -S.vel && performance.now() - t0 < 30) { if (S.pasoJuego()) n++; } }
+    if (cfg.alto && cfg.alto(S)) { S.corre = false; bPlay.textContent = '▶ ' + cfg.verbo; }
+    dibuja(); if (S.corre) setTimeout(() => requestAnimationFrame(loop), S.vel === 1 ? 90 : 0);
+  }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.4);
+    const cs = Math.min((w * 0.42) / PX, (h - fs * 2.2) / PY), X = 10, Y = fs * 1.6;
+    txt(g, S.marca || 'partido en curso', X + PX * cs / 2, fs * 0.7, PAL.soft, 'center', fs * 0.9);
+    dibujaCancha(g, X, Y, cs, S.s || S.visible, S.estela, cfg.colorPaleta);
+    const P = { x: X + PX * cs + fs * 4.4, y: fs * 0.6, w: w - (X + PX * cs + fs * 4.4) - fs * 1.6, h: h - fs * 3.6 };
+    cfg.grafico(g, P, fs, S);
+    read.innerHTML = cfg.lectura(S);
+  }
+  S.dibuja = dibuja; root._S = S;
+  cfg.reinicia(S); S.visible = pongSaque(mulberry32(3)); onResize(root, dibuja); dibuja();
+  return S;
+}
+function lineasRef(g, P, px, py, X1, refs, fs) {
+  refs.forEach(([v, col, etq]) => { curva(g, [0, X1], [v, v], px, py, col, 1.8, [6, 5]); txt(g, etq, P.x + P.w - 6, py(v) - fs * 0.6, col, 'right', fs * 0.8); });
+}
+RLW.pongQ = function (root) {
+  const REF_AZAR = pongEvalua(s => Math.floor(Math.random() * 3), 200), REF_SIGUE = pongEvalua(pongSigue, 200);
+  let jugador = 'q', eps = 0.1;
+  pongJuego(root, {
+    verbo: 'jugar', semilla: 7, colorPaleta: '#8ecae6',
+    velocidades: [['1', '1 paso por cuadro'], ['-1', '1 partido por cuadro'], ['-25', '25 partidos por cuadro'], ['-200', '200 partidos por cuadro']],
+    controles(bar, S) {
+      const lab = el('label', { class: 'rlw-sl', html: 'jugador ' }, bar);
+      const sel = el('select', {}, lab);
+      [['q', 'Q-Learning (aprende)'], ['sigue', 'seguir la pelota'], ['azar', 'al azar']].forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+      sel.addEventListener('change', () => { jugador = sel.value; S.marca = ''; S.dibuja(); });
+      slider(bar, 'ε', 0.01, 0.3, 0.01, eps, 2, v => { eps = v; });
+    },
+    reinicia(S) { S.Q = new Float64Array(PNS * 3); S.hist = []; S.marca = ''; S.rnd = mulberry32(7); },
+    accion(S, s) {
+      if (jugador === 'sigue') return pongSigue(s);
+      if (jugador === 'azar') return Math.floor(S.rnd() * 3);
+      if (S.rnd() < eps) return Math.floor(S.rnd() * 3);
+      const i = pongIdx(s) * 3; let b = 0; for (let k = 1; k < 3; k++) if (S.Q[i + k] > S.Q[i + b]) b = k; return b;
+    },
+    aprende(S, s, a, r, s2, fin) {
+      if (jugador !== 'q') return;
+      const i = pongIdx(s) * 3 + a, j = pongIdx(s2) * 3;
+      const obj = r + (fin ? 0 : PGAM * Math.max(S.Q[j], S.Q[j + 1], S.Q[j + 2]));
+      S.Q[i] += 0.5 * (obj - S.Q[i]);
+    },
+    finPartido(S) {
+      if (jugador === 'q' && S.partido % 50 === 0) {
+        const Q = S.Q; S.hist.push([S.partido, pongEvalua(s => { const i = pongIdx(s) * 3; let b = 0; for (let k = 1; k < 3; k++) if (Q[i + k] > Q[i + b]) b = k; return b; }, 40)]);
+      }
+    },
+    grafico(g, P, fs, S) {
+      const n = S.hist.length ? S.hist[S.hist.length - 1][0] : 0, X1 = Math.max(2000, Math.ceil(n / 1000) * 1000);
+      const [px, py] = ejes(g, P, 0, X1, 0, 21, [0, X1 / 2, X1], [[0, '0'], [5, '5'], [10, '10'], [15, '15'], [20, '20']], 'partidos de entrenamiento', 'golpes por partido', fs);
+      lineasRef(g, P, px, py, X1, [[REF_SIGUE, PAL.orange, 'seguir la pelota'], [REF_AZAR, PAL.faint, '']], fs);
+      curva(g, S.hist.map(z => z[0]), S.hist.map(z => z[1]), px, py, PAL.blue, 2.5);
+    },
+    lectura(S) {
+      let vis = 0; for (let i = 0; i < PNS; i++) if (S.Q[3 * i] || S.Q[3 * i + 1] || S.Q[3 * i + 2]) vis++;
+      const ult = S.hist.length ? S.hist[S.hist.length - 1][1].toFixed(1) : 'n/d';
+      return `Jugador: <b>${jugador === 'q' ? 'Q-Learning' : jugador === 'sigue' ? 'seguir la pelota' : 'al azar'}</b> · partidos jugados: ${S.partido} · ` +
+        `golpes por partido de la política codiciosa: <b>${ult}</b> (máximo ${PMAXG}; seguir la pelota: ${REF_SIGUE.toFixed(2)}, al azar: ${REF_AZAR.toFixed(2)}) · ` +
+        `estados con algún valor aprendido: ${vis} de ${PNS}.`;
+    },
+  });
+};
+RLW.pongDQN = function (root) {
+  let replay = true, target = true;
+  const PASOS = 30000, H = 32, LR = 1e-3, B = 32, CAP = 10000, K = 500;
+  const ent = s => [(s[0] - 1) / (PX - 1), (s[1] - 1) / (PY - 1), (s[2] + 1) / 2, (s[3] + 1) / 2, (s[4] - 1) / (PNP - 1)];
+  function nueva(rnd) {
+    const n = (k, sd) => { const a = new Float64Array(k); for (let i = 0; i < k; i++) a[i] = gauss(rnd) * sd; return a; };
+    return { W1: n(H * 5, Math.sqrt(2 / 5)), b1: new Float64Array(H), W2: n(H * H, Math.sqrt(2 / H)), b2: new Float64Array(H), W3: n(3 * H, Math.sqrt(1 / H)), b3: new Float64Array(3) };
+  }
+  const KS = ['W1', 'b1', 'W2', 'b2', 'W3', 'b3'];
+  const copia = m => { const o = {}; KS.forEach(k => o[k] = m[k].slice()); return o; };
+  function fwd(m, x, c) {
+    const z1 = new Float64Array(H), h1 = new Float64Array(H), z2 = new Float64Array(H), h2 = new Float64Array(H), y = new Float64Array(3);
+    for (let i = 0; i < H; i++) { let z = m.b1[i]; for (let j = 0; j < 5; j++) z += m.W1[i * 5 + j] * x[j]; z1[i] = z; h1[i] = z > 0 ? z : 0; }
+    for (let i = 0; i < H; i++) { let z = m.b2[i]; for (let j = 0; j < H; j++) z += m.W2[i * H + j] * h1[j]; z2[i] = z; h2[i] = z > 0 ? z : 0; }
+    for (let i = 0; i < 3; i++) { let z = m.b3[i]; for (let j = 0; j < H; j++) z += m.W3[i * H + j] * h2[j]; y[i] = z; }
+    if (c) Object.assign(c, { x, z1, h1, z2, h2 });
+    return y;
+  }
+  const argm = y => (y[1] > y[0] ? (y[2] > y[1] ? 2 : 1) : (y[2] > y[0] ? 2 : 0));
+  function entrenaPaso(S, tr) {
+    if (replay) { if (S.D.length < CAP) S.D.push(tr); else S.D[Math.floor(S.rnd() * CAP)] = tr; } else S.D = [tr];
+    if (replay && S.D.length < B) return;
+    const nb = replay ? B : 1, m = S.m, G = {}; KS.forEach(k => G[k] = new Float64Array(m[k].length));
+    const c = {}, d2 = new Float64Array(H), d1 = new Float64Array(H);
+    for (let b = 0; b < nb; b++) {
+      const [x, a, r, x2, fin] = replay ? S.D[Math.floor(S.rnd() * S.D.length)] : S.D[0];
+      const qn = fwd(target ? S.mt : m, x2), T = r + (fin ? 0 : PGAM * Math.max(qn[0], qn[1], qn[2]));
+      const y = fwd(m, x, c), e = Math.max(-1, Math.min(1, y[a] - T)) / nb;
+      G.b3[a] += e; for (let j = 0; j < H; j++) { G.W3[a * H + j] += e * c.h2[j]; d2[j] = c.z2[j] > 0 ? m.W3[a * H + j] * e : 0; }
+      for (let i = 0; i < H; i++) { if (!d2[i]) continue; G.b2[i] += d2[i]; for (let j = 0; j < H; j++) G.W2[i * H + j] += d2[i] * c.h1[j]; }
+      for (let j = 0; j < H; j++) { let z = 0; if (c.z1[j] > 0) for (let i = 0; i < H; i++) z += m.W2[i * H + j] * d2[i]; d1[j] = z; }
+      for (let i = 0; i < H; i++) { G.b1[i] += d1[i]; for (let j = 0; j < 5; j++) G.W1[i * 5 + j] += d1[i] * c.x[j]; }
+    }
+    S.tA++; const c1 = 1 - Math.pow(0.9, S.tA), c2 = 1 - Math.pow(0.999, S.tA);
+    KS.forEach(k => { const p = m[k], g = G[k], M = S.M[k], V = S.V[k];
+      for (let i = 0; i < p.length; i++) { M[i] = 0.9 * M[i] + 0.1 * g[i]; V[i] = 0.999 * V[i] + 0.001 * g[i] * g[i]; p[i] -= LR * (M[i] / c1) / (Math.sqrt(V[i] / c2) + 1e-8); } });
+  }
+  pongJuego(root, {
+    verbo: 'entrenar', semilla: 11, colorPaleta: '#f4a261',
+    velocidades: [['40', '40 pasos por cuadro'], ['1', '1 paso por cuadro'], ['200', '200 pasos por cuadro']],
+    controles(bar) {
+      check(bar, 'repetición de experiencia', replay, v => { replay = v; });
+      check(bar, 'red objetivo', target, v => { target = v; });
+    },
+    reinicia(S) {
+      S.rnd = mulberry32(11 + (S.sem = (S.sem || 0) + 1)); S.m = nueva(S.rnd); S.mt = copia(S.m);
+      S.M = {}; S.V = {}; KS.forEach(k => { S.M[k] = new Float64Array(S.m[k].length); S.V[k] = new Float64Array(S.m[k].length); });
+      S.D = []; S.t = 0; S.tA = 0; S.hist = []; S.marca = '';
+    },
+    accion(S, s) {
+      const eps = Math.max(0.05, 1 - S.t / (0.3 * PASOS));
+      return S.rnd() < eps ? Math.floor(S.rnd() * 3) : argm(fwd(S.m, ent(s)));
+    },
+    aprende(S, s, a, r, s2, fin) {
+      S.t++; entrenaPaso(S, [ent(s), a, r, ent(s2), fin]);
+      if (target && S.t % K === 0) S.mt = copia(S.m);
+      if (S.t % 2000 === 0) S.hist.push([S.t, pongEvalua(z => argm(fwd(S.m, ent(z))), 20)]);
+    },
+    alto: S => S.t >= PASOS,
+    grafico(g, P, fs, S) {
+      const [px, py] = ejes(g, P, 0, PASOS, 0, 21, [0, 10000, 20000, 30000], [[0, '0'], [5, '5'], [10, '10'], [15, '15'], [20, '20']], 'paso de interacción', 'golpes por partido', fs);
+      curva(g, S.hist.map(z => z[0]), S.hist.map(z => z[1]), px, py, PAL.orange, 2.5);
+    },
+    lectura(S) {
+      const ult = S.hist.length ? S.hist[S.hist.length - 1][1].toFixed(1) : 'n/d', eps = Math.max(0.05, 1 - S.t / (0.3 * PASOS));
+      return `Paso <b>${S.t}</b> de ${PASOS} · ε = ${eps.toFixed(2)} · golpes por partido de la política codiciosa: <b>${ult}</b> de ${PMAXG} ` +
+        `(evaluada cada 2000 pasos en 20 partidos). Los interruptores rigen desde el paso actual; reiniciar entrena una red nueva.`;
+    },
+  });
+};
+RLW._pong = { pongPaso, pongSaque, pongEvalua, pongSigue, PNS };
+
+})();
+
+</script>
+<script>
+document.querySelectorAll('[data-rlw]').forEach(el => RLW[el.dataset.rlw](el));
 </script>
 </body>
 </html>
