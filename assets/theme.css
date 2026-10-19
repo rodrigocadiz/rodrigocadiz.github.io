@@ -452,7 +452,7 @@ body.portal{height:auto;overflow-x:hidden;overflow-y:auto;background:var(--dark)
 .nowplaying span{font-size:13.5px;color:rgba(255,255,255,.58)}
 .nowplaying a{margin-left:auto;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#e0a49a;text-decoration:none;white-space:nowrap}
 .nowplaying a:hover{color:#fff}
-.picks{display:flex;flex-direction:column;gap:1px;max-height:none}
+.picks{display:flex;flex-direction:column;gap:1px;max-height:min(72vh,620px);overflow-y:auto}
 .pick{
   display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;color:#fff;
   padding:13px 4px;border-bottom:1px solid rgba(255,255,255,.14);font:inherit;transition:.16s;
@@ -509,3 +509,64 @@ div.album{display:block}
 .evyear{font-family:var(--display);font-weight:400;font-size:26px;margin:40px 0 0;scroll-margin-top:70px}
 .evyear:first-of-type{margin-top:18px}
 .album .atag{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-left:4px}
+
+/* ---------- double CD proposal (discography/proposal/) ---------- */
+.dossier .dhero{padding:clamp(56px,9vw,130px) 0 clamp(36px,5vw,60px);border-bottom:1px solid var(--line)}
+.dossier .dhero h1{font-size:clamp(44px,8vw,104px);line-height:.98;letter-spacing:-.03em;font-weight:300}
+.dossier .wt{display:inline-block;vertical-align:middle;font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);border:1px dashed var(--ink3);padding:4px 9px;margin-left:10px;font-weight:500;line-height:1.2}
+.dossier .dcomp{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);margin:14px 0 24px;color:var(--ink)}
+.dossier .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px 30px;margin:36px 0 0;padding:24px 0 0;border-top:1px solid var(--line)}
+.dossier .facts dt{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.dossier .facts dd{margin:0;font-size:15.5px}
+.dossier .djump{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:34px;font-size:13.5px}
+.dossier .djump a{color:var(--ink2);text-decoration:none;border-bottom:1px solid var(--line)}
+.dossier .djump a:hover{color:var(--accent);border-color:var(--accent)}
+.dossier .dsec{padding:clamp(44px,6vw,86px) 0;border-bottom:1px solid var(--line)}
+.dossier .dgrid{display:grid;grid-template-columns:minmax(180px,1fr) 2.6fr;gap:24px clamp(24px,5vw,80px)}
+.dossier .dlab .dno{display:block;font-family:var(--sans);font-size:12px;letter-spacing:.18em;color:var(--accent);font-weight:600;margin-bottom:8px}
+.dossier .dlab h2{font-size:clamp(26px,3vw,36px);line-height:1.1}
+.dossier .dbody{max-width:72ch}
+.dossier .prose p{margin:0 0 1em}
+.dossier .ph{font-style:normal;font-size:.86em;color:var(--ink3);border:1px dashed var(--ink3);border-radius:3px;padding:1px 7px;white-space:normal;display:inline}
+.dossier .discs{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,4vw,64px)}
+.dossier .disc .dh{border-bottom:2px solid var(--ink);padding-bottom:12px}
+.dossier .disc .dh h3{font-size:clamp(24px,2.6vw,32px);margin-top:6px}
+.dossier .trks{list-style:none;margin:0;padding:0}
+.dossier .trk{display:grid;grid-template-columns:2em 1fr auto;gap:0 14px;padding:16px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.dossier .tn{font-variant-numeric:tabular-nums;color:var(--ink3);font-size:14px}
+.dossier .tt{margin:0;font-family:var(--display);font-size:21px;line-height:1.2}
+.dossier .tt a{color:inherit;text-decoration:none}
+.dossier .tt a:hover{color:var(--accent)}
+.dossier .ty{font-family:var(--sans);font-size:13px;color:var(--ink3);margin-left:4px}
+.dossier .tf{margin:4px 0 0;font-size:15px;color:var(--ink)}
+.dossier .tnew{display:block;font-size:12.5px;letter-spacing:.04em;color:var(--accent)}
+.dossier .tp{margin:3px 0 0;font-size:14px;color:var(--ink2)}
+.dossier .td{font-variant-numeric:tabular-nums;font-size:15px;white-space:nowrap}
+.dossier .dt,.dossier .gt{display:flex;justify-content:space-between;margin:0;padding:12px 0;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);font-variant-numeric:tabular-nums}
+.dossier .gt{margin-top:34px;border-top:2px solid var(--ink);border-bottom:1px solid var(--line);font-size:15px;color:var(--ink);font-weight:600}
+.dossier .note{font-size:14px;color:var(--ink3);margin-top:16px;max-width:80ch}
+.dossier .wns{display:grid;gap:34px}
+.dossier .wn h3,.dossier .pf h3,.dossier .sess h3{font-size:24px}
+.dossier .wn h3 a{color:inherit;text-decoration:none}
+.dossier .wn .meta,.dossier .pf .meta,.dossier .sess .meta{margin:4px 0 12px}
+.dossier .pf+.pf{margin-top:34px}
+.dossier .sess{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px}
+.dossier .sess p{margin:0}
+.dossier .lgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.dossier .lgrid figure{margin:0}
+.dossier .lgrid figcaption{margin-top:9px;font-family:var(--display);font-size:18px}
+.dossier .lgrid figcaption span{display:block;font-family:var(--sans);font-size:13px;color:var(--ink3)}
+.dossier .contact{font-style:normal;font-size:17px;line-height:1.7}
+.dossier .contact a{color:var(--accent)}
+@media (max-width:900px){
+  .dossier .dgrid,.dossier .discs{grid-template-columns:1fr}
+  .dossier .lgrid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .dossier .lgrid{grid-template-columns:1fr}
+  .dossier .wt{display:block;width:max-content;margin:12px 0 0}
+  .dossier .tt{font-size:19px}
+}
+.dossier .note{border:0;background:none;padding:0}
+.dossier .wn .prose p:first-child,.dossier .pf .prose p:first-child{font-size:17px;line-height:1.68;color:var(--ink2)}
+.dossier .dt span+span,.dossier .gt span+span{text-transform:none}
