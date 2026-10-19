@@ -570,3 +570,4 @@ div.album{display:block}
 .dossier .note{border:0;background:none;padding:0}
 .dossier .wn .prose p:first-child,.dossier .pf .prose p:first-child{font-size:17px;line-height:1.68;color:var(--ink2)}
 .dossier .dt span+span,.dossier .gt span+span{text-transform:none}
+.listenbar[hidden]{display:none}

@@ -108,6 +108,16 @@ document.addEventListener('DOMContentLoaded',()=>{
         np.querySelector('span').textContent=btn.dataset.meta;
         const a=np.querySelector('a'); if(a) a.href=btn.dataset.href;
       }
+      /* the SoundCloud bar follows the selected work, and hides when it has no audio */
+      const lb=document.querySelector('.listenbar');
+      if(lb){
+        const sc=lb.querySelector('.sc');
+        if(btn.dataset.sc){
+          lb.hidden=false;
+          lb.querySelector('.kicker').textContent=btn.dataset.title;
+          if(sc.dataset.sc!==btn.dataset.sc){ sc.dataset.sc=btn.dataset.sc; delete sc.dataset.done; sc.innerHTML=''; mount(sc); }
+        } else { lb.hidden=true; }
+      }
     }));
   }
 
