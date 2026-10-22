@@ -121,6 +121,7 @@ p.note {
 .close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
 
 .slide-num { display: none; }
+.reveal .slides section.stack { padding: 0; }
 .reveal .controls { color: var(--ink-faint); }
 .reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
 /* --- visualizaciones interactivas --- */
@@ -163,10 +164,7 @@ p.note {
 <section>
 <h2>Aprender a decidir cuando las consecuencias llegan tarde</h2>
 <p>En el aprendizaje reforzado nadie entrega respuestas correctas: un agente actúa, recibe una recompensa numérica y debe descubrir qué secuencia de decisiones la hace más grande a largo plazo.</p>
-</section>
-<section>
-<h2>Go, robots y modelos de lenguaje comparten esta estructura</h2>
-<p>Los agentes que vencen en Go, los controladores de robots y el ajuste de modelos de lenguaje con retroalimentación humana (RLHF, <em>reinforcement learning from human feedback</em>) eligen acciones cuyo efecto se ve después.</p>
+<p>Los agentes que vencen en Go, los controladores de robots y el ajuste de modelos de lenguaje con retroalimentación humana (RLHF, <em>reinforcement learning from human feedback</em>) comparten esta estructura: eligen acciones cuyo efecto se ve después.</p>
 </section>
 <section>
 <div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
@@ -266,43 +264,22 @@ p.note {
 </section>
 <section>
 <div class="section-label">§ 2 · El ciclo agente-entorno</div>
-<h2>Una recompensa mal diseñada se cumple al pie de la letra</h2>
-<ul>
-  <li>Supóngase que cada paso valiera $+1$ en vez de $-1$, con la intención de premiar "avanzar".</li>
-  <li>Llegar a G en 9 pasos suma $1 + 0.95 + \dots + 0.95^8 \approx 7.4$; vagar sin llegar nunca suma $20$.</li>
-  <li>La mejor política deja de buscar la meta: maximiza la cifra y traiciona la intención. Esto se llama <em>reward hacking</em>.</li>
-</ul>
-<p class="note">Con $-1$ por paso, cada paso extra resta: la única forma de dejar de perder es llegar.</p>
-
-</section>
-<section>
-<div class="section-label">§ 2 · El ciclo agente-entorno</div>
-<h2>Algunas tareas terminan y otras no</h2>
-<ul>
-  <li>Cruzar el acantilado es <strong>episódico</strong>: termina en G y vuelve a empezar.</li>
-  <li>Regular una planta industrial es <strong>continuo</strong>: no termina nunca.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 2 · El ciclo agente-entorno</div>
 <h2>En una tarea continua, sumar todo deja de servir</h2>
 <ul>
-  <li>Supóngase que un controlador gana $+1$ por hora y otro, mejor, $+2$ por hora, para siempre.</li>
-  <li>Sumadas sin fin, ambas dan infinito: $1 + 1 + 1 + \cdots = \infty$ y $2 + 2 + 2 + \cdots = \infty$. La suma ya no distingue cuál es mejor.</li>
+  <li>Cruzar el acantilado es <strong>episódico</strong>, pues termina en G; regular una planta industrial es <strong>continuo</strong>: no termina nunca.</li>
+  <li>Si un controlador gana $+1$ por hora y otro, mejor, $+2$, para siempre, ambas sumas dan $\infty$ y ya no distinguen cuál es mejor.</li>
   <li>La salida es pesar menos lo lejano: si la hora $k$ pesa $0.95^k$, las sumas valen $20$ y $40$, finitas y comparables.</li>
 </ul>
 <p class="note">Ese peso decreciente es el descuento; aparece formalmente al definir el retorno.</p>
-
 </section>
 <section>
 <div class="section-label">§ 3 · Procesos de decisión de Markov</div>
 <h2>Un proceso de decisión de Markov describe el mundo con cinco objetos</h2>
 $$
-(\mathcal{S},\ \mathcal{A},\ P,\ R,\ \gamma)
+(\mathcal{S},\ \mathcal{A},\ P,\ r,\ \gamma)
 $$
 <ul>
-  <li>Un proceso de decisión de Markov (MDP, <em>Markov decision process</em>) reúne estados $\mathcal{S}$, acciones $\mathcal{A}$, dinámica $P(s_{t+1} \mid s_t, a_t)$, recompensa $R(s_t, a_t)$ y factor de descuento $\gamma$.</li>
+  <li>Un proceso de decisión de Markov (MDP, <em>Markov decision process</em>) reúne estados $\mathcal{S}$, acciones $\mathcal{A}$, dinámica $P(s_{t+1} \mid s_t, a_t)$, la recompensa $r_{t+1}$ que entrega el entorno tras cada acción y el factor de descuento $\gamma$.</li>
 </ul>
 <p class="note">En palabras: qué situaciones hay, qué se puede hacer, qué pasa al hacerlo, cuánto se gana y cuánto pesa el futuro. La <strong>dinámica</strong> $P$ es el "qué pasa": la probabilidad de cada estado siguiente.</p>
 
@@ -311,47 +288,16 @@ $$
 <div class="section-label">§ 3 · Procesos de decisión de Markov</div>
 <h2>En el acantilado hay 25 estados y 4 acciones</h2>
 <ul>
-  <li>Los estados son las casillas donde el robot puede estar: 32 menos las 6 del acantilado y la meta, que es terminal.</li>
-  <li>Las acciones son $\mathcal{A} = \{\uparrow, \downarrow, \leftarrow, \rightarrow\}$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
-<h2>Tres símbolos describen un movimiento</h2>
-<ul>
-  <li>$s$: la casilla donde está el robot; $a$: la acción que elige.</li>
-  <li>$s'$: la casilla donde queda después; la prima se lee "la siguiente".</li>
+  <li>Los estados son las casillas donde el robot puede estar: 32 menos las 6 del acantilado y la meta, que es terminal; las acciones son $\mathcal{A} = \{\uparrow, \downarrow, \leftarrow, \rightarrow\}$.</li>
+  <li>$s$ es la casilla donde está el robot, $a$ la acción que elige y $s'$ la casilla donde queda después; la prima se lee "la siguiente".</li>
 </ul>
 <p class="note">S y G, en mayúscula, no son variables: son los nombres de dos casillas fijas, la salida y la meta.</p>
-
-</section>
-<section>
-<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
-<h2>La función f dice adónde lleva cada acción</h2>
-<ul>
-  <li>$f(s,a)$ es la casilla a la que llega el robot si ejecuta $a$ desde $s$ sin resbalar.</li>
-  <li>Contra un borde se queda donde está: $f(s,a) = s$.</li>
-  <li>Si el movimiento cae al acantilado, vuelve a la salida: $f(s,a) = \mathrm{S}$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
-<h2>El indicador vale 1 cuando algo se cumple</h2>
-$$
-\mathbf{1}[\text{condición}] = \begin{cases} 1 & \text{si la condición se cumple} \\ 0 & \text{si no} \end{cases}
-$$
-<ul>
-  <li>$\mathbf{1}[s' = f(s,a)]$ vale 1 solo para la casilla adonde apunta la acción $a$, y 0 para todas las demás.</li>
-</ul>
-
 </section>
 <section>
 <div class="section-label">§ 3 · Procesos de decisión de Markov</div>
 <h2>Hay dos maneras de terminar en s'</h2>
 <ul>
-  <li><strong>No resbala</strong> (probabilidad $1-p$): ejecuta $a$ y llega a $s'$ si $f(s,a) = s'$.</li>
+  <li><strong>No resbala</strong> (probabilidad $1-p$): ejecuta $a$ y llega a $f(s,a)$, la casilla adonde lleva $a$ (la misma si choca con un borde, S si cae).</li>
   <li><strong>Resbala</strong> (probabilidad $p$): el azar elige una de las cuatro acciones $b$, cada una con probabilidad $\tfrac14$; aporta $\tfrac{p}{4}$ por cada $b$ que lleve a $s'$.</li>
 </ul>
 
@@ -359,6 +305,7 @@ $$
 <section>
 <div class="section-label">§ 3 · Procesos de decisión de Markov</div>
 <h2>Al sumar las dos maneras se obtiene la dinámica</h2>
+<ul><li>$\mathbf{1}[\cdot]$ vale 1 si se cumple lo que está adentro y 0 si no.</li></ul>
 $$
 P(s' \mid s, a) = \underbrace{(1-p)\, \mathbf{1}[s' = f(s,a)]}_{\text{no resbala}} \;+\; \underbrace{\frac{p}{4} \sum_{b \in \mathcal{A}} \mathbf{1}[s' = f(s,b)]}_{\text{resbala}}
 $$
@@ -408,15 +355,6 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 3 · Procesos de decisión de Markov</div>
-<h2>En Pong, una foto de la cancha no basta</h2>
-<ul>
-  <li>En un Pong simplificado, una paleta debe devolver una pelota que rebota en una cancha de casillas.</li>
-  <li>La posición de la pelota no dice si sube o baja: el estado de Markov debe incluir su velocidad.</li>
-</ul>
-
-</section>
-<section>
 <div class="section-label">§ 4 · Políticas</div>
 <h2>Una manera de cruzar es una política π(a | s)</h2>
 <ul>
@@ -428,7 +366,7 @@ $$
 <div class="section-label">§ 4 · Políticas</div>
 <h2>Las dos rutas son políticas deterministas</h2>
 <ul>
-  <li>Cada política pone una flecha en cada una de las 25 casillas: es una tabla que a cada estado le asigna una acción.</li>
+  <li>Una política es una tabla con una flecha en cada una de las 25 casillas, también fuera de la ruta, por si el robot resbala.</li>
 </ul>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -443,16 +381,6 @@ $$
   <text x="30" y="235" font-size="12" fill="#c0392b">marco rojo: el robot resbaló y quedó fuera de la ruta; la flecha de esa casilla le dice cómo seguir</text>
 </svg>
 </div>
-
-</section>
-<section>
-<div class="section-label">§ 4 · Políticas</div>
-<h2>La política también cubre las casillas fuera de la ruta</h2>
-<ul>
-  <li>La ruta es solo el recorrido cuando nada falla.</li>
-  <li>Al resbalar, el robot puede quedar en una casilla que la ruta no pisa; ahí también necesita saber qué hacer.</li>
-  <li>Por eso una política se define en <em>todo</em> estado: las flechas grises de las casillas sin color devuelven al robot a su camino.</li>
-</ul>
 
 </section>
 <section>
@@ -476,7 +404,7 @@ $$
 <div class="section-label">§ 4 · Políticas</div>
 <h2>Con azar, cada fila reparte la probabilidad</h2>
 <ul>
-  <li>Con probabilidad 0.2 el robot ignora la tabla y elige una de las cuatro acciones al azar.</li>
+  <li>Con probabilidad $\varepsilon = 0.2$ el robot ignora la tabla y elige una de las cuatro acciones al azar; esta regla se llama <strong>ε-greedy</strong> (ε-codiciosa).</li>
 </ul>
 <table class="ptab">
 <tr><th>casilla (fila, col.)</th><th class="ar">↑</th><th class="ar">↓</th><th class="ar">←</th><th class="ar">→</th></tr>
@@ -517,45 +445,36 @@ $$
 <ul>
   <li>Con $\gamma = 1$ todo pesa igual; con $\gamma &lt; 1$ una recompensa a $k$ pasos pesa $\gamma^{k}$.</li>
   <li>La suma de los pesos, $1/(1-\gamma)$, es el horizonte efectivo: 20 pasos con $\gamma = 0.95$, el valor que se usa en el acantilado.</li>
+  <li>Con recompensas acotadas y $\gamma &lt; 1$ la serie converge aunque la tarea no termine; además expresa que el futuro es incierto, como una tasa de interés.</li>
 </ul>
-
 </section>
 <section>
 <div class="section-label">§ 5 · El retorno descontado</div>
-<h2>Descontar asegura sumas finitas y prefiere lo inmediato</h2>
-<ul>
-  <li>Con recompensas acotadas y $\gamma &lt; 1$ la serie converge, aunque la tarea no termine.</li>
-  <li>También expresa que el futuro es incierto, como una tasa de interés.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 5 · El retorno descontado</div>
-<h2>Paso 1: sin resbalón, el borde paga nueve veces −1</h2>
+<h2>Sin resbalón, el borde paga nueve veces −1: −7.40</h2>
 $$
-G = -\left(1 + 0.95 + 0.95^2 + \cdots + 0.95^{8}\right)
-$$
-
-</section>
-<section>
-<div class="section-label">§ 5 · El retorno descontado</div>
-<h2>Paso 2: la suma geométrica da −7.40</h2>
-$$
-G = -\frac{1 - 0.95^{9}}{1 - 0.95} \approx -7.40
+\begin{aligned}
+G &= -\left(1 + 0.95 + 0.95^2 + \cdots + 0.95^{8}\right) \\
+&= -\frac{1 - 0.95^{9}}{1 - 0.95} \approx -7.40
+\end{aligned}
 $$
 <ul>
-  <li>Con el mismo cálculo y 13 pasos, la ruta segura obtiene $-9.73$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 5 · El retorno descontado</div>
-<h2>Cuatro pasos extra cuestan 2.33, no 4</h2>
-<ul>
-  <li>Llegan tarde, y el descuento los pesa menos.</li>
+  <li>Con el mismo cálculo y 13 pasos, la ruta segura obtiene $-9.73$: cuatro pasos extra cuestan 2.33, no 4, porque llegan tarde y el descuento los pesa menos.</li>
   <li>Sin resbalón, el borde gana.</li>
 </ul>
-
+</section>
+<section>
+<div class="section-label">§ 5 · El retorno descontado</div>
+<h2>Una recompensa mal diseñada se cumple al pie de la letra</h2>
+<ul>
+  <li>Si cada paso valiera $+1$ para premiar "avanzar", llegar cobra solo 9 pesos; sin llegar nunca, el robot cobra todos: el horizonte efectivo, $1/(1-\gamma) = 20$.</li>
+</ul>
+$$
+\underbrace{1 + 0.95 + \cdots + 0.95^{8}}_{\text{llegar en 9 pasos}} \approx 7.40 \;&lt;\; 20 = \underbrace{1 + 0.95 + 0.95^2 + \cdots}_{\text{vagar para siempre}}
+$$
+<ul>
+  <li>La mejor política deja de buscar la meta: maximiza la cifra y traiciona la intención. Esto se llama <em>reward hacking</em>.</li>
+</ul>
+<p class="note">Con $-1$ por paso, cada paso extra resta: la única forma de dejar de perder es llegar.</p>
 </section>
 <section>
 <div class="section-label">§ 5 · El retorno descontado</div>
@@ -572,6 +491,7 @@ $$
 $$
 v_\pi(s) = \mathbb{E}_\pi\left[\, G_t \mid s_t = s \,\right]
 $$
+<ul><li>La esperanza $\mathbb{E}[X] = \sum_x \Pr(X = x)\, x$ promedia los valores posibles, cada uno pesado por su probabilidad.</li></ul>
 <p class="note">En palabras: el valor de un estado es el retorno que se obtiene, en promedio, partiendo de él y siguiendo la política π.</p>
 
 </section>
@@ -579,8 +499,8 @@ $$
 <div class="section-label">§ 6 · Funciones de valor</div>
 <h2>El valor es, literalmente, el retorno promedio</h2>
 <ul>
-  <li>La línea negra punteada es el valor exacto $v_\pi(\mathrm{S})$: se calcula sin simular y no cambia.</li>
-  <li>La línea roja es el promedio de los retornos simulados: es aleatorio, por eso se mueve. Cada clic en +1000 episodios se suma a los anteriores y la roja se acerca a la negra.</li>
+  <li>La línea negra punteada es el valor exacto $v_\pi(\mathrm{S})$, calculado sin simular con ecuaciones que se deducen más adelante.</li>
+  <li>La línea roja promedia los retornos simulados y se acerca a la negra con cada clic en +1000 episodios; estimar así, jugando episodios y promediando, se llama <strong>Monte Carlo</strong>.</li>
 </ul>
 <div data-rlw="trayectoria" style="max-width:1060px"></div>
 
@@ -598,7 +518,7 @@ $$
 <div class="section-label">§ 6 · Funciones de valor</div>
 <h2>Las dos rutas empatan en p ≈ 0.019</h2>
 <ul>
-  <li>Curvas: valor exacto; puntos: promedio de 500 episodios; gris: el mejor valor posible.</li>
+  <li>Curvas: valor exacto; puntos: 500 episodios; gris: la mejor política, ni borde ni segura.</li>
 </ul>
 <div class="svg-holder">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4000 1720">
@@ -719,7 +639,7 @@ $$
 </g>
 <polyline clip-path="url(#vpclip940)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:12; stroke-opacity:1; fill:none" stroke-dasharray="48, 30" points="500.363,1215.79 736.833,1215.79 "/>
 <g clip-path="url(#vpclip940)">
-<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 776.245, 1241.79)" x="776.245" y="1241.79">óptimo v*(S)</text>
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 776.245, 1241.79)" x="776.245" y="1241.79">mejor política posible</text>
 </g>
 <circle clip-path="url(#vpclip940)" cx="618.598" cy="1291.24" r="31.9015" fill="#ff8c00" fill-rule="evenodd" fill-opacity="1" stroke="#000000" stroke-opacity="1" stroke-width="5.08062"/>
 <g clip-path="url(#vpclip940)">
@@ -731,6 +651,36 @@ $$
 </g>
 </svg>
 
+</div>
+
+</section>
+<section>
+<div class="section-label">§ 6 · Funciones de valor</div>
+<h2>La mejor política cruza por una tercera ruta</h2>
+<ul>
+  <li>Por la segunda fila son 11 pasos, solo 2 más que el borde, y un resbalón no la lanza al vacío.</li>
+</ul>
+<div class="svg-holder">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <pattern id="hatch3r" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#f4cccc"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c0392b" stroke-width="2" opacity="0.5"/></pattern>
+    <marker id="t3e65100" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#e65100"/></marker><marker id="t32e7d32" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2e7d32"/></marker><marker id="t31565c0" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#1565c0"/></marker><marker id="t3555555" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#555555"/></marker>
+  </defs>
+  <rect x="40" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="90" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="140" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="190" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="240" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="290" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="340" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="390" y="22" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="40" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="90" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="140" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="190" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="240" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="290" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="340" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="390" y="72" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="40" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="90" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="140" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="190" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="240" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="290" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="340" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="390" y="122" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="40" y="172" width="50" height="50" fill="#fffdf5" stroke="#b8b2a0"/><rect x="90" y="172" width="50" height="50" fill="url(#hatch3r)" stroke="#b8b2a0"/><rect x="140" y="172" width="50" height="50" fill="url(#hatch3r)" stroke="#b8b2a0"/><rect x="190" y="172" width="50" height="50" fill="url(#hatch3r)" stroke="#b8b2a0"/><rect x="240" y="172" width="50" height="50" fill="url(#hatch3r)" stroke="#b8b2a0"/><rect x="290" y="172" width="50" height="50" fill="url(#hatch3r)" stroke="#b8b2a0"/><rect x="340" y="172" width="50" height="50" fill="url(#hatch3r)" stroke="#b8b2a0"/><rect x="390" y="172" width="50" height="50" fill="#d9efd9" stroke="#b8b2a0"/>
+  <text x="215" y="203" text-anchor="middle" font-size="14" font-weight="bold" fill="#7a1a1a">acantilado</text>
+  <text x="65" y="203" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a3a5c">S</text>
+  <text x="415" y="203" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a4d1a">G</text>
+  <polyline points="72,197 72,47 422,47 422,197" fill="none" stroke="#1565c0" stroke-width="4" stroke-linejoin="round" marker-end="url(#t31565c0)"/>
+  <polyline points="65,197 65,97 415,97 415,197" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linejoin="round" marker-end="url(#t32e7d32)"/>
+  <polyline points="58,197 58,147 408,147 408,197" fill="none" stroke="#e65100" stroke-width="4" stroke-linejoin="round" marker-end="url(#t3e65100)"/>
+  <line x1="265" y1="101" x2="265" y2="135" stroke="#555555" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#t3555555)"/>
+  <text x="470" y="50" font-size="15" font-weight="bold" fill="#e65100">ruta del borde: 9 pasos, junto al vacío</text>
+  <text x="470" y="80" font-size="15" font-weight="bold" fill="#2e7d32">segunda fila: 11 pasos</text>
+  <text x="470" y="110" font-size="15" font-weight="bold" fill="#1565c0">ruta segura: 13 pasos, fila superior</text>
+  <text x="470" y="160" font-size="14" fill="#1a1a1a">flecha gris: desde la segunda fila,</text>
+  <text x="470" y="180" font-size="14" fill="#1a1a1a">un resbalón hacia ↓ deja al robot</text>
+  <text x="470" y="200" font-size="14" fill="#1a1a1a">junto al vacío, no adentro</text>
+</svg>
 </div>
 
 </section>
@@ -758,19 +708,16 @@ $$
 </section>
 <section>
 <div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>¿Se puede calcular v sin simular episodios?</h2>
+<h2>¿Se puede calcular v sin simular? Paso 1: el retorno es un paso más el resto</h2>
+$$
+\begin{aligned}
+G_t &= r_{t+1} + \gamma\, r_{t+2} + \gamma^2\, r_{t+3} + \cdots \\
+&= r_{t+1} + \gamma \left( r_{t+2} + \gamma\, r_{t+3} + \cdots \right) = r_{t+1} + \gamma\, G_{t+1}
+\end{aligned}
+$$
 <ul>
-  <li>Sí: el retorno tiene una estructura recursiva, y el valor la hereda.</li>
+  <li>Sí: al sacar $\gamma$ de factor común, $\gamma^2 r_{t+3}$ queda como $\gamma \cdot \gamma\, r_{t+3}$, y el paréntesis es el retorno que empieza un paso después, $G_{t+1}$.</li>
 </ul>
-
-</section>
-<section>
-<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>Paso 1: el retorno es un paso más el resto</h2>
-$$
-G_t = r_{t+1} + \gamma \left( r_{t+2} + \gamma\, r_{t+3} + \cdots \right) = r_{t+1} + \gamma\, G_{t+1}
-$$
-
 </section>
 <section>
 <div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
@@ -783,20 +730,7 @@ $$
 </section>
 <section>
 <div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>Paso 3: abrir una esperanza es escribirla como suma</h2>
-$$
-\mathbb{E}[X] = \sum_x \Pr(X = x)\, x
-$$
-<ul>
-  <li>La esperanza de una variable aleatoria es el promedio de sus valores posibles, cada uno pesado por su probabilidad.</li>
-  <li>Ejemplo: un dado justo da $\mathbb{E}[X] = \tfrac{1}{6}(1 + 2 + \cdots + 6) = 3.5$.</li>
-  <li><b>Abrir</b> la esperanza es reemplazar el símbolo $\mathbb{E}$ por esa suma explícita: el valor no cambia, pero las probabilidades quedan a la vista.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>Paso 4: la esperanza de una suma se separa</h2>
+<h2>Paso 3: la esperanza de una suma se separa</h2>
 $$
 v_\pi(s) = \mathbb{E}_\pi\left[\, r_{t+1} \mid s_t = s \,\right] + \gamma\, \mathbb{E}_\pi\left[\, v_\pi(s_{t+1}) \mid s_t = s \,\right]
 $$
@@ -808,17 +742,16 @@ $$
 </section>
 <section>
 <div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>Paso 5: en un paso hay dos sorteos</h2>
+<h2>Paso 4: en un paso hay dos sorteos</h2>
 <ul>
-  <li>Primero la política sortea la acción: $a$ ocurre con probabilidad $\pi(a \mid s)$.</li>
-  <li>Después el entorno sortea el estado siguiente: $s'$ ocurre con probabilidad $P(s' \mid s, a)$.</li>
-  <li>Abrir cada esperanza significa sumar sobre ambos sorteos, en ese orden.</li>
+  <li>Primero la política sortea la acción: $a$ ocurre con probabilidad $\pi(a \mid s)$; después el entorno sortea el estado siguiente: $s'$ ocurre con probabilidad $P(s' \mid s, a)$.</li>
+  <li><b>Abrir</b> una esperanza es reemplazar $\mathbb{E}$ por la suma que la define, $\sum_x \Pr(X = x)\, x$: el valor no cambia, pero las probabilidades quedan a la vista.</li>
+  <li>Aquí, abrir cada esperanza significa sumar sobre ambos sorteos, en ese orden.</li>
 </ul>
-
 </section>
 <section>
 <div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>Paso 6: la recompensa promedio de una acción se llama r(s, a)</h2>
+<h2>Paso 5: la recompensa promedio de una acción se llama r(s, a)</h2>
 $$
 r(s, a) = \mathbb{E}\left[\, r_{t+1} \mid s_t = s,\, a_t = a \,\right]
 $$
@@ -830,7 +763,7 @@ $$
 </section>
 <section>
 <div class="section-label">§ 7 · Las ecuaciones de Bellman</div>
-<h2>Paso 7: abrir ambas esperanzas da la ecuación de Bellman</h2>
+<h2>Paso 6: abrir ambas esperanzas da la ecuación de Bellman</h2>
 $$
 v_\pi(s) = \sum_{a} \pi(a \mid s) \Big( r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, v_\pi(s') \Big)
 $$
@@ -900,112 +833,7 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 8 · Valores y políticas óptimos</div>
-<h2>La mejor ruta maximiza el valor en todos los estados</h2>
-$$
-v_*(s) = \max_\pi\, v_\pi(s), \qquad q_*(s, a) = \max_\pi\, q_\pi(s, a)
-$$
-<ul>
-  <li>Todo MDP tiene una política óptima $\pi_*$ determinista, mejor o igual que todas en cada estado.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Valores y políticas óptimos</div>
-<h2>Para la política óptima, el promedio se vuelve un máximo</h2>
-$$
-q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, \max_{a'} q_*(s', a')
-$$
-<p class="note">En palabras: una acción vale lo que paga ahora más lo mejor que se puede hacer desde donde deja al robot.</p>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Valores y políticas óptimos</div>
-<h2>De q* se obtiene la política óptima</h2>
-$$
-\pi_*(s) = \arg\max_{a}\, q_*(s, a)
-$$
-<ul>
-  <li>Lo que se obtiene es una <b>política</b>: la regla $\pi_*$ que asigna a cada estado $s$ la acción que el robot debe tomar.</li>
-  <li>$\arg\max_a$ no entrega el valor máximo, sino la acción $a$ que lo alcanza.</li>
-  <li>Elegir siempre la acción de mayor $q_*$ se llama actuar de forma <b>codiciosa</b>; respecto de $q_*$, eso es óptimo.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Valores y políticas óptimos</div>
-<h2>Con v* también se obtiene, pero hace falta el modelo</h2>
-$$
-\pi_*(s) = \arg\max_{a}\, \Big( r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, v_*(s') \Big)
-$$
-<ul>
-  <li>$v_*$ solo dice cuánto vale cada estado; para comparar acciones hay que mirar un paso adelante y saber adónde lleva cada una.</li>
-  <li>Eso exige conocer $P$ y $r$. Con $q_*$ la comparación ya está hecha: no se necesita el modelo, y por eso los métodos sin modelo aprenden $q$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Iteración de valor</div>
-<h2>¿Cómo se resuelve una ecuación con un máximo adentro?</h2>
-<ul>
-  <li>Ya no es lineal; la idea es aplicarla repetidamente, partiendo de $v_0 = 0$.</li>
-</ul>
-$$
-v_{k+1} = T v_k, \qquad (T v)(s) = \max_a \Big[ r(s,a) + \gamma \sum_{s'} P(s' \mid s, a)\, v(s') \Big]
-$$
-
-</section>
-<section>
-<div class="section-label">§ 9 · Iteración de valor</div>
-<h2>Paso 1: dos máximos no se alejan más que sus funciones</h2>
-$$
-\big|\max_a f(a) - \max_a g(a)\big| \le \max_a \big|f(a) - g(a)\big|
-$$
-<ul>
-  <li>Si $\max f \ge \max g$ y $a^\star$ maximiza $f$: $\;0 \le \max f - \max g \le f(a^\star) - g(a^\star)$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Iteración de valor</div>
-<h2>Paso 2: T acerca dos estimaciones por un factor γ</h2>
-$$
-|(Tv)(s) - (Tw)(s)| \le \max_a \gamma \sum_{s'} P(s' \mid s,a)\, |v(s') - w(s')| \le \gamma\, \|v - w\|_\infty
-$$
-<ul>
-  <li>La recompensa se cancela y las probabilidades suman uno; $\|v\|_\infty = \max_s |v(s)|$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Iteración de valor</div>
-<h2>Paso 3: el error cae como γᵏ desde cualquier inicio</h2>
-$$
-\|v_k - v_*\|_\infty \le \gamma^{k}\, \|v_0 - v_*\|_\infty
-$$
-<p class="note">En palabras: T es una contracción; su único punto fijo es v*, y cada barrido recorta el error al menos en un factor γ.</p>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Iteración de valor</div>
-<h2>Iteración de valor, barrido a barrido</h2>
-<ul>
-  <li>Color y número: $v_k(s)$; flechas: acción codiciosa; derecha: cambio máximo frente a $\gamma^k$.</li>
-</ul>
-<div data-rlw="iteracionValor" style="max-width:1120px"></div>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Iteración de valor</div>
-<h2>El valor se propaga desde la meta</h2>
-<ul>
-  <li>Sin resbalón, una casilla por barrido: S recibe su valor $-7.40$ en el noveno.</li>
-  <li>La ruta óptima es el borde si $p &lt; 0.0125$, la segunda fila hasta $p \approx 0.18$ y la fila superior después.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 10 · Mejora de la política</div>
+<div class="section-label">§ 8 · Mejora de la política</div>
 <h2>Mejorar una política: elegir de forma codiciosa según su q</h2>
 $$
 \pi'(s) = \arg\max_{a}\, q_\pi(s, a)
@@ -1018,7 +846,7 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 10 · Mejora de la política</div>
+<div class="section-label">§ 8 · Mejora de la política</div>
 <h2>Teorema de mejora de la política</h2>
 $$
 q_\pi(s, \pi'(s)) \ge v_\pi(s) \;\;\text{en todo } s \quad\Longrightarrow\quad v_{\pi'}(s) \ge v_\pi(s) \;\;\text{en todo } s
@@ -1030,7 +858,8 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 10 · Mejora de la política</div>
+<section>
+<div class="section-label">§ 8 · Mejora de la política</div>
 <h2>La política codiciosa cumple la hipótesis</h2>
 $$
 q_\pi(s, \pi'(s)) = \max_{a}\, q_\pi(s, a) \;\ge\; \sum_{a} \pi(a \mid s)\, q_\pi(s, a) = v_\pi(s)
@@ -1042,8 +871,8 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 10 · Mejora de la política</div>
-<h2>Demostración: aplicar la hipótesis paso a paso</h2>
+<div class="section-label">§ 8 · Mejora de la política</div>
+<h2>Demostración: aplicar la hipótesis un paso más adelante cada vez</h2>
 $$
 \begin{aligned}
 v_\pi(s) &\le q_\pi(s, \pi'(s)) = \mathbb{E}\big[ r_{t+1} + \gamma\, v_\pi(s_{t+1}) \mid s_t = s,\, a_t = \pi'(s) \big] \\
@@ -1054,91 +883,201 @@ $$
 <p class="note">En palabras: cada desigualdad reemplaza la acción de π por la de π′ un paso más adelante.</p>
 
 </section>
+</section>
 <section>
-<div class="section-label">§ 10 · Mejora de la política</div>
+<div class="section-label">§ 8 · Mejora de la política</div>
 <h2>Si la mejora ya no cambia nada, la política es óptima</h2>
 <ul>
-  <li>Entonces $v_\pi(s) = \max_a q_\pi(s,a)$ en todo estado: la ecuación de optimalidad.</li>
-  <li>Alternar evaluación y mejora es la <strong>iteración de políticas</strong>.</li>
+  <li>Entonces $v_\pi(s) = \max_a q_\pi(s,a)$ en todo estado: ninguna acción rinde más que lo que la política ya hace, y esa es justamente la condición que cumple la política óptima.</li>
+  <li>Alternar evaluación, resolviendo Bellman, y mejora, volviéndose codiciosa, se llama <strong>iteración de políticas</strong>.</li>
 </ul>
 
 </section>
 <section>
-<div class="section-label">§ 10 · Mejora de la política</div>
+<div class="section-label">§ 8 · Mejora de la política</div>
 <h2>En el acantilado, dos mejoras llevan del borde al óptimo</h2>
 <ul>
   <li>Con $p = 0.1$ el borde vale $-24.71$; la primera mejora hace subir en la casilla sobre S, y la política vale $-13.41$.</li>
-  <li>La segunda la lleva por la segunda fila: $-12.54 = v_*(S)$; una tercera ya no cambia nada.</li>
+  <li>La segunda la lleva por la segunda fila y vale $-12.54$; una tercera mejora ya no cambia nada: ninguna política lo hace mejor.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Valores y políticas óptimos</div>
+<h2>La mejor ruta maximiza el valor en todos los estados</h2>
+$$
+v_*(s) = \max_\pi\, v_\pi(s), \qquad q_*(s, a) = \max_\pi\, q_\pi(s, a)
+$$
+<ul>
+  <li>Todo MDP tiene una política óptima $\pi_*$ determinista, mejor o igual que todas en cada estado.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Valores y políticas óptimos</div>
+<h2>Desde s, lo mejor es elegir la mejor acción</h2>
+$$
+v_*(s) = \max_a\, q_*(s, a)
+$$
+<ul>
+  <li>$q_*(s,a)$ ya supone seguir de forma óptima después de $a$; solo falta elegir bien la primera acción.</li>
+</ul>
+<p class="note">En palabras: un estado vale lo que vale su mejor acción.</p>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Valores y políticas óptimos</div>
+<h2>Paso 1: tomar a, cobrar y seguir de forma óptima</h2>
+$$
+q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, v_*(s')
+$$
+<ul>
+  <li>Tomar $a$ paga en promedio $r(s,a)$; el entorno sortea $s'$ con probabilidad $P(s' \mid s,a)$, y desde ahí lo mejor posible vale $v_*(s')$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Valores y políticas óptimos</div>
+<h2>Paso 2: al reemplazar v* por su máximo, queda una ecuación para q*</h2>
+$$
+q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, \max_{a'} q_*(s', a')
+$$
+<ul>
+  <li>Dentro de la suma del Paso 1 se sustituye $v_*(s') = \max_{a'} q_*(s', a')$.</li>
+</ul>
+<p class="note">En palabras: una acción vale lo que paga ahora más lo mejor que se puede hacer desde donde deja al robot.</p>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Valores y políticas óptimos</div>
+<h2>Paso 3: al revés, queda la ecuación de optimalidad de v*</h2>
+$$
+v_*(s) = \max_a \Big[ r(s,a) + \gamma \sum_{s'} P(s' \mid s, a)\, v_*(s') \Big]
+$$
+<ul>
+  <li>Se sustituye el Paso 1 dentro de $v_*(s) = \max_a q_*(s,a)$: es la <strong>ecuación de optimalidad de Bellman</strong>.</li>
+  <li>Frente a la ecuación de $v_\pi$, el promedio sobre acciones pesado por $\pi$ se vuelve un máximo.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Valores y políticas óptimos</div>
+<h2>De q* se obtiene la política óptima</h2>
+$$
+\pi_*(s) = \arg\max_{a}\, q_*(s, a)
+$$
+<ul>
+  <li>Lo que se obtiene es una <b>política</b>: la regla $\pi_*$ que asigna a cada estado $s$ la acción que el robot debe tomar.</li>
+  <li>$\arg\max_a$ no entrega el valor máximo, sino la acción $a$ que lo alcanza.</li>
+  <li>Es actuar de forma codiciosa respecto de $q_*$; como $q_*$ ya mide el futuro óptimo, aquí lo codicioso es lo óptimo.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Valores y políticas óptimos</div>
+<h2>Con v* también se obtiene, pero hace falta el modelo</h2>
+$$
+\pi_*(s) = \arg\max_{a}\, \Big( r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, v_*(s') \Big)
+$$
+<ul>
+  <li>$v_*$ solo dice cuánto vale cada estado; para comparar acciones hay que mirar un paso adelante y saber adónde lleva cada una.</li>
+  <li>Eso exige conocer $P$ y $r$. Con $q_*$ la comparación ya está hecha: no se necesita el modelo, y por eso los métodos sin modelo aprenden $q$.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Iteración de valor</div>
+<h2>Una ecuación con un máximo adentro se resuelve iterando</h2>
+$$
+(T v)(s) = \max_a \Big[ r(s,a) + \gamma \sum_{s'} P(s' \mid s, a)\, v(s') \Big], \qquad v_{k+1} = T v_k,\;\; v_0 = 0
+$$
+<ul>
+  <li>El operador $T$ aplica a una tabla de valores $v$ el lado derecho de la ecuación de optimalidad; el máximo lo vuelve no lineal.</li>
+  <li>La ecuación se lee $v_* = T v_*$: $v_*$ es un <strong>punto fijo</strong> de $T$, una tabla que $T$ deja igual.</li>
+  <li>Aplicar $T$ una y otra vez, un <strong>barrido</strong> por todas las casillas cada vez, es la <strong>iteración de valor</strong>; cada barrido acerca la tabla a $v_*$ al menos en un factor $\gamma$ ($T$ es una <strong>contracción</strong>), así que llega desde cualquier inicio.</li>
+</ul>
+</section>
+<section>
+<div class="section-label">§ 10 · Iteración de valor</div>
+<h2>Iteración de valor, barrido a barrido</h2>
+<ul>
+  <li>Color y número: $v_k(s)$; flechas: acción codiciosa; derecha: cambio máximo frente a $\gamma^k$.</li>
+</ul>
+<div data-rlw="iteracionValor" style="max-width:1120px"></div>
+
+</section>
+<section>
+<div class="section-label">§ 10 · Iteración de valor</div>
+<h2>El valor se propaga desde la meta</h2>
+<ul>
+  <li>Sin resbalón, una casilla por barrido: S recibe su valor $-7.40$ en el noveno.</li>
+  <li>Al subir $p$ la ruta codiciosa se aleja del vacío: el borde si $p &lt; 0.0125$, la segunda fila hasta $p \approx 0.18$ y la fila superior después.</li>
+  <li>En $p \approx 0.019$ solo empatan el borde y la fila superior; la segunda fila le gana al borde antes, porque cuesta 2 pasos más y un resbalón la deja junto al vacío, no adentro.</li>
 </ul>
 
 </section>
 <section>
 <div class="section-label">§ 11 · Un mapa de los métodos</div>
-<h2>Los métodos se ordenan según qué saben y qué aprenden</h2>
+<h2>Tres preguntas ubican cada método</h2>
 <ul>
-  <li>Con modelo se conoce o aprende $P$; sin modelo se aprende de la experiencia, estimando valores o la política.</li>
+  <li>Todos buscan la política de mayor retorno esperado; difieren en qué saben, qué aprenden y cuándo actualizan.</li>
 </ul>
 <div class="svg-holder">
-<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs>
     <marker id="rc" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1a1a"/></marker>
   </defs>
-  <rect x="270" y="14" width="160" height="40" rx="8" fill="#eceff1" stroke="#607d8b" stroke-width="1.5"/>
-  <text x="350" y="39" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">Aprendizaje reforzado</text>
-  <line x1="300" y1="54" x2="180" y2="84" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
-  <line x1="400" y1="54" x2="520" y2="84" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
-  <rect x="80" y="86" width="200" height="40" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.4"/>
-  <text x="180" y="104" text-anchor="middle" font-size="12" font-weight="bold" fill="#663300">Basado en modelo</text>
-  <text x="180" y="119" text-anchor="middle" font-size="10" fill="#885500">conoce o aprende P, R</text>
-  <rect x="420" y="86" width="200" height="40" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.4"/>
-  <text x="520" y="104" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a4d1a">Libre de modelo</text>
-  <text x="520" y="119" text-anchor="middle" font-size="10" fill="#2d6b2d">aprende solo de la experiencia</text>
-  <line x1="470" y1="126" x2="370" y2="158" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
-  <line x1="560" y1="126" x2="600" y2="158" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
-  <rect x="250" y="160" width="240" height="44" rx="8" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
-  <text x="370" y="179" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a3a5c">Basado en valor</text>
-  <text x="370" y="195" text-anchor="middle" font-size="9.5" fill="#3a6a8c">Q-Learning, SARSA, DQN</text>
-  <rect x="500" y="160" width="180" height="44" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
-  <text x="590" y="179" text-anchor="middle" font-size="12" font-weight="bold" fill="#5c1a5c">Basado en política</text>
-  <text x="590" y="195" text-anchor="middle" font-size="9.5" fill="#7a2d7a">REINFORCE, actor-crítico</text>
-  <text x="350" y="240" text-anchor="middle" font-size="11" fill="#555">Eje transversal:</text>
-  <text x="350" y="258" text-anchor="middle" font-size="11.5" font-weight="bold" font-style="italic" fill="#1a1a1a">on-policy (SARSA) vs off-policy (Q-Learning)</text>
+  <rect x="230" y="8" width="300" height="38" rx="8" fill="#eceff1" stroke="#607d8b" stroke-width="1.5"/>
+  <text x="380" y="25" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">Aprendizaje reforzado</text>
+  <text x="380" y="40" text-anchor="middle" font-size="10" fill="#455a64">meta: la política con mayor retorno esperado</text>
+  <text x="380" y="66" text-anchor="middle" font-size="11.5" font-weight="bold" font-style="italic" fill="#1a1a1a">1. ¿Se conoce el modelo P, r?</text>
+  <line x1="330" y1="72" x2="190" y2="92" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <line x1="430" y1="72" x2="560" y2="92" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <text x="245" y="80" text-anchor="middle" font-size="10" fill="#555">sí</text>
+  <text x="510" y="80" text-anchor="middle" font-size="10" fill="#555">no</text>
+  <rect x="60" y="94" width="260" height="40" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.4"/>
+  <text x="190" y="111" text-anchor="middle" font-size="12" font-weight="bold" fill="#663300">Programación dinámica</text>
+  <text x="190" y="126" text-anchor="middle" font-size="10" fill="#885500">iteración de políticas y de valor, sin jugar episodios</text>
+  <rect x="440" y="94" width="240" height="40" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.4"/>
+  <text x="560" y="111" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a4d1a">Libre de modelo</text>
+  <text x="560" y="126" text-anchor="middle" font-size="10" fill="#2d6b2d">aprende de la experiencia</text>
+  <text x="560" y="154" text-anchor="middle" font-size="11.5" font-weight="bold" font-style="italic" fill="#1a1a1a">2. ¿Qué se aprende?</text>
+  <line x1="520" y1="160" x2="320" y2="180" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <line x1="560" y1="160" x2="520" y2="180" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <line x1="600" y1="160" x2="680" y2="180" stroke="#1a1a1a" stroke-width="1.3" marker-end="url(#rc)"/>
+  <rect x="210" y="182" width="220" height="44" rx="8" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text x="320" y="201" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a3a5c">Valores v, q</text>
+  <text x="320" y="217" text-anchor="middle" font-size="9.5" fill="#3a6a8c">evaluación MC, SARSA, Q-Learning, DQN</text>
+  <rect x="440" y="182" width="160" height="44" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="520" y="201" text-anchor="middle" font-size="12" font-weight="bold" fill="#5c1a5c">Política π(a | s)</text>
+  <text x="520" y="217" text-anchor="middle" font-size="9.5" fill="#7a2d7a">REINFORCE, PPO</text>
+  <rect x="610" y="182" width="140" height="44" rx="8" fill="#fce4ec" stroke="#ad1457" stroke-width="1.5"/>
+  <text x="680" y="201" text-anchor="middle" font-size="12" font-weight="bold" fill="#6a1038">Ambas</text>
+  <text x="680" y="217" text-anchor="middle" font-size="9.5" fill="#8a2050">actor-crítico, A2C, PPO</text>
+  <text x="380" y="258" text-anchor="middle" font-size="11.5" font-weight="bold" font-style="italic" fill="#1a1a1a">3. ¿Cuándo se actualiza? (atraviesa las ramas sin modelo)</text>
+  <rect x="90" y="270" width="280" height="44" rx="8" fill="#fffde7" stroke="#9e8a00" stroke-width="1.3"/>
+  <text x="230" y="289" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#5c5000">Monte Carlo: al final del episodio</text>
+  <text x="230" y="305" text-anchor="middle" font-size="9.5" fill="#6d6000">con el retorno completo: evaluación MC, REINFORCE</text>
+  <rect x="390" y="270" width="300" height="44" rx="8" fill="#e0f7fa" stroke="#00838f" stroke-width="1.3"/>
+  <text x="540" y="289" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#004d55">Diferencia temporal: en cada paso</text>
+  <text x="540" y="305" text-anchor="middle" font-size="9.5" fill="#006064">con la estimación siguiente: SARSA, Q-Learning, actor-crítico</text>
 </svg>
 </div>
 
 </section>
 <section>
 <div class="section-label">§ 11 · Un mapa de los métodos</div>
-<h2>Al aprender hay dos políticas en juego</h2>
+<h2>Las respuestas, y un eje más: on-policy u off-policy</h2>
 <ul>
-  <li>La <b>política de comportamiento</b> es la que realmente mueve al robot y genera la experiencia. Debe explorar: por ejemplo, con probabilidad $\varepsilon = 0.1$ da un paso al azar.</li>
-  <li>La <b>política objetivo</b> es aquella cuyo valor se quiere aprender.</li>
-  <li><b>On-policy</b>: ambas son la misma. <b>Off-policy</b>: se aprende el valor de una política distinta de la que actúa.</li>
+  <li><strong>Basados en valor</strong> aprenden $q$ o $v$ y derivan la política; <strong>basados en política</strong> ajustan $\pi$; los <strong>actor-crítico</strong> aprenden ambos.</li>
+  <li><strong>Monte Carlo</strong> espera el final del episodio; <strong>diferencia temporal</strong> actualiza en cada paso con la estimación siguiente.</li>
+  <li><strong>On-policy</strong>: aprende la misma política que genera los datos; <strong>off-policy</strong>: aprende otra, por ejemplo la codiciosa, mientras explora con una distinta.</li>
 </ul>
+<p class="note">Q-Learning es la versión muestral de la iteración de valor; REINFORCE, la de Monte Carlo del gradiente de política; el actor-crítico cambia el retorno de REINFORCE por el error de diferencia temporal.</p>
 
 </section>
 <section>
-<div class="section-label">§ 11 · Un mapa de los métodos</div>
-<h2>En el acantilado, la diferencia cambia la ruta aprendida</h2>
-<ul>
-  <li>SARSA (on-policy) aprende el valor del robot que explora, con sus pasos al azar incluidos: junto al borde esos pasos pueden hacerlo caer, así que aprende una ruta alejada del acantilado.</li>
-  <li>Q-Learning (off-policy) explora igual, pero aprende el valor del robot que ya no exploraría y siempre elegiría la mejor acción: aprende la ruta del borde.</li>
-  <li>Ambos algoritmos se desarrollan en el capítulo siguiente.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 11 · Un mapa de los métodos</div>
-<h2>Las otras ramas: aprender la política directamente</h2>
-<ul>
-  <li>Los métodos <b>basados en valor</b> aprenden $q$ y actúan de forma codiciosa respecto de él. Los <b>basados en política</b> ajustan directamente las probabilidades $\pi(a \mid s)$ en la dirección que aumenta el retorno.</li>
-  <li>Los métodos <b>actor-crítico</b> combinan ambos: el actor es la política y el crítico estima valores para juzgar sus acciones.</li>
-  <li>PPO (<em>Proximal Policy Optimization</em>) es un actor-crítico que limita cuánto cambia la política en cada actualización. Es el método usado en RLHF (<em>Reinforcement Learning from Human Feedback</em>): un modelo de lenguaje es la política y la recompensa la da otro modelo, entrenado con las preferencias de personas entre pares de respuestas.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<div class="section-label">§ 12 · Desafíos y lo que sigue</div>
 <h2>La recompensa llega tarde</h2>
 <ul>
   <li>La $-100$ llega en el paso 6, junto a una acción razonable que resbaló; la elección que hizo probable la caída fue la del paso 2.</li>
@@ -1213,7 +1152,7 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 12 · Desafíos fundamentales</div>
+<div class="section-label">§ 12 · Desafíos y lo que sigue</div>
 <h2>Repartir la culpa hacia atrás</h2>
 <ul>
   <li>El agente solo ve la secuencia de recompensas: $-1, -1, -1, -1, -1, -100$. Nada le dice cuál de sus decisiones causó la caída.</li>
@@ -1223,42 +1162,21 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 12 · Desafíos fundamentales</div>
-<h2>Explorar o aprovechar</h2>
+<div class="section-label">§ 12 · Desafíos y lo que sigue</div>
+<h2>Todo lo anterior supuso conocer P; un robot real no la conoce</h2>
 <ul>
-  <li>Aprovechar usa lo que parece mejor; explorar prueba lo desconocido.</li>
-  <li>Sin explorar el agente se estanca; sin aprovechar nunca cobra lo aprendido.</li>
+  <li>Evaluar con Bellman, la iteración de políticas y la iteración de valor usan $P$ y $r$ explícitamente; juntas forman la <strong>programación dinámica</strong>.</li>
+  <li>Un robot real no sabe con qué probabilidad resbala, que con $p = 0.1$ es $0.925$ en la dirección elegida y $0.025$ en cada otra: solo observa transiciones, estaba en $s$, eligió $a$, recibió $r$ y llegó a $s'$.</li>
+  <li>Aprender de esas transiciones, sin conocer $P$, es lo que hacen los capítulos siguientes: ajustando la política directamente o estimando sus valores.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 12 · Desafíos fundamentales</div>
-<h2>Recompensas escasas, azar y datos que cambian</h2>
+<div class="section-label">§ 12 · Desafíos y lo que sigue</div>
+<h2>Lo que viene: tres maneras de aprender sin modelo</h2>
 <ul>
-  <li>A veces hay que encadenar muchas acciones antes de ver una recompensa distinta de cero.</li>
-  <li>Los datos los genera el propio agente: cambian al mejorar la política y son consecutivos, no independientes.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 12 · Desafíos fundamentales</div>
-<h2>Todo lo anterior supuso conocer P</h2>
-$$
-P(s' \mid s, a) = \text{probabilidad de llegar a } s' \text{ si en } s \text{ se elige } a
-$$
-<ul>
-  <li>$P$ es la <b>dinámica</b> del mundo. En el acantilado con $p = 0.1$: la dirección elegida ocurre con probabilidad $0.925$ y cada una de las otras tres con $0.025$.</li>
-  <li>La ecuación de Bellman, la evaluación exacta, la iteración de valor y la política obtenida desde $v_*$ usan $P$ y $r$ explícitamente.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 12 · Desafíos fundamentales</div>
-<h2>Sin modelo, se aprende de la experiencia</h2>
-<ul>
-  <li>Un robot real no conoce $P$: no sabe con qué probabilidad resbala ni adónde lo lleva cada acción.</li>
-  <li>Solo observa transiciones: estaba en $s$, eligió $a$, recibió $r$ y llegó a $s'$.</li>
-  <li>Estimar los valores a partir de esas transiciones, sin conocer $P$, es lo que hacen los métodos de <b>diferencia temporal</b> del capítulo siguiente.</li>
+  <li><b>Gradiente de política</b>: ajusta directamente las probabilidades $\pi(a \mid s)$ en la dirección que aumenta el retorno; de ahí vienen PPO y el ajuste de modelos de lenguaje con RLHF.</li>
+  <li><b>Diferencia temporal</b>: estima $q$ desde la experiencia, con SARSA y Q-Learning, y se combina con el gradiente de política en los métodos <b>actor-crítico</b>.</li>
+  <li><b>Deep RL</b>: reemplaza la tabla de valores por una red neuronal, como en DQN.</li>
 </ul>
 
 </section>
@@ -2209,6 +2127,140 @@ RLW.pongDQN = function (root) {
   });
 };
 RLW._pong = { pongPaso, pongSaque, pongEvalua, pongSigue, PNS };
+
+// ======================== 7. REINFORCE EN VIVO ========================
+// Política softmax tabular θ(s,a); cada episodio parte de una casilla al azar (inicios aleatorios),
+// dura a lo sumo 200 pasos y al terminar actualiza θ con el retorno G_t (menos la línea base v(s)).
+const CELDAS = []; for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) if (!esAcant(r, c) && !esMeta(r, c)) CELDAS.push([r, c]);
+const si = (r, c) => r * NC + c;
+function pgProbs(th, r, c) {
+  const k = si(r, c) * 4; let m = -Infinity; for (let a = 0; a < 4; a++) m = Math.max(m, th[k + a]);
+  const e = [0, 1, 2, 3].map(a => Math.exp(th[k + a] - m)), s = e[0] + e[1] + e[2] + e[3];
+  return e.map(x => x / s);
+}
+function pgMuestra(p, rnd) { const u = rnd(); let s = 0; for (let a = 0; a < 4; a++) { s += p[a]; if (u < s) return a; } return 3; }
+function pgAgente(base, semilla, ac) {
+  return { base, ac: !!ac, rnd: mulberry32(semilla), th: new Float64Array(NR * NC * 4), V: new Float64Array(NR * NC),
+           ep: [], r: S0[0], c: S0[1], t: 0, n: 0, hist: [[0, pgValorS(new Float64Array(NR * NC * 4))]], estela: [] };
+}
+function pgInicia(A) {
+  const [r, c] = CELDAS[Math.floor(A.rnd() * CELDAS.length)]; A.r = r; A.c = c; A.t = 0; A.ep = []; A.estela = [[r, c]];
+}
+function pgValorS(th) {          // valor exacto de la política estocástica desde S (sin resbalón, γ = 0.95)
+  let V = new Float64Array(NR * NC);
+  const P = CELDAS.map(([r, c]) => pgProbs(th, r, c));
+  for (let it = 0; it < 3000; it++) {
+    const Vn = new Float64Array(NR * NC); let d = 0;
+    CELDAS.forEach(([r, c], k) => {
+      let v = 0;
+      for (let a = 0; a < 4; a++) { const [nr, nc, rw] = mover(r, c, a); v += P[k][a] * (rw + 0.95 * (esMeta(nr, nc) ? 0 : V[si(nr, nc)])); }
+      Vn[si(r, c)] = v; d = Math.max(d, Math.abs(v - V[si(r, c)]));
+    });
+    V = Vn; if (d < 1e-6) break;
+  }
+  return V[si(S0[0], S0[1])];
+}
+function pgActualiza(A, alfa, beta) {   // REINFORCE (cada visita), con o sin línea base
+  let G = 0;
+  const Gs = new Array(A.ep.length);
+  for (let t = A.ep.length - 1; t >= 0; t--) { G = A.ep[t][3] + 0.95 * G; Gs[t] = G; }
+  A.ep.forEach(([r, c, a], t) => {
+    const j = si(r, c); let d = Gs[t];
+    if (A.base) { d -= A.V[j]; A.V[j] += beta * d; }
+    const p = pgProbs(A.th, r, c);
+    for (let b = 0; b < 4; b++) A.th[j * 4 + b] += alfa * d * ((b === a ? 1 : 0) - p[b]);
+  });
+  A.n++;
+}
+function pgPaso(A, alfa, beta) {        // un paso de interacción; devuelve true al cerrar un episodio
+  A.alfa = alfa; A.beta = beta;
+  if (A.t === 0 && A.ep.length === 0 && A.estela.length === 0) pgInicia(A);
+  const p = pgProbs(A.th, A.r, A.c), a = pgMuestra(p, A.rnd);
+  const [nr, nc, rw, cae] = mover(A.r, A.c, a);
+  A.ep.push([A.r, A.c, a, rw]); A.t++;
+  if (A.ac) {                           // actor-crítico: el error TD hace de ventaja en cada paso
+    const j = si(A.r, A.c), d = rw + (esMeta(nr, nc) ? 0 : 0.95 * A.V[si(nr, nc)]) - A.V[j];
+    A.V[j] += A.beta * d;
+    for (let b = 0; b < 4; b++) A.th[j * 4 + b] += A.alfa * d * ((b === a ? 1 : 0) - p[b]);
+  }
+  if (cae) A.estela.push([3, Math.min(NC - 1, Math.max(0, A.c + DC[a])), true], null);
+  A.r = nr; A.c = nc; A.estela.push([nr, nc]); if (A.estela.length > 40) A.estela.shift();
+  if (esMeta(nr, nc) || A.t >= 200) {
+    if (A.ac) A.n++; else pgActualiza(A, alfa, beta);
+    if (A.n % 50 === 0) A.hist.push([A.n, pgValorS(A.th)]);
+    pgInicia(A); return true;
+  }
+  return false;
+}
+RLW._pg = { pgAgente, pgPaso, pgValorS, pgProbs };
+function pgWidget(root, cfg) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const BETA = 0.1;
+  const S = { alfa: cfg.alfa, vel: -10, corre: false, semilla: 1, ag: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'α', cfg.amin, cfg.amax, cfg.amin, S.alfa, 4, v => { S.alfa = v; });
+  const lab = el('label', { class: 'rlw-sl', html: 'velocidad ' }, bar);
+  const sel = el('select', {}, lab);
+  [['1', '1 paso por cuadro'], ['-1', '1 episodio por cuadro'], ['-10', '10 episodios por cuadro'], ['-50', '50 episodios por cuadro']].forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+  sel.value = String(S.vel);
+  sel.addEventListener('change', () => { S.vel = +sel.value; });
+  const bPlay = button(bar, '▶ entrenar', () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ entrenar'; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ reiniciar', () => { S.semilla++; nuevo(); dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function nuevo() { S.ag = cfg.agentes.map(([base, ac]) => pgAgente(base, 3000 + S.semilla, ac)); }
+  function avanza() {
+    S.ag.forEach(A => {
+      if (S.vel > 0) pgPaso(A, S.alfa, BETA);
+      else for (let e = 0; e < -S.vel; e++) { let n = 0; while (!pgPaso(A, S.alfa, BETA) && n++ < 250); }
+    });
+  }
+  function loop() { if (!S.corre) return; avanza(); dibuja(); if (S.ag[0].n >= 20000) { S.corre = false; bPlay.textContent = '▶ entrenar'; return; } requestAnimationFrame(loop); }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.56);
+    const cs = Math.min((w / 2 - 18) / NC, h * 0.5 / NR), Y = fs * 1.6;
+    const cols = cfg.colores, nombres = cfg.nombres;
+    S.ag.forEach((A, i) => {
+      const X = i * w / 2 + (w / 2 - NC * cs) / 2;
+      dibujaMundo(g, X, Y, cs, { robot: [A.r, A.c], estela: A.estela });
+      // la política como distribución: cuatro flechas por casilla, de largo proporcional a π(a|s)
+      CELDAS.forEach(([r, c]) => {
+        const p = pgProbs(A.th, r, c), cx = X + (c + 0.5) * cs, cy = Y + (r + 0.5) * cs;
+        for (let a = 0; a < 4; a++) {
+          const L = cs * 0.44 * Math.sqrt(p[a]); if (p[a] < 0.02) continue;
+          const ux = DC[a], uy = DR[a];
+          g.strokeStyle = cols[i]; g.fillStyle = cols[i]; g.globalAlpha = 0.35 + 0.65 * p[a]; g.lineWidth = Math.max(1.2, cs * 0.035);
+          g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + ux * L, cy + uy * L); g.stroke();
+          const k = Math.max(2.5, cs * 0.07);
+          g.beginPath(); g.moveTo(cx + ux * (L + k * 0.6), cy + uy * (L + k * 0.6));
+          g.lineTo(cx + ux * L - uy * k * 0.6, cy + uy * L + ux * k * 0.6); g.lineTo(cx + ux * L + uy * k * 0.6, cy + uy * L - ux * k * 0.6); g.closePath(); g.fill();
+          g.globalAlpha = 1;
+        }
+      });
+      txt(g, nombres[i] + ' · episodio ' + A.n, X + NC * cs / 2, fs * 0.75, cols[i], 'center', fs, true);
+    });
+    const P = { x: fs * 4.2, y: Y + NR * cs + fs * 1.0, w: w - fs * 6, h: h - (Y + NR * cs) - fs * 3.6 };
+    const n = Math.max(...S.ag.map(A => A.n)), X1 = Math.max(2000, Math.ceil(n / 1000) * 1000);
+    const [px, py] = ejes(g, P, 0, X1, -40, 0, [0, X1 / 4, X1 / 2, 3 * X1 / 4, X1].map(Math.round), [[0, '0'], [-10, '−10'], [-20, '−20'], [-30, '−30'], [-40, '−40']], 'episodio', 'valor v(S) de π', fs);
+    [[-7.40, 'borde −7.40', -0.55], [-9.73, 'segura −9.73', 0.6]].forEach(([v, s, d]) => {
+      g.strokeStyle = PAL.soft; g.setLineDash([4, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(P.x, py(v)); g.lineTo(P.x + P.w, py(v)); g.stroke(); g.setLineDash([]);
+      txt(g, s, P.x + P.w - 4, py(v) + fs * d, PAL.soft, 'right', fs * 0.8);
+    });
+    S.ag.forEach((A, i) => curva(g, A.hist.map(z => z[0]), A.hist.map(z => z[1]), px, py, cols[i], 2.5));
+    const ult = A => A.hist[A.hist.length - 1][1].toFixed(1);
+    const ruta = A => { const rr = rutaDesde((r, c) => { const p = pgProbs(A.th, r, c); return p.indexOf(Math.max(...p)); }); return rr.llega ? `${rr.length - 1} pasos` : 'aún no llega'; };
+    const [n0, n1] = cfg.cortos;
+    read.innerHTML = `Valor exacto desde S de la política estocástica actual: ${n0} <b>${ult(S.ag[0])}</b>, ${n1} <b>${ult(S.ag[1])}</b> ` +
+      `(se recalcula cada 50 episodios). Ruta más probable: ${n0} ${ruta(S.ag[0])}, ${n1} ${ruta(S.ag[1])}. ` +
+      `Cada episodio parte de una casilla al azar; las flechas miden la probabilidad π(a | s) de cada acción.`;
+  }
+  nuevo(); onResize(root, dibuja); dibuja();
+}
+RLW.reinforceVivo = root => pgWidget(root, { alfa: 0.002, amin: 0.0005, amax: 0.01, agentes: [[false, false], [true, false]], colores: [PAL.orange, PAL.blue],
+  nombres: ['REINFORCE sin línea base', 'REINFORCE con línea base'], cortos: ['sin línea base', 'con línea base'] });
+RLW.actorCriticoVivo = root => pgWidget(root, { alfa: 0.05, amin: 0.0025, amax: 0.1, agentes: [[true, false], [true, true]], colores: [PAL.blue, PAL.green],
+  nombres: ['REINFORCE con línea base', 'actor-crítico'], cortos: ['REINFORCE', 'actor-crítico'] });
 
 })();
 

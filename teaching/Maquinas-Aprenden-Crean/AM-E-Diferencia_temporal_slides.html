@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diferencia Temporal, Q-Learning y SARSA</title>
+<title>Diferencia Temporal, Q-Learning, SARSA y Actor-Crítico</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,6 +44,7 @@
   box-sizing: border-box;
   min-width: 0;
 }
+.reveal .slides section.stack { padding: 0; }
 
 .section-label {
   font-size: 0.75em;
@@ -132,6 +133,16 @@ p.note {
 .viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
 .viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft); font-variant-numeric:tabular-nums; margin-top:0.35em; }
 
+/* --- tabla de política --- */
+.reveal table.ptab { border-collapse: collapse; margin: 0.2em auto 0; font-size: 26px; }
+.reveal table.ptab th, .reveal table.ptab td { border-bottom: 1px solid #d8d2bf; padding: 3px 22px; text-align: center; }
+.reveal table.ptab th { color: #4a6f9c; font-weight: 700; border-bottom: 2px solid #4a6f9c; }
+.reveal table.ptab td.cas { text-align: left; }
+.reveal table.ptab td.cas span { color: #888; font-size: 0.8em; margin-left: 0.5em; }
+.reveal table.ptab td.uno { background: #fde3cf; color: #c24400; font-weight: 700; }
+.reveal table.ptab td.dots { color: #999; }
+.reveal table.ptab th.ar { font-family: Arial, Helvetica, sans-serif; font-size: 1.1em; }
+
 /* --- widgets del mundo del acantilado --- */
 .reveal .rlw { font-size: 17px; margin: 0.3em auto 0; }
 .reveal .rlw-read { font-size: 1em; text-align: left; }
@@ -145,7 +156,7 @@ p.note {
 <section>
 <div class="title-slide">
   <div class="course-id"><a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
-  <h1>Diferencia Temporal, Q-Learning y SARSA</h1>
+  <h1>Diferencia Temporal, Q-Learning, SARSA y Actor-Crítico</h1>
   <div class="byline">Rodrigo F. Cádiz · Departamento de Ingeniería Eléctrica</div>
   <div class="byline">Pontificia Universidad Católica de Chile</div>
 </div>
@@ -180,26 +191,17 @@ p.note {
     <line x1="0" y1="2" x2="0" y2="-44" stroke="#3b3b3b" stroke-width="2"/>
     <path d="M0,-44 L20,-38 L0,-32 Z" fill="#2e7d32"/>
   </g><text x="65.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">S</text><text x="415.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">G</text><text x="240.0" y="216.2" text-anchor="middle" font-size="15" font-weight="bold" fill="#f4cccc">acantilado</text><text x="240.0" y="22.0" text-anchor="middle" font-size="12" fill="#555">8 columnas × 4 filas, vistas en perspectiva</text>
-  <line x1="484" y1="66" x2="514" y2="66" stroke="#e65100" stroke-width="3"/><text x="524" y="70" font-size="13" fill="#1a1a1a">ruta del borde: 9 pasos</text><line x1="484" y1="96" x2="514" y2="96" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4"/><text x="524" y="100" font-size="13" fill="#1a1a1a">ruta segura: 13 pasos</text><rect x="488" y="119" width="22" height="14" fill="#3a2a1a"/><text x="524" y="130" font-size="13" fill="#1a1a1a">acantilado: −100 y vuelta a S</text><text x="484" y="160" font-size="13" fill="#1a1a1a">cada paso: recompensa −1</text><text x="484" y="190" font-size="13" fill="#1a1a1a">resbalón: con prob. p, acción al azar</text>
+  <line x1="484" y1="66" x2="514" y2="66" stroke="#e65100" stroke-width="3"/><text x="524" y="70" font-size="13" fill="#1a1a1a">ruta del borde: 9 pasos</text><line x1="484" y1="96" x2="514" y2="96" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4"/><text x="524" y="100" font-size="13" fill="#1a1a1a">ruta segura: 13 pasos</text><rect x="488" y="119" width="22" height="14" fill="#3a2a1a"/><text x="524" y="130" font-size="13" fill="#1a1a1a">acantilado: −100 y vuelta a S</text><text x="484" y="160" font-size="13" fill="#1a1a1a">cada paso: recompensa −1</text><text x="484" y="190" font-size="13" fill="#1a1a1a">sin resbalón: cada acción hace lo que dice</text>
 </svg>
 </div>
 
 </section>
 <section>
 <div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
-<h2>Cada paso cuesta −1 y caer cuesta −100</h2>
+<h2>Cada paso cuesta −1 y caer −100, pero el robot no lo sabe</h2>
 <ul>
-  <li>Cuatro acciones: arriba, abajo, izquierda y derecha; contra un borde, el robot se queda donde está.</li>
-  <li>Caer al acantilado cuesta $-100$ y devuelve a S. Las recompensas futuras se descuentan con $\gamma = 0.95$.</li>
-  <li>En este deck el suelo no resbala: cada acción hace exactamente lo que dice.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
-<h2>Esta vez el robot no conoce las reglas</h2>
-<ul>
-  <li>Solo observa la casilla en que está y la recompensa que recibe.</li>
+  <li>Cuatro acciones: arriba, abajo, izquierda y derecha; contra un borde se queda donde está, y caer al acantilado cuesta $-100$ y devuelve a S. El descuento es $\gamma = 0.95$ y el suelo no resbala.</li>
+  <li>Pero el robot no conoce estas reglas: solo observa la casilla en que está y la recompensa que recibe.</li>
   <li>No sabe dónde está el vacío hasta que cae en él.</li>
 </ul>
 
@@ -208,11 +210,11 @@ p.note {
 <div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
 <h2>Lo que hay que aprender: el valor de cada acción</h2>
 $$
-q(s, a) = \mathbb{E}\left[\, G_t \mid s_t = s,\, a_t = a \,\right], \qquad G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots
+q_\pi(s, a) = \mathbb{E}_\pi\left[\, G_t \mid s_t = s,\, a_t = a \,\right], \qquad G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots
 $$
 <ul>
-  <li>$G_t$ es el retorno descontado; $q(s,a)$ dice cuánto se gana en promedio tomando $a$ en la casilla $s$.</li>
-  <li>Si se conoce $q$, actuar bien es elegir en cada casilla la acción de mayor $q$.</li>
+  <li>$G_t$ es el retorno descontado; $q_\pi(s,a)$ es lo que se gana en promedio al tomar $a$ en la casilla $s$ y seguir después la política $\pi$, la regla que da la probabilidad $\pi(a \mid s)$ de cada acción.</li>
+  <li>Con la mejor política se obtiene $q_*$, y actuar bien es elegir en cada casilla la acción de mayor $q_*$.</li>
 </ul>
 
 </section>
@@ -223,7 +225,8 @@ $$
 q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, \max_{a'} q_*(s', a')
 $$
 <ul>
-  <li>Sin conocer las probabilidades de transición $P(s' \mid s,a)$ esa suma no se puede evaluar: hay que reemplazarla por experiencia.</li>
+  <li>$r(s,a)$ es la recompensa esperada al tomar $a$ en $s$, y $P(s' \mid s,a)$ la probabilidad de llegar a $s'$: juntos forman el modelo del mundo.</li>
+  <li>En palabras: una acción vale lo que paga ahora más lo mejor que se puede hacer desde donde deja al robot; sin conocer $P$ esa suma no se puede evaluar y hay que reemplazarla por experiencia.</li>
 </ul>
 
 </section>
@@ -231,58 +234,56 @@ $$
 <div class="section-label">§ 2 · El error de diferencia temporal</div>
 <h2>Dos extremos: programación dinámica y Monte Carlo</h2>
 <ul>
-  <li>La programación dinámica resuelve Bellman exactamente, pero exige conocer $P$.</li>
-  <li>Monte Carlo promedia retornos reales sin modelo, pero espera el final del episodio y su estimación varía mucho.</li>
+  <li>La <strong>programación dinámica</strong> resuelve Bellman con el modelo $P$ y $r$, barriendo todos los estados una y otra vez, como la iteración de valor: es exacta, pero exige conocer el modelo.</li>
+  <li><strong>Monte Carlo</strong> juega episodios completos y promedia los retornos observados: no necesita modelo, pero espera el final del episodio y su estimación varía mucho.</li>
 </ul>
 
+</section>
+<section>
+<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<h2>Diferencia temporal: un tercer camino entre ambos extremos</h2>
+$$
+\begin{aligned}
+&\text{Programación dinámica:} && v(s) \leftarrow \textstyle\sum_a \pi(a \mid s)\, \big[\, r(s,a) + \gamma \sum_{s'} P(s' \mid s,a)\, v(s') \,\big] \\
+&\text{Monte Carlo:} && v(s_t) \leftarrow v(s_t) + \alpha\, \big[\, G_t - v(s_t) \,\big] \\
+&\text{Diferencia temporal (TD):} && v(s_t) \leftarrow v(s_t) + \alpha\, \big[\, r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t) \,\big]
+\end{aligned}
+$$
+<ul>
+  <li>Como Monte Carlo, TD aprende de la experiencia, sin modelo: usa la recompensa $r_{t+1}$ y la casilla $s_{t+1}$ que de verdad ocurrieron.</li>
+  <li>Como la programación dinámica, no espera el final: completa el resto del retorno con la estimación $v(s_{t+1})$ y actualiza en cada paso.</li>
+</ul>
+<p class="note">Se llama diferencia temporal porque corrige con la diferencia entre dos predicciones hechas en instantes consecutivos.</p>
 </section>
 <section>
 <div class="section-label">§ 2 · El error de diferencia temporal</div>
 <h2>Diferencia temporal: corregir una predicción con la siguiente</h2>
 $$
-\delta_t = \underbrace{r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1})}_{\text{objetivo TD}} - \underbrace{q(s_t, a_t)}_{\text{estimación actual}}
+\delta_t = \underbrace{r_{t+1} + \gamma\, v(s_{t+1})}_{\text{objetivo TD}} - \underbrace{v(s_t)}_{\text{estimación actual}}, \qquad v(s_t) \leftarrow v(s_t) + \alpha\, \delta_t
 $$
+<ul>
+  <li>$v(s)$ es la estimación actual del valor de la casilla $s$, y avanza una fracción $\alpha$, la tasa de aprendizaje, hacia el objetivo.</li>
+  <li>Si las estimaciones fueran exactas, $\delta_t$ valdría cero en promedio: es el residuo de la ecuación de Bellman medido con una sola muestra.</li>
+</ul>
 <p class="note">En palabras: lo que se observó un paso después, recompensa más estimación siguiente, menos lo que se esperaba.</p>
 
 </section>
 <section>
 <div class="section-label">§ 2 · El error de diferencia temporal</div>
-<h2>La estimación avanza una fracción α hacia el objetivo</h2>
-$$
-q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha\, \delta_t
-$$
+<h2>Bootstrapping: menos varianza que Monte Carlo, a cambio de sesgo</h2>
 <ul>
-  <li>$\alpha$ es la tasa de aprendizaje.</li>
-  <li>Si las estimaciones fueran exactas, $\delta_t$ valdría cero en promedio: es el residuo de Bellman medido con una sola muestra.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 2 · El error de diferencia temporal</div>
-<h2>Bootstrapping: estimar a partir de otra estimación</h2>
-<ul>
-  <li>El objetivo usa $q(s_{t+1}, a_{t+1})$ en lugar del retorno real.</li>
-  <li>Así se puede actualizar en cada paso, pero el objetivo hereda los errores de la estimación en que se apoya.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 2 · El error de diferencia temporal</div>
-<h2>TD tiene sesgo y poca varianza; Monte Carlo, al revés</h2>
-<ul>
-  <li>$G_t$ acumula el azar de toda la trayectoria; $r_{t+1} + \gamma\, v(s_{t+1})$, el de un solo paso.</li>
-  <li>En la práctica, la menor varianza hace que TD suela aprender más rápido.</li>
+  <li>El objetivo usa la estimación $v(s_{t+1})$ en lugar del retorno real $G_t$: estimar a partir de otra estimación se llama <em>bootstrapping</em>.</li>
+  <li>Así se actualiza en cada paso, pero el objetivo hereda los errores de la estimación en que se apoya: TD tiene sesgo.</li>
+  <li>A cambio, $G_t$ acumula el azar de toda la trayectoria y $r_{t+1} + \gamma\, v(s_{t+1})$ el de un solo paso; esa menor varianza hace que TD suela aprender más rápido.</li>
 </ul>
 
 </section>
 <section>
 <div class="section-label">§ 3 · Predicción con TD(0)</div>
 <h2>Primero, evaluar una política fija</h2>
-$$
-v(s_t) \leftarrow v(s_t) + \alpha \big( r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t) \big)
-$$
 <ul>
-  <li>Es TD(0): estima el valor $v_\pi(s)$ de una política dada. Buscar la mejor política, el <strong>control</strong>, viene después.</li>
+  <li>Seguir una política dada y aplicar $v(s_t) \leftarrow v(s_t) + \alpha\, \delta_t$ en cada paso es <strong>TD(0)</strong>: estima el valor $v_\pi(s)$ de esa política con un objetivo que mira un solo paso adelante.</li>
+  <li>A esto se le llama <strong>predicción</strong>; buscar la mejor política, el <strong>control</strong>, viene después.</li>
 </ul>
 
 </section>
@@ -304,20 +305,43 @@ $$
 </section>
 <section>
 <div class="section-label">§ 3 · Predicción con TD(0)</div>
-<h2>El valor verdadero crece linealmente de A a E</h2>
+<h2>Paso 1: el valor de un estado es la probabilidad de salir por la derecha</h2>
 $$
-v(A), \dots, v(E) = \tfrac{1}{6},\ \tfrac{2}{6},\ \tfrac{3}{6},\ \tfrac{4}{6},\ \tfrac{5}{6}
+v(s) = \mathbb{E}[\,G \mid s\,] = 1 \cdot \Pr(\text{sale por la derecha} \mid s) + 0 \cdot \Pr(\text{sale por la izquierda} \mid s)
 $$
 <ul>
-  <li>Es la probabilidad de salir por la derecha partiendo de cada estado; TD(0) debe descubrirla sin conocerla.</li>
+  <li>Sin descuento y con recompensa solo al salir, el retorno de un episodio vale 1 si sale por la derecha y 0 si sale por la izquierda.</li>
+  <li>Su promedio es, entonces, la probabilidad de salir por la derecha.</li>
 </ul>
-
+</section>
+<section>
+<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<h2>Paso 2: cada valor es el promedio de sus dos vecinos</h2>
+$$
+v(k) = \tfrac{1}{2}\, v(k-1) + \tfrac{1}{2}\, v(k+1), \qquad v(0) = 0, \quad v(6) = 1
+$$
+<ul>
+  <li>Se numeran las posiciones: 0 es la salida izquierda, A a E son 1 a 5, y 6 es la salida derecha.</li>
+  <li>Es la ecuación de Bellman de la caminata: desde $k$ se va a cada vecino con probabilidad $\tfrac{1}{2}$, sin recompensa por el paso; en las salidas el valor ya se conoce.</li>
+</ul>
+</section>
+<section>
+<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<h2>Paso 3: pasos iguales de 0 a 1 en seis tramos dan k/6</h2>
+$$
+v(k+1) - v(k) = v(k) - v(k-1) \quad\Longrightarrow\quad v(k) = \tfrac{k}{6}: \quad v(A), \dots, v(E) = \tfrac{1}{6},\ \tfrac{2}{6},\ \tfrac{3}{6},\ \tfrac{4}{6},\ \tfrac{5}{6}
+$$
+<ul>
+  <li>Multiplicar el Paso 2 por 2 y reordenar muestra que cada escalón mide lo mismo: los valores forman una recta.</li>
+  <li>La recta sube de $v(0) = 0$ a $v(6) = 1$ en seis escalones iguales, así que cada uno mide $\tfrac{1}{6}$; C, en el centro, vale $\tfrac{3}{6} = 0.5$.</li>
+</ul>
+<p class="note">En palabras: cuanto más a la derecha parte la caminata, más probable es que salga por ese lado. TD(0) debe descubrir estos valores sin conocerlos.</p>
 </section>
 <section>
 <div class="section-label">§ 3 · Predicción con TD(0)</div>
 <h2>TD(0) filtra el valor hacia atrás</h2>
 <ul>
-  <li>Barras: estimación, partiendo de 0.5; línea punteada: valor verdadero; derecha: error medio.</li>
+  <li>Barras: estimación, todas parten en 0.5; línea punteada: el valor verdadero $k/6$; derecha: error medio.</li>
 </ul>
 <div data-rlw="td0Caminata" style="max-width:1100px"></div>
 
@@ -332,42 +356,60 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 4 · SARSA: aprendizaje on-policy</div>
+<div class="section-label">§ 4 · Exploración</div>
+<h2>Sin explorar, el robot no conoce otras rutas</h2>
+<ul>
+  <li>La acción <strong>codiciosa</strong> es la de mayor valor estimado $q(s,a)$; una política que siempre la elige es la política codiciosa, y nunca prueba las demás.</li>
+  <li>$\varepsilon$-greedy: con probabilidad $\varepsilon$ elige una de las cuatro acciones al azar; si no, la codiciosa.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 4 · Exploración</div>
+<h2>La exploración debe apagarse en el límite</h2>
+<ul>
+  <li>GLIE (<em>greedy in the limit with infinite exploration</em>, codicioso en el límite con exploración infinita): visitar infinitas veces cada par estado-acción y volverse codicioso, por ejemplo con $\varepsilon_t = 1/t$.</li>
+  <li>Alternativas: elegir con probabilidad proporcional a $e^{q(s,a)/\tau}$ (softmax), donde la temperatura $\tau$ regula el azar, o partir con valores optimistas.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 5 · SARSA: aprendizaje on-policy</div>
 <h2>Para elegir acciones, se aprende q en lugar de v</h2>
 <ul>
+  <li>Elegir con $v$ exigiría mirar un paso adelante con el modelo; con $q$ basta comparar las acciones de la casilla. La idea de TD es la misma, con $q$ en lugar de $v$.</li>
   <li>SARSA usa la tupla $(s_t, a_t, r_{t+1}, s_{t+1}, a_{t+1})$, de donde viene su nombre: <em>State, Action, Reward, State, Action</em>.</li>
 </ul>
 
 </section>
 <section>
-<div class="section-label">§ 4 · SARSA: aprendizaje on-policy</div>
+<div class="section-label">§ 5 · SARSA: aprendizaje on-policy</div>
 <h2>SARSA usa la acción que de verdad tomará</h2>
 $$
-q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \big( r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1}) - q(s_t, a_t) \big)
+q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha\, \underbrace{\big( r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1}) - q(s_t, a_t) \big)}_{\delta_t \text{ de SARSA}}
 $$
-<p class="note">En palabras: el objetivo incluye la acción siguiente elegida por la misma política que explora, errores incluidos.</p>
-
-</section>
-<section>
-<div class="section-label">§ 4 · SARSA: aprendizaje on-policy</div>
-<h2>On-policy: evalúa la política que ejecuta</h2>
+<p class="note">En palabras: el objetivo incluye la acción siguiente elegida por la misma política ε-greedy que explora, errores incluidos.</p>
 <ul>
-  <li>Si la política explora cerca del vacío, el riesgo de caer queda escrito en sus valores.</li>
+  <li>Es <strong>on-policy</strong>: evalúa la política que ejecuta; si explora cerca del vacío, el riesgo de caer queda escrito en sus valores.</li>
   <li><em>Expected SARSA</em> reemplaza $q(s_{t+1}, a_{t+1})$ por su promedio bajo la política y reduce la varianza.</li>
 </ul>
 
 </section>
 <section>
-<div class="section-label">§ 5 · Q-Learning: aprendizaje off-policy</div>
+<div class="section-label">§ 6 · Q-Learning: aprendizaje off-policy</div>
 <h2>Q-Learning supone que después actuará de forma óptima</h2>
 $$
 q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a) - q(s_t, a_t) \big)
 $$
-<p class="note">En palabras: el objetivo usa la mejor acción posible en el estado siguiente, no la que se tomará (Watkins, 1989).</p>
+<ul>
+  <li>El robot sigue actuando con $\varepsilon$-greedy: en $s_{t+1}$ a veces tomará una acción al azar. El objetivo ignora eso y usa la acción de mayor $q$, como si desde ahí ya no fuera a explorar (Watkins, 1989).</li>
+  <li>Junto al vacío, si en $s_{t+1}$ el azar va a elegir ↓ (probabilidad $0.025$), SARSA usaría $q(s_{t+1}, \downarrow)$, que incluye la caída; Q-Learning usa $\max_a q(s_{t+1}, a)$, el valor de seguir por →.</li>
+  <li>Es <strong>off-policy</strong>: la <strong>política de comportamiento</strong>, que explora, genera los datos, y la <strong>política objetivo</strong>, codiciosa respecto de $q$, es la que se aprende.</li>
+</ul>
 
 </section>
 <section>
-<div class="section-label">§ 5 · Q-Learning: aprendizaje off-policy</div>
+<div class="section-label">§ 6 · Q-Learning: aprendizaje off-policy</div>
 <h2>La única diferencia está en el objetivo</h2>
 <ul>
   <li>SARSA: el valor de la acción $a'$ que elige la política; Q-Learning: el máximo sobre las acciones en $s'$.</li>
@@ -408,40 +450,6 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 5 · Q-Learning: aprendizaje off-policy</div>
-<h2>Off-policy: aprende una política mientras sigue otra</h2>
-<ul>
-  <li>La <strong>política de comportamiento</strong>, que explora, genera los datos.</li>
-  <li>La <strong>política objetivo</strong>, codiciosa respecto de $q$, es la que se aprende.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 6 · Exploración</div>
-<h2>Sin explorar, el robot no conoce otras rutas</h2>
-<ul>
-  <li>$\varepsilon$-greedy: con probabilidad $\varepsilon$ elige una de las cuatro acciones al azar; si no, la de mayor $q$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 6 · Exploración</div>
-<h2>La exploración debe apagarse en el límite</h2>
-<ul>
-  <li>GLIE (<em>greedy in the limit with infinite exploration</em>): visitar infinitas veces cada par y volverse codicioso, por ejemplo con $\varepsilon_t = 1/t$.</li>
-  <li>Alternativas: elegir con probabilidad proporcional a $e^{q/\tau}$ (softmax) o partir con valores optimistas.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
-<h2>Junto al vacío, explorar es peligroso</h2>
-<ul>
-  <li>Con $\varepsilon = 0.1$, cada paso por el borde elige "abajo" al azar con probabilidad $0.1/4 = 0.025$.</li>
-</ul>
-
-</section>
-<section>
 <div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
 <h2>SARSA y Q-Learning aprendiendo el acantilado</h2>
 <ul>
@@ -454,27 +462,23 @@ $$
 <div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
 <h2>Q-Learning aprende el borde; SARSA, una ruta alejada</h2>
 <ul>
-  <li>Con $\varepsilon = 0.1$, Q-Learning traza el borde de 9 pasos y SARSA suele ir por la fila superior, en 13.</li>
-  <li>Mientras aprenden, SARSA gana más: unos $-19$ por episodio frente a $-30$, porque Q-Learning cae al explorar.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
-<h2>¿La ruta de SARSA es un accidente?</h2>
-<ul>
-  <li>¿O es la solución exacta de algún problema? Para responder hay que ver dónde se detiene cada algoritmo.</li>
+  <li>Con $\varepsilon = 0.1$ y $\alpha = 0.5$ fijo, Q-Learning traza el borde de 9 pasos y SARSA una ruta más alta, típicamente la fila superior, en 13.</li>
+  <li>Mientras aprenden, SARSA gana más, unos $-19$ por episodio frente a $-30$: junto al borde la exploración elige "abajo" con probabilidad $0.1/4 = 0.025$, y Q-Learning, que camina ahí, cae.</li>
+  <li>Con $\alpha$ tan grande las estimaciones de SARSA oscilan entre rutas de valor parecido; más adelante se verá adónde llega cuando se le deja converger.</li>
 </ul>
 
 </section>
 <section>
 <div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>Un punto fijo es donde la actualización media es cero</h2>
+<h2>¿La ruta de SARSA es un accidente, o la solución exacta de algún problema?</h2>
+<ul>
+  <li>Para responder hay que ver dónde se detiene cada algoritmo: en su punto fijo, donde la actualización media es cero.</li>
+</ul>
 $$
 \mathbb{E}\left[\, \delta_t \mid s_t = s,\, a_t = a \,\right] = 0 \quad \text{para todo } (s, a)
 $$
 <ul>
-  <li>Si el algoritmo llega ahí, en promedio ya no se mueve.</li>
+  <li>Aquí $\delta_t$ es el error TD de cada algoritmo, su objetivo menos $q(s_t, a_t)$; si el algoritmo llega ahí, en promedio ya no se mueve.</li>
 </ul>
 
 </section>
@@ -485,7 +489,7 @@ $$
 \mathbb{E}[\delta_t \mid s, a] = r(s,a) + \gamma \sum_{s'} P(s' \mid s,a) \max_{a'} q(s',a') - q(s,a)
 $$
 <ul>
-  <li>Anularlo en todo $(s,a)$ es la ecuación de optimalidad de Bellman, $q = Tq$.</li>
+  <li>Llamando $(Tq)(s,a)$ a los dos primeros términos, anularlo en todo $(s,a)$ es $q = Tq$: la ecuación de optimalidad de Bellman, cuya solución es $q_*$.</li>
 </ul>
 
 </section>
@@ -503,6 +507,16 @@ $$
 </section>
 <section>
 <div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>La prudencia de SARSA no es miedo</h2>
+<ul>
+  <li>La idea que se demostrará: SARSA optimiza un mundo en que su propia exploración es parte del entorno.</li>
+  <li>Ese mundo es un suelo resbaloso: con probabilidad $\varepsilon$ la acción elegida se reemplaza por una al azar, igual que el azar de $\varepsilon$-greedy.</li>
+</ul>
+
+</section>
+<section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
 <h2>SARSA promedia la acción siguiente según ε-greedy</h2>
 $$
 (M_\varepsilon q)(s) = (1-\varepsilon) \max_a q(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_a q(s,a)
@@ -513,7 +527,7 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
 <h2>Paso 1: el punto fijo de SARSA cumple su propia ecuación</h2>
 $$
 q(s,a) = r(s,a) + \gamma \sum_{s'} P(s' \mid s,a)\, (M_\varepsilon q)(s')
@@ -524,42 +538,70 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
 <h2>Paso 2: un robot que resbala con probabilidad ε</h2>
 $$
 \rho(b \mid a) = (1-\varepsilon)\, \mathbf{1}[b = a] + \frac{\varepsilon}{|\mathcal{A}|}
 $$
 <ul>
-  <li>Elegir $a$ ejecuta $b$ con probabilidad $\rho(b \mid a)$. Sea $\tilde v$ el valor óptimo de ese mundo y $u(s,b) = r(s,b) + \gamma \sum_{s'} P(s' \mid s,b)\, \tilde v(s')$ el valor de <em>ejecutar</em> $b$.</li>
+  <li>Elegir $a$ ejecuta $b$ con probabilidad $\rho(b \mid a)$: con $1-\varepsilon$ la propia $a$, y con $\varepsilon$ una de las $|\mathcal{A}|$ acciones al azar.</li>
+  <li>Sea $\tilde v$ el valor óptimo de ese mundo y $u(s,b) = r(s,b) + \gamma \sum_{s'} P(s' \mid s,b)\, \tilde v(s')$ el valor de <em>ejecutar</em> $b$.</li>
 </ul>
 
 </section>
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
 <h2>Paso 3: elegir vale un promedio de ejecutar</h2>
 $$
-\tilde q(s,a) = (1-\varepsilon)\, u(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_b u(s,b) \quad\Longrightarrow\quad \tilde v(s) = \max_a \tilde q(s,a) = (M_\varepsilon u)(s)
+\tilde q(s,a) = (1-\varepsilon)\, u(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_b u(s,b)
 $$
+<ul>
+  <li>$\tilde q(s,a)$ es el valor de <em>elegir</em> $a$ en el mundo resbaloso: se promedia $u$ sobre lo que de verdad se ejecuta, con los pesos $\rho(b \mid a)$.</li>
+</ul>
 
 </section>
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>Paso 4: u cumple la misma ecuación que SARSA</h2>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
+<h2>Paso 4: el mejor valor de ese mundo es M<sub>ε</sub> aplicado a u</h2>
+$$
+\tilde v(s) = \max_a \tilde q(s,a) = (1-\varepsilon) \max_a u(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_b u(s,b) = (M_\varepsilon u)(s)
+$$
+<ul>
+  <li>El segundo término de $\tilde q$ no depende de $a$, así que el máximo solo afecta al primero.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
+<h2>Paso 5: u cumple la misma ecuación que SARSA</h2>
 $$
 u(s,b) = r(s,b) + \gamma \sum_{s'} P(s' \mid s,b)\, (M_\varepsilon u)(s')
 $$
 <ul>
-  <li>$M_\varepsilon$ combina un máximo y un promedio, ambos no expansivos: la ecuación tiene una sola solución.</li>
+  <li>Basta reemplazar $\tilde v = M_\varepsilon u$ en la definición de $u$; $M_\varepsilon$ combina un máximo y un promedio, ambos no expansivos, así que la ecuación tiene una sola solución.</li>
   <li>Entonces $q_{\text{SARSA}} = u$, y como $\tilde q$ crece con $u$, ambos eligen la misma acción.</li>
 </ul>
 
+</section>
 </section>
 <section>
 <div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
 <h2>SARSA resuelve con exactitud el problema del robot que resbala</h2>
 <ul>
-  <li>Su prudencia no es miedo: optimiza un mundo en que su propia exploración es parte del entorno.</li>
+  <li>Su ruta es la óptima de un robot que resbala con probabilidad $p = \varepsilon$; Q-Learning resuelve el mundo sin resbalón.</li>
   <li>Con $\varepsilon \to 0$ ese mundo se vuelve el original y los dos algoritmos coinciden.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<h2>Para llegar al punto fijo, los pasos deben decrecer</h2>
+$$
+\sum_t \alpha_t = \infty, \qquad \sum_t \alpha_t^2 &lt; \infty
+$$
+<ul>
+  <li>Condiciones de Robbins y Monro, con cada par estado-acción visitado infinitas veces: los pasos deben poder llegar lejos, pero su ruido debe extinguirse.</li>
+  <li>Con $\alpha$ constante las estimaciones siguen oscilando, como en la caminata aleatoria; $\alpha = 1/N(s,a)^{0.8}$, con $N(s,a)$ las visitas al par, cumple ambas porque el exponente está entre $1/2$ y $1$.</li>
 </ul>
 
 </section>
@@ -777,12 +819,11 @@ $$
 </section>
 <section>
 <div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>La ruta de SARSA sube a medida que crece ε</h2>
+<h2>En vivo: los valores se acercan a su punto fijo</h2>
 <ul>
-  <li>$\varepsilon \le 0.15$: segunda fila, 11 pasos. $\varepsilon \ge 0.2$: fila superior, 13 pasos.</li>
-  <li>Q-Learning: siempre el borde, 9 pasos, el óptimo del mundo sin resbalón.</li>
+  <li>Cada punto es un par (casilla, acción): horizontal, el valor que predice la teoría; vertical, el aprendido con $\alpha = 1/N(s,a)^{0.8}$.</li>
 </ul>
-
+<div data-rlw="puntoFijoVivo" data-ratio="0.31" style="max-width:1100px"></div>
 </section>
 <section>
 <div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
@@ -815,21 +856,12 @@ $$
 </section>
 <section>
 <div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
-<h2>Subir, quedarse o bajar; +1 al golpear, −1 al fallar</h2>
-<ul>
-  <li>La pelota avanza una casilla por paso y rebota arriba, abajo y a la izquierda.</li>
-  <li>Golpear da $+1$ y la devuelve; fallar da $-1$ y termina el partido, que dura a lo más 20 golpes; $\gamma = 0.95$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
 <h2>El estado necesita la velocidad de la pelota</h2>
 $$
 s = (x,\ y,\ v_x,\ v_y,\ p)
 $$
 <ul>
-  <li>Posición y velocidad de la pelota y posición de la paleta: $10 \cdot 8 \cdot 2 \cdot 3 \cdot 7 = 3360$ estados y 3 acciones.</li>
+  <li>Posición y velocidad de la pelota y posición de la paleta: $10 \cdot 8 \cdot 2 \cdot 3 \cdot 7 = 3360$ estados y 3 acciones; descuento $\gamma = 0.95$.</li>
   <li>Sin la velocidad, una misma foto sirve para una pelota que sube y una que baja: el estado no sería de Markov.</li>
 </ul>
 
@@ -882,19 +914,310 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 11 · Convergencia</div>
-<h2>Converger exige visitar todo y pasos que decrezcan</h2>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>Otra familia ajusta la política, pero REINFORCE espera el final</h2>
 $$
-\sum_t \alpha_t = \infty, \qquad \sum_t \alpha_t^2 &lt; \infty
+\pi(a \mid s; \theta) = \frac{e^{\theta_{s,a}}}{\sum_b e^{\theta_{s,b}}}, \qquad \theta \leftarrow \theta + \alpha\, \big( G_t - v(s_t) \big)\, \nabla_\theta \log \pi(a_t \mid s_t; \theta)
 $$
 <ul>
-  <li>Condiciones de Robbins y Monro: los pasos deben poder llegar lejos, pero su ruido debe extinguirse.</li>
-  <li>Con $\alpha$ constante las estimaciones siguen oscilando, como en la animación.</li>
+  <li>Una <b>política parametrizada</b> da a cada acción una probabilidad que depende de preferencias $\theta_{s,a}$; el <b>gradiente de política</b> mueve $\theta$ hacia más retorno esperado, sin pasar por un $\max$.</li>
+  <li>En REINFORCE con línea base, $\nabla_\theta \log \pi$ apunta a hacer más probable la acción tomada y $G_t - v(s_t)$ dice si resultó mejor o peor que lo habitual.</li>
+  <li>Tanto $G_t$ como la línea base $v$ salen de episodios completos: es Monte Carlo, con su varianza alta.</li>
 </ul>
 
 </section>
 <section>
-<div class="section-label">§ 11 · Convergencia</div>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>La idea: usar el error TD como peso</h2>
+$$
+G_t - v(s_t) \quad\longrightarrow\quad \delta_t = r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t)
+$$
+<ul>
+  <li>El <b>actor</b> es la política; el <b>crítico</b> es $v$, aprendido con TD(0), que juzga cada acción apenas ocurre.</li>
+</ul>
+
+</section>
+<section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>Proposición: el error TD estima la ventaja</h2>
+$$
+v = v_\pi \;\Longrightarrow\; \mathbb{E}\left[\, \delta_t \mid s_t, a_t \,\right] = q_\pi(s_t, a_t) - v_\pi(s_t)
+$$
+<ul>
+  <li>$q_\pi - v_\pi$ es la <b>ventaja</b>: cuánto mejor que lo habitual en esa casilla fue la acción.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico · Demostración</div>
+<h2>Demostración: es la ecuación de Bellman de q</h2>
+$$
+\mathbb{E}\left[\, r_{t+1} + \gamma\, v_\pi(s_{t+1}) \mid s_t, a_t \,\right] = q_\pi(s_t, a_t)
+$$
+<ul>
+  <li>Tomar $a_t$, cobrar la recompensa y seguir la política desde $s_{t+1}$ es la definición de $q_\pi(s_t, a_t)$; restar $v_\pi(s_t)$, constante dado $s_t$, da la ventaja.</li>
+</ul>
+
+</section>
+</section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>Actor-crítico de un paso</h2>
+<ul>
+  <li>1. El actor elige $a_t \sim \pi(\cdot \mid s_t; \theta)$; se observan $r_{t+1}$ y $s_{t+1}$.</li>
+  <li>2. Error TD: $\delta_t = r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t)$.</li>
+  <li>3. Crítico: $v(s_t) \leftarrow v(s_t) + \beta\, \delta_t$. Actor: $\theta \leftarrow \theta + \alpha\, \delta_t\, \nabla_\theta \log \pi(a_t \mid s_t; \theta)$.</li>
+</ul>
+<p class="note">Sesgado mientras el crítico no sea exacto, pero con la varianza de un solo paso.</p>
+
+</section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>Con el mismo paso grande, ¿cuál aprende?</h2>
+<ul>
+  <li>Ambos usan $\alpha = 0.05$: REINFORCE con el retorno de episodios completos, el actor-crítico con el error TD de un paso. Cada episodio parte de una casilla al azar; flechas: $\pi(a \mid s)$.</li>
+</ul>
+<div data-rlw="actorCriticoVivo" data-ratio="0.43" style="max-width:1000px"></div>
+
+</section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>El crítico permite pasos 25 veces mayores</h2>
+<ul>
+  <li>Seis semillas, 3000 episodios, $\alpha = 0.05$: REINFORCE se estanca en $-20$, la política que nunca llega; el actor-crítico aprende a cruzar.</li>
+</ul>
+<div class="svg-holder">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4400 1800">
+<defs>
+  <clipPath id="acclip860">
+    <rect x="0" y="0" width="4400" height="1800"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#acclip860)" d="M0 1800 L4400 1800 L4400 -1.11022e-13 L0 -1.11022e-13  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="acclip861">
+    <rect x="880" y="0" width="3081" height="1800"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#acclip860)" d="M344.745 1570.82 L2089.76 1570.82 L2089.76 167.139 L344.745 167.139  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="acclip862">
+    <rect x="344" y="167" width="1746" height="1405"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="344.745,1570.82 344.745,167.139 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="926.418,1570.82 926.418,167.139 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="1508.09,1570.82 1508.09,167.139 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2089.76,1570.82 2089.76,167.139 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="344.745,1414.86 2089.76,1414.86 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="344.745,1102.93 2089.76,1102.93 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="344.745,790.997 2089.76,790.997 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="344.745,479.068 2089.76,479.068 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="344.745,167.139 2089.76,167.139 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,1570.82 2089.76,1570.82 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,1570.82 344.745,1551.92 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="926.418,1570.82 926.418,1551.92 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1508.09,1570.82 1508.09,1551.92 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2089.76,1570.82 2089.76,1551.92 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 344.745, 1669.74)" x="344.745" y="1669.74">0</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 926.418, 1669.74)" x="926.418" y="1669.74">1000</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 1508.09, 1669.74)" x="1508.09" y="1669.74">2000</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2089.76, 1669.74)" x="2089.76" y="1669.74">3000</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(0, 1217.25, 1793.58)" x="1217.25" y="1793.58">episodio</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,1570.82 344.745,167.139 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,1414.86 363.643,1414.86 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,1102.93 363.643,1102.93 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,790.997 363.643,790.997 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,479.068 363.643,479.068 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="344.745,167.139 363.643,167.139 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 218.53, 1440.86)" x="218.53" y="1440.86">−40</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 218.53, 1128.93)" x="218.53" y="1128.93">−30</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 218.53, 816.997)" x="218.53" y="816.997">−20</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 218.53, 505.068)" x="218.53" y="505.068">−10</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 258.673, 193.139)" x="258.673" y="193.139">0</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(-90, 76.0025, 868.979)" x="76.0025" y="868.979">v(S) de la política</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:95px; text-anchor:middle;" transform="rotate(0, 1217.25, 82.8)" x="1217.25" y="82.8">REINFORCE con línea base</text>
+</g>
+<polyline clip-path="url(#acclip862)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="344.745,8273.74 402.912,790.997 461.08,790.997 519.247,790.997 577.414,790.997 635.581,790.997 693.749,790.997 751.916,790.997 810.083,790.997 868.251,790.997 926.418,790.997 984.585,790.997 1042.75,790.997 1100.92,790.997 1159.09,790.997 1217.25,790.997 1275.42,790.997 1333.59,790.997 1391.76,790.997 1449.92,790.997 1508.09,790.997 1566.26,790.997 1624.43,790.997 1682.59,790.997 1740.76,790.997 1798.93,790.997 1857.09,790.997 1915.26,790.997 1973.43,790.997 2031.6,790.997 2089.76,790.997 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="344.745,8273.74 402.912,790.997 461.08,790.997 519.247,790.997 577.414,790.997 635.581,790.997 693.749,790.997 751.916,790.997 810.083,790.997 868.251,790.997 926.418,790.997 984.585,790.997 1042.75,790.997 1100.92,790.997 1159.09,790.997 1217.25,790.997 1275.42,790.997 1333.59,790.997 1391.76,790.997 1449.92,790.997 1508.09,790.997 1566.26,790.997 1624.43,790.997 1682.59,790.997 1740.76,790.997 1798.93,790.997 1857.09,790.997 1915.26,790.997 1973.43,790.997 2031.6,790.997 2089.76,790.997 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="344.745,8273.74 402.912,790.997 461.08,790.997 519.247,790.997 577.414,790.997 635.581,790.997 693.749,790.997 751.916,790.997 810.083,790.997 868.251,790.997 926.418,790.997 984.585,790.997 1042.75,790.997 1100.92,790.997 1159.09,790.997 1217.25,790.997 1275.42,790.997 1333.59,790.997 1391.76,790.997 1449.92,790.997 1508.09,790.997 1566.26,790.997 1624.43,790.997 1682.59,790.997 1740.76,790.997 1798.93,790.997 1857.09,790.997 1915.26,790.997 1973.43,790.997 2031.6,790.997 2089.76,790.997 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="344.745,8273.74 402.912,790.997 461.08,790.997 519.247,790.997 577.414,790.997 635.581,790.997 693.749,790.997 751.916,790.997 810.083,790.997 868.251,790.997 926.418,790.997 984.585,790.997 1042.75,790.997 1100.92,790.997 1159.09,790.997 1217.25,790.997 1275.42,790.997 1333.59,790.997 1391.76,790.997 1449.92,790.997 1508.09,790.997 1566.26,790.997 1624.43,790.997 1682.59,790.997 1740.76,790.997 1798.93,790.997 1857.09,790.997 1915.26,790.997 1973.43,790.997 2031.6,790.997 2089.76,790.997 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="344.745,8273.74 402.912,790.997 461.08,790.997 519.247,790.997 577.414,790.997 635.581,790.997 693.749,790.997 751.916,790.997 810.083,790.997 868.251,790.997 926.418,790.997 984.585,790.997 1042.75,790.997 1100.92,790.997 1159.09,790.997 1217.25,790.997 1275.42,790.997 1333.59,790.997 1391.76,790.997 1449.92,790.997 1508.09,790.997 1566.26,790.997 1624.43,790.997 1682.59,790.997 1740.76,790.997 1798.93,790.997 1857.09,790.997 1915.26,790.997 1973.43,790.997 2031.6,790.997 2089.76,790.997 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="344.745,8273.74 402.912,790.997 461.08,790.997 519.247,790.997 577.414,790.997 635.581,790.997 693.749,790.997 751.916,790.997 810.083,790.997 868.251,790.997 926.418,790.997 984.585,790.997 1042.75,790.997 1100.92,790.997 1159.09,790.997 1217.25,790.997 1275.42,790.997 1333.59,790.997 1391.76,790.997 1449.92,790.997 1508.09,790.997 1566.26,790.997 1624.43,790.997 1682.59,790.997 1740.76,790.997 1798.93,790.997 1857.09,790.997 1915.26,790.997 1973.43,790.997 2031.6,790.997 2089.76,790.997 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="2, 4" points="-1400.27,397.966 3834.78,397.966 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="16, 10" points="-1400.27,470.646 3834.78,470.646 "/>
+<polyline clip-path="url(#acclip862)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="16, 8, 2, 8" points="-1400.27,790.997 3834.78,790.997 "/>
+<path clip-path="url(#acclip860)" d="M1347.36 1524.03 L2031.6 1524.03 L2031.6 1146.78 L1347.36 1146.78  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1347.36,1524.03 2031.6,1524.03 2031.6,1146.78 1347.36,1146.78 1347.36,1524.03 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#4682b4; stroke-linecap:round; stroke-linejoin:round; stroke-width:9.6; stroke-opacity:0.8; fill:none" points="1366.75,1222.23 1483.08,1222.23 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 1502.47, 1248.23)" x="1502.47" y="1248.23">6 semillas</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:6; stroke-opacity:1; fill:none" stroke-dasharray="3, 6" points="1366.75,1297.68 1483.08,1297.68 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 1502.47, 1323.68)" x="1502.47" y="1323.68">borde −7.40</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:6; stroke-opacity:1; fill:none" stroke-dasharray="24, 15" points="1366.75,1373.13 1483.08,1373.13 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 1502.47, 1399.13)" x="1502.47" y="1399.13">segura −9.73</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:6; stroke-opacity:1; fill:none" stroke-dasharray="24, 12, 3, 12" points="1366.75,1448.58 1483.08,1448.58 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 1502.47, 1474.58)" x="1502.47" y="1474.58">nunca llega −20</text>
+</g>
+<path clip-path="url(#acclip860)" d="M2544.74 1570.82 L4289.76 1570.82 L4289.76 167.139 L2544.74 167.139  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="acclip863">
+    <rect x="2544" y="167" width="1746" height="1405"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2544.74,1570.82 2544.74,167.139 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="3126.42,1570.82 3126.42,167.139 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="3708.09,1570.82 3708.09,167.139 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="4289.76,1570.82 4289.76,167.139 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2544.74,1414.86 4289.76,1414.86 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2544.74,1102.93 4289.76,1102.93 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2544.74,790.997 4289.76,790.997 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2544.74,479.068 4289.76,479.068 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:2; stroke-opacity:0.1; fill:none" points="2544.74,167.139 4289.76,167.139 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,1570.82 4289.76,1570.82 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,1570.82 2544.74,1551.92 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="3126.42,1570.82 3126.42,1551.92 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="3708.09,1570.82 3708.09,1551.92 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="4289.76,1570.82 4289.76,1551.92 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2544.74, 1669.74)" x="2544.74" y="1669.74">0</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 3126.42, 1669.74)" x="3126.42" y="1669.74">1000</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 3708.09, 1669.74)" x="3708.09" y="1669.74">2000</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 4289.76, 1669.74)" x="4289.76" y="1669.74">3000</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(0, 3417.25, 1793.58)" x="3417.25" y="1793.58">episodio</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,1570.82 2544.74,167.139 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,1414.86 2563.64,1414.86 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,1102.93 2563.64,1102.93 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,790.997 2563.64,790.997 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,479.068 2563.64,479.068 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2544.74,167.139 2563.64,167.139 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2418.53, 1440.86)" x="2418.53" y="1440.86">−40</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2418.53, 1128.93)" x="2418.53" y="1128.93">−30</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2418.53, 816.997)" x="2418.53" y="816.997">−20</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2418.53, 505.068)" x="2418.53" y="505.068">−10</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:middle;" transform="rotate(0, 2458.67, 193.139)" x="2458.67" y="193.139">0</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:89px; text-anchor:middle;" transform="rotate(-90, 2276, 868.979)" x="2276" y="868.979">v(S) de la política</text>
+</g>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:95px; text-anchor:middle;" transform="rotate(0, 3417.25, 82.8)" x="3417.25" y="82.8">Actor-crítico</text>
+</g>
+<polyline clip-path="url(#acclip863)" style="stroke:#2e8b57; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="2544.74,8273.74 2602.91,615.342 2661.08,569.363 2719.25,547.553 2777.41,525.446 2835.58,503.961 2893.75,465.489 2951.92,455.524 3010.08,453.798 3068.25,451.298 3126.42,449.885 3184.59,447.413 3242.75,446.426 3300.92,445.864 3359.09,444.989 3417.25,444.667 3475.42,444.348 3533.59,444.152 3591.76,443.943 3649.92,443.661 3708.09,443.474 3766.26,443.267 3824.43,443.057 3882.59,442.84 3940.76,442.459 3998.93,442.269 4057.09,442.035 4115.26,441.264 4173.43,440.551 4231.6,440.489 4289.76,440.372 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#2e8b57; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="2544.74,8273.74 2602.91,628.25 2661.08,567.922 2719.25,516.296 2777.41,497.021 2835.58,477.643 2893.75,470.414 2951.92,466.909 3010.08,462.806 3068.25,455.572 3126.42,456.123 3184.59,455.632 3242.75,455.159 3300.92,453.099 3359.09,451.341 3417.25,449.889 3475.42,449.214 3533.59,448.912 3591.76,448.649 3649.92,448.15 3708.09,447.819 3766.26,447.734 3824.43,446.97 3882.59,446.748 3940.76,446.551 3998.93,446.36 4057.09,446.301 4115.26,446.226 4173.43,445.879 4231.6,445.568 4289.76,445.495 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#2e8b57; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="2544.74,8273.74 2602.91,714.988 2661.08,604.395 2719.25,532.074 2777.41,488.458 2835.58,471.015 2893.75,463.698 2951.92,456.327 3010.08,454.543 3068.25,453.064 3126.42,451.915 3184.59,451.111 3242.75,450.118 3300.92,449.145 3359.09,448.771 3417.25,448.616 3475.42,447.878 3533.59,446.839 3591.76,446.377 3649.92,446.227 3708.09,446.1 3766.26,445.651 3824.43,445.618 3882.59,445.483 3940.76,445.383 3998.93,445.268 4057.09,445.222 4115.26,445.171 4173.43,445.045 4231.6,444.867 4289.76,444.6 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#2e8b57; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="2544.74,8273.74 2602.91,657.912 2661.08,544.412 2719.25,516.243 2777.41,495.639 2835.58,481.963 2893.75,473.892 2951.92,469.907 3010.08,465.405 3068.25,462.44 3126.42,459.42 3184.59,458.509 3242.75,457.266 3300.92,456.651 3359.09,455.909 3417.25,454.737 3475.42,454.224 3533.59,453.129 3591.76,452.693 3649.92,451.805 3708.09,451.142 3766.26,450.166 3824.43,449.506 3882.59,449.025 3940.76,448.734 3998.93,448.369 4057.09,447.78 4115.26,447.158 4173.43,445.983 4231.6,445.657 4289.76,445.329 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#2e8b57; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="2544.74,8273.74 2602.91,748.371 2661.08,474.785 2719.25,456.729 2777.41,453.269 2835.58,449.396 2893.75,447.407 2951.92,446.029 3010.08,444.795 3068.25,443.916 3126.42,443.401 3184.59,443.09 3242.75,442.747 3300.92,442.415 3359.09,442.286 3417.25,441.888 3475.42,441.599 3533.59,441.292 3591.76,441.181 3649.92,440.992 3708.09,440.905 3766.26,440.695 3824.43,440.617 3882.59,440.536 3940.76,440.502 3998.93,440.289 4057.09,440.225 4115.26,440.129 4173.43,440.072 4231.6,439.969 4289.76,439.847 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#2e8b57; stroke-linecap:round; stroke-linejoin:round; stroke-width:6.4; stroke-opacity:0.8; fill:none" points="2544.74,8273.74 2602.91,639.68 2661.08,604.382 2719.25,527.994 2777.41,499.532 2835.58,483.893 2893.75,471.336 2951.92,468.732 3010.08,467.129 3068.25,464.052 3126.42,461.426 3184.59,459.775 3242.75,458.749 3300.92,457.353 3359.09,455.583 3417.25,454.897 3475.42,452.027 3533.59,452.224 3591.76,451.514 3649.92,450.492 3708.09,447.523 3766.26,446.276 3824.43,445.195 3882.59,442.689 3940.76,437.896 3998.93,435.837 4057.09,432.693 4115.26,428.416 4173.43,424.699 4231.6,421.883 4289.76,431.567 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="2, 4" points="799.726,397.966 6034.78,397.966 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="16, 10" points="799.726,470.646 6034.78,470.646 "/>
+<polyline clip-path="url(#acclip863)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="16, 8, 2, 8" points="799.726,790.997 6034.78,790.997 "/>
+<path clip-path="url(#acclip860)" d="M3547.36 1524.03 L4231.6 1524.03 L4231.6 1146.78 L3547.36 1146.78  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="3547.36,1524.03 4231.6,1524.03 4231.6,1146.78 3547.36,1146.78 3547.36,1524.03 "/>
+<polyline clip-path="url(#acclip860)" style="stroke:#2e8b57; stroke-linecap:round; stroke-linejoin:round; stroke-width:9.6; stroke-opacity:0.8; fill:none" points="3566.75,1222.23 3683.08,1222.23 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 3702.47, 1248.23)" x="3702.47" y="1248.23">6 semillas</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:6; stroke-opacity:1; fill:none" stroke-dasharray="3, 6" points="3566.75,1297.68 3683.08,1297.68 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 3702.47, 1323.68)" x="3702.47" y="1323.68">borde −7.40</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:6; stroke-opacity:1; fill:none" stroke-dasharray="24, 15" points="3566.75,1373.13 3683.08,1373.13 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 3702.47, 1399.13)" x="3702.47" y="1399.13">segura −9.73</text>
+</g>
+<polyline clip-path="url(#acclip860)" style="stroke:#808080; stroke-linecap:round; stroke-linejoin:round; stroke-width:6; stroke-opacity:1; fill:none" stroke-dasharray="24, 12, 3, 12" points="3566.75,1448.58 3683.08,1448.58 "/>
+<g clip-path="url(#acclip860)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:71px; text-anchor:start;" transform="rotate(0, 3702.47, 1474.58)" x="3702.47" y="1474.58">nunca llega −20</text>
+</g>
+</svg>
+
+</div>
+<p class="note">No es que llegue más alto: con $\alpha = 0.002$ ambos aprenden parecido. El error TD de un paso varía menos que el retorno de un episodio, y eso tolera un paso 25 veces mayor.</p>
+
+</section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>Entre un paso y el episodio completo: GAE</h2>
+$$
+A_t = \sum_{k \ge 0} (\gamma \lambda)^k\, \delta_{t+k}, \qquad 0 \le \lambda \le 1
+$$
+<ul>
+  <li>El error TD de un paso, $\delta_t$, varía poco pero hereda el sesgo del crítico; $G_t - v(s_t)$ no tiene sesgo pero acumula el ruido de todo el episodio.</li>
+  <li>La <strong>estimación generalizada de la ventaja</strong> (GAE, <em>Generalized Advantage Estimation</em>, Schulman et al., 2016) suma los errores TD de los pasos siguientes, cada uno con un peso $(\gamma\lambda)^k$ que decae: es la idea de TD(λ) aplicada a la ventaja.</li>
+</ul>
+</section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>Los extremos de λ recuperan los dos métodos</h2>
+$$
+\lambda = 1: \quad \sum_{k \ge 0} \gamma^k \delta_{t+k} = \underbrace{\sum_{k \ge 0} \gamma^k r_{t+k+1}}_{G_t} + \sum_{k \ge 0} \Big( \gamma^{k+1} v(s_{t+k+1}) - \gamma^{k} v(s_{t+k}) \Big) = G_t - v(s_t)
+$$
+<ul>
+  <li>Con $\lambda = 0$ solo queda $A_t = \delta_t$: el actor-crítico de un paso.</li>
+  <li>Con $\lambda = 1$ la segunda suma se cancela en cadena, cada término con el siguiente, y solo sobrevive $-v(s_t)$: la ventaja de REINFORCE con línea base.</li>
+</ul>
+<p class="note">En la práctica se usa un λ intermedio, típicamente cerca de 0.95: poco sesgo y bastante menos varianza que el episodio completo.</p>
+</section>
+<section>
+<div class="section-label">§ 11 · Actor-crítico</div>
+<h2>A2C, A3C y PPO: el actor-crítico a escala</h2>
+<ul>
+  <li><strong>A2C</strong> (<em>Advantage Actor-Critic</em>, actor-crítico con ventaja): actor y crítico son redes neuronales, y varias copias del entorno juegan a la vez para que cada actualización mezcle experiencias distintas.</li>
+  <li><strong>A3C</strong> (<em>Asynchronous</em> A2C): las copias actualizan la red cada una por su cuenta, sin esperarse (Mnih et al., 2016).</li>
+  <li><strong>PPO</strong> (<em>Proximal Policy Optimization</em>) en su forma completa: el crítico estima las ventajas con GAE, y el actor usa un objetivo recortado que limita cuánto puede cambiar la política en cada actualización.</li>
+</ul>
+</section>
+<section>
+<div class="section-label">§ 12 · Lo que sigue</div>
 <h2>Una tabla por estado no escala</h2>
 <ul>
   <li>Q-Learning tabular converge a $q_*$ (Watkins y Dayan, 1992), pero con millones de estados la tabla no cabe ni se llena.</li>
@@ -1413,6 +1736,107 @@ RLW.tdVivo = function (root) {
   nuevo(); onResize(root, dibuja); dibuja();
 };
 
+// ======================== 3b. CONVERGENCIA A LOS PUNTOS FIJOS ========================
+// SARSA y Q-Learning con alfa = 1/N(s,a)^0.8; se comparan con sus puntos fijos teóricos:
+// q* (mundo sin resbalón) para Q-Learning y u (Bellman con M_eps) para SARSA.
+function teoriaPuntosFijos(eps, gam) {
+  const n = NR * NC * 4, Qs = new Float64Array(n), U = new Float64Array(n);
+  const Meps = (Q, r, c) => { let m = -Infinity, s = 0; for (let a = 0; a < 4; a++) { const q = Q[qi(r, c, a)]; m = Math.max(m, q); s += q; } return (1 - eps) * m + eps / 4 * s; };
+  for (let it = 0; it < 3000; it++) {
+    let d = 0;
+    for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) {
+      if (esMeta(r, c) || esAcant(r, c)) continue;
+      for (let a = 0; a < 4; a++) {
+        const [nr, nc, rw] = mover(r, c, a), fin = esMeta(nr, nc), k = qi(r, c, a);
+        const qs = rw + (fin ? 0 : gam * maxQ(Qs, nr, nc)), u = rw + (fin ? 0 : gam * Meps(U, nr, nc));
+        d = Math.max(d, Math.abs(qs - Qs[k]), Math.abs(u - U[k])); Qs[k] = qs; U[k] = u;
+      }
+    }
+    if (d < 1e-10) break;
+  }
+  return { q: Qs, sarsa: U };
+}
+function agenteRM(metodo, semilla) {
+  return { metodo, rnd: mulberry32(semilla), Q: new Float64Array(NR * NC * 4), N: new Float64Array(NR * NC * 4), ep: 0 };
+}
+function episodioRM(A, eps, gam) {
+  const eg = (r, c) => A.rnd() < eps ? Math.floor(A.rnd() * 4) : argmaxQ(A.Q, r, c, A.rnd);
+  let r = S0[0], c = S0[1], a = eg(r, c);
+  for (let t = 0; t < 1000; t++) {
+    const [nr, nc, rw] = mover(r, c, a), fin = esMeta(nr, nc), k = qi(r, c, a);
+    let na = -1, obj;
+    if (A.metodo === 'sarsa') { na = fin ? -1 : eg(nr, nc); obj = rw + (fin ? 0 : gam * A.Q[qi(nr, nc, na)]); }
+    else obj = rw + (fin ? 0 : gam * maxQ(A.Q, nr, nc));
+    A.N[k] += 1; A.Q[k] += Math.pow(A.N[k], -0.8) * (obj - A.Q[k]);
+    if (fin) break;
+    r = nr; c = nc; a = A.metodo === 'sarsa' ? na : eg(r, c);
+  }
+  A.ep++;
+}
+RLW.puntoFijoVivo = function (root) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const GAM = 0.95, METAS = [100, 1000, 10000, 100000];
+  const S = { eps: 0.1, semilla: 1, ag: null, teo: null, hist: [], meta: 0, corre: false };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'ε', 0.05, 0.3, 0.05, S.eps, 2, v => { S.eps = v; reinicia(); });
+  const bMas = [100, 1000, 10000].map(k => button(bar, '+' + k.toLocaleString('es-CL') + ' episodios', () => { S.meta = Math.max(S.meta, S.ag[0].ep) + k; arranca(); }));
+  const bPlay = button(bar, '▶ hasta 100.000', () => { if (S.corre) { S.corre = false; S.meta = S.ag[0].ep; } else { S.meta = 100000; arranca(); } });
+  button(bar, '↺ reiniciar', () => { S.semilla++; reinicia(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function reinicia() { S.corre = false; S.ag = [agenteRM('sarsa', 3000 + S.semilla), agenteRM('q', 4000 + S.semilla)]; S.teo = teoriaPuntosFijos(S.eps, GAM); S.hist = []; S.meta = 0; registra(); dibuja(); }
+  const pares = []; for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) if (!esMeta(r, c) && !esAcant(r, c)) for (let a = 0; a < 4; a++) pares.push(qi(r, c, a));
+  function rms(Q, T) { let s = 0; pares.forEach(k => { s += (Q[k] - T[k]) ** 2; }); return Math.sqrt(s / pares.length); }
+  function registra() { S.hist.push([Math.max(1, S.ag[0].ep), rms(S.ag[0].Q, S.teo.sarsa), rms(S.ag[1].Q, S.teo.q)]); }
+  function arranca() { if (!S.corre) { S.corre = true; requestAnimationFrame(loop); } }
+  function loop() {
+    if (!S.corre) return;
+    const t0 = performance.now();
+    while (S.ag[0].ep < S.meta && performance.now() - t0 < 30) {
+      for (let k = 0; k < 20 && S.ag[0].ep < S.meta; k++) { episodioRM(S.ag[0], S.eps, GAM); episodioRM(S.ag[1], S.eps, GAM); }
+      const e = S.ag[0].ep, ult = S.hist[S.hist.length - 1][0];
+      if (e >= ult * 1.08 || e === S.meta) registra();
+    }
+    if (S.ag[0].ep >= S.meta) S.corre = false;
+    dibuja();
+    if (S.corre) requestAnimationFrame(loop);
+  }
+  function ruta(Q) { const rr = rutaDesde((r, c) => argmaxQ(Q, r, c)); return rr.llega ? (rr.length - 1) + ' pasos' : 'aún no llega'; }
+  function dibuja() {
+    bPlay.textContent = S.corre ? '⏸ pausa' : '▶ hasta 100.000';
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.4);
+    let vmin = 0; pares.forEach(k => { vmin = Math.min(vmin, S.teo.sarsa[k], S.teo.q[k]); });
+    vmin = Math.floor(vmin / 20) * 20;
+    const lado = Math.min(h - fs * 4.2, (w * 0.62 - fs * 9) / 2);
+    const paneles = [['SARSA frente a su punto fijo', 0, S.teo.sarsa, PAL.blue], ['Q-Learning frente a q*', 1, S.teo.q, PAL.orange]];
+    const ticks = [vmin, vmin / 2, 0].map(v => [v, String(Math.round(v)).replace('-', '−')]);
+    paneles.forEach(([tit, i, T, col], j) => {
+      const P = { x: fs * 4 + j * (lado + fs * 4.6), y: fs * 1.6, w: lado, h: lado };
+      const [px, py] = ejes(g, P, vmin, 0, vmin, 0, [vmin, vmin / 2, 0].map(Math.round), ticks, 'valor teórico', 'valor aprendido', fs);
+      g.strokeStyle = PAL.faint; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(px(vmin), py(vmin)); g.lineTo(px(0), py(0)); g.stroke(); g.setLineDash([]);
+      const Q = S.ag[i].Q; g.fillStyle = col;
+      pares.forEach(k => { g.globalAlpha = 0.75; g.beginPath(); g.arc(px(T[k]), py(Math.max(vmin, Q[k])), Math.max(2.2, fs * 0.2), 0, 2 * Math.PI); g.fill(); });
+      g.globalAlpha = 1;
+      txt(g, tit, P.x + P.w / 2, fs * 0.7, col, 'center', fs * 0.85, true);
+    });
+    const P = { x: w * 0.62 + fs * 3.6, y: fs * 1.6, w: w * 0.38 - fs * 6.2, h: lado };
+    const lx = v => Math.log10(v), X1 = 5;
+    const ymax = Math.max(5, ...S.hist.map(x => Math.max(x[1], x[2])));
+    const top = Math.ceil(ymax / 10) * 10;
+    const [px, py] = ejes(g, P, 0, X1, 0, top, [], [[0, '0'], [top / 2, String(top / 2)], [top, String(top)]], 'episodios (escala logarítmica)', 'error RMS', fs);
+    ['1', '10', '100', '1.000', '10.000', '100.000'].forEach((s, k) => txt(g, s, px(k), P.y + P.h + fs * 0.9, PAL.soft, 'center', fs * 0.8));
+    curva(g, S.hist.map(x => lx(x[0])), S.hist.map(x => x[1]), px, py, PAL.blue, 2.5);
+    curva(g, S.hist.map(x => lx(x[0])), S.hist.map(x => x[2]), px, py, PAL.orange, 2.5);
+    txt(g, 'distancia al punto fijo', P.x + P.w / 2, fs * 0.7, PAL.ink, 'center', fs * 0.85, true);
+    const ultimo = S.hist[S.hist.length - 1];
+    const rt = (Qt) => ruta(Qt);
+    read.innerHTML = `Episodios: <b>${S.ag[0].ep.toLocaleString('es-CL')}</b> · error RMS: SARSA <b>${ultimo[1].toFixed(2)}</b>, Q-Learning <b>${ultimo[2].toFixed(2)}</b>. Teoría: SARSA, robot que resbala con p = ε; Q-Learning, mundo sin resbalón. ` +
+      `Ruta codiciosa: SARSA <b>${ruta(S.ag[0].Q)}</b> (teoría: ${rt(S.teo.sarsa)}), Q-Learning <b>${ruta(S.ag[1].Q)}</b> (teoría: ${rt(S.teo.q)}).`;
+  }
+  reinicia(); onResize(root, dibuja);
+};
+
 // ======================== 4. DQN EN VIVO ========================
 // Red 2 -> H -> H -> 4 con ReLU, entrada = (fila, columna) normalizadas; Adam, pérdida de Huber.
 function redNueva(H, rnd) {
@@ -1849,6 +2273,140 @@ RLW.pongDQN = function (root) {
   });
 };
 RLW._pong = { pongPaso, pongSaque, pongEvalua, pongSigue, PNS };
+
+// ======================== 7. REINFORCE EN VIVO ========================
+// Política softmax tabular θ(s,a); cada episodio parte de una casilla al azar (inicios aleatorios),
+// dura a lo sumo 200 pasos y al terminar actualiza θ con el retorno G_t (menos la línea base v(s)).
+const CELDAS = []; for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) if (!esAcant(r, c) && !esMeta(r, c)) CELDAS.push([r, c]);
+const si = (r, c) => r * NC + c;
+function pgProbs(th, r, c) {
+  const k = si(r, c) * 4; let m = -Infinity; for (let a = 0; a < 4; a++) m = Math.max(m, th[k + a]);
+  const e = [0, 1, 2, 3].map(a => Math.exp(th[k + a] - m)), s = e[0] + e[1] + e[2] + e[3];
+  return e.map(x => x / s);
+}
+function pgMuestra(p, rnd) { const u = rnd(); let s = 0; for (let a = 0; a < 4; a++) { s += p[a]; if (u < s) return a; } return 3; }
+function pgAgente(base, semilla, ac) {
+  return { base, ac: !!ac, rnd: mulberry32(semilla), th: new Float64Array(NR * NC * 4), V: new Float64Array(NR * NC),
+           ep: [], r: S0[0], c: S0[1], t: 0, n: 0, hist: [[0, pgValorS(new Float64Array(NR * NC * 4))]], estela: [] };
+}
+function pgInicia(A) {
+  const [r, c] = CELDAS[Math.floor(A.rnd() * CELDAS.length)]; A.r = r; A.c = c; A.t = 0; A.ep = []; A.estela = [[r, c]];
+}
+function pgValorS(th) {          // valor exacto de la política estocástica desde S (sin resbalón, γ = 0.95)
+  let V = new Float64Array(NR * NC);
+  const P = CELDAS.map(([r, c]) => pgProbs(th, r, c));
+  for (let it = 0; it < 3000; it++) {
+    const Vn = new Float64Array(NR * NC); let d = 0;
+    CELDAS.forEach(([r, c], k) => {
+      let v = 0;
+      for (let a = 0; a < 4; a++) { const [nr, nc, rw] = mover(r, c, a); v += P[k][a] * (rw + 0.95 * (esMeta(nr, nc) ? 0 : V[si(nr, nc)])); }
+      Vn[si(r, c)] = v; d = Math.max(d, Math.abs(v - V[si(r, c)]));
+    });
+    V = Vn; if (d < 1e-6) break;
+  }
+  return V[si(S0[0], S0[1])];
+}
+function pgActualiza(A, alfa, beta) {   // REINFORCE (cada visita), con o sin línea base
+  let G = 0;
+  const Gs = new Array(A.ep.length);
+  for (let t = A.ep.length - 1; t >= 0; t--) { G = A.ep[t][3] + 0.95 * G; Gs[t] = G; }
+  A.ep.forEach(([r, c, a], t) => {
+    const j = si(r, c); let d = Gs[t];
+    if (A.base) { d -= A.V[j]; A.V[j] += beta * d; }
+    const p = pgProbs(A.th, r, c);
+    for (let b = 0; b < 4; b++) A.th[j * 4 + b] += alfa * d * ((b === a ? 1 : 0) - p[b]);
+  });
+  A.n++;
+}
+function pgPaso(A, alfa, beta) {        // un paso de interacción; devuelve true al cerrar un episodio
+  A.alfa = alfa; A.beta = beta;
+  if (A.t === 0 && A.ep.length === 0 && A.estela.length === 0) pgInicia(A);
+  const p = pgProbs(A.th, A.r, A.c), a = pgMuestra(p, A.rnd);
+  const [nr, nc, rw, cae] = mover(A.r, A.c, a);
+  A.ep.push([A.r, A.c, a, rw]); A.t++;
+  if (A.ac) {                           // actor-crítico: el error TD hace de ventaja en cada paso
+    const j = si(A.r, A.c), d = rw + (esMeta(nr, nc) ? 0 : 0.95 * A.V[si(nr, nc)]) - A.V[j];
+    A.V[j] += A.beta * d;
+    for (let b = 0; b < 4; b++) A.th[j * 4 + b] += A.alfa * d * ((b === a ? 1 : 0) - p[b]);
+  }
+  if (cae) A.estela.push([3, Math.min(NC - 1, Math.max(0, A.c + DC[a])), true], null);
+  A.r = nr; A.c = nc; A.estela.push([nr, nc]); if (A.estela.length > 40) A.estela.shift();
+  if (esMeta(nr, nc) || A.t >= 200) {
+    if (A.ac) A.n++; else pgActualiza(A, alfa, beta);
+    if (A.n % 50 === 0) A.hist.push([A.n, pgValorS(A.th)]);
+    pgInicia(A); return true;
+  }
+  return false;
+}
+RLW._pg = { pgAgente, pgPaso, pgValorS, pgProbs };
+function pgWidget(root, cfg) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const BETA = 0.1;
+  const S = { alfa: cfg.alfa, vel: -10, corre: false, semilla: 1, ag: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'α', cfg.amin, cfg.amax, cfg.amin, S.alfa, 4, v => { S.alfa = v; });
+  const lab = el('label', { class: 'rlw-sl', html: 'velocidad ' }, bar);
+  const sel = el('select', {}, lab);
+  [['1', '1 paso por cuadro'], ['-1', '1 episodio por cuadro'], ['-10', '10 episodios por cuadro'], ['-50', '50 episodios por cuadro']].forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+  sel.value = String(S.vel);
+  sel.addEventListener('change', () => { S.vel = +sel.value; });
+  const bPlay = button(bar, '▶ entrenar', () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ entrenar'; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ reiniciar', () => { S.semilla++; nuevo(); dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function nuevo() { S.ag = cfg.agentes.map(([base, ac]) => pgAgente(base, 3000 + S.semilla, ac)); }
+  function avanza() {
+    S.ag.forEach(A => {
+      if (S.vel > 0) pgPaso(A, S.alfa, BETA);
+      else for (let e = 0; e < -S.vel; e++) { let n = 0; while (!pgPaso(A, S.alfa, BETA) && n++ < 250); }
+    });
+  }
+  function loop() { if (!S.corre) return; avanza(); dibuja(); if (S.ag[0].n >= 20000) { S.corre = false; bPlay.textContent = '▶ entrenar'; return; } requestAnimationFrame(loop); }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.56);
+    const cs = Math.min((w / 2 - 18) / NC, h * 0.5 / NR), Y = fs * 1.6;
+    const cols = cfg.colores, nombres = cfg.nombres;
+    S.ag.forEach((A, i) => {
+      const X = i * w / 2 + (w / 2 - NC * cs) / 2;
+      dibujaMundo(g, X, Y, cs, { robot: [A.r, A.c], estela: A.estela });
+      // la política como distribución: cuatro flechas por casilla, de largo proporcional a π(a|s)
+      CELDAS.forEach(([r, c]) => {
+        const p = pgProbs(A.th, r, c), cx = X + (c + 0.5) * cs, cy = Y + (r + 0.5) * cs;
+        for (let a = 0; a < 4; a++) {
+          const L = cs * 0.44 * Math.sqrt(p[a]); if (p[a] < 0.02) continue;
+          const ux = DC[a], uy = DR[a];
+          g.strokeStyle = cols[i]; g.fillStyle = cols[i]; g.globalAlpha = 0.35 + 0.65 * p[a]; g.lineWidth = Math.max(1.2, cs * 0.035);
+          g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + ux * L, cy + uy * L); g.stroke();
+          const k = Math.max(2.5, cs * 0.07);
+          g.beginPath(); g.moveTo(cx + ux * (L + k * 0.6), cy + uy * (L + k * 0.6));
+          g.lineTo(cx + ux * L - uy * k * 0.6, cy + uy * L + ux * k * 0.6); g.lineTo(cx + ux * L + uy * k * 0.6, cy + uy * L - ux * k * 0.6); g.closePath(); g.fill();
+          g.globalAlpha = 1;
+        }
+      });
+      txt(g, nombres[i] + ' · episodio ' + A.n, X + NC * cs / 2, fs * 0.75, cols[i], 'center', fs, true);
+    });
+    const P = { x: fs * 4.2, y: Y + NR * cs + fs * 1.0, w: w - fs * 6, h: h - (Y + NR * cs) - fs * 3.6 };
+    const n = Math.max(...S.ag.map(A => A.n)), X1 = Math.max(2000, Math.ceil(n / 1000) * 1000);
+    const [px, py] = ejes(g, P, 0, X1, -40, 0, [0, X1 / 4, X1 / 2, 3 * X1 / 4, X1].map(Math.round), [[0, '0'], [-10, '−10'], [-20, '−20'], [-30, '−30'], [-40, '−40']], 'episodio', 'valor v(S) de π', fs);
+    [[-7.40, 'borde −7.40', -0.55], [-9.73, 'segura −9.73', 0.6]].forEach(([v, s, d]) => {
+      g.strokeStyle = PAL.soft; g.setLineDash([4, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(P.x, py(v)); g.lineTo(P.x + P.w, py(v)); g.stroke(); g.setLineDash([]);
+      txt(g, s, P.x + P.w - 4, py(v) + fs * d, PAL.soft, 'right', fs * 0.8);
+    });
+    S.ag.forEach((A, i) => curva(g, A.hist.map(z => z[0]), A.hist.map(z => z[1]), px, py, cols[i], 2.5));
+    const ult = A => A.hist[A.hist.length - 1][1].toFixed(1);
+    const ruta = A => { const rr = rutaDesde((r, c) => { const p = pgProbs(A.th, r, c); return p.indexOf(Math.max(...p)); }); return rr.llega ? `${rr.length - 1} pasos` : 'aún no llega'; };
+    const [n0, n1] = cfg.cortos;
+    read.innerHTML = `Valor exacto desde S de la política estocástica actual: ${n0} <b>${ult(S.ag[0])}</b>, ${n1} <b>${ult(S.ag[1])}</b> ` +
+      `(se recalcula cada 50 episodios). Ruta más probable: ${n0} ${ruta(S.ag[0])}, ${n1} ${ruta(S.ag[1])}. ` +
+      `Cada episodio parte de una casilla al azar; las flechas miden la probabilidad π(a | s) de cada acción.`;
+  }
+  nuevo(); onResize(root, dibuja); dibuja();
+}
+RLW.reinforceVivo = root => pgWidget(root, { alfa: 0.002, amin: 0.0005, amax: 0.01, agentes: [[false, false], [true, false]], colores: [PAL.orange, PAL.blue],
+  nombres: ['REINFORCE sin línea base', 'REINFORCE con línea base'], cortos: ['sin línea base', 'con línea base'] });
+RLW.actorCriticoVivo = root => pgWidget(root, { alfa: 0.05, amin: 0.0025, amax: 0.1, agentes: [[true, false], [true, true]], colores: [PAL.blue, PAL.green],
+  nombres: ['REINFORCE con línea base', 'actor-crítico'], cortos: ['REINFORCE', 'actor-crítico'] });
 
 })();
 

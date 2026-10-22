@@ -120,6 +120,7 @@ p.note {
 .close-slide { }
 .close-slide h1 { font-size: 2em; max-width: 22em; line-height: 1.3; color: var(--pluto-blue); }
 
+.reveal .slides section.stack { padding: 0; }
 .slide-num { display: none; }
 .reveal .controls { color: var(--ink-faint); }
 .reveal .progress { background: transparent; color: var(--pluto-blue); height: 2px; }
@@ -131,6 +132,16 @@ p.note {
 .viz .val { font-variant-numeric:tabular-nums; color:var(--pluto-blue); font-weight:600; min-width:1.6em; }
 .viz canvas { width:100%; height:auto; display:block; border-radius:6px; }
 .viz .lect { text-align:center; font-size:0.85em; color:var(--ink-soft); font-variant-numeric:tabular-nums; margin-top:0.35em; }
+
+/* --- tabla de política --- */
+.reveal table.ptab { border-collapse: collapse; margin: 0.2em auto 0; font-size: 26px; }
+.reveal table.ptab th, .reveal table.ptab td { border-bottom: 1px solid #d8d2bf; padding: 3px 22px; text-align: center; }
+.reveal table.ptab th { color: #4a6f9c; font-weight: 700; border-bottom: 2px solid #4a6f9c; }
+.reveal table.ptab td.cas { text-align: left; }
+.reveal table.ptab td.cas span { color: #888; font-size: 0.8em; margin-left: 0.5em; }
+.reveal table.ptab td.uno { background: #fde3cf; color: #c24400; font-weight: 700; }
+.reveal table.ptab td.dots { color: #999; }
+.reveal table.ptab th.ar { font-family: Arial, Helvetica, sans-serif; font-size: 1.1em; }
 
 /* --- widgets del mundo del acantilado --- */
 .reveal .rlw { font-size: 17px; margin: 0.3em auto 0; }
@@ -180,73 +191,52 @@ p.note {
     <line x1="0" y1="2" x2="0" y2="-44" stroke="#3b3b3b" stroke-width="2"/>
     <path d="M0,-44 L20,-38 L0,-32 Z" fill="#2e7d32"/>
   </g><text x="65.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">S</text><text x="415.0" y="190.0" text-anchor="middle" font-size="15" font-weight="bold" fill="#ffffff">G</text><text x="240.0" y="216.2" text-anchor="middle" font-size="15" font-weight="bold" fill="#f4cccc">acantilado</text><text x="240.0" y="22.0" text-anchor="middle" font-size="12" fill="#555">8 columnas × 4 filas, vistas en perspectiva</text>
-  <line x1="484" y1="66" x2="514" y2="66" stroke="#e65100" stroke-width="3"/><text x="524" y="70" font-size="13" fill="#1a1a1a">ruta del borde: 9 pasos</text><line x1="484" y1="96" x2="514" y2="96" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4"/><text x="524" y="100" font-size="13" fill="#1a1a1a">ruta segura: 13 pasos</text><rect x="488" y="119" width="22" height="14" fill="#3a2a1a"/><text x="524" y="130" font-size="13" fill="#1a1a1a">acantilado: −100 y vuelta a S</text><text x="484" y="160" font-size="13" fill="#1a1a1a">cada paso: recompensa −1</text><text x="484" y="190" font-size="13" fill="#1a1a1a">resbalón: con prob. p, acción al azar</text>
+  <line x1="484" y1="66" x2="514" y2="66" stroke="#e65100" stroke-width="3"/><text x="524" y="70" font-size="13" fill="#1a1a1a">ruta del borde: 9 pasos</text><line x1="484" y1="96" x2="514" y2="96" stroke="#1565c0" stroke-width="3" stroke-dasharray="7,4"/><text x="524" y="100" font-size="13" fill="#1a1a1a">ruta segura: 13 pasos</text><rect x="488" y="119" width="22" height="14" fill="#3a2a1a"/><text x="524" y="130" font-size="13" fill="#1a1a1a">acantilado: −100 y vuelta a S</text><text x="484" y="160" font-size="13" fill="#1a1a1a">cada paso: recompensa −1</text><text x="484" y="190" font-size="13" fill="#1a1a1a">sin resbalón: cada acción se cumple</text>
 </svg>
 </div>
 
 </section>
 <section>
 <div class="section-label">§ 1 · El caso: el acantilado visto por una red</div>
-<h2>La mejor ruta vale −7.40 y tiene 9 pasos</h2>
+<h2>La mejor ruta vale −7.40: una respuesta conocida delata los fallos</h2>
 <ul>
   <li>Cada paso cuesta $-1$, caer cuesta $-100$ y devuelve a S; en este deck el suelo no resbala.</li>
-  <li>Con descuento $\gamma = 0.95$, el mejor retorno posible desde S es $v_*(S) = -(1-0.95^9)/(1-0.95) = -7.40$, por la ruta del borde.</li>
+  <li>Con descuento $\gamma = 0.95$, lo mejor posible desde S es $v_*(S) = -(1-0.95^9)/(1-0.95) = -7.40$, por la ruta del borde de 9 pasos.</li>
+  <li>Una red que aprenda debe llevar su estimación en S hacia $-7.40$ y su ruta a G en 9 pasos; si diverge o se pierde, se verá de inmediato.</li>
 </ul>
-
 </section>
 <section>
 <div class="section-label">§ 1 · El caso: el acantilado visto por una red</div>
-<h2>Q-Learning guarda un número por casilla y acción</h2>
-$$
-q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a) - q(s_t, a_t) \big)
-$$
+<h2>Una tabla de valores sirve para el acantilado, no para Atari</h2>
 <ul>
-  <li>$q(s,a)$: retorno esperado al tomar $a$ en $s$ y actuar de forma óptima después; con tasa $\alpha$.</li>
-  <li>Aquí la tabla tiene $25 \times 4 = 100$ entradas.</li>
+  <li>$q(s,a)$ es el retorno esperado al tomar $a$ en $s$ y actuar de forma óptima después; en el acantilado la tabla tiene $25 \times 4 = 100$ números.</li>
+  <li>En un juego de Atari el estado son 4 cuadros de $84 \times 84$ píxeles con 256 tonos de gris: $256^{28\,224} \approx 10^{67\,970}$ estados posibles, y ninguna tabla cabe ni se llena.</li>
+  <li>La red que aprendió esos juegos tiene unos 1.7 millones de parámetros, compartidos por todos los estados: en vez de una tabla, una función.</li>
 </ul>
-
 </section>
 <section>
 <div class="section-label">§ 1 · El caso: el acantilado visto por una red</div>
 <h2>La red recibe la casilla y devuelve los cuatro valores</h2>
 <ul>
-  <li>$2 \cdot 32 + 32 + 32 \cdot 32 + 32 + 32 \cdot 4 + 4 = 1284$ parámetros, compartidos por todas las casillas.</li>
+  <li>Entrada: la casilla como dos números entre 0 y 1, la fila (0 a 3) dividida por 3 y la columna (0 a 7) dividida por 7.</li>
 </ul>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 820 245" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
 <line x1="150" y1="100" x2="330" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="100" x2="330" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="100" x2="330" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="100" x2="330" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="100" x2="330" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="100" x2="330" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="100" x2="330" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="100" x2="330" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="150" y1="150" x2="330" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="40" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="62" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="84" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="106" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="128" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="150" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="172" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="40" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="84" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="128" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="172" stroke="#b0b8c8" stroke-width="0.6"/><line x1="330" y1="194" x2="510" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="40" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="40" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="40" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="40" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="62" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="62" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="62" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="62" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="84" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="84" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="84" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="84" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="106" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="106" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="106" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="106" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="128" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="128" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="128" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="128" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="150" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="150" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="150" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="150" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="172" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="172" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="172" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="172" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="194" x2="690" y2="62" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="194" x2="690" y2="106" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="194" x2="690" y2="150" stroke="#b0b8c8" stroke-width="0.6"/><line x1="510" y1="194" x2="690" y2="194" stroke="#b0b8c8" stroke-width="0.6"/><circle cx="150" cy="100" r="11" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/><circle cx="150" cy="150" r="11" fill="#e8f0fe" stroke="#4a6fa5" stroke-width="1.6"/><circle cx="330" cy="40" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="330" cy="62" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="330" cy="84" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="330" cy="106" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="330" cy="128" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="330" cy="150" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="330" cy="172" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="330" cy="194" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="40" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="62" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="84" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="106" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="128" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="150" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="172" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="510" cy="194" r="11" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.6"/><circle cx="690" cy="62" r="11" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.6"/><circle cx="690" cy="106" r="11" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.6"/><circle cx="690" cy="150" r="11" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.6"/><circle cx="690" cy="194" r="11" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.6"/>
-<text x="128" y="104" text-anchor="end" font-size="14" fill="#1a3a5c">fila / 3</text><text x="128" y="154" text-anchor="end" font-size="14" fill="#1a3a5c">columna / 7</text><text x="712" y="67" font-size="14" fill="#5c1a5c"><tspan font-family="serif" font-style="italic">q</tspan>(<tspan font-family="serif" font-style="italic">s</tspan>, ↑)</text><text x="712" y="111" font-size="14" fill="#5c1a5c"><tspan font-family="serif" font-style="italic">q</tspan>(<tspan font-family="serif" font-style="italic">s</tspan>, ↓)</text><text x="712" y="155" font-size="14" fill="#5c1a5c"><tspan font-family="serif" font-style="italic">q</tspan>(<tspan font-family="serif" font-style="italic">s</tspan>, ←)</text><text x="712" y="199" font-size="14" fill="#5c1a5c"><tspan font-family="serif" font-style="italic">q</tspan>(<tspan font-family="serif" font-style="italic">s</tspan>, →)</text><text x="330" y="232" text-anchor="middle" font-size="13" fill="#555">32 ReLU</text><text x="510" y="232" text-anchor="middle" font-size="13" fill="#555">32 ReLU</text>
-<text x="150" y="232" text-anchor="middle" font-size="13" fill="#555">entrada</text><text x="690" y="232" text-anchor="middle" font-size="13" fill="#555">4 salidas</text>
+<text x="128" y="104" text-anchor="end" font-size="14" fill="#1a3a5c">fila / 3</text><text x="128" y="154" text-anchor="end" font-size="14" fill="#1a3a5c">columna / 7</text><text x="712" y="67" font-size="14" fill="#5c1a5c">q(s, ↑)</text><text x="712" y="111" font-size="14" fill="#5c1a5c">q(s, ↓)</text><text x="712" y="155" font-size="14" fill="#5c1a5c">q(s, ←)</text><text x="712" y="199" font-size="14" fill="#5c1a5c">q(s, →)</text><text x="330" y="232" text-anchor="middle" font-size="13" fill="#555">32 ReLU</text><text x="510" y="232" text-anchor="middle" font-size="13" fill="#555">32 ReLU</text>
+<text x="150" y="232" text-anchor="middle" font-size="13" fill="#555">entrada, entre 0 y 1</text><text x="690" y="232" text-anchor="middle" font-size="13" fill="#555">4 salidas</text>
 </svg>
 </div>
-
-</section>
-<section>
-<div class="section-label">§ 1 · El caso: el acantilado visto por una red</div>
-<h2>Un problema con respuesta conocida delata los fallos</h2>
-<ul>
-  <li>Si la red aprende, su estimación en S debe acercarse a $-7.40$ y su ruta llegar a G en 9 pasos.</li>
-  <li>Si diverge o se pierde, se verá de inmediato.</li>
-</ul>
+<p class="note">Salida: $q(s,a)$ para las cuatro acciones. Parámetros: $2 \cdot 32 + 32 + 32 \cdot 32 + 32 + 32 \cdot 4 + 4 = 1284$, compartidos por todas las casillas.</p>
 
 </section>
 <section>
 <div class="section-label">§ 2 · De la tabla a la función</div>
-<h2>Con millones de estados la tabla no cabe ni se llena</h2>
+<h2>Con millones de estados, una red reemplaza la tabla y acopla los estados</h2>
 <ul>
-  <li>Píxeles de una pantalla o ángulos de un brazo robótico: el agente casi nunca repite un estado.</li>
-  <li>Es la maldición de la dimensionalidad; la salida es una función con parámetros $\phi$, $q(s, a; \phi)$.</li>
+  <li>Píxeles de una pantalla o ángulos de un brazo robótico: el agente casi nunca repite un estado y la tabla no cabe ni se llena; es la maldición de la dimensionalidad.</li>
+  <li>La red $q(s, a; \phi)$ usa los mismos pesos $\phi$ para todos los estados: corregir uno mueve también a sus vecinos, y una corrección local puede estropear estimaciones lejanas.</li>
 </ul>
-
-</section>
-<section>
-<div class="section-label">§ 2 · De la tabla a la función</div>
-<h2>Corregir un estado mueve también a sus vecinos</h2>
-<ul>
-  <li>Los estados comparten parámetros: eso permite generalizar a estados nunca vistos.</li>
-  <li>Pero una corrección local también puede estropear estimaciones lejanas.</li>
-</ul>
-
 </section>
 <section>
 <div class="section-label">§ 2 · De la tabla a la función</div>
@@ -255,35 +245,53 @@ $$
 \mathcal{L}(\phi) = \Big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a; \phi) - q(s_t, a_t; \phi) \Big)^2
 $$
 <ul>
-  <li>El <strong>semi-gradiente</strong> deriva solo la predicción y trata el objetivo como constante: cada paso mueve el blanco y la flecha a la vez.</li>
+  <li>Se quiere acercar la predicción $q(s_t, a_t; \phi)$ al objetivo, pero el objetivo también depende de $\phi$: cada paso mueve el blanco y la flecha a la vez.</li>
 </ul>
 
+</section>
+<section>
+<div class="section-label">§ 2 · De la tabla a la función</div>
+<h2>El gradiente completo tiene dos partes</h2>
+$$
+\nabla_\phi \mathcal{L} = -2\, \delta_t \Big( \underbrace{\nabla_\phi\, q(s_t, a_t; \phi)}_{\text{la predicción}} \;-\; \underbrace{\gamma\, \nabla_\phi \max_a q(s_{t+1}, a; \phi)}_{\text{el objetivo}} \Big)
+$$
+<ul>
+  <li>$\delta_t = r_{t+1} + \gamma \max_a q(s_{t+1}, a; \phi) - q(s_t, a_t; \phi)$ es el <strong>error de diferencia temporal</strong> (error TD): el objetivo menos la estimación actual.</li>
+  <li>Como el objetivo también depende de $\phi$, la regla de la cadena entrega dos términos: uno mueve la predicción hacia el objetivo y el otro mueve el objetivo hacia la predicción.</li>
+</ul>
+</section>
+<section>
+<div class="section-label">§ 2 · De la tabla a la función</div>
+<h2>Semi-gradiente: se conserva solo la parte que mueve la predicción</h2>
+$$
+\phi \leftarrow \phi + \alpha\, \delta_t\, \nabla_\phi\, q(s_t, a_t; \phi)
+$$
+<ul>
+  <li>Se descarta el término del objetivo y el objetivo se trata como una etiqueta fija, igual que en una regresión supervisada; por usar solo parte del gradiente se llama <strong>semi-gradiente</strong>. El factor 2 se absorbe en $\alpha$.</li>
+  <li>Derivar también el objetivo lo arrastraría hacia la predicción, en vez de llevar la predicción hacia lo observado.</li>
+  <li>Con una tabla, $\nabla_\phi q$ vale 1 en la entrada visitada y 0 en las demás: se recupera la regla de Q-Learning tabular.</li>
+</ul>
 </section>
 <section>
 <div class="section-label">§ 3 · Deep Q-Networks</div>
 <h2>DQN aprendió decenas de juegos de Atari desde los píxeles</h2>
 <ul>
   <li>Mnih et al. (2015): una Deep Q-Network (DQN) con la misma arquitectura e hiperparámetros en 49 juegos, a nivel humano o superior en muchos.</li>
+  <li>Entrada: los últimos 4 cuadros, de $84 \times 84$ en grises, para que se vea el movimiento; luego tres capas convolucionales y capas densas.</li>
+  <li>Hay una salida por acción, así que una sola pasada entrega el valor de todas las acciones.</li>
 </ul>
-
 </section>
 <section>
 <div class="section-label">§ 3 · Deep Q-Networks</div>
-<h2>Una pasada entrega el valor de todas las acciones</h2>
+<h2>Un error TD enorme daría un paso enorme: DQN usa la pérdida de Huber</h2>
 <ul>
-  <li>Entrada: los últimos 4 cuadros, de $84 \times 84$ en grises, para que se vea el movimiento.</li>
-  <li>Tres capas convolucionales y capas densas; una salida por acción.</li>
+  <li>Al comienzo la red no sabe nada y sus errores TD $e$ pueden ser enormes; con la pérdida cuadrática el gradiente crece con $e$ y un solo paso puede desarmar lo aprendido.</li>
 </ul>
-
-</section>
-<section>
-<div class="section-label">§ 3 · Deep Q-Networks</div>
-<h2>La pérdida de Huber acota los pasos grandes</h2>
 $$
-\ell_\delta(e) = \begin{cases} \tfrac{1}{2} e^2 & |e| \le \delta \\ \delta\, (|e| - \tfrac{1}{2}\delta) & |e| &gt; \delta \end{cases}
+\ell_\kappa(e) = \begin{cases} \tfrac{1}{2} e^2 & |e| \le \kappa \\ \kappa\, (|e| - \tfrac{1}{2}\kappa) & |e| &gt; \kappa \end{cases}
 $$
 <ul>
-  <li>Cuadrática cerca de cero y lineal lejos: el gradiente queda acotado en $\pm\delta$ aunque el error TD $e$ sea enorme.</li>
+  <li>Cuadrática cerca de cero y lineal lejos: con umbral $\kappa$, el gradiente queda acotado en $\pm\kappa$ aunque $e$ sea enorme. En Atari se usó $\kappa = 1$, que equivale a recortar el error TD a $[-1, 1]$.</li>
 </ul>
 
 </section>
@@ -291,17 +299,18 @@ $$
 <div class="section-label">§ 4 · La tríada mortal</div>
 <h2>Tres ingredientes que juntos pueden divergir</h2>
 <ul>
-  <li><strong>Aproximación de funciones</strong>: una red acopla las estimaciones de muchos estados.</li>
-  <li><strong>Bootstrapping</strong>: el objetivo usa otra estimación.</li>
-  <li><strong>Off-policy</strong>: se aprende la política codiciosa con datos generados por otra.</li>
+  <li><strong>Aproximación de funciones</strong>: los estados comparten los pesos de la red, así que un paso que corrige un estado mueve también a otros, incluido el estado siguiente.</li>
+  <li><strong>Bootstrapping</strong>: el objetivo de un estado es la estimación del estado siguiente, justo la que ese mismo paso acaba de mover.</li>
+  <li><strong>Off-policy</strong>: los datos vienen de otra política, la que explora (por ejemplo $\varepsilon$-greedy, que con probabilidad $\varepsilon$ elige al azar), y el estado siguiente puede no corregirse nunca con su propia experiencia.</li>
 </ul>
+<p class="note">Juntos forman un lazo: subir una estimación sube su propio objetivo, el siguiente paso sube aún más, y ningún dato frena la subida.</p>
 
 </section>
 <section>
 <div class="section-label">§ 4 · La tríada mortal</div>
-<h2>El ejemplo más pequeño: dos estados, un parámetro</h2>
+<h2>El ejemplo más pequeño: dos estados y un solo peso w</h2>
 <ul>
-  <li>Los valores estimados son $w$ y $2w$; solo se entrena el primero, como pasa con datos off-policy.</li>
+  <li>Sutton y Barto: la «red» es lineal, $v(s) = w \cdot x(s)$, y los estados tienen características $x = 1$ y $x = 2$; por eso valen $w$ y $2w$.</li>
 </ul>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -318,16 +327,18 @@ $$
 <text x="520" y="176" text-anchor="middle" font-size="14" fill="#888">nunca se actualiza</text>
 </svg>
 </div>
+<p class="note">Todas las recompensas valen 0, así que la respuesta correcta es $w = 0$ y la red puede representarla. Off-policy: los datos solo traen la transición del estado 1 al 2; el estado 2 nunca se corrige. ¿Llega $w$ a 0?</p>
 
 </section>
 <section>
 <div class="section-label">§ 4 · La tríada mortal</div>
-<h2>Paso 1: la actualización semi-gradiente</h2>
+<h2>Paso 1: subir w para alcanzar el objetivo sube también el objetivo</h2>
 $$
 w \leftarrow w + \alpha \big( \underbrace{0 + \gamma \cdot 2w}_{\text{objetivo}} - \underbrace{w}_{\text{estimación}} \big) \cdot 1
 $$
 <ul>
-  <li>El factor final, 1, es la derivada de la estimación $w$ respecto de $w$.</li>
+  <li>El factor final, 1, es la derivada de la estimación del estado 1, $w \cdot 1$, respecto de $w$.</li>
+  <li>Con $\gamma &gt; 1/2$, si $w &gt; 0$ el objetivo $2\gamma w$ queda sobre la estimación $w$: el paso sube $w$, y con él el objetivo, que sube $2\gamma$ veces más: nunca lo alcanza.</li>
 </ul>
 
 </section>
@@ -353,23 +364,26 @@ $$
 </section>
 <section>
 <div class="section-label">§ 5 · Repetición de experiencia</div>
-<h2>Pasos consecutivos se parecen demasiado</h2>
+<h2>Pasos consecutivos se parecen demasiado; un búfer los baraja</h2>
 <ul>
   <li>Entrenar con la última transición viola el supuesto de datos independientes del descenso de gradiente.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 5 · Repetición de experiencia</div>
-<h2>Un búfer baraja la experiencia</h2>
-<ul>
-  <li>Se guardan las transiciones $\langle s, a, r, s' \rangle$ y se entrena con minilotes elegidos al azar: se rompe la correlación y se reutilizan datos.</li>
+  <li>Un búfer guarda las transiciones $\langle s, a, r, s' \rangle$ y se entrena con minilotes elegidos al azar: se rompe la correlación y se reutilizan datos.</li>
   <li>Solo es legítimo off-policy, porque esas transiciones vienen de políticas antiguas.</li>
 </ul>
+</section>
+<section>
+<div class="section-label">§ 6 · Redes objetivo</div>
+<h2>Una copia congelada calcula el objetivo</h2>
+$$
+\mathcal{L}(\phi) = \Big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a; \phi^{-}) - q(s_t, a_t; \phi) \Big)^2
+$$
+<ul>
+  <li>$\phi^-$ se copia de $\phi$ cada $K$ pasos, o se acerca suavemente: $\phi^- \leftarrow \eta\, \phi + (1-\eta)\,\phi^-$, donde $\eta \ll 1$ es la fracción que avanza en cada paso.</li>
+</ul>
 
 </section>
 <section>
-<div class="section-label">§ 5 · Repetición de experiencia</div>
+<div class="section-label">§ 6 · Redes objetivo</div>
 <h2>El lazo de entrenamiento de DQN</h2>
 <ul>
   <li>Entorno → búfer → minilote → red principal $\phi$; la red objetivo $\phi^-$ se copia cada $K$ pasos.</li>
@@ -406,19 +420,22 @@ $$
 
 </section>
 <section>
+<section>
 <div class="section-label">§ 6 · Redes objetivo</div>
-<h2>Una copia congelada calcula el objetivo</h2>
+<h2>Con red objetivo, cada 20 pasos el crecimiento baja de 6.5 a 1.86</h2>
 $$
-\mathcal{L}(\phi) = \Big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a; \phi^{-}) - q(s_t, a_t; \phi) \Big)^2
+\underbrace{\big(1+\alpha(2\gamma-1)\big)^{K}}_{\text{sin red objetivo}\;\approx\;6.5}
+\qquad\text{frente a}\qquad
+\underbrace{2\gamma - (2\gamma-1)(1-\alpha)^{K}}_{\text{con red objetivo}\;\approx\;1.86}
 $$
 <ul>
-  <li>$\phi^-$ se copia de $\phi$ cada $K$ pasos, o se acerca suavemente: $\phi^- \leftarrow \tau \phi + (1-\tau)\phi^-$ con $\tau \ll 1$.</li>
+  <li>Factor por el que se multiplica $w$ cada $K = 20$ pasos en el ejemplo mínimo, con $\gamma = 0.99$ y $\alpha = 0.1$; la derivación está hacia abajo (↓).</li>
+  <li>El factor sigue mayor que 1: la red objetivo frena el lazo, no lo elimina. Cada bloque pasa a ser una regresión con blanco fijo.</li>
 </ul>
-
 </section>
 <section>
 <div class="section-label">§ 6 · Redes objetivo</div>
-<h2>Paso 1: con el blanco fijo, cada paso es una regresión</h2>
+<h2>Derivación, paso 1: con el blanco fijo, cada paso es una regresión</h2>
 $$
 w \leftarrow w + \alpha\, \big( 2\gamma\, w^{-} - w \big)
 $$
@@ -429,7 +446,7 @@ $$
 </section>
 <section>
 <div class="section-label">§ 6 · Redes objetivo</div>
-<h2>Paso 2: tras K pasos, el factor no supera 2γ</h2>
+<h2>Derivación, paso 2: tras K pasos, el factor no supera 2γ</h2>
 $$
 w_K = 2\gamma\, w^{-} + (1-\alpha)^K \big( w^{-} - 2\gamma\, w^{-} \big) = \big( 2\gamma - (2\gamma - 1)(1-\alpha)^K \big)\, w^{-}
 $$
@@ -438,14 +455,6 @@ $$
 </ul>
 
 </section>
-<section>
-<div class="section-label">§ 6 · Redes objetivo</div>
-<h2>Cada 20 pasos el crecimiento baja de 6.5 a 1.86</h2>
-<ul>
-  <li>Con $\gamma = 0.99$, $\alpha = 0.1$ y $K = 20$.</li>
-  <li>Aquí el factor sigue mayor que 1: la red objetivo frena el lazo, no lo elimina. Cada bloque pasa a ser una regresión con blanco fijo.</li>
-</ul>
-
 </section>
 <section>
 <div class="section-label">§ 6 · Redes objetivo</div>
@@ -469,8 +478,8 @@ $$
 <div class="section-label">§ 6 · Redes objetivo</div>
 <h2>Solo la combinación de búfer y red objetivo aprende</h2>
 <ul>
-  <li>En ocho semillas, búfer + objetivo llegó a G en 9 pasos, con estimación cercana a $-7.4$, todas las veces.</li>
-  <li>Sin red objetivo diverge a cientos o miles; sin búfer oscila. Ninguna de esas variantes llegó nunca.</li>
+  <li>En la demo del navegador, 40 000 pasos y ocho semillas: búfer + objetivo llegó a G en 9 pasos, con estimación cercana a $-7.4$, todas las veces.</li>
+  <li>Sin red objetivo la estimación se dispara a cientos o miles en la mayoría de las semillas; sin búfer oscila. Ninguna de esas variantes llegó nunca.</li>
 </ul>
 
 </section>
@@ -478,7 +487,7 @@ $$
 <div class="section-label">§ 6 · Redes objetivo</div>
 <h2>La misma ablación, entrenada en Julia</h2>
 <ul>
-  <li>Solo búfer: la estimación llega a $10^7$. Estancarse en $-20 = -1/(1-\gamma)$ es concluir que la meta es inalcanzable.</li>
+  <li>Otra implementación, una semilla, 40 000 pasos: solo búfer llega a $10^7$; la magnitud varía, la divergencia no. Estancarse en $-20$ es "la meta es inalcanzable".</li>
 </ul>
 <div class="svg-holder">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4400 1800">
@@ -867,33 +876,49 @@ $$
 </section>
 <section>
 <div class="section-label">§ 8 · Sobreestimación y Double DQN</div>
-<h2>El máximo de estimaciones ruidosas se infla</h2>
-<ul>
-  <li>Si cada estimación $\hat Q(a)$ es correcta en promedio, el máximo elige con preferencia los errores hacia arriba.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Sobreestimación y Double DQN</div>
-<h2>Proposición: el máximo sobreestima</h2>
+<h2>El máximo de estimaciones ruidosas sobreestima</h2>
 $$
 \mathbb{E}\Big[\max_a \hat Q(a)\Big] \ge \max_a q(a), \qquad q(a) = \mathbb{E}[\hat Q(a)]
 $$
 <ul>
-  <li>Para todo $a'$: $\max_a \hat Q(a) \ge \hat Q(a')$; tomando esperanza, $\mathbb{E}[\max_a \hat Q(a)] \ge q(a')$, también para el $a'$ que maximiza $q$.</li>
+  <li>Aunque cada estimación $\hat Q(a)$ sea correcta en promedio, el máximo elige con preferencia los errores hacia arriba.</li>
+  <li>Prueba: para todo $a'$, $\max_a \hat Q(a) \ge \hat Q(a')$; tomando esperanza, $\mathbb{E}[\max_a \hat Q(a)] \ge q(a')$, también para el $a'$ que maximiza $q$.</li>
+</ul>
+</section>
+<section>
+<section>
+<div class="section-label">§ 8 · Sobreestimación y Double DQN</div>
+<h2>Con dos acciones de valor 0, el máximo promedia σ/√π</h2>
+$$
+\mathbb{E}\Big[\max_a \hat Q(a)\Big] = \tfrac{1}{2} \cdot \sqrt{2}\,\sigma \sqrt{2/\pi} = \frac{\sigma}{\sqrt{\pi}} \approx 0.56\,\sigma
+$$
+<ul>
+  <li>Dos acciones que valen 0, estimadas con errores independientes $\mathcal{N}(0, \sigma^2)$; la derivación en dos pasos está hacia abajo (↓).</li>
+</ul>
+<p class="note">En palabras: aunque ninguna acción vale más que 0, el máximo de dos estimaciones ruidosas promedia más de medio σ.</p>
+</section>
+<section>
+<div class="section-label">§ 8 · Sobreestimación y Double DQN</div>
+<h2>Derivación, paso 1: con dos acciones, el máximo es promedio más media brecha</h2>
+$$
+\max(x, y) = \frac{x+y}{2} + \frac{|x-y|}{2} \quad\Longrightarrow\quad \mathbb{E}\Big[\max_a \hat Q(a)\Big] = \tfrac{1}{2}\, \mathbb{E}\,\big|\hat Q(1) - \hat Q(2)\big|
+$$
+<ul>
+  <li>Ambas acciones valen 0 y cada $\hat Q(a)$ es independiente, $\mathcal{N}(0, \sigma^2)$: el promedio $\tfrac{x+y}{2}$ tiene esperanza 0.</li>
 </ul>
 
 </section>
 <section>
 <div class="section-label">§ 8 · Sobreestimación y Double DQN</div>
-<h2>Con dos acciones de valor 0, el sesgo es σ/√π</h2>
+<h2>Derivación, paso 2: la brecha es una normal con varianza 2σ²</h2>
 $$
-\max(x, y) = \frac{x+y}{2} + \frac{|x-y|}{2} \quad\Longrightarrow\quad \mathbb{E}\big[\max\big] = \tfrac{1}{2}\, \mathbb{E}\,|\hat Q(1) - \hat Q(2)| = \frac{\sigma}{\sqrt{\pi}} \approx 0.56\,\sigma
+\hat Q(1) - \hat Q(2) \sim \mathcal{N}(0,\, 2\sigma^2), \qquad Z \sim \mathcal{N}(0, s^2) \;\Rightarrow\; \mathbb{E}|Z| = s\sqrt{2/\pi}
 $$
 <ul>
-  <li>Con ruido gaussiano de desviación $\sigma$, la diferencia $\hat Q(1) - \hat Q(2)$ es normal con varianza $2\sigma^2$.</li>
+  <li>Las varianzas de variables independientes se suman; $\mathbb{E}|Z|$ es la media de una normal "doblada" sobre el cero.</li>
 </ul>
 
+</section>
 </section>
 <section>
 <div class="section-label">§ 8 · Sobreestimación y Double DQN</div>
@@ -913,7 +938,8 @@ $$
 \mathbb{E}\big[\hat Q_2(\hat a) \mid \hat a\big] = q(\hat a) \le \max_a q(a), \qquad \hat a = \arg\max_a \hat Q_1(a)
 $$
 <ul>
-  <li>$\hat a$ depende solo de $\hat Q_1$; el error que hizo elegir $\hat a$ ya no infla su evaluación.</li>
+  <li>$\hat a$ depende solo de $\hat Q_1$; si $\hat Q_2$ tiene errores independientes, el error que hizo elegir $\hat a$ ya no infla su evaluación.</li>
+  <li>En Double DQN, $\phi^-$ es una copia atrasada de $\phi$: sus errores no son del todo independientes, así que el sesgo baja mucho pero no desaparece.</li>
 </ul>
 
 </section>
@@ -1051,38 +1077,57 @@ $$
 </section>
 <section>
 <div class="section-label">§ 9 · Extensiones modernas</div>
-<h2>Dueling: separar el valor del estado y la ventaja de la acción</h2>
+<h2>Dueling separa el valor del estado y la ventaja de cada acción</h2>
 $$
-q(s, a) = V(s) + A(s, a) - \frac{1}{|\mathcal{A}|} \sum_{a'} A(s, a')
+A(s, a) = q(s, a) - v(s), \qquad q(s, a) = v(s) + A(s, a) - \frac{1}{|\mathcal{A}|} \sum_{a'} A(s, a')
 $$
 <ul>
-  <li>En muchos estados da lo mismo qué acción tomar; basta con estimar bien $V(s)$.</li>
+  <li>La <strong>ventaja</strong> $A(s,a)$ dice cuánto mejor o peor que lo habitual en $s$ es la acción $a$; lejos de la pelota o del borde todas son casi cero y lo que importa es estimar bien $v(s)$.</li>
+  <li>Una red con dos cabezas estima $v(s)$ y $A(s,a)$ para cada acción, y las combina en $q$ (Wang et al., 2016).</li>
+</ul>
+</section>
+<section>
+<div class="section-label">§ 9 · Extensiones modernas</div>
+<h2>Sin restar el promedio, v y A no quedan determinados</h2>
+<ul>
+  <li>Si $q = v + A$, sumar una constante $c$ a $v$ y restarla a todas las $A$ deja $q$ igual: infinitas parejas dan la misma salida.</li>
+  <li>Restar el promedio obliga a que la ventaja promedie cero sobre las acciones; entonces $v(s)$ es el valor del estado y $A$, la diferencia de cada acción.</li>
 </ul>
 
 </section>
 <section>
 <div class="section-label">§ 9 · Extensiones modernas</div>
-<h2>Rainbow combina seis mejoras complementarias</h2>
+<h2>Rainbow suma a Double DQN y Dueling otras cuatro mejoras</h2>
 <ul>
-  <li>Double DQN, Dueling, repetición priorizada por error TD, retornos de $n$ pasos, DQN distribucional y Noisy Nets (Hessel et al., 2018).</li>
-  <li>Juntas rinden más que cualquiera por separado: cada una corrige un defecto distinto.</li>
+  <li><strong>Repetición priorizada</strong>: se muestrean más seguido las transiciones del búfer con mayor error TD, de las que hay más que aprender.</li>
+  <li><strong>Retornos de $n$ pasos</strong>: el objetivo usa $n$ recompensas reales antes de apoyarse en la estimación, y la información viaja más rápido.</li>
+</ul>
+
+</section>
+<section>
+<div class="section-label">§ 9 · Extensiones modernas</div>
+<h2>Las seis juntas rinden más que cualquiera por separado</h2>
+<ul>
+  <li><strong>DQN distribucional</strong>: la red predice la distribución del retorno, no solo su promedio; <strong>Noisy Nets</strong>: ruido aprendible en los pesos que reemplaza a $\varepsilon$-greedy.</li>
+  <li>Rainbow (Hessel et al., 2018) combina las seis: cada una corrige un defecto distinto.</li>
 </ul>
 
 </section>
 <section>
 <div class="section-label">§ 10 · Más allá de DQN</div>
-<h2>Con acciones continuas, el máximo se vuelve impracticable</h2>
+<h2>Con acciones continuas, el máximo cede el paso al actor-crítico</h2>
 <ul>
-  <li>Torques o ángulos de volante: maximizar sobre infinitas acciones en cada paso no es viable.</li>
+  <li>Maximizar $q$ sobre infinitas acciones, como torques o ángulos de volante, no es viable; el <strong>gradiente de política</strong> usa una red, el actor, que da $\pi(a \mid s; \theta)$ y mueve sus pesos hacia más retorno esperado.</li>
+  <li>Un <strong>crítico</strong>, otra red que estima $v(s; \phi)$ por diferencia temporal, con el error TD como en DQN, juzga cada acción: es el método actor-crítico.</li>
+  <li>Es <strong>on-policy</strong>, aprende de los datos de la política actual y no usa búfer; A2C y A3C (Advantage Actor-Critic, síncrono y asíncrono) usan varias copias del entorno en paralelo para decorrelacionar los datos.</li>
 </ul>
-
 </section>
 <section>
 <div class="section-label">§ 10 · Más allá de DQN</div>
-<h2>Gradiente de política y actor-crítico optimizan π directamente</h2>
+<h2>PPO para políticas estocásticas; DDPG, TD3 y SAC para acciones continuas</h2>
 <ul>
-  <li>REINFORCE ajusta una política $\pi(a \mid s; \theta)$; un crítico que estima valores reduce la varianza.</li>
-  <li>De ahí vienen A2C, DDPG, SAC y PPO, el motor del ajuste de modelos de lenguaje con RLHF.</li>
+  <li>PPO (Proximal Policy Optimization), un actor-crítico que limita cuánto cambia la política en cada actualización, es hoy la referencia.</li>
+  <li>DDPG, TD3 y SAC son actor-críticos off-policy para acciones continuas: reutilizan el búfer de repetición y las redes objetivo de DQN.</li>
 </ul>
 
 </section>
@@ -2033,6 +2078,140 @@ RLW.pongDQN = function (root) {
   });
 };
 RLW._pong = { pongPaso, pongSaque, pongEvalua, pongSigue, PNS };
+
+// ======================== 7. REINFORCE EN VIVO ========================
+// Política softmax tabular θ(s,a); cada episodio parte de una casilla al azar (inicios aleatorios),
+// dura a lo sumo 200 pasos y al terminar actualiza θ con el retorno G_t (menos la línea base v(s)).
+const CELDAS = []; for (let r = 0; r < NR; r++) for (let c = 0; c < NC; c++) if (!esAcant(r, c) && !esMeta(r, c)) CELDAS.push([r, c]);
+const si = (r, c) => r * NC + c;
+function pgProbs(th, r, c) {
+  const k = si(r, c) * 4; let m = -Infinity; for (let a = 0; a < 4; a++) m = Math.max(m, th[k + a]);
+  const e = [0, 1, 2, 3].map(a => Math.exp(th[k + a] - m)), s = e[0] + e[1] + e[2] + e[3];
+  return e.map(x => x / s);
+}
+function pgMuestra(p, rnd) { const u = rnd(); let s = 0; for (let a = 0; a < 4; a++) { s += p[a]; if (u < s) return a; } return 3; }
+function pgAgente(base, semilla, ac) {
+  return { base, ac: !!ac, rnd: mulberry32(semilla), th: new Float64Array(NR * NC * 4), V: new Float64Array(NR * NC),
+           ep: [], r: S0[0], c: S0[1], t: 0, n: 0, hist: [[0, pgValorS(new Float64Array(NR * NC * 4))]], estela: [] };
+}
+function pgInicia(A) {
+  const [r, c] = CELDAS[Math.floor(A.rnd() * CELDAS.length)]; A.r = r; A.c = c; A.t = 0; A.ep = []; A.estela = [[r, c]];
+}
+function pgValorS(th) {          // valor exacto de la política estocástica desde S (sin resbalón, γ = 0.95)
+  let V = new Float64Array(NR * NC);
+  const P = CELDAS.map(([r, c]) => pgProbs(th, r, c));
+  for (let it = 0; it < 3000; it++) {
+    const Vn = new Float64Array(NR * NC); let d = 0;
+    CELDAS.forEach(([r, c], k) => {
+      let v = 0;
+      for (let a = 0; a < 4; a++) { const [nr, nc, rw] = mover(r, c, a); v += P[k][a] * (rw + 0.95 * (esMeta(nr, nc) ? 0 : V[si(nr, nc)])); }
+      Vn[si(r, c)] = v; d = Math.max(d, Math.abs(v - V[si(r, c)]));
+    });
+    V = Vn; if (d < 1e-6) break;
+  }
+  return V[si(S0[0], S0[1])];
+}
+function pgActualiza(A, alfa, beta) {   // REINFORCE (cada visita), con o sin línea base
+  let G = 0;
+  const Gs = new Array(A.ep.length);
+  for (let t = A.ep.length - 1; t >= 0; t--) { G = A.ep[t][3] + 0.95 * G; Gs[t] = G; }
+  A.ep.forEach(([r, c, a], t) => {
+    const j = si(r, c); let d = Gs[t];
+    if (A.base) { d -= A.V[j]; A.V[j] += beta * d; }
+    const p = pgProbs(A.th, r, c);
+    for (let b = 0; b < 4; b++) A.th[j * 4 + b] += alfa * d * ((b === a ? 1 : 0) - p[b]);
+  });
+  A.n++;
+}
+function pgPaso(A, alfa, beta) {        // un paso de interacción; devuelve true al cerrar un episodio
+  A.alfa = alfa; A.beta = beta;
+  if (A.t === 0 && A.ep.length === 0 && A.estela.length === 0) pgInicia(A);
+  const p = pgProbs(A.th, A.r, A.c), a = pgMuestra(p, A.rnd);
+  const [nr, nc, rw, cae] = mover(A.r, A.c, a);
+  A.ep.push([A.r, A.c, a, rw]); A.t++;
+  if (A.ac) {                           // actor-crítico: el error TD hace de ventaja en cada paso
+    const j = si(A.r, A.c), d = rw + (esMeta(nr, nc) ? 0 : 0.95 * A.V[si(nr, nc)]) - A.V[j];
+    A.V[j] += A.beta * d;
+    for (let b = 0; b < 4; b++) A.th[j * 4 + b] += A.alfa * d * ((b === a ? 1 : 0) - p[b]);
+  }
+  if (cae) A.estela.push([3, Math.min(NC - 1, Math.max(0, A.c + DC[a])), true], null);
+  A.r = nr; A.c = nc; A.estela.push([nr, nc]); if (A.estela.length > 40) A.estela.shift();
+  if (esMeta(nr, nc) || A.t >= 200) {
+    if (A.ac) A.n++; else pgActualiza(A, alfa, beta);
+    if (A.n % 50 === 0) A.hist.push([A.n, pgValorS(A.th)]);
+    pgInicia(A); return true;
+  }
+  return false;
+}
+RLW._pg = { pgAgente, pgPaso, pgValorS, pgProbs };
+function pgWidget(root, cfg) {
+  injectCSS(); root.classList.add('rlw'); root.innerHTML = ''; aislar(root);
+  const BETA = 0.1;
+  const S = { alfa: cfg.alfa, vel: -10, corre: false, semilla: 1, ag: null };
+  const bar = el('div', { class: 'rlw-bar' }, root);
+  slider(bar, 'α', cfg.amin, cfg.amax, cfg.amin, S.alfa, 4, v => { S.alfa = v; });
+  const lab = el('label', { class: 'rlw-sl', html: 'velocidad ' }, bar);
+  const sel = el('select', {}, lab);
+  [['1', '1 paso por cuadro'], ['-1', '1 episodio por cuadro'], ['-10', '10 episodios por cuadro'], ['-50', '50 episodios por cuadro']].forEach(([v, t]) => el('option', { value: v, text: t }, sel));
+  sel.value = String(S.vel);
+  sel.addEventListener('change', () => { S.vel = +sel.value; });
+  const bPlay = button(bar, '▶ entrenar', () => { S.corre = !S.corre; bPlay.textContent = S.corre ? '⏸ pausa' : '▶ entrenar'; if (S.corre) requestAnimationFrame(loop); });
+  button(bar, '↺ reiniciar', () => { S.semilla++; nuevo(); dibuja(); });
+  const cv = el('canvas', {}, root);
+  const read = el('div', { class: 'rlw-read' }, root);
+  function nuevo() { S.ag = cfg.agentes.map(([base, ac]) => pgAgente(base, 3000 + S.semilla, ac)); }
+  function avanza() {
+    S.ag.forEach(A => {
+      if (S.vel > 0) pgPaso(A, S.alfa, BETA);
+      else for (let e = 0; e < -S.vel; e++) { let n = 0; while (!pgPaso(A, S.alfa, BETA) && n++ < 250); }
+    });
+  }
+  function loop() { if (!S.corre) return; avanza(); dibuja(); if (S.ag[0].n >= 20000) { S.corre = false; bPlay.textContent = '▶ entrenar'; return; } requestAnimationFrame(loop); }
+  function dibuja() {
+    const fs = fsDe(root);
+    const { g, w, h } = fit(cv, +root.dataset.ratio || 0.56);
+    const cs = Math.min((w / 2 - 18) / NC, h * 0.5 / NR), Y = fs * 1.6;
+    const cols = cfg.colores, nombres = cfg.nombres;
+    S.ag.forEach((A, i) => {
+      const X = i * w / 2 + (w / 2 - NC * cs) / 2;
+      dibujaMundo(g, X, Y, cs, { robot: [A.r, A.c], estela: A.estela });
+      // la política como distribución: cuatro flechas por casilla, de largo proporcional a π(a|s)
+      CELDAS.forEach(([r, c]) => {
+        const p = pgProbs(A.th, r, c), cx = X + (c + 0.5) * cs, cy = Y + (r + 0.5) * cs;
+        for (let a = 0; a < 4; a++) {
+          const L = cs * 0.44 * Math.sqrt(p[a]); if (p[a] < 0.02) continue;
+          const ux = DC[a], uy = DR[a];
+          g.strokeStyle = cols[i]; g.fillStyle = cols[i]; g.globalAlpha = 0.35 + 0.65 * p[a]; g.lineWidth = Math.max(1.2, cs * 0.035);
+          g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + ux * L, cy + uy * L); g.stroke();
+          const k = Math.max(2.5, cs * 0.07);
+          g.beginPath(); g.moveTo(cx + ux * (L + k * 0.6), cy + uy * (L + k * 0.6));
+          g.lineTo(cx + ux * L - uy * k * 0.6, cy + uy * L + ux * k * 0.6); g.lineTo(cx + ux * L + uy * k * 0.6, cy + uy * L - ux * k * 0.6); g.closePath(); g.fill();
+          g.globalAlpha = 1;
+        }
+      });
+      txt(g, nombres[i] + ' · episodio ' + A.n, X + NC * cs / 2, fs * 0.75, cols[i], 'center', fs, true);
+    });
+    const P = { x: fs * 4.2, y: Y + NR * cs + fs * 1.0, w: w - fs * 6, h: h - (Y + NR * cs) - fs * 3.6 };
+    const n = Math.max(...S.ag.map(A => A.n)), X1 = Math.max(2000, Math.ceil(n / 1000) * 1000);
+    const [px, py] = ejes(g, P, 0, X1, -40, 0, [0, X1 / 4, X1 / 2, 3 * X1 / 4, X1].map(Math.round), [[0, '0'], [-10, '−10'], [-20, '−20'], [-30, '−30'], [-40, '−40']], 'episodio', 'valor v(S) de π', fs);
+    [[-7.40, 'borde −7.40', -0.55], [-9.73, 'segura −9.73', 0.6]].forEach(([v, s, d]) => {
+      g.strokeStyle = PAL.soft; g.setLineDash([4, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(P.x, py(v)); g.lineTo(P.x + P.w, py(v)); g.stroke(); g.setLineDash([]);
+      txt(g, s, P.x + P.w - 4, py(v) + fs * d, PAL.soft, 'right', fs * 0.8);
+    });
+    S.ag.forEach((A, i) => curva(g, A.hist.map(z => z[0]), A.hist.map(z => z[1]), px, py, cols[i], 2.5));
+    const ult = A => A.hist[A.hist.length - 1][1].toFixed(1);
+    const ruta = A => { const rr = rutaDesde((r, c) => { const p = pgProbs(A.th, r, c); return p.indexOf(Math.max(...p)); }); return rr.llega ? `${rr.length - 1} pasos` : 'aún no llega'; };
+    const [n0, n1] = cfg.cortos;
+    read.innerHTML = `Valor exacto desde S de la política estocástica actual: ${n0} <b>${ult(S.ag[0])}</b>, ${n1} <b>${ult(S.ag[1])}</b> ` +
+      `(se recalcula cada 50 episodios). Ruta más probable: ${n0} ${ruta(S.ag[0])}, ${n1} ${ruta(S.ag[1])}. ` +
+      `Cada episodio parte de una casilla al azar; las flechas miden la probabilidad π(a | s) de cada acción.`;
+  }
+  nuevo(); onResize(root, dibuja); dibuja();
+}
+RLW.reinforceVivo = root => pgWidget(root, { alfa: 0.002, amin: 0.0005, amax: 0.01, agentes: [[false, false], [true, false]], colores: [PAL.orange, PAL.blue],
+  nombres: ['REINFORCE sin línea base', 'REINFORCE con línea base'], cortos: ['sin línea base', 'con línea base'] });
+RLW.actorCriticoVivo = root => pgWidget(root, { alfa: 0.05, amin: 0.0025, amax: 0.1, agentes: [[true, false], [true, true]], colores: [PAL.blue, PAL.green],
+  nombres: ['REINFORCE con línea base', 'actor-crítico'], cortos: ['REINFORCE', 'actor-crítico'] });
 
 })();
 
