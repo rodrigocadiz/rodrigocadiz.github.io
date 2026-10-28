@@ -6,7 +6,7 @@ Versión moderna y responsiva de la *Guía de Instrumentos Musicales* (Alejandro
 
 Doble clic en `index.html`. No necesita Node, Python ni servidor: funciona directo desde el disco (`file://`) en Chrome, Safari, Firefox y Edge actuales, y también en cualquier hosting estático.
 
-La carpeta `app_moderna/` debe quedar junto a `extraido/` (de ahí lee fotos, notación, audio y video). Para publicarla en otro lugar, copiar ambas carpetas manteniendo esa relación, o cambiar `ASSET_BASE` al comienzo de `js/app.js`.
+La carpeta es autocontenida: todas las fotos, notaciones, audios y videos que usa están en `medios/` (copiados desde `extraido/`, con nombres sin tildes ni espacios para que funcionen en cualquier servidor, incluido GitHub Pages). Para publicarla basta con subir la carpeta completa.
 
 ## Qué tiene de nuevo respecto de `app_web/`
 

@@ -21,7 +21,7 @@
   /* Carpeta de los medios extraídos, relativa a index.html. Si se publica
      la app en otro lugar basta con cambiar esta línea (o definir
      window.GUIA_CONFIG = { assetBase: "..." } antes de cargar app.js). */
-  var ASSET_BASE = (window.GUIA_CONFIG && window.GUIA_CONFIG.assetBase) || "../extraido/";
+  var ASSET_BASE = (window.GUIA_CONFIG && window.GUIA_CONFIG.assetBase) || "medios/";
 
   var EXTRA = window.GUIA_EXTRA;
   var TITULO_APP = "Guía de Instrumentos Musicales";
