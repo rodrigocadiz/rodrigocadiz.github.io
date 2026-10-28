@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Guía de Instrumentos Musicales: instrumentos de la orquesta, técnicas de ejecución con sonido, notación y video, y principios de acústica. Instituto de Música, Pontificia Universidad Católica de Chile.">
+<meta name="theme-color" content="#080029">
+<title>Guía de Instrumentos Musicales</title>
+<link rel="icon" type="image/png" href="ui/logo.png">
+<link rel="stylesheet" href="css/fonts.css?v=4">
+<link rel="stylesheet" href="css/app.css?v=4">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<header class="cabecera" id="cabecera">
+  <a class="cabecera-logo" href="#/" aria-label="Portada">
+    <img src="ui/logo.png" alt="Pontificia Universidad Católica de Chile" width="61" height="78">
+  </a>
+  <div class="cabecera-titulos">
+    <a class="cabecera-titulo" href="#/"><span>Guía de Instrumentos Musicales</span></a>
+    <p class="cabecera-sub">Instituto de Música <span class="sep">-</span> Pontificia Universidad Católica de Chile</p>
+  </div>
+  <div class="cabecera-extremo" aria-hidden="true"></div>
+</header>
+
+<nav class="barra" id="barra" aria-label="Navegación principal">
+  <a class="barra-item barra-portada" href="#/" data-nav="portada">Portada</a>
+  <button class="barra-item barra-familias" type="button" id="btn-familias" aria-expanded="false" aria-controls="menu-familias" data-nav="familia">Familias <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+  <a class="barra-item" href="#/az" data-nav="az">Instrumentos A-Z</a>
+  <a class="barra-item" href="#/acustica" data-nav="acustica">Acústica en general</a>
+  <a class="barra-item" href="#/autores" data-nav="autores">Autores</a>
+  <span class="barra-relleno" aria-hidden="true"></span>
+  <button class="barra-item barra-buscar" type="button" data-action="buscar" aria-label="Buscar (tecla /)">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <span>Buscar</span><kbd>/</kbd>
+  </button>
+</nav>
+
+<div class="menu-familias" id="menu-familias" hidden></div>
+
+<main id="contenido" tabindex="-1"></main>
+
+<footer class="pie">
+  <p>Guía de Instrumentos Musicales · Alejandro Guarello F. · Instituto de Música, Pontificia Universidad Católica de Chile</p>
+  <p>Versión original en Macromedia Director (2001), programada por Rodrigo F. Cádiz · Versión HTML5 (2026)</p>
+</footer>
+
+<!-- Barra inferior en móviles -->
+<nav class="tabbar" aria-label="Navegación móvil">
+  <a href="#/" data-nav="portada"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="currentColor"/></svg><span>Portada</span></a>
+  <button type="button" data-action="familias-movil" data-nav="familia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h3v18H5zM10.5 3h3v18h-3zM16 3h3v18h-3z" fill="currentColor"/></svg><span>Familias</span></button>
+  <a href="#/az" data-nav="az"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20L8 4h2l5 16h-2.6l-1.2-4H6.8l-1.2 4zm4.5-6.4h3.9L9.4 7.3zM16 4h5v2h-5zm0 5h5v2h-5zm0 5h5v2h-5zm0 5h5v2h-5z" fill="currentColor"/></svg><span>A-Z</span></a>
+  <a href="#/acustica" data-nav="acustica"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Acústica</span></a>
+  <button type="button" data-action="buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>Buscar</span></button>
+</nav>
+
+<!-- Reproductor global: sigue sonando al navegar entre páginas -->
+<section class="reproductor" id="reproductor" aria-label="Reproductor" hidden>
+  <img class="rep-arte" id="rep-arte" alt="">
+  <div class="rep-info">
+    <div class="rep-titulo" id="rep-titulo"></div>
+    <div class="rep-sub" id="rep-sub"></div>
+  </div>
+  <div class="rep-controles">
+    <button type="button" id="rep-prev" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z" fill="currentColor"/></svg></button>
+    <button type="button" id="rep-play" class="rep-play" aria-label="Pausa"><svg viewBox="0 0 24 24" class="ico-pausa"><path d="M6 5h4v14H6zM14 5h4v14h-4z" fill="currentColor"/></svg><svg viewBox="0 0 24 24" class="ico-play"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg></button>
+    <button type="button" id="rep-next" aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z" fill="currentColor"/></svg></button>
+  </div>
+  <div class="rep-progreso">
+    <span id="rep-t">0:00</span>
+    <input type="range" id="rep-barra" min="0" max="1000" value="0" aria-label="Posición">
+    <span id="rep-d">0:00</span>
+  </div>
+  <a class="rep-ir" id="rep-ir" href="#/" aria-label="Ir a la página de este sonido"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></a>
+  <button type="button" class="rep-cerrar" id="rep-cerrar" aria-label="Cerrar reproductor"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4"/></svg></button>
+</section>
+
+<!-- Visor de imágenes -->
+<dialog class="visor" id="visor" aria-label="Visor de imágenes">
+  <div class="visor-marco" id="visor-marco"><img id="visor-img" alt=""></div>
+  <div class="visor-pie"><span id="visor-cap"></span><span id="visor-cont"></span></div>
+  <button type="button" class="visor-btn visor-cerrar" data-visor="cerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4"/></svg></button>
+  <button type="button" class="visor-btn visor-ant" data-visor="ant" aria-label="Imagen anterior"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></button>
+  <button type="button" class="visor-btn visor-sig" data-visor="sig" aria-label="Imagen siguiente"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></button>
+</dialog>
+
+<!-- Buscador -->
+<dialog class="buscador" id="buscador" aria-label="Buscar en la guía">
+  <div class="buscador-caja">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <input type="search" id="buscador-input" placeholder="Instrumento, técnica, concepto acústico…" autocomplete="off" spellcheck="false" aria-label="Buscar" aria-controls="buscador-res">
+    <button type="button" class="buscador-esc" data-action="cerrar-buscador">Esc</button>
+  </div>
+  <div class="buscador-res" id="buscador-res" role="listbox"></div>
+</dialog>
+
+<div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+<script src="js/data.js?v=4"></script>
+<script src="js/extra.js?v=4"></script>
+<script src="js/simulaciones.js?v=4"></script>
+<script src="js/app.js?v=4"></script>
+</body>
+</html>
