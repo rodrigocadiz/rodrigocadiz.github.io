@@ -147,6 +147,7 @@ p.note {
 .reveal .rlw-read { font-size: 1em; text-align: left; }
 .reveal .rlw button, .reveal .rlw select { font-family: Helvetica, Arial, sans-serif; }
   .reveal .slides section.stack { padding: 0; }
+.reveal .svg-holder.svg-sm svg { max-height: 400px; }
 </style>
 </head>
 <body>
@@ -162,11 +163,12 @@ p.note {
 </div>
 </section>
 <section>
+
 <h2>Ajustar la política directamente, siguiendo el gradiente del retorno</h2>
-<p>En lugar de calcular valores y elegir la mejor acción, se escribe la política como una función con parámetros y se los mueve en la dirección que aumenta el retorno esperado.</p>
+<p>La <b>política</b> es la regla con que el agente elige su acción. Aquí se escribe como una función con parámetros, que se mueven hacia donde aumenta el retorno esperado.</p>
 </section>
 <section>
-<div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
+<div class="section-label">El caso: un robot junto al acantilado</div>
 <h2>Un robot debe cruzar junto a un acantilado</h2>
 <ul>
   <li>Cuadrícula de 4 filas y 8 columnas: sale de S y el episodio termina al llegar a G.</li>
@@ -197,36 +199,36 @@ p.note {
 
 </section>
 <section>
-<div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
+<div class="section-label">El caso: un robot junto al acantilado</div>
 <h2>Cada paso cuesta −1 y caer cuesta −100</h2>
 <ul>
-  <li>Cuatro acciones: arriba, abajo, izquierda y derecha; contra un borde, el robot se queda donde está.</li>
-  <li>Caer cuesta $-100$ y devuelve a S. Las recompensas futuras se descuentan con $\gamma = 0.95$; aquí el suelo no resbala, y un episodio que no llega a G se corta a los 200 pasos.</li>
-  <li>El <b>retorno</b> es la suma descontada $G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots$. La ruta del borde (9 pasos) da $-7.40$; la segura por arriba (13 pasos), $-9.73$.</li>
+  <li>Acciones: ↑, ↓, ←, →. Caer devuelve a S; G termina el episodio.</li>
+  <li>Retorno: $G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots$, donde $r$: recompensas, $\gamma = 0.95$: descuento.</li>
+  <li>Ruta del borde: $-7.40$; ruta segura, por arriba: $-9.73$.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 1 · El caso: un robot junto al acantilado</div>
-<h2>Hasta ahora, la política salía de los valores</h2>
+<div class="section-label">Por qué optimizar la política directamente</div>
+<h2>Hasta ahora, la política salía de los valores, y eso tiene límites</h2>
 <ul>
-  <li>El valor $q(s,a)$ es el retorno promedio al tomar la acción $a$ en la casilla $s$ y seguir después con la política.</li>
-  <li>La política se obtenía eligiendo en cada casilla la acción de mayor valor: $a = \arg\max_a q(s,a)$.</li>
-  <li>Aquí se toma el camino directo: ajustar la política misma.</li>
+  <li>$q(s,a)$: retorno promedio al tomar $a$ en la casilla $s$; se elegía la de mayor valor, $\arg\max_a q(s,a)$.</li>
+  <li>Con acciones continuas, buscar ese máximo en cada paso es otro problema de optimización.</li>
+  <li>Solo da políticas deterministas, y a veces conviene el azar (piedra, papel o tijera).</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 2 · Por qué optimizar la política directamente</div>
-<h2>El arg max falla con acciones continuas y da políticas rígidas</h2>
+<div class="section-label">Políticas parametrizadas</div>
+<h2>Una política con parámetros θ, ajustada para maximizar el retorno</h2>
+$$
+\pi(a \mid s; \theta) = \text{probabilidad de elegir } a \text{ en } s
+$$
 <ul>
-  <li>Si la acción es un torque o el ángulo de un volante, hay infinitas acciones, y encontrar el máximo de $q$ en cada paso se vuelve otro problema de optimización.</li>
-  <li>Solo da políticas deterministas, y a veces la mejor es aleatoria: en piedra, papel o tijera cualquier regla fija es explotable.</li>
-  <li>Un cambio mínimo en $q$ puede invertir el orden de dos acciones y cambiar la política de golpe.</li>
+  <li>$\theta$: parámetros ajustables. $J(\theta)$: retorno esperado desde S, un promedio que se escribe $\mathbb{E}[\cdot]$.</li>
+  <li>Ascenso de gradiente: $\theta \leftarrow \theta + \alpha\, \nabla_\theta J$; el gradiente apunta hacia donde $J$ sube, $\alpha$: tasa.</li>
 </ul>
 </section>
 <section>
-<div class="section-label">§ 2 · Por qué optimizar la política directamente</div>
+<div class="section-label">Políticas parametrizadas</div>
 <h2>Dos familias de métodos</h2>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -266,101 +268,59 @@ p.note {
 
 </section>
 <section>
-<div class="section-label">§ 3 · Políticas parametrizadas</div>
-<h2>Una política con parámetros θ, ajustada para maximizar el retorno</h2>
-$$
-\pi(a \mid s; \theta) = \text{probabilidad de elegir } a \text{ en } s, \qquad J(\theta) = \mathbb{E}_{\pi_\theta}\left[ G_0 \right] = v_{\pi_\theta}(S)
-$$
-<ul>
-  <li>$\theta$ es un vector de números que se ajusta (se escribe también $\pi_\theta$); el objetivo $J$ es el retorno esperado desde el inicio, el valor de la política en la casilla S.</li>
-  <li>Se busca el $\theta$ que maximiza $J$ por <b>ascenso de gradiente</b>: $\theta \leftarrow \theta + \alpha\, \nabla_\theta J(\theta)$, con tasa $\alpha$.</li>
-</ul>
-</section>
-<section>
-<div class="section-label">§ 3 · Políticas parametrizadas</div>
+<div class="section-label">Políticas parametrizadas</div>
 <h2>Acciones discretas: preferencias y softmax</h2>
 $$
 \pi(a \mid s; \theta) = \frac{e^{\theta_{s,a}}}{\sum_b e^{\theta_{s,b}}}
 $$
 <ul>
-  <li>$\theta_{s,a}$ es la <b>preferencia</b> por la acción $a$ en la casilla $s$: un número real cualquiera.</li>
-  <li>En el acantilado son $25 \times 4 = 100$ preferencias. Todas en cero: las cuatro acciones con probabilidad $1/4$.</li>
+  <li>$\theta_{s,a}$: preferencia por $a$ en $s$. La softmax las vuelve probabilidades que suman 1 ($b$ recorre las acciones).</li>
+  <li>25 casillas por 4 acciones: 100 preferencias. Todas en cero dan $1/4$ a cada acción.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 3 · Políticas parametrizadas</div>
+<div class="section-label">Políticas parametrizadas</div>
 <h2>Acciones continuas: una política gaussiana</h2>
 $$
 a \sim \mathcal{N}\big(\mu_\theta(s),\, \sigma_\theta(s)^2\big)
 $$
 <ul>
-  <li>Una red calcula la media $\mu$ y la desviación $\sigma$; muestrear es inmediato y no hay que maximizar nada.</li>
-  <li>Una política estocástica explora sola: no necesita una regla aparte, como elegir al azar con probabilidad $\varepsilon$ y si no la acción de mayor valor (llamada $\varepsilon$-greedy).</li>
+  <li>Una red neuronal con parámetros $\theta$ calcula la media $\mu$ y la desviación $\sigma$ de la normal $\mathcal{N}$.</li>
+  <li>Una política estocástica explora sola.</li>
 </ul>
-
 </section>
 <section>
-<section>
-<div class="section-label">§ 3 · Políticas parametrizadas</div>
-<h2>La derivada del logaritmo de la softmax es «tomada menos esperada»</h2>
+<div class="section-label">Políticas parametrizadas</div>
+<h2>Para hacer más probable la acción tomada: subirla y bajar las demás</h2>
 $$
 \frac{\partial \log \pi(a \mid s)}{\partial \theta_{s,b}} = \mathbf{1}[b = a] - \pi(b \mid s)
 $$
 <ul>
-  <li>$\mathbf{1}[b=a]$ vale 1 si $b$ es la acción tomada y 0 si no; el vector $\nabla_\theta \log \pi(a \mid s)$ se llama <b>función de puntaje</b>.</li>
+  <li>Derivada del logaritmo de la softmax (se omite $\theta$); $\mathbf{1}[b=a]$ vale 1 si $b$ es la acción tomada.</li>
+  <li>«Tomada menos esperada»: la tomada sube, las demás bajan. El vector $\nabla_\theta \log \pi$ es la <b>función de puntaje</b>.</li>
 </ul>
-<p class="note">En palabras: sube la preferencia de la acción tomada y baja las demás, cada una en proporción a su probabilidad.</p>
-
 </section>
 <section>
-<div class="section-label">§ 3 · Políticas parametrizadas</div>
-<h2>Demostración, paso 1: el logaritmo de la softmax es una resta</h2>
-$$
-\log \pi(a \mid s) = \theta_{s,a} - \log \sum_c e^{\theta_{s,c}}
-$$
-<ul>
-  <li>El logaritmo de un cociente es la resta de los logaritmos, y $\log e^{\theta_{s,a}} = \theta_{s,a}$.</li>
-  <li>Para aprender hará falta derivar esta expresión respecto de cada preferencia $\theta_{s,b}$ de la casilla.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 3 · Políticas parametrizadas</div>
-<h2>Demostración, paso 2: se deriva cada término por separado</h2>
-$$
-\frac{\partial\, \theta_{s,a}}{\partial \theta_{s,b}} = \mathbf{1}[b = a], \qquad \frac{\partial}{\partial \theta_{s,b}} \log \sum_c e^{\theta_{s,c}} = \frac{e^{\theta_{s,b}}}{\sum_c e^{\theta_{s,c}}} = \pi(b \mid s)
-$$
-<ul>
-  <li>$\mathbf{1}[b=a]$ vale 1 si $b$ es la acción tomada y 0 si no.</li>
-  <li>En el segundo término, la derivada del logaritmo es la derivada de la suma, $e^{\theta_{s,b}}$, dividida por la suma: justo la softmax.</li>
-</ul>
-
-</section>
-</section>
-<section>
-<div class="section-label">§ 3 · Políticas parametrizadas</div>
+<div class="section-label">Políticas parametrizadas</div>
 <h2>Al empezar, las preferencias valen cero y la política es uniforme</h2>
 <ul>
-  <li>La política está <strong>parametrizada</strong>: la definen las 100 preferencias $\theta_{s,a}$, que el aprendizaje ajusta. Se parte con todas en cero, y la softmax da $e^0/(4e^0) = 0.25$ a cada acción: eso es la política <strong>uniforme</strong>.</li>
-  <li>En S el robot sorteó ↑. El puntaje dice cómo mover las cuatro preferencias de S para que ↑ sea más probable: $(1 - 0.25,\, -0.25,\, -0.25,\, -0.25) = (0.75,\, -0.25,\, -0.25,\, -0.25)$ para (↑, ↓, ←, →).</li>
-  <li>Sumar $0.1$ veces ese vector deja $\theta_{\mathrm{S}} = (0.075,\, -0.025,\, -0.025,\, -0.025)$, y la probabilidad de ↑ sube de $0.25$ a $0.27$.</li>
+  <li>Todas en cero: cada acción con probabilidad 0.25, la política <b>uniforme</b>.</li>
+  <li>En S el robot sorteó ↑. Su puntaje para (↑, ↓, ←, →) es $(0.75, -0.25, -0.25, -0.25)$.</li>
+  <li>Un paso con $\alpha = 0.1$ sube la probabilidad de ↑ de 0.25 a 0.27.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 4 · El truco del logaritmo</div>
+<div class="section-label">El truco del logaritmo</div>
 <h2>Una trayectoria es un producto de probabilidades</h2>
 $$
 \Pr(\tau; \theta) = p_0(s_0) \prod_t \pi(a_t \mid s_t; \theta)\, P(s_{t+1} \mid s_t, a_t)
 $$
 <ul>
-  <li>$\tau$ es un episodio completo; $p_0$ la distribución de la casilla inicial; $P(s_{t+1} \mid s_t, a_t)$ la <b>dinámica</b> del entorno, que el robot no conoce.</li>
+  <li>$\tau$: episodio con casillas $s_t$ y acciones $a_t$; $p_0$: casilla inicial; $P$: dinámica del entorno, que el robot no conoce.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 4 · El truco del logaritmo</div>
+<div class="section-label">El truco del logaritmo</div>
 <h2>Unos factores dependen de θ y otros no</h2>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -394,152 +354,81 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 4 · El truco del logaritmo</div>
-<h2>Paso 1: J es un promedio sobre trayectorias</h2>
+<div class="section-label">El truco del logaritmo</div>
+<h2>El gradiente vuelve a ser un promedio sobre episodios</h2>
+<ul>
+  <li>$J$ promedia el retorno $G(\tau)$ de cada episodio; derivar solo cambia los pesos $\Pr(\tau;\theta)$.</li>
+</ul>
 $$
-J(\theta) = \sum_\tau \Pr(\tau; \theta)\, G(\tau)
+\nabla_\theta \Pr(\tau;\theta) = \Pr(\tau;\theta)\, \nabla_\theta \log \Pr(\tau;\theta)
 $$
 <ul>
-  <li>$G(\tau)$ es el retorno de la trayectoria. Derivar respecto de $\theta$ solo afecta a $\Pr(\tau;\theta)$.</li>
+  <li>Así $\nabla_\theta J = \mathbb{E}[G(\tau)\, \nabla_\theta \log \Pr]$: se estima jugando episodios.</li>
+  <li>El logaritmo separa el producto, y los términos del entorno, $p_0$ y $P$, se anulan al derivar.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 4 · El truco del logaritmo</div>
-<h2>Paso 2: la regla de la cadena del logaritmo</h2>
-$$
-\nabla_\theta \log \Pr(\tau;\theta) = \frac{\nabla_\theta \Pr(\tau;\theta)}{\Pr(\tau;\theta)} \quad\Longrightarrow\quad \nabla_\theta \Pr(\tau;\theta) = \Pr(\tau;\theta)\, \nabla_\theta \log \Pr(\tau;\theta)
-$$
-<p class="note">En palabras: la derivada de un logaritmo es la derivada de su argumento dividida por el argumento.</p>
-
-</section>
-<section>
-<div class="section-label">§ 4 · El truco del logaritmo</div>
-<h2>Paso 3: el gradiente vuelve a ser un promedio</h2>
-$$
-\nabla_\theta J = \sum_\tau \Pr(\tau; \theta)\, \nabla_\theta \log \Pr(\tau; \theta)\, G(\tau) = \mathbb{E}_{\tau \sim \pi_\theta}\big[\, G(\tau)\, \nabla_\theta \log \Pr(\tau; \theta) \,\big]
-$$
-<ul>
-  <li>Un promedio se estima jugando episodios y promediando.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 4 · El truco del logaritmo</div>
-<h2>Paso 4: el logaritmo separa el producto</h2>
-$$
-\log \Pr(\tau; \theta) = \log p_0(s_0) + \sum_t \log \pi(a_t \mid s_t; \theta) + \sum_t \log P(s_{t+1} \mid s_t, a_t)
-$$
-<ul>
-  <li>El primer y el último término no dependen de $\theta$: su gradiente es cero.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 4 · El truco del logaritmo</div>
-<h2>El modelo del entorno desaparece</h2>
-$$
-\nabla_\theta J = \mathbb{E}_{\pi_\theta}\Big[\, G(\tau) \sum_t \nabla_\theta \log \pi(a_t \mid s_t; \theta) \,\Big]
-$$
-<ul>
-  <li>Solo hace falta derivar la política, que el agente conoce.</li>
-  <li>La dinámica influye en qué episodios aparecen, pero basta con muestrearlos del mundo real: es un método sin modelo.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 5 · El teorema del gradiente de política</div>
+<div class="section-label">El teorema del gradiente de política</div>
 <h2>Cada acción se pondera con el retorno que vino después</h2>
 $$
-\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\Big[\, \sum_t G_t\, \nabla_\theta \log \pi(a_t \mid s_t; \theta) \,\Big]
+\nabla_\theta J(\theta) = \mathbb{E}\Big[\, \sum_t G_t\, \nabla_\theta \log \pi(a_t \mid s_t; \theta) \,\Big]
 $$
 <ul>
-  <li>Una acción no influye en las recompensas cobradas antes de ella, así que en promedio solo cuenta el retorno desde $t$, $G_t$: es el <strong>teorema del gradiente de política</strong> (con un factor $\gamma^t$ que en la práctica se omite).</li>
-  <li>$\nabla_\theta \log \pi(a_t \mid s_t)$ apunta a hacer más probable la acción tomada: con retorno alto se empuja mucho en esa dirección; con retorno bajo, poco o en contra.</li>
+  <li>Solo se deriva la política: el entorno desaparece y basta jugar. Es un método <b>sin modelo</b>.</li>
+  <li>Cada acción pesa según el retorno desde su paso, $G_t$.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 6 · REINFORCE</div>
+<div class="section-label">REINFORCE</div>
 <h2>REINFORCE: Monte Carlo para la política</h2>
-<p>Un método de <b>Monte Carlo</b> estima promedios con episodios completos y sus retornos reales, sin modelo del entorno ni estimaciones intermedias.</p>
+<p><b>Monte Carlo</b>: estimar promedios con episodios completos.</p>
 <ul>
-  <li>1. Jugar un episodio completo con la política actual.</li>
-  <li>2. Calcular hacia atrás los retornos: $G_t = r_{t+1} + \gamma\, G_{t+1}$.</li>
-  <li>3. Para cada paso: $\theta \leftarrow \theta + \alpha\, G_t\, \nabla_\theta \log \pi(a_t \mid s_t; \theta)$.</li>
+  <li>1. Jugar un episodio con la política actual.</li>
+  <li>2. Calcular hacia atrás $G_t = r_{t+1} + \gamma\, G_{t+1}$.</li>
+  <li>3. En cada paso: $\theta \leftarrow \theta + \alpha\, G_t\, \nabla_\theta \log \pi(a_t \mid s_t; \theta)$.</li>
 </ul>
-<p class="note">Williams (1992).</p>
-
+<p class="note">Williams (1992); REINFORCE es un nombre, no una sigla.</p>
 </section>
 <section>
-<div class="section-label">§ 6 · REINFORCE</div>
-<h2>Con la softmax, la regla es explícita</h2>
-$$
-\theta_{s_t, b} \leftarrow \theta_{s_t, b} + \alpha\, G_t \left( \mathbf{1}[b = a_t] - \pi(b \mid s_t) \right)
-$$
-<ul>
-  <li>Solo cambian las preferencias de la casilla visitada.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 6 · REINFORCE</div>
+<div class="section-label">REINFORCE</div>
 <h2>Ejemplo: en el acantilado todo retorno es negativo</h2>
 <ul>
-  <li>En S, con la política uniforme, el robot sube y, por ejemplo, el episodio termina con $G_0 = -20$; tasa $\alpha = 0.002$.</li>
-  <li>Preferencia por subir: $0.002 \cdot (-20) \cdot 0.75 = -0.03$. Por cada una de las otras tres: $0.002 \cdot (-20) \cdot (-0.25) = +0.01$.</li>
-  <li>Subir se vuelve menos probable aunque haya sido una buena acción: toda acción tomada se castiga.</li>
+  <li>En S el robot sube y el episodio termina, por ejemplo, con $G_0 = -30$. Con $\alpha = 0.002$, cada preferencia cambia $\alpha G_0$ por su puntaje.</li>
+  <li>Subir: $-0.045$. Cada una de las otras: $+0.015$.</li>
+  <li>Subir se vuelve menos probable: con retornos negativos, toda acción tomada se castiga.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 6 · REINFORCE</div>
+<div class="section-label">REINFORCE</div>
 <h2>Insesgado pero ruidoso</h2>
 <ul>
-  <li>$G_t$ promedia a $q_\pi(s_t, a_t)$: en promedio el paso apunta al gradiente verdadero.</li>
+  <li>En promedio, el paso apunta al gradiente verdadero: es <b>insesgado</b>.</li>
   <li>Pero $G_t$ acumula el azar de todo el episodio: su <b>varianza</b> es alta.</li>
-  <li>Es <b>on-policy</b>: el gradiente vale para la política que jugó, y cada episodio se usa una sola vez.</li>
+  <li>Es <b>on-policy</b>: cada episodio sirve una sola vez.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 6 · REINFORCE</div>
+<div class="section-label">REINFORCE</div>
 <h2>Desde S, la política aprende a huir antes que a llegar</h2>
-$$
--\left(1 + \gamma + \gamma^2 + \cdots\right) = -\frac{1}{1-\gamma} = -\frac{1}{0.05} = -20
-$$
 <ul>
-  <li>Al azar desde S llega a G en solo el 14 % de los episodios, cortados a los 200 pasos, y cae una y otra vez a $-100$: la política uniforme vale $v(S) \approx -260$.</li>
-  <li>El castigo frecuente le enseña a alejarse del borde antes de descubrir la meta; arrinconada, sin caer ni llegar, paga $-1$ para siempre y vale $-20$.</li>
-  <li>Remedio: <b>inicios aleatorios</b>; la meta se descubre desde sus vecinas, y la política óptima es la misma desde cualquier casilla.</li>
+  <li>Al principio el robot cae una y otra vez, y el castigo le enseña primero a alejarse del borde.</li>
+  <li>Si lo hace antes de encontrar G, queda <b>arrinconada</b>: sin caer ni llegar, paga $-1$ para siempre y vale <span style="white-space:nowrap">$-1/(1-\gamma) = -20$</span>.</li>
+  <li>Remedio: <b>inicios aleatorios</b>, cada episodio parte de una casilla al azar.</li>
 </ul>
 </section>
 <section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
-<h2>Restar una referencia no cambia el promedio</h2>
+<div class="section-label">Línea base y varianza</div>
+<h2>Restar una referencia: la línea base y la ventaja</h2>
 $$
-\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\Big[\, \sum_t \big( G_t - b(s_t) \big)\, \nabla_\theta \log \pi(a_t \mid s_t; \theta) \,\Big]
-$$
-<ul>
-  <li>$b(s)$ es una <b>línea base</b>: cualquier función de la casilla que no dependa de la acción.</li>
-  <li>No cambia el promedio porque, en cada casilla, el puntaje promedia cero: las probabilidades suman uno, y lo que una acción gana otra lo pierde.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
-<h2>La línea base natural es el valor: aparece la ventaja</h2>
-$$
-G_t - v_\pi(s_t) \;\;\text{promedia a}\;\; q_\pi(s_t, a_t) - v_\pi(s_t) = A_\pi(s_t, a_t)
+\nabla_\theta J(\theta) = \mathbb{E}\Big[\, \sum_t \big( G_t \,{\color{#e8a33d}-\, b(s_t)} \big)\, \nabla_\theta \log \pi(a_t \mid s_t; \theta) \,\Big]
 $$
 <ul>
-  <li>$A_\pi$ es la <b>función de ventaja</b>: cuánto mejor que lo habitual en esa casilla fue la acción.</li>
-  <li>Mejor que lo esperado: se refuerza. Peor: se desalienta.</li>
+  <li>$b(s)$: <b>línea base</b>, depende de la casilla y no de la acción. No cambia el promedio: el puntaje promedia cero.</li>
+  <li>Con $b = v(s)$, el <b>valor</b> de la casilla, $G_t - v(s_t)$ estima la <b>ventaja</b> $A$: cuánto mejor que lo habitual resultó la acción.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
+<div class="section-label">Línea base y varianza</div>
 <h2>Con referencia, la buena sube y la mala baja</h2>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -579,10 +468,10 @@ $$
 
 </section>
 <section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
+<div class="section-label">Línea base y varianza</div>
 <h2>La línea base no mueve el promedio, pero reduce el ruido a la mitad</h2>
 <ul>
-  <li>Cada episodio da una estimación de cuánto conviene subir la preferencia por ↑ en S; se repitió 1500 veces, sin y con línea base $v_\pi(\mathrm{S})$.</li>
+  <li>Estimaciones de la derivada de $J$ para ↑ en S, sin y con línea base.</li>
 </ul>
 <div class="svg-holder">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4000 1720">
@@ -1161,32 +1050,20 @@ $$
 </svg>
 
 </div>
-<p class="note">Ambas nubes se centran en el mismo valor (793 y 781): la línea base no cambia hacia dónde apunta el gradiente. Pero la desviación baja de 1022 a 497, la varianza cae a un cuarto, y para la misma precisión bastan unas cuatro veces menos episodios.</p>
-
+<p class="note">Mismo centro y la mitad de desviación: la varianza cae a un cuarto, y bastan unas cuatro veces menos episodios.</p>
 </section>
 <section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
-<h2>La línea base también se aprende promediando</h2>
-$$
-v(s_t) \leftarrow v(s_t) + \beta \big( G_t - v(s_t) \big)
-$$
-<ul>
-  <li>Con los mismos retornos: la política con tasa $\alpha$, su valor con tasa $\beta$.</li>
-  <li>Sigue siendo Monte Carlo: hay que esperar el final del episodio.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
+<div class="section-label">Línea base y varianza</div>
 <h2>REINFORCE en vivo, con y sin línea base</h2>
+<ul><li>Qué mirar: si la curva del valor desde S sube hacia la ruta segura ($-9.73$) o el borde ($-7.40$), y si las flechas se alargan hacia G.</li></ul>
 <div data-rlw="reinforceVivo" data-ratio="0.43" style="max-width:1000px"></div>
 
 </section>
 <section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
+<div class="section-label">Línea base y varianza</div>
 <h2>Con línea base aprenden todas las semillas</h2>
 <ul>
-  <li>Seis semillas, $\alpha = 0.002$, $\beta = 0.1$, 6000 episodios; valor exacto desde S cada 200 episodios.</li>
+  <li>Seis semillas (corridas con distinto azar); la línea base $v(s)$ se aprende con tasa $\beta$.</li>
 </ul>
 <div class="svg-holder">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4400 1800">
@@ -1412,88 +1289,54 @@ $$
 <path clip-path="url(#psclip340)" d="M2602.91 239.637 L2607.7 239.637 L2607.7 280.157 L2602.91 280.157 L2602.91 239.637 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2617.73 239.637 L2622.52 239.637 L2622.52 280.157 L2617.73 280.157 L2617.73 239.637 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2657.5 264.376 L2657.5 266.72 L2635.46 266.72 Q2635.78 271.668 2638.43 274.272 Q2641.12 276.85 2645.88 276.85 Q2648.64 276.85 2651.22 276.173 Q2653.82 275.496 2656.38 274.142 L2656.38 278.673 Q2653.8 279.767 2651.09 280.34 Q2648.38 280.913 2645.59 280.913 Q2638.62 280.913 2634.53 276.85 Q2630.46 272.788 2630.46 265.861 Q2630.46 258.699 2634.32 254.506 Q2638.2 250.288 2644.76 250.288 Q2650.65 250.288 2654.06 254.09 Q2657.5 257.866 2657.5 264.376 M2652.7 262.97 Q2652.65 259.038 2650.49 256.694 Q2648.35 254.35 2644.81 254.35 Q2640.8 254.35 2638.38 256.616 Q2635.99 258.881 2635.62 262.996 L2652.7 262.97 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2684.55 265.236 Q2684.55 260.027 2682.39 257.163 Q2680.26 254.298 2676.38 254.298 Q2672.52 254.298 2670.36 257.163 Q2668.22 260.027 2668.22 265.236 Q2668.22 270.418 2670.36 273.282 Q2672.52 276.147 2676.38 276.147 Q2680.26 276.147 2682.39 273.282 Q2684.55 270.418 2684.55 265.236 M2689.34 276.538 Q2689.34 283.985 2686.04 287.605 Q2682.73 291.251 2675.91 291.251 Q2673.38 291.251 2671.14 290.86 Q2668.9 290.496 2666.79 289.715 L2666.79 285.053 Q2668.9 286.199 2670.96 286.746 Q2673.02 287.293 2675.15 287.293 Q2679.86 287.293 2682.21 284.819 Q2684.55 282.371 2684.55 277.397 L2684.55 275.027 Q2683.07 277.605 2680.75 278.881 Q2678.43 280.157 2675.2 280.157 Q2669.84 280.157 2666.56 276.069 Q2663.28 271.98 2663.28 265.236 Q2663.28 258.465 2666.56 254.376 Q2669.84 250.288 2675.2 250.288 Q2678.43 250.288 2680.75 251.564 Q2683.07 252.84 2684.55 255.418 L2684.55 250.991 L2689.34 250.991 L2689.34 276.538 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2712.47 265.496 Q2706.66 265.496 2704.42 266.824 Q2702.18 268.152 2702.18 271.355 Q2702.18 273.907 2703.85 275.418 Q2705.54 276.902 2708.43 276.902 Q2712.42 276.902 2714.81 274.09 Q2717.23 271.251 2717.23 266.564 L2717.23 265.496 L2712.47 265.496 M2722.03 263.517 L2722.03 280.157 L2717.23 280.157 L2717.23 275.73 Q2715.59 278.386 2713.15 279.663 Q2710.7 280.913 2707.16 280.913 Q2702.68 280.913 2700.02 278.413 Q2697.39 275.887 2697.39 271.668 Q2697.39 266.746 2700.67 264.246 Q2703.98 261.746 2710.52 261.746 L2717.23 261.746 L2717.23 261.277 Q2717.23 257.97 2715.05 256.173 Q2712.89 254.35 2708.95 254.35 Q2706.45 254.35 2704.08 254.949 Q2701.71 255.548 2699.53 256.746 L2699.53 252.319 Q2702.16 251.303 2704.63 250.809 Q2707.1 250.288 2709.45 250.288 Q2715.78 250.288 2718.9 253.569 Q2722.03 256.85 2722.03 263.517 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2756.14 262.553 L2756.14 280.157 L2751.35 280.157 L2751.35 262.709 Q2751.35 258.569 2749.73 256.512 Q2748.12 254.454 2744.89 254.454 Q2741.01 254.454 2738.77 256.928 Q2736.53 259.402 2736.53 263.673 L2736.53 280.157 L2731.71 280.157 L2731.71 250.991 L2736.53 250.991 L2736.53 255.522 Q2738.25 252.892 2740.57 251.59 Q2742.91 250.288 2745.96 250.288 Q2750.98 250.288 2753.56 253.413 Q2756.14 256.512 2756.14 262.553 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2795.91 265.496 Q2790.1 265.496 2787.86 266.824 Q2785.62 268.152 2785.62 271.355 Q2785.62 273.907 2787.29 275.418 Q2788.98 276.902 2791.87 276.902 Q2795.85 276.902 2798.25 274.09 Q2800.67 271.251 2800.67 266.564 L2800.67 265.496 L2795.91 265.496 M2805.46 263.517 L2805.46 280.157 L2800.67 280.157 L2800.67 275.73 Q2799.03 278.386 2796.58 279.663 Q2794.14 280.913 2790.59 280.913 Q2786.11 280.913 2783.46 278.413 Q2780.83 275.887 2780.83 271.668 Q2780.83 266.746 2784.11 264.246 Q2787.42 261.746 2793.95 261.746 L2800.67 261.746 L2800.67 261.277 Q2800.67 257.97 2798.48 256.173 Q2796.32 254.35 2792.39 254.35 Q2789.89 254.35 2787.52 254.949 Q2785.15 255.548 2782.96 256.746 L2782.96 252.319 Q2785.59 251.303 2788.07 250.809 Q2790.54 250.288 2792.89 250.288 Q2799.21 250.288 2802.34 253.569 Q2805.46 256.85 2805.46 263.517 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2859 274.61 L2859 264.168 L2850.41 264.168 L2850.41 259.845 L2864.21 259.845 L2864.21 276.538 Q2861.17 278.699 2857.49 279.819 Q2853.82 280.913 2849.66 280.913 Q2840.54 280.913 2835.38 275.6 Q2830.25 270.262 2830.25 260.756 Q2830.25 251.225 2835.38 245.913 Q2840.54 240.574 2849.66 240.574 Q2853.46 240.574 2856.87 241.512 Q2860.31 242.449 2863.2 244.272 L2863.2 249.871 Q2860.28 247.397 2857 246.147 Q2853.72 244.897 2850.1 244.897 Q2842.96 244.897 2839.37 248.881 Q2835.8 252.866 2835.8 260.756 Q2835.8 268.621 2839.37 272.605 Q2842.96 276.59 2850.1 276.59 Q2852.88 276.59 2855.07 276.121 Q2857.26 275.626 2859 274.61 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2874.84 273.543 L2880.33 273.543 L2880.33 280.157 L2874.84 280.157 L2874.84 273.543 M2874.84 252.579 L2880.33 252.579 L2880.33 259.194 L2874.84 259.194 L2874.84 252.579 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2921.11 258.621 Q2917.57 258.621 2915.49 261.043 Q2913.43 263.465 2913.43 267.683 Q2913.43 271.876 2915.49 274.324 Q2917.57 276.746 2921.11 276.746 Q2924.66 276.746 2926.71 274.324 Q2928.8 271.876 2928.8 267.683 Q2928.8 263.465 2926.71 261.043 Q2924.66 258.621 2921.11 258.621 M2931.56 242.137 L2931.56 246.928 Q2929.58 245.991 2927.55 245.496 Q2925.54 245.001 2923.56 245.001 Q2918.35 245.001 2915.59 248.517 Q2912.86 252.032 2912.47 259.142 Q2914 256.876 2916.32 255.678 Q2918.64 254.454 2921.43 254.454 Q2927.29 254.454 2930.67 258.022 Q2934.08 261.564 2934.08 267.683 Q2934.08 273.673 2930.54 277.293 Q2927 280.913 2921.11 280.913 Q2914.37 280.913 2910.8 275.756 Q2907.23 270.574 2907.23 260.756 Q2907.23 251.538 2911.61 246.069 Q2915.98 240.574 2923.35 240.574 Q2925.33 240.574 2927.34 240.965 Q2929.37 241.355 2931.56 242.137 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M2978.61 255.418 L2978.61 239.637 L2983.41 239.637 L2983.41 280.157 L2978.61 280.157 L2978.61 275.782 Q2977.1 278.386 2974.79 279.663 Q2972.49 280.913 2969.26 280.913 Q2963.98 280.913 2960.64 276.694 Q2957.34 272.475 2957.34 265.6 Q2957.34 258.725 2960.64 254.506 Q2963.98 250.288 2969.26 250.288 Q2972.49 250.288 2974.79 251.564 Q2977.1 252.814 2978.61 255.418 M2962.29 265.6 Q2962.29 270.887 2964.45 273.907 Q2966.63 276.902 2970.44 276.902 Q2974.24 276.902 2976.43 273.907 Q2978.61 270.887 2978.61 265.6 Q2978.61 260.314 2976.43 257.319 Q2974.24 254.298 2970.44 254.298 Q2966.63 254.298 2964.45 257.319 Q2962.29 260.314 2962.29 265.6 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M3018.22 264.376 L3018.22 266.72 L2996.19 266.72 Q2996.5 271.668 2999.16 274.272 Q3001.84 276.85 3006.61 276.85 Q3009.37 276.85 3011.95 276.173 Q3014.55 275.496 3017.1 274.142 L3017.1 278.673 Q3014.52 279.767 3011.82 280.34 Q3009.11 280.913 3006.32 280.913 Q2999.34 280.913 2995.25 276.85 Q2991.19 272.788 2991.19 265.861 Q2991.19 258.699 2995.05 254.506 Q2998.93 250.288 3005.49 250.288 Q3011.37 250.288 3014.79 254.09 Q3018.22 257.866 3018.22 264.376 M3013.43 262.97 Q3013.38 259.038 3011.22 256.694 Q3009.08 254.35 3005.54 254.35 Q3001.53 254.35 2999.11 256.616 Q2996.71 258.881 2996.35 262.996 L3013.43 262.97 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /><path clip-path="url(#psclip340)" d="M3055.62 258.621 Q3052.08 258.621 3049.99 261.043 Q3047.94 263.465 3047.94 267.683 Q3047.94 271.876 3049.99 274.324 Q3052.08 276.746 3055.62 276.746 Q3059.16 276.746 3061.22 274.324 Q3063.3 271.876 3063.3 267.683 Q3063.3 263.465 3061.22 261.043 Q3059.16 258.621 3055.62 258.621 M3066.06 242.137 L3066.06 246.928 Q3064.08 245.991 3062.05 245.496 Q3060.05 245.001 3058.07 245.001 Q3052.86 245.001 3050.1 248.517 Q3047.36 252.032 3046.97 259.142 Q3048.51 256.876 3050.83 255.678 Q3053.14 254.454 3055.93 254.454 Q3061.79 254.454 3065.18 258.022 Q3068.59 261.564 3068.59 267.683 Q3068.59 273.673 3065.05 277.293 Q3061.5 280.913 3055.62 280.913 Q3048.87 280.913 3045.31 275.756 Q3041.74 270.574 3041.74 260.756 Q3041.74 251.538 3046.11 246.069 Q3050.49 240.574 3057.86 240.574 Q3059.84 240.574 3061.84 240.965 Q3063.87 241.355 3066.06 242.137 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1" /></svg>
 
 </div>
-
+<p class="note">Sin línea base, la mayoría queda arrinconada en $-20$; con ella aprenden las seis.</p>
 </section>
 <section>
-<div class="section-label">§ 7 · Línea base y varianza</div>
+<div class="section-label">Línea base y varianza</div>
 <h2>La ruta segura es una meseta, no el óptimo</h2>
 <ul>
-  <li>Mientras la política tiene azar, el borde cuesta caídas y el gradiente la empuja hacia arriba, hasta la ruta segura, con $-9.73$.</li>
-  <li>Ya casi determinista, casi nunca prueba las acciones del borde, así que el gradiente hacia esa ruta es diminuto.</li>
-  <li>Con gradiente exacto y tiempo suficiente llegaría al óptimo, el borde con $-7.40$, pero muy lentamente (Mei et al., 2020).</li>
+  <li>Mientras hay azar, el borde cuesta caídas y la política se va a la ruta segura.</li>
+  <li>Ya casi determinista, rara vez prueba el borde: el gradiente hacia el óptimo es diminuto y llega muy lento (Mei et al., 2020).</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
-<h2>Un paso grande puede no tener vuelta</h2>
+<div class="section-label">Pasos grandes: PPO</div>
+<h2>Un paso grande puede no tener vuelta, y cada lote se usa una sola vez</h2>
 <ul>
-  <li>Con $\alpha = 0.01$, la mitad de las semillas se estanca en el acantilado aun con línea base.</li>
-  <li>La política mala genera los datos siguientes, y el error se realimenta.</li>
+  <li>Con $\alpha$ grande, la política se concentra antes de descubrir la meta, y sus propios datos realimentan el error.</li>
+  <li>Un <b>lote</b>: episodios jugados con la política $\pi_{\text{old}}$ (parámetros $\theta_\text{old}$). Reutilizarlo varios pasos es lo que permite PPO (<em>Proximal Policy Optimization</em>).</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
-<h2>Se quiere aprovechar más cada lote de datos</h2>
-<ul>
-  <li>Un <b>lote</b> es un conjunto de episodios jugados con una misma política, que se llamará $\pi_{\text{old}} = \pi_{\theta_\text{old}}$.</li>
-  <li>REINFORCE lo usa para un solo paso y lo descarta; se quiere dar varios pasos con él sin alejarse demasiado de la política que lo generó.</li>
-  <li>Pero tras el primer paso la política ya cambió, y los datos vienen de otra: hace falta corregir esa diferencia.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
-<h2>Paso 1: multiplicar y dividir por π<sub>old</sub> no cambia el promedio</h2>
+<div class="section-label">Pasos grandes: PPO</div>
+<h2>Reutilizar el lote: repesar cada acción con un cociente</h2>
 $$
-\mathbb{E}_{a \sim \pi_\theta}\big[ f(a) \big] = \sum_a \pi_\theta(a \mid s)\, f(a) = \sum_a \pi_{\text{old}}(a \mid s)\, \frac{\pi_\theta(a \mid s)}{\pi_{\text{old}}(a \mid s)}\, f(a)
+\rho_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\text{old}}(a_t \mid s_t)}
 $$
 <ul>
-  <li>$f(a)$ es cualquier cantidad que dependa de la acción, por ejemplo su ventaja; el problema es que las acciones del lote se sortearon con $\pi_{\text{old}}$, no con $\pi_\theta$.</li>
-  <li>El factor $\pi_{\text{old}} / \pi_{\text{old}}$ vale uno, siempre que $\pi_{\text{old}}$ dé probabilidad positiva a cada acción.</li>
+  <li>$\rho_t$: cuánto más probable es $a_t$ con la política nueva.</li>
+  <li>Repesar con $\rho_t$ usa datos viejos como si fueran nuevos (<b>muestreo por importancia</b>): se maximiza el promedio de $\rho_t A_t$.</li>
 </ul>
 </section>
 <section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
-<h2>Paso 2: muestreo por importancia</h2>
-$$
-\mathbb{E}_{a \sim \pi_\theta}\big[ f(a) \big] = \mathbb{E}_{a \sim \pi_{\text{old}}}\Big[ \frac{\pi_\theta(a \mid s)}{\pi_{\text{old}}(a \mid s)}\, f(a) \Big]
-$$
-<ul>
-  <li>La suma del paso anterior es un promedio bajo $\pi_{\text{old}}$, y ese sí se estima con el lote.</li>
-</ul>
-<p class="note">En palabras: el cociente repesa los datos viejos como si vinieran de la política nueva; esto se llama muestreo por importancia (importance sampling).</p>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
-<h2>Objetivo sustituto: datos viejos, gradiente correcto</h2>
-$$
-\rho_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_\text{old}}(a_t \mid s_t)}, \qquad L(\theta) = \mathbb{E}_{\pi_{\theta_\text{old}}}\big[\, \rho_t(\theta)\, A_t \,\big]
-$$
-<ul>
-  <li>El cociente $\rho_t$ es el factor del muestreo por importancia para la acción $a_t$ del lote ($\rho_t &gt; 1$ si se volvió más probable); $A_t$ estima la ventaja, por ejemplo $G_t - v(s_t)$.</li>
-  <li>En $\theta = \theta_\text{old}$: $\nabla_\theta \rho_t = \nabla_\theta \log \pi_\theta$, y se recupera el gradiente de política; lejos de $\theta_\text{old}$ la aproximación se degrada.</li>
-</ul>
-<p class="note">En palabras: L mide con el lote viejo la ventaja que lograría la política nueva.</p>
-</section>
-<section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
+<div class="section-label">Pasos grandes: PPO</div>
 <h2>PPO recorta el cociente</h2>
+<ul>
+  <li>PPO (Schulman et al., 2017) no deja que $\rho_t$ salga de $[1-\varepsilon, 1+\varepsilon]$, con $\varepsilon \approx 0.2$.</li>
+</ul>
 $$
 L^{\text{CLIP}}(\theta) = \mathbb{E}\Big[ \min\big( \rho_t\, A_t,\; \operatorname{clip}(\rho_t, 1-\varepsilon, 1+\varepsilon)\, A_t \big) \Big]
 $$
 <ul>
-  <li>PPO (<em>Proximal Policy Optimization</em>, Schulman et al., 2017), típicamente con $\varepsilon = 0.2$.</li>
-  <li>$\operatorname{clip}$ deja el cociente dentro de $[1-\varepsilon, 1+\varepsilon]$.</li>
+  <li>$L^{\text{CLIP}}$: objetivo a maximizar; $\operatorname{clip}$ recorta el cociente y $\min$ toma el menor término.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
+<div class="section-label">Pasos grandes: PPO</div>
 <h2>Fuera del intervalo, el objetivo se aplana</h2>
-<ul><li>Horizontal: el cociente $\rho_t$; vertical: lo que la acción aporta al objetivo. Gris: $\rho_t A_t$ sin recorte; color: PPO.</li></ul>
+<ul>
+  <li>Horizontal: el cociente $\rho_t$; vertical: lo que la acción aporta al objetivo. Gris: sin recorte; color: PPO.</li>
+</ul>
 <div class="svg-holder">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4400 1760">
 <defs>
@@ -1684,11 +1527,10 @@ $$
 </svg>
 
 </div>
-<p class="note">Acción buena (izquierda): hacerla más de $1+\varepsilon$ veces más probable ya no suma, así que no hay incentivo para alejarse de la política vieja. Acción mala (derecha): bajarla de $1-\varepsilon$ ya no suma, pero si se volvió más probable el castigo sigue completo. El recorte quita incentivos, nunca castigos.</p>
-
+<p class="note">Pasado $1 \pm \varepsilon$ el objetivo deja de crecer: el recorte quita incentivos para alejarse, nunca castigos.</p>
 </section>
 <section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
+<div class="section-label">Pasos grandes: PPO</div>
 <h2>El ciclo de PPO</h2>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -1711,58 +1553,35 @@ $$
   <text x="380" y="30" font-size="13.5" fill="#333" text-anchor="middle">el recorte impide que una sola tanda de datos aleje demasiado la política de la que los generó</text>
   </svg>
 </div>
-
+<p class="note">Época: una pasada por el lote; PPO da $K$. TRPO (<em>Trust Region Policy Optimization</em>, 2015) acotaba la distancia entre políticas con la divergencia KL, que mide cuán distintas son dos distribuciones.</p>
 </section>
 <section>
-<div class="section-label">§ 8 · Pasos grandes: PPO</div>
-<h2>Cuánto se alejó la política: la divergencia KL</h2>
-$$
-\mathrm{KL}\big(\pi_{\text{old}} \,\|\, \pi_\theta\big) = \sum_a \pi_{\text{old}}(a \mid s)\, \log \frac{\pi_{\text{old}}(a \mid s)}{\pi_\theta(a \mid s)}
-$$
-<ul>
-  <li>La divergencia de Kullback–Leibler (KL) vale cero si las dos políticas son iguales y es positiva si difieren.</li>
-  <li>TRPO (<em>Trust Region Policy Optimization</em>, Schulman et al., 2015) maximizaba el objetivo sustituto con la KL acotada; PPO logra lo mismo con un recorte y un optimizador común.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Del acantilado a los modelos de lenguaje</div>
+<div class="section-label">Del acantilado a los modelos de lenguaje</div>
 <h2>Escribir una respuesta es jugar un episodio</h2>
 <ul>
-  <li>Estado: la pregunta y el texto ya escrito; acción: el siguiente token.</li>
-  <li>Política: la última capa da una preferencia, o <i>logit</i>, por cada token del vocabulario, y una softmax la convierte en probabilidad; $\theta$ son los pesos de la red.</li>
-  <li>Un episodio es una respuesta completa y la recompensa suele llegar al final, tras cientos de tokens; todo lo anterior aplica: puntaje, línea base, ventaja y recorte.</li>
+  <li>Estado: la pregunta y el texto escrito; acción: el siguiente <i>token</i>, un fragmento de palabra.</li>
+  <li>Política: la propia red del modelo, con pesos $\theta$; la softmax de sus <i>logits</i> da la probabilidad de cada token.</li>
+  <li>La recompensa llega al final de la respuesta; todo lo anterior aplica.</li>
 </ul>
 </section>
 <section>
-<div class="section-label">§ 9 · Del acantilado a los modelos de lenguaje</div>
-<h2>RLHF: PPO con preferencias humanas</h2>
+<div class="section-label">Del acantilado a los modelos de lenguaje</div>
+<h2>RLHF y DPO: aprender de preferencias humanas</h2>
 <ul>
-  <li>RLHF (<em>Reinforcement Learning from Human Feedback</em>): la recompensa la da un modelo entrenado con las preferencias de personas entre pares de respuestas.</li>
-  <li>La política se ajusta con PPO; una penalización KL la mantiene cerca del modelo original, para que no aprenda a engañar al modelo de recompensa.</li>
-  <li>Costoso: política, modelo de recompensa, modelo original y un <b>crítico</b> del mismo tamaño, una red que estima $v(s)$ para usarlo como línea base.</li>
+  <li>RLHF (<em>Reinforcement Learning from Human Feedback</em>): recompensa aprendida de preferencias humanas y PPO, con una penalización KL que mantiene el modelo cerca de su versión de referencia.</li>
+  <li>DPO (<em>Direct Preference Optimization</em>, 2023): vuelve más probable la respuesta preferida de cada par, sin modelo de recompensa ni generar respuestas.</li>
 </ul>
-
 </section>
 <section>
-<div class="section-label">§ 9 · Del acantilado a los modelos de lenguaje</div>
-<h2>DPO: preferencias sin refuerzo</h2>
-<ul>
-  <li>DPO (<em>Direct Preference Optimization</em>, 2023) alcanza el mismo objetivo con una pérdida supervisada sobre pares de respuestas preferida y rechazada.</li>
-  <li>Sin modelo de recompensa ni generación durante el entrenamiento: más simple, pero limitado a los pares ya recolectados.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 9 · Del acantilado a los modelos de lenguaje</div>
+<div class="section-label">Del acantilado a los modelos de lenguaje</div>
 <h2>GRPO: el grupo hace de línea base</h2>
 $$
 A_i = \frac{r_i - \text{media}(r_1, \dots, r_M)}{\text{desviación}(r_1, \dots, r_M)}
 $$
 <ul>
-  <li>GRPO (<em>Group Relative Policy Optimization</em>, 2024): $M$ respuestas por pregunta, con recompensas $r_1, \dots, r_M$; su promedio es la línea base y se optimiza con el recorte de PPO.</li>
+  <li>GRPO (<em>Group Relative Policy Optimization</em>, 2024): $M$ respuestas $o_i$ con recompensa $r_i$; la media del grupo es la línea base.</li>
 </ul>
-<div class="svg-holder">
+<div class="svg-holder svg-sm">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
   <defs><marker id="gra" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker></defs>
   <rect x="14" y="112" width="118" height="62" rx="8" fill="#e8f0fe" stroke="#3b5b92" stroke-width="2"/>
@@ -1813,26 +1632,14 @@ $$
   <text x="380" y="286" font-size="13.5" fill="#1a1a1a" text-anchor="middle">no hace falta una red que estime v(s): el promedio del grupo cumple ese papel</text>
   </svg>
 </div>
-
 </section>
 <section>
-<div class="section-label">§ 9 · Del acantilado a los modelos de lenguaje</div>
+<div class="section-label">Del acantilado a los modelos de lenguaje</div>
 <h2>Con recompensas verificables, GRPO entrena modelos que razonan</h2>
 <ul>
-  <li>RLVR (<em>Reinforcement Learning with Verifiable Rewards</em>): un programa comprueba la respuesta, como el resultado de un problema o las pruebas de un código; así, DeepSeek-R1 (2025) desarrolló razonamientos largos y autoverificación.</li>
-  <li>DAPO (2025) ajusta el recorte y descarta los grupos sin contraste: si todas las respuestas reciben la misma recompensa, todas las ventajas son cero y el grupo no enseña nada.</li>
-  <li>GSPO (2025) calcula el cociente $\rho$ para la respuesta completa y no token por token.</li>
+  <li>RLVR (<em>Reinforcement Learning with Verifiable Rewards</em>): un programa verifica la respuesta. Así se entrenó el modelo de lenguaje DeepSeek-R1 (2025).</li>
+  <li>DAPO (<em>Decoupled Clip and Dynamic Sampling</em>, 2025) descarta grupos sin contraste. SDPO (<em>Self-Distillation Policy Optimization</em>, 2026) aprende de mensajes de error imitándose a sí mismo.</li>
 </ul>
-</section>
-<section>
-<div class="section-label">§ 9 · Del acantilado a los modelos de lenguaje</div>
-<h2>SDPO: el modelo como su propio maestro</h2>
-<ul>
-  <li>Con una recompensa escalar el modelo sabe que falló, pero no dónde.</li>
-  <li>SDPO (<em>Self-Distillation Policy Optimization</em>, 2026) usa la retroalimentación en texto, como un mensaje de error: el mismo modelo, leyendo ese error, predice mejor cada token.</li>
-  <li>Esa predicción se <b>destila</b> en la política: se entrena al modelo para imitar las probabilidades de sí mismo con la retroalimentación a la vista.</li>
-</ul>
-
 </section>
 <section>
 <div class="close-slide">

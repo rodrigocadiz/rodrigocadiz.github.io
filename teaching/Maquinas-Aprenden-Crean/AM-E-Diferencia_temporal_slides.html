@@ -161,12 +161,14 @@ p.note {
   <div class="byline">Pontificia Universidad Católica de Chile</div>
 </div>
 </section>
+
 <section>
 <h2>Aprender cuánto vale cada situación sin saber cómo funciona el mundo</h2>
 <p>Un agente que no conoce la dinámica de su entorno puede, aun así, aprender cuánto vale cada situación corrigiendo una predicción con la siguiente.</p>
 </section>
+
 <section>
-<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<div class="section-label">El caso: un robot que no conoce el acantilado</div>
 <h2>Un robot debe cruzar junto a un acantilado</h2>
 <ul>
   <li>Cuadrícula de 4 filas y 8 columnas: sale de S y el episodio termina al llegar a G.</li>
@@ -196,102 +198,77 @@ p.note {
 </div>
 
 </section>
+
 <section>
-<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<div class="section-label">El caso: un robot que no conoce el acantilado</div>
 <h2>Cada paso cuesta −1 y caer −100, pero el robot no lo sabe</h2>
 <ul>
-  <li>Cuatro acciones: arriba, abajo, izquierda y derecha; contra un borde se queda donde está, y caer al acantilado cuesta $-100$ y devuelve a S. El descuento es $\gamma = 0.95$ y el suelo no resbala.</li>
-  <li>Pero el robot no conoce estas reglas: solo observa la casilla en que está y la recompensa que recibe.</li>
-  <li>No sabe dónde está el vacío hasta que cae en él.</li>
+  <li>Cuatro acciones; caer cuesta $-100$ y devuelve a S.</li>
+  <li>Solo ve su casilla y la recompensa: no sabe dónde está el vacío.</li>
+  <li><strong>Descuento</strong> $\gamma = 0.95$: las recompensas lejanas valen menos.</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<div class="section-label">El caso: un robot que no conoce el acantilado</div>
 <h2>Lo que hay que aprender: el valor de cada acción</h2>
-$$
-q_\pi(s, a) = \mathbb{E}_\pi\left[\, G_t \mid s_t = s,\, a_t = a \,\right], \qquad G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots
-$$
 <ul>
-  <li>$G_t$ es el retorno descontado; $q_\pi(s,a)$ es lo que se gana en promedio al tomar $a$ en la casilla $s$ y seguir después la política $\pi$, la regla que da la probabilidad $\pi(a \mid s)$ de cada acción.</li>
-  <li>Con la mejor política se obtiene $q_*$, y actuar bien es elegir en cada casilla la acción de mayor $q_*$.</li>
+  <li><strong>Política</strong> $\pi(a \mid s)$: probabilidad de cada acción $a$ en la casilla $s$.</li>
+  <li><strong>Retorno</strong>: recompensas futuras descontadas ($r_{t+1}$: recompensa tras actuar en $t$):</li>
 </ul>
-
+$$G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots$$
+<ul>
+  <li>$q_\pi(s,a)$: retorno promedio al tomar $a$ en $s$ y seguir $\pi$; el óptimo es $q_*$.</li>
+</ul>
 </section>
+
 <section>
-<div class="section-label">§ 1 · El caso: un robot que no conoce el acantilado</div>
+<div class="section-label">El caso: un robot que no conoce el acantilado</div>
 <h2>Con el modelo, Bellman entrega q directamente</h2>
-$$
-q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, \max_{a'} q_*(s', a')
-$$
+$$q_*(s, a) = r(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, \max_{a'} q_*(s', a')$$
 <ul>
-  <li>$r(s,a)$ es la recompensa esperada al tomar $a$ en $s$, y $P(s' \mid s,a)$ la probabilidad de llegar a $s'$: juntos forman el modelo del mundo.</li>
-  <li>En palabras: una acción vale lo que paga ahora más lo mejor que se puede hacer desde donde deja al robot; sin conocer $P$ esa suma no se puede evaluar y hay que reemplazarla por experiencia.</li>
+  <li>$r(s,a)$: recompensa esperada; $P(s' \mid s,a)$: probabilidad de llegar a $s'$. Juntos, el modelo.</li>
+  <li><strong>Bellman</strong>: una acción vale lo que paga ahora más lo mejor desde donde deja al robot.</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<div class="section-label">El error de diferencia temporal</div>
 <h2>Dos extremos: programación dinámica y Monte Carlo</h2>
 <ul>
-  <li>La <strong>programación dinámica</strong> resuelve Bellman con el modelo $P$ y $r$, barriendo todos los estados una y otra vez, como la iteración de valor: es exacta, pero exige conocer el modelo.</li>
-  <li><strong>Monte Carlo</strong> juega episodios completos y promedia los retornos observados: no necesita modelo, pero espera el final del episodio y su estimación varía mucho.</li>
+  <li><strong>Programación dinámica</strong>: resuelve Bellman barriendo todos los estados con el modelo. Exacta, pero necesita $P$ y $r$.</li>
+  <li><strong>Monte Carlo</strong>: promedia retornos de episodios completos. Sin modelo, pero espera el final y varía mucho.</li>
 </ul>
+</section>
 
-</section>
 <section>
-<div class="section-label">§ 2 · El error de diferencia temporal</div>
-<h2>Diferencia temporal: un tercer camino entre ambos extremos</h2>
-$$
-\begin{aligned}
-&\text{Programación dinámica:} && v(s) \leftarrow \textstyle\sum_a \pi(a \mid s)\, \big[\, r(s,a) + \gamma \sum_{s'} P(s' \mid s,a)\, v(s') \,\big] \\
-&\text{Monte Carlo:} && v(s_t) \leftarrow v(s_t) + \alpha\, \big[\, G_t - v(s_t) \,\big] \\
-&\text{Diferencia temporal (TD):} && v(s_t) \leftarrow v(s_t) + \alpha\, \big[\, r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t) \,\big]
-\end{aligned}
-$$
-<ul>
-  <li>Como Monte Carlo, TD aprende de la experiencia, sin modelo: usa la recompensa $r_{t+1}$ y la casilla $s_{t+1}$ que de verdad ocurrieron.</li>
-  <li>Como la programación dinámica, no espera el final: completa el resto del retorno con la estimación $v(s_{t+1})$ y actualiza en cada paso.</li>
-</ul>
-<p class="note">Se llama diferencia temporal porque corrige con la diferencia entre dos predicciones hechas en instantes consecutivos.</p>
-</section>
-<section>
-<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<div class="section-label">El error de diferencia temporal</div>
 <h2>Diferencia temporal: corregir una predicción con la siguiente</h2>
-$$
-\delta_t = \underbrace{r_{t+1} + \gamma\, v(s_{t+1})}_{\text{objetivo TD}} - \underbrace{v(s_t)}_{\text{estimación actual}}, \qquad v(s_t) \leftarrow v(s_t) + \alpha\, \delta_t
-$$
 <ul>
-  <li>$v(s)$ es la estimación actual del valor de la casilla $s$, y avanza una fracción $\alpha$, la tasa de aprendizaje, hacia el objetivo.</li>
-  <li>Si las estimaciones fueran exactas, $\delta_t$ valdría cero en promedio: es el residuo de la ecuación de Bellman medido con una sola muestra.</li>
+  <li>$v(s)$: valor estimado de la casilla $s$; $\alpha$: tamaño de paso.</li>
 </ul>
-<p class="note">En palabras: lo que se observó un paso después, recompensa más estimación siguiente, menos lo que se esperaba.</p>
-
+$$\delta_t = r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t), \qquad v(s_t) \leftarrow v(s_t) + \alpha\, \delta_t$$
+<ul>
+  <li><strong>Error TD</strong> $\delta_t$: lo observado un paso después menos lo esperado.</li>
+  <li>Sin modelo y sin esperar el final del episodio.</li>
+</ul>
 </section>
+
 <section>
-<div class="section-label">§ 2 · El error de diferencia temporal</div>
+<div class="section-label">El error de diferencia temporal</div>
 <h2>Bootstrapping: menos varianza que Monte Carlo, a cambio de sesgo</h2>
 <ul>
-  <li>El objetivo usa la estimación $v(s_{t+1})$ en lugar del retorno real $G_t$: estimar a partir de otra estimación se llama <em>bootstrapping</em>.</li>
-  <li>Así se actualiza en cada paso, pero el objetivo hereda los errores de la estimación en que se apoya: TD tiene sesgo.</li>
-  <li>A cambio, $G_t$ acumula el azar de toda la trayectoria y $r_{t+1} + \gamma\, v(s_{t+1})$ el de un solo paso; esa menor varianza hace que TD suela aprender más rápido.</li>
+  <li>El objetivo $r_{t+1} + \gamma\, v(s_{t+1})$ usa una estimación: <em>bootstrapping</em>.</li>
+  <li>Hereda su error (<strong>sesgo</strong>), pero solo el azar de un paso (menos <strong>varianza</strong>).</li>
 </ul>
-
 </section>
-<section>
-<div class="section-label">§ 3 · Predicción con TD(0)</div>
-<h2>Primero, evaluar una política fija</h2>
-<ul>
-  <li>Seguir una política dada y aplicar $v(s_t) \leftarrow v(s_t) + \alpha\, \delta_t$ en cada paso es <strong>TD(0)</strong>: estima el valor $v_\pi(s)$ de esa política con un objetivo que mira un solo paso adelante.</li>
-  <li>A esto se le llama <strong>predicción</strong>; buscar la mejor política, el <strong>control</strong>, viene después.</li>
-</ul>
 
-</section>
 <section>
-<div class="section-label">§ 3 · Predicción con TD(0)</div>
-<h2>Caso de ejemplo: la caminata aleatoria</h2>
+<div class="section-label">Predicción con TD(0)</div>
+<h2>Primero, evaluar una política fija: la caminata aleatoria</h2>
 <ul>
-  <li>Cinco estados en línea; salir por la derecha paga 1, por la izquierda 0; sin descuento ($\gamma = 1$).</li>
+  <li><strong>TD(0)</strong>: aplicar la corrección TD siguiendo una política fija para estimar su valor $v_\pi$ (<strong>predicción</strong>).</li>
+  <li>Caminata: cinco estados; salir por la derecha paga 1, por la izquierda 0; $\gamma = 1$.</li>
 </ul>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -301,53 +278,29 @@ $$
 <text x="360" y="22" text-anchor="middle" font-size="14" fill="#7b1fa2">se parte en C · cada paso: izquierda o derecha con probabilidad 1/2</text>
 </svg>
 </div>
+</section>
 
-</section>
 <section>
-<div class="section-label">§ 3 · Predicción con TD(0)</div>
-<h2>Paso 1: el valor de un estado es la probabilidad de salir por la derecha</h2>
-$$
-v(s) = \mathbb{E}[\,G \mid s\,] = 1 \cdot \Pr(\text{sale por la derecha} \mid s) + 0 \cdot \Pr(\text{sale por la izquierda} \mid s)
-$$
+<div class="section-label">Predicción con TD(0)</div>
+<h2>El valor verdadero de la caminata: k/6</h2>
 <ul>
-  <li>Sin descuento y con recompensa solo al salir, el retorno de un episodio vale 1 si sale por la derecha y 0 si sale por la izquierda.</li>
-  <li>Su promedio es, entonces, la probabilidad de salir por la derecha.</li>
+  <li>El valor es la probabilidad de salir por la derecha: el promedio de los vecinos.</li>
+  <li>Resulta una recta: $k/6$ para A a E ($k = 1, \dots, 5$).</li>
 </ul>
 </section>
+
 <section>
-<div class="section-label">§ 3 · Predicción con TD(0)</div>
-<h2>Paso 2: cada valor es el promedio de sus dos vecinos</h2>
-$$
-v(k) = \tfrac{1}{2}\, v(k-1) + \tfrac{1}{2}\, v(k+1), \qquad v(0) = 0, \quad v(6) = 1
-$$
-<ul>
-  <li>Se numeran las posiciones: 0 es la salida izquierda, A a E son 1 a 5, y 6 es la salida derecha.</li>
-  <li>Es la ecuación de Bellman de la caminata: desde $k$ se va a cada vecino con probabilidad $\tfrac{1}{2}$, sin recompensa por el paso; en las salidas el valor ya se conoce.</li>
-</ul>
-</section>
-<section>
-<div class="section-label">§ 3 · Predicción con TD(0)</div>
-<h2>Paso 3: pasos iguales de 0 a 1 en seis tramos dan k/6</h2>
-$$
-v(k+1) - v(k) = v(k) - v(k-1) \quad\Longrightarrow\quad v(k) = \tfrac{k}{6}: \quad v(A), \dots, v(E) = \tfrac{1}{6},\ \tfrac{2}{6},\ \tfrac{3}{6},\ \tfrac{4}{6},\ \tfrac{5}{6}
-$$
-<ul>
-  <li>Multiplicar el Paso 2 por 2 y reordenar muestra que cada escalón mide lo mismo: los valores forman una recta.</li>
-  <li>La recta sube de $v(0) = 0$ a $v(6) = 1$ en seis escalones iguales, así que cada uno mide $\tfrac{1}{6}$; C, en el centro, vale $\tfrac{3}{6} = 0.5$.</li>
-</ul>
-<p class="note">En palabras: cuanto más a la derecha parte la caminata, más probable es que salga por ese lado. TD(0) debe descubrir estos valores sin conocerlos.</p>
-</section>
-<section>
-<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<div class="section-label">Predicción con TD(0)</div>
 <h2>TD(0) filtra el valor hacia atrás</h2>
 <ul>
-  <li>Barras: estimación, todas parten en 0.5; línea punteada: el valor verdadero $k/6$; derecha: error medio.</li>
+  <li>Barras: estimación, todas parten en 0.5; línea punteada: el valor verdadero $k/6$; derecha: error RMS, la raíz del error cuadrático medio entre las barras y el valor verdadero.</li>
 </ul>
 <div data-rlw="td0Caminata" style="max-width:1100px"></div>
 
 </section>
+
 <section>
-<div class="section-label">§ 3 · Predicción con TD(0)</div>
+<div class="section-label">Predicción con TD(0)</div>
 <h2>Cada actualización empuja un estado hacia su sucesor</h2>
 <ul>
   <li>La información de las salidas viaja hacia el centro una casilla por visita.</li>
@@ -355,64 +308,43 @@ $$
 </ul>
 
 </section>
+
 <section>
-<div class="section-label">§ 4 · Exploración</div>
+<div class="section-label">Exploración</div>
 <h2>Sin explorar, el robot no conoce otras rutas</h2>
 <ul>
-  <li>La acción <strong>codiciosa</strong> es la de mayor valor estimado $q(s,a)$; una política que siempre la elige es la política codiciosa, y nunca prueba las demás.</li>
-  <li>$\varepsilon$-greedy: con probabilidad $\varepsilon$ elige una de las cuatro acciones al azar; si no, la codiciosa.</li>
+  <li>Acción <strong>codiciosa</strong>: la de mayor $q(s,a)$ estimado. Elegirla siempre impide probar otras.</li>
+  <li>$\varepsilon$-greedy: con probabilidad $\varepsilon$, una acción al azar; si no, la codiciosa. $\varepsilon$ se reduce de a poco.</li>
 </ul>
-
 </section>
-<section>
-<div class="section-label">§ 4 · Exploración</div>
-<h2>La exploración debe apagarse en el límite</h2>
-<ul>
-  <li>GLIE (<em>greedy in the limit with infinite exploration</em>, codicioso en el límite con exploración infinita): visitar infinitas veces cada par estado-acción y volverse codicioso, por ejemplo con $\varepsilon_t = 1/t$.</li>
-  <li>Alternativas: elegir con probabilidad proporcional a $e^{q(s,a)/\tau}$ (softmax), donde la temperatura $\tau$ regula el azar, o partir con valores optimistas.</li>
-</ul>
 
-</section>
 <section>
-<div class="section-label">§ 5 · SARSA: aprendizaje on-policy</div>
-<h2>Para elegir acciones, se aprende q en lugar de v</h2>
-<ul>
-  <li>Elegir con $v$ exigiría mirar un paso adelante con el modelo; con $q$ basta comparar las acciones de la casilla. La idea de TD es la misma, con $q$ en lugar de $v$.</li>
-  <li>SARSA usa la tupla $(s_t, a_t, r_{t+1}, s_{t+1}, a_{t+1})$, de donde viene su nombre: <em>State, Action, Reward, State, Action</em>.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 5 · SARSA: aprendizaje on-policy</div>
+<div class="section-label">SARSA: aprendizaje on-policy</div>
 <h2>SARSA usa la acción que de verdad tomará</h2>
-$$
-q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha\, \underbrace{\big( r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1}) - q(s_t, a_t) \big)}_{\delta_t \text{ de SARSA}}
-$$
-<p class="note">En palabras: el objetivo incluye la acción siguiente elegida por la misma política ε-greedy que explora, errores incluidos.</p>
 <ul>
-  <li>Es <strong>on-policy</strong>: evalúa la política que ejecuta; si explora cerca del vacío, el riesgo de caer queda escrito en sus valores.</li>
-  <li><em>Expected SARSA</em> reemplaza $q(s_{t+1}, a_{t+1})$ por su promedio bajo la política y reduce la varianza.</li>
+  <li>Se aprende $q$ en vez de $v$: basta comparar acciones. Nombre: <em>State, Action, Reward, State, Action</em>.</li>
 </ul>
-
+$$q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha\, \big( r_{t+1} + \gamma\, q(s_{t+1}, a_{t+1}) - q(s_t, a_t) \big)$$
+<ul>
+  <li>$a_{t+1}$: la que elegirá la misma política. <strong>On-policy</strong>: aprende el riesgo de explorar.</li>
+</ul>
 </section>
+
 <section>
-<div class="section-label">§ 6 · Q-Learning: aprendizaje off-policy</div>
+<div class="section-label">Q-Learning: aprendizaje off-policy</div>
 <h2>Q-Learning supone que después actuará de forma óptima</h2>
-$$
-q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a) - q(s_t, a_t) \big)
-$$
+$$q(s_t, a_t) \leftarrow q(s_t, a_t) + \alpha \big( r_{t+1} + \gamma\, \max_{a}\, q(s_{t+1}, a) - q(s_t, a_t) \big)$$
 <ul>
-  <li>El robot sigue actuando con $\varepsilon$-greedy: en $s_{t+1}$ a veces tomará una acción al azar. El objetivo ignora eso y usa la acción de mayor $q$, como si desde ahí ya no fuera a explorar (Watkins, 1989).</li>
-  <li>Junto al vacío, si en $s_{t+1}$ el azar va a elegir ↓ (probabilidad $0.025$), SARSA usaría $q(s_{t+1}, \downarrow)$, que incluye la caída; Q-Learning usa $\max_a q(s_{t+1}, a)$, el valor de seguir por →.</li>
-  <li>Es <strong>off-policy</strong>: la <strong>política de comportamiento</strong>, que explora, genera los datos, y la <strong>política objetivo</strong>, codiciosa respecto de $q$, es la que se aprende.</li>
+  <li>El objetivo usa la mejor acción en $s_{t+1}$, como si ya no fuera a explorar (Watkins, 1989).</li>
+  <li><strong>Off-policy</strong>: una política que explora genera los datos; se aprende la codiciosa.</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 6 · Q-Learning: aprendizaje off-policy</div>
+<div class="section-label">Q-Learning: aprendizaje off-policy</div>
 <h2>La única diferencia está en el objetivo</h2>
 <ul>
-  <li>SARSA: el valor de la acción $a'$ que elige la política; Q-Learning: el máximo sobre las acciones en $s'$.</li>
+  <li>$s'$, $a'$: estado y acción siguientes; $a' \sim \pi$: elegida por la política.</li>
 </ul>
 <div class="svg-holder">
 <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 660 220" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
@@ -447,10 +379,10 @@ $$
   <text x="500" y="205" text-anchor="middle" font-size="10.5" font-style="italic" fill="#7a1a1a">usa la mejor acción posible</text>
 </svg>
 </div>
-
 </section>
+
 <section>
-<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
+<div class="section-label">SARSA frente a Q-Learning</div>
 <h2>SARSA y Q-Learning aprendiendo el acantilado</h2>
 <ul>
   <li>Color: $\max_a q(s,a)$; gruesa: ruta codiciosa; abajo: recompensa por episodio.</li>
@@ -458,158 +390,61 @@ $$
 <div data-rlw="tdVivo" data-ratio="0.43" style="max-width:1000px"></div>
 
 </section>
+
 <section>
-<div class="section-label">§ 7 · SARSA frente a Q-Learning</div>
+<div class="section-label">SARSA frente a Q-Learning</div>
 <h2>Q-Learning aprende el borde; SARSA, una ruta alejada</h2>
 <ul>
-  <li>Con $\varepsilon = 0.1$ y $\alpha = 0.5$ fijo, Q-Learning traza el borde de 9 pasos y SARSA una ruta más alta, típicamente la fila superior, en 13.</li>
-  <li>Mientras aprenden, SARSA gana más, unos $-19$ por episodio frente a $-30$: junto al borde la exploración elige "abajo" con probabilidad $0.1/4 = 0.025$, y Q-Learning, que camina ahí, cae.</li>
-  <li>Con $\alpha$ tan grande las estimaciones de SARSA oscilan entre rutas de valor parecido; más adelante se verá adónde llega cuando se le deja converger.</li>
+  <li>Con $\varepsilon = 0.1$ y $\alpha = 0.5$: Q-Learning traza el borde (9 pasos); SARSA, una ruta más alta.</li>
+  <li>Mientras aprenden, SARSA gana más: Q-Learning, junto al borde, cae al explorar.</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<div class="section-label">Qué aprende cada algoritmo</div>
 <h2>¿La ruta de SARSA es un accidente, o la solución exacta de algún problema?</h2>
 <ul>
-  <li>Para responder hay que ver dónde se detiene cada algoritmo: en su punto fijo, donde la actualización media es cero.</li>
+  <li>Cada algoritmo se detiene donde su corrección promedio vale cero: su <strong>punto fijo</strong>.</li>
+  <li>Comparar puntos fijos dice qué problema resuelve cada uno.</li>
 </ul>
-$$
-\mathbb{E}\left[\, \delta_t \mid s_t = s,\, a_t = a \,\right] = 0 \quad \text{para todo } (s, a)
-$$
-<ul>
-  <li>Aquí $\delta_t$ es el error TD de cada algoritmo, su objetivo menos $q(s_t, a_t)$; si el algoritmo llega ahí, en promedio ya no se mueve.</li>
-</ul>
+</section>
 
-</section>
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>Proposición: el punto fijo de Q-Learning es q*</h2>
-$$
-\mathbb{E}[\delta_t \mid s, a] = r(s,a) + \gamma \sum_{s'} P(s' \mid s,a) \max_{a'} q(s',a') - q(s,a)
-$$
+<div class="section-label">Qué aprende cada algoritmo</div>
+<h2>Q-Learning llega a q* cualquiera sea la política que explora</h2>
 <ul>
-  <li>Llamando $(Tq)(s,a)$ a los dos primeros términos, anularlo en todo $(s,a)$ es $q = Tq$: la ecuación de optimalidad de Bellman, cuya solución es $q_*$.</li>
+  <li>Su punto fijo es la ecuación de Bellman con el máximo, cuya única solución es $q_*$.</li>
+  <li>Sirve cualquier exploración que visite todos los pares, con pasos decrecientes.</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>Demostración: T es una contracción</h2>
-$$
-\|Tq - Tq'\|_\infty \le \gamma\, \|q - q'\|_\infty
-$$
+<div class="section-label">Qué aprende cada algoritmo</div>
+<h2>SARSA resuelve con exactitud el problema de un robot que resbala</h2>
 <ul>
-  <li>Porque $|\max q - \max q'| \le \max |q - q'|$ y las probabilidades suman uno.</li>
-  <li>Una contracción tiene un único punto fijo, $q_*$, cualquiera sea la política que explora.</li>
+  <li>Con $\varepsilon$ fijo, en el punto fijo de SARSA:</li>
 </ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>La prudencia de SARSA no es miedo</h2>
+$$\text{valor siguiente} = (1-\varepsilon)\, \max_a q(s',a) + \varepsilon \cdot \text{promedio}_a\, q(s',a)$$
 <ul>
-  <li>La idea que se demostrará: SARSA optimiza un mundo en que su propia exploración es parte del entorno.</li>
-  <li>Ese mundo es un suelo resbaloso: con probabilidad $\varepsilon$ la acción elegida se reemplaza por una al azar, igual que el azar de $\varepsilon$-greedy.</li>
+  <li>Es el valor en un suelo que resbala con probabilidad $\varepsilon$: allí la ruta alejada es la óptima.</li>
 </ul>
+<p class="note">Con $\varepsilon \to 0$, ambos algoritmos coinciden.</p>
+</section>
 
-</section>
 <section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>SARSA promedia la acción siguiente según ε-greedy</h2>
-$$
-(M_\varepsilon q)(s) = (1-\varepsilon) \max_a q(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_a q(s,a)
-$$
-<ul>
-  <li>Es el valor esperado de la acción siguiente cuando, con probabilidad $\varepsilon$, se elige al azar entre las $|\mathcal{A}|$ acciones.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
-<h2>Paso 1: el punto fijo de SARSA cumple su propia ecuación</h2>
-$$
-q(s,a) = r(s,a) + \gamma \sum_{s'} P(s' \mid s,a)\, (M_\varepsilon q)(s')
-$$
-<ul>
-  <li>Es la ecuación de Bellman con $M_\varepsilon$ en el lugar del máximo.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
-<h2>Paso 2: un robot que resbala con probabilidad ε</h2>
-$$
-\rho(b \mid a) = (1-\varepsilon)\, \mathbf{1}[b = a] + \frac{\varepsilon}{|\mathcal{A}|}
-$$
-<ul>
-  <li>Elegir $a$ ejecuta $b$ con probabilidad $\rho(b \mid a)$: con $1-\varepsilon$ la propia $a$, y con $\varepsilon$ una de las $|\mathcal{A}|$ acciones al azar.</li>
-  <li>Sea $\tilde v$ el valor óptimo de ese mundo y $u(s,b) = r(s,b) + \gamma \sum_{s'} P(s' \mid s,b)\, \tilde v(s')$ el valor de <em>ejecutar</em> $b$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
-<h2>Paso 3: elegir vale un promedio de ejecutar</h2>
-$$
-\tilde q(s,a) = (1-\varepsilon)\, u(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_b u(s,b)
-$$
-<ul>
-  <li>$\tilde q(s,a)$ es el valor de <em>elegir</em> $a$ en el mundo resbaloso: se promedia $u$ sobre lo que de verdad se ejecuta, con los pesos $\rho(b \mid a)$.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
-<h2>Paso 4: el mejor valor de ese mundo es M<sub>ε</sub> aplicado a u</h2>
-$$
-\tilde v(s) = \max_a \tilde q(s,a) = (1-\varepsilon) \max_a u(s,a) + \frac{\varepsilon}{|\mathcal{A}|} \sum_b u(s,b) = (M_\varepsilon u)(s)
-$$
-<ul>
-  <li>El segundo término de $\tilde q$ no depende de $a$, así que el máximo solo afecta al primero.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo · Demostración</div>
-<h2>Paso 5: u cumple la misma ecuación que SARSA</h2>
-$$
-u(s,b) = r(s,b) + \gamma \sum_{s'} P(s' \mid s,b)\, (M_\varepsilon u)(s')
-$$
-<ul>
-  <li>Basta reemplazar $\tilde v = M_\varepsilon u$ en la definición de $u$; $M_\varepsilon$ combina un máximo y un promedio, ambos no expansivos, así que la ecuación tiene una sola solución.</li>
-  <li>Entonces $q_{\text{SARSA}} = u$, y como $\tilde q$ crece con $u$, ambos eligen la misma acción.</li>
-</ul>
-
-</section>
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
-<h2>SARSA resuelve con exactitud el problema del robot que resbala</h2>
-<ul>
-  <li>Su ruta es la óptima de un robot que resbala con probabilidad $p = \varepsilon$; Q-Learning resuelve el mundo sin resbalón.</li>
-  <li>Con $\varepsilon \to 0$ ese mundo se vuelve el original y los dos algoritmos coinciden.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<div class="section-label">Qué aprende cada algoritmo</div>
 <h2>Para llegar al punto fijo, los pasos deben decrecer</h2>
-$$
-\sum_t \alpha_t = \infty, \qquad \sum_t \alpha_t^2 &lt; \infty
-$$
 <ul>
-  <li>Condiciones de Robbins y Monro, con cada par estado-acción visitado infinitas veces: los pasos deben poder llegar lejos, pero su ruido debe extinguirse.</li>
-  <li>Con $\alpha$ constante las estimaciones siguen oscilando, como en la caminata aleatoria; $\alpha = 1/N(s,a)^{0.8}$, con $N(s,a)$ las visitas al par, cumple ambas porque el exponente está entre $1/2$ y $1$.</li>
+  <li>Con $\alpha$ constante, las estimaciones oscilan.</li>
+  <li>Robbins y Monro: pasos que sumen infinito y cuyos cuadrados no, como $\alpha = 1/N(s,a)^{0.8}$ ($N$: visitas al par).</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<div class="section-label">Qué aprende cada algoritmo</div>
 <h2>Verificación: cada algoritmo llega a su punto fijo</h2>
 <ul>
-  <li>100 000 episodios, $\alpha = 1/N(s,a)^{0.8}$, $\varepsilon = 0.1$: puntos sobre la diagonal; ruta de SARSA (azul) = óptima con resbalón (gris).</li>
+  <li>Cada punto, una casilla: $\tilde v$ con resbalón $p = \varepsilon$; $v_* = \max_a q_*$ sin resbalón. Derecha: SARSA (azul) sigue la ruta óptima con resbalón (gris).</li>
 </ul>
 <div class="svg-holder">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4400 1880">
@@ -815,18 +650,19 @@ $$
 </svg>
 
 </div>
-
 </section>
+
 <section>
-<div class="section-label">§ 8 · Qué aprende cada algoritmo</div>
+<div class="section-label">Qué aprende cada algoritmo</div>
 <h2>En vivo: los valores se acercan a su punto fijo</h2>
 <ul>
-  <li>Cada punto es un par (casilla, acción): horizontal, el valor que predice la teoría; vertical, el aprendido con $\alpha = 1/N(s,a)^{0.8}$.</li>
+  <li>Cada punto, un par (casilla, acción): teoría en horizontal, aprendido en vertical. Derecha: distancia al punto fijo.</li>
 </ul>
 <div data-rlw="puntoFijoVivo" data-ratio="0.31" style="max-width:1100px"></div>
 </section>
+
 <section>
-<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<div class="section-label">Un caso aplicado: Pong simplificado</div>
 <h2>Un caso más cercano a un juego: Pong simplificado</h2>
 <ul>
   <li>Un jugador contra una pared: la paleta, en la columna derecha, debe devolver la pelota.</li>
@@ -854,29 +690,19 @@ $$
 </div>
 
 </section>
+
 <section>
-<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<div class="section-label">Un caso aplicado: Pong simplificado</div>
 <h2>El estado necesita la velocidad de la pelota</h2>
-$$
-s = (x,\ y,\ v_x,\ v_y,\ p)
-$$
+$$s = (x,\ y,\ v_x,\ v_y,\ p)$$
 <ul>
-  <li>Posición y velocidad de la pelota y posición de la paleta: $10 \cdot 8 \cdot 2 \cdot 3 \cdot 7 = 3360$ estados y 3 acciones; descuento $\gamma = 0.95$.</li>
-  <li>Sin la velocidad, una misma foto sirve para una pelota que sube y una que baja: el estado no sería de Markov.</li>
+  <li>Pelota: posición $(x, y)$ y velocidad $(v_x, v_y)$; paleta: $p$. Son 3360 estados y 3 acciones.</li>
+  <li>Sin velocidad no se sabe si la pelota sube o baja. Seguirla llega tarde: hay que anticipar.</li>
 </ul>
-
 </section>
-<section>
-<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
-<h2>Seguir la pelota casi nunca la devuelve</h2>
-<ul>
-  <li>Mover la paleta hacia la fila de la pelota logra menos de medio golpe por partido, casi lo mismo que moverla al azar.</li>
-  <li>Paleta y pelota van a la misma velocidad: si la pelota se aleja, la paleta nunca la alcanza. Hay que anticipar.</li>
-</ul>
 
-</section>
 <section>
-<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<div class="section-label">Un caso aplicado: Pong simplificado</div>
 <h2>Q-Learning aprendiendo a jugar</h2>
 <ul>
   <li>Izquierda: el partido en curso; derecha: golpes de la política codiciosa, medidos cada 50 partidos.</li>
@@ -884,108 +710,68 @@ $$
 <div data-rlw="pongQ" style="max-width:1100px"></div>
 
 </section>
+
 <section>
-<div class="section-label">§ 9 · Un caso aplicado: Pong simplificado</div>
+<div class="section-label">Un caso aplicado: Pong simplificado</div>
 <h2>Q-Learning aprende a anticipar sin que nadie se lo diga</h2>
 <ul>
-  <li>Solo recibe $+1$ y $-1$; el valor de golpear se propaga hacia atrás por la trayectoria de la pelota.</li>
-  <li>Más de 14 golpes de 20 en unos 500 partidos y los 20 hacia los 1500 a 2000, sin visitar ni la mitad de la tabla.</li>
+  <li>Solo recibe $+1$ y $-1$; el valor de golpear se propaga hacia atrás.</li>
+  <li>En unos 500 partidos devuelve más de 14 de 20.</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 10 · Métodos de n pasos</div>
+<div class="section-label">Métodos de n pasos</div>
 <h2>Entre TD y Monte Carlo hay un espectro</h2>
-$$
-G_t^{(n)} = r_{t+1} + \gamma\, r_{t+2} + \cdots + \gamma^{n-1} r_{t+n} + \gamma^{n}\, v(s_{t+n})
-$$
 <ul>
-  <li>$n = 1$ es TD(0); si $n$ llega al final del episodio es Monte Carlo. Los valores intermedios suelen rendir mejor.</li>
+  <li>Usar $n$ recompensas reales antes de la estimación: $n = 1$ es TD(0); hasta el final, Monte Carlo.</li>
+  <li><strong>TD(λ)</strong> promedia todos los $n$: $\lambda = 0$ es TD(0) y $\lambda = 1$, Monte Carlo.</li>
 </ul>
-
 </section>
-<section>
-<div class="section-label">§ 10 · Métodos de n pasos</div>
-<h2>TD(λ) promedia todos los horizontes</h2>
-<ul>
-  <li>Pesa el retorno de $n$ pasos con $(1-\lambda)\lambda^{n-1}$; $\lambda = 0$ es TD(0) y $\lambda = 1$, Monte Carlo.</li>
-  <li>Se implementa con <strong>trazas de elegibilidad</strong>, una memoria de qué estados se visitaron hace poco.</li>
-</ul>
 
-</section>
 <section>
-<div class="section-label">§ 11 · Actor-crítico</div>
+<div class="section-label">Actor-crítico</div>
 <h2>Otra familia ajusta la política, pero REINFORCE espera el final</h2>
-$$
-\pi(a \mid s; \theta) = \frac{e^{\theta_{s,a}}}{\sum_b e^{\theta_{s,b}}}, \qquad \theta \leftarrow \theta + \alpha\, \big( G_t - v(s_t) \big)\, \nabla_\theta \log \pi(a_t \mid s_t; \theta)
-$$
 <ul>
-  <li>Una <b>política parametrizada</b> da a cada acción una probabilidad que depende de preferencias $\theta_{s,a}$; el <b>gradiente de política</b> mueve $\theta$ hacia más retorno esperado, sin pasar por un $\max$.</li>
-  <li>En REINFORCE con línea base, $\nabla_\theta \log \pi$ apunta a hacer más probable la acción tomada y $G_t - v(s_t)$ dice si resultó mejor o peor que lo habitual.</li>
-  <li>Tanto $G_t$ como la línea base $v$ salen de episodios completos: es Monte Carlo, con su varianza alta.</li>
+  <li><strong>Política parametrizada</strong> $\pi(a \mid s;\theta)$: el <strong>gradiente de política</strong> ajusta $\theta$ directamente.</li>
+  <li>REINFORCE pesa cada acción con $G_t - v(s_t)$ ($v$: <strong>línea base</strong>), pero espera el final.</li>
 </ul>
-
 </section>
+
 <section>
-<div class="section-label">§ 11 · Actor-crítico</div>
+<div class="section-label">Actor-crítico</div>
 <h2>La idea: usar el error TD como peso</h2>
-$$
-G_t - v(s_t) \quad\longrightarrow\quad \delta_t = r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t)
-$$
+$$G_t - v(s_t) \quad\longrightarrow\quad \delta_t = r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t)$$
 <ul>
-  <li>El <b>actor</b> es la política; el <b>crítico</b> es $v$, aprendido con TD(0), que juzga cada acción apenas ocurre.</li>
+  <li><strong>Actor</strong>: la política. <strong>Crítico</strong>: $v$, aprendido con TD(0).</li>
+  <li>Si el crítico es exacto, $\delta_t$ vale en promedio la <strong>ventaja</strong>: cuánto mejor que lo habitual fue la acción.</li>
 </ul>
+</section>
 
-</section>
 <section>
-<section>
-<div class="section-label">§ 11 · Actor-crítico</div>
-<h2>Proposición: el error TD estima la ventaja</h2>
-$$
-v = v_\pi \;\Longrightarrow\; \mathbb{E}\left[\, \delta_t \mid s_t, a_t \,\right] = q_\pi(s_t, a_t) - v_\pi(s_t)
-$$
-<ul>
-  <li>$q_\pi - v_\pi$ es la <b>ventaja</b>: cuánto mejor que lo habitual en esa casilla fue la acción.</li>
-</ul>
-
-</section>
-<section>
-<div class="section-label">§ 11 · Actor-crítico · Demostración</div>
-<h2>Demostración: es la ecuación de Bellman de q</h2>
-$$
-\mathbb{E}\left[\, r_{t+1} + \gamma\, v_\pi(s_{t+1}) \mid s_t, a_t \,\right] = q_\pi(s_t, a_t)
-$$
-<ul>
-  <li>Tomar $a_t$, cobrar la recompensa y seguir la política desde $s_{t+1}$ es la definición de $q_\pi(s_t, a_t)$; restar $v_\pi(s_t)$, constante dado $s_t$, da la ventaja.</li>
-</ul>
-
-</section>
-</section>
-<section>
-<div class="section-label">§ 11 · Actor-crítico</div>
+<div class="section-label">Actor-crítico</div>
 <h2>Actor-crítico de un paso</h2>
 <ul>
-  <li>1. El actor elige $a_t \sim \pi(\cdot \mid s_t; \theta)$; se observan $r_{t+1}$ y $s_{t+1}$.</li>
-  <li>2. Error TD: $\delta_t = r_{t+1} + \gamma\, v(s_{t+1}) - v(s_t)$.</li>
-  <li>3. Crítico: $v(s_t) \leftarrow v(s_t) + \beta\, \delta_t$. Actor: $\theta \leftarrow \theta + \alpha\, \delta_t\, \nabla_\theta \log \pi(a_t \mid s_t; \theta)$.</li>
+  <li>1. El actor actúa; se observan $r_{t+1}$ y $s_{t+1}$.</li>
+  <li>2. Se calcula $\delta_t$; el crítico corrige $v(s_t)$ con él.</li>
+  <li>3. El actor hace más probable la acción si $\delta_t &gt; 0$, y menos si $\delta_t &lt; 0$.</li>
 </ul>
-<p class="note">Sesgado mientras el crítico no sea exacto, pero con la varianza de un solo paso.</p>
-
 </section>
+
 <section>
-<div class="section-label">§ 11 · Actor-crítico</div>
+<div class="section-label">Actor-crítico</div>
 <h2>Con el mismo paso grande, ¿cuál aprende?</h2>
 <ul>
-  <li>Ambos usan $\alpha = 0.05$: REINFORCE con el retorno de episodios completos, el actor-crítico con el error TD de un paso. Cada episodio parte de una casilla al azar; flechas: $\pi(a \mid s)$.</li>
+  <li>Mismo acantilado, $\alpha = 0.05$ grande: REINFORCE usa episodios completos; el actor-crítico, el error TD. Flechas: $\pi(a \mid s)$.</li>
 </ul>
 <div data-rlw="actorCriticoVivo" data-ratio="0.43" style="max-width:1000px"></div>
-
 </section>
+
 <section>
-<div class="section-label">§ 11 · Actor-crítico</div>
+<div class="section-label">Actor-crítico</div>
 <h2>El crítico permite pasos 25 veces mayores</h2>
 <ul>
-  <li>Seis semillas, 3000 episodios, $\alpha = 0.05$: REINFORCE se estanca en $-20$, la política que nunca llega; el actor-crítico aprende a cruzar.</li>
+  <li>Seis semillas, $\alpha = 0.05$: REINFORCE se estanca en $-20$, la política que nunca llega; el actor-crítico cruza.</li>
 </ul>
 <div class="svg-holder">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 4400 1800">
@@ -1181,43 +967,33 @@ $$
 </svg>
 
 </div>
-<p class="note">No es que llegue más alto: con $\alpha = 0.002$ ambos aprenden parecido. El error TD de un paso varía menos que el retorno de un episodio, y eso tolera un paso 25 veces mayor.</p>
+<p class="note">Con $\alpha = 0.002$ ambos aprenden: el crítico tolera pasos 25 veces mayores.</p>
+</section>
 
-</section>
 <section>
-<div class="section-label">§ 11 · Actor-crítico</div>
+<div class="section-label">Actor-crítico</div>
 <h2>Entre un paso y el episodio completo: GAE</h2>
-$$
-A_t = \sum_{k \ge 0} (\gamma \lambda)^k\, \delta_{t+k}, \qquad 0 \le \lambda \le 1
-$$
 <ul>
-  <li>El error TD de un paso, $\delta_t$, varía poco pero hereda el sesgo del crítico; $G_t - v(s_t)$ no tiene sesgo pero acumula el ruido de todo el episodio.</li>
-  <li>La <strong>estimación generalizada de la ventaja</strong> (GAE, <em>Generalized Advantage Estimation</em>, Schulman et al., 2016) suma los errores TD de los pasos siguientes, cada uno con un peso $(\gamma\lambda)^k$ que decae: es la idea de TD(λ) aplicada a la ventaja.</li>
+  <li>$\delta_t$: poco ruido, algo de sesgo; $G_t - v(s_t)$: lo contrario. <strong>GAE</strong> (estimación generalizada de la ventaja $A_t$) los mezcla con $\lambda$:</li>
+</ul>
+$$A_t = \delta_t + \gamma\lambda\, \delta_{t+1} + (\gamma\lambda)^2\, \delta_{t+2} + \cdots$$
+<ul>
+  <li>$\lambda = 0$: actor-crítico de un paso; $\lambda = 1$: REINFORCE con línea base. Usual: $\lambda \approx 0.95$.</li>
 </ul>
 </section>
+
 <section>
-<div class="section-label">§ 11 · Actor-crítico</div>
-<h2>Los extremos de λ recuperan los dos métodos</h2>
-$$
-\lambda = 1: \quad \sum_{k \ge 0} \gamma^k \delta_{t+k} = \underbrace{\sum_{k \ge 0} \gamma^k r_{t+k+1}}_{G_t} + \sum_{k \ge 0} \Big( \gamma^{k+1} v(s_{t+k+1}) - \gamma^{k} v(s_{t+k}) \Big) = G_t - v(s_t)
-$$
-<ul>
-  <li>Con $\lambda = 0$ solo queda $A_t = \delta_t$: el actor-crítico de un paso.</li>
-  <li>Con $\lambda = 1$ la segunda suma se cancela en cadena, cada término con el siguiente, y solo sobrevive $-v(s_t)$: la ventaja de REINFORCE con línea base.</li>
-</ul>
-<p class="note">En la práctica se usa un λ intermedio, típicamente cerca de 0.95: poco sesgo y bastante menos varianza que el episodio completo.</p>
-</section>
-<section>
-<div class="section-label">§ 11 · Actor-crítico</div>
+<div class="section-label">Actor-crítico</div>
 <h2>A2C, A3C y PPO: el actor-crítico a escala</h2>
 <ul>
-  <li><strong>A2C</strong> (<em>Advantage Actor-Critic</em>, actor-crítico con ventaja): actor y crítico son redes neuronales, y varias copias del entorno juegan a la vez para que cada actualización mezcle experiencias distintas.</li>
-  <li><strong>A3C</strong> (<em>Asynchronous</em> A2C): las copias actualizan la red cada una por su cuenta, sin esperarse (Mnih et al., 2016).</li>
-  <li><strong>PPO</strong> (<em>Proximal Policy Optimization</em>) en su forma completa: el crítico estima las ventajas con GAE, y el actor usa un objetivo recortado que limita cuánto puede cambiar la política en cada actualización.</li>
+  <li><strong>A2C</strong> (<em>Advantage Actor-Critic</em>): actor y crítico son redes; muchas copias del entorno.</li>
+  <li><strong>A3C</strong> (<em>Asynchronous</em> A2C): las copias actualizan sin esperarse.</li>
+  <li><strong>PPO</strong> (<em>Proximal Policy Optimization</em>): ventajas con GAE y un objetivo recortado que limita el cambio de política.</li>
 </ul>
 </section>
+
 <section>
-<div class="section-label">§ 12 · Lo que sigue</div>
+<div class="section-label">Lo que sigue</div>
 <h2>Una tabla por estado no escala</h2>
 <ul>
   <li>Q-Learning tabular converge a $q_*$ (Watkins y Dayan, 1992), pero con millones de estados la tabla no cabe ni se llena.</li>
@@ -1225,12 +1001,14 @@ $$
 </ul>
 
 </section>
+
 <section>
 <div class="close-slide">
   <h1>Aprender es corregir una predicción con la siguiente; lo que se usa como «siguiente» decide qué problema se resuelve.</h1>
   <div class="byline">Rodrigo F. Cádiz · <a href="index.html">Aprendizaje de Máquina y Modelos Generativos</a></div>
 </div>
 </section>
+
 
 </div></div>
 
