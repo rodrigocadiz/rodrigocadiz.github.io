@@ -178,7 +178,8 @@ $$p(x, y) = p(y \mid x)\,p(x) = p(x \mid y)\,p(y)$$
 <div class="section-label">§ 1 · La distinción fundamental</div>
 <h2>Pero cada enfoque elige una y se compromete</h2>
 <ul>
-<li>El <strong>discriminativo</strong> aprende $p(y \mid x)$ y nada más; el <strong>generativo</strong> aprende $p(x \mid y)$ y $p(y)$.</li>
+<li>El <strong>discriminativo</strong> aprende $p(y \mid x)$ y nada más.</li>
+<li>El <strong>generativo</strong> aprende $p(x \mid y)$ y $p(y)$ si hay etiquetas, y $p(x)$ si no las hay.</li>
 </ul>
 </section>
 
@@ -205,7 +206,7 @@ $$p(x, y) = p(y \mid x)\,p(x) = p(x \mid y)\,p(y)$$
     <rect x="40" y="110" width="264" height="150" rx="10" fill="#dbe9f4" stroke="#33607f" stroke-width="1.8"/>
     <text x="172" y="134" font-size="14" font-weight="bold">Discriminativo</text>
     <text x="172" y="158" font-size="12.5" font-style="italic">aprende p(y | x)</text>
-    <line x1="66" y1="172" x2="278" y2="172" stroke="#33607f" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="66" y1="178" x2="278" y2="178" stroke="#33607f" stroke-width="1" stroke-dasharray="4,3"/>
     <text x="172" y="192" font-size="11.5">solo la frontera de decisión</text>
     <text x="172" y="212" font-size="11.5">nunca modela p(x)</text>
     <text x="172" y="234" font-size="11.5" fill="#555">reg. logística · SVM · árboles</text>
@@ -213,8 +214,9 @@ $$p(x, y) = p(y \mid x)\,p(x) = p(x \mid y)\,p(y)$$
 
     <rect x="416" y="110" width="264" height="150" rx="10" fill="#d9ecd9" stroke="#2f6b33" stroke-width="1.8"/>
     <text x="548" y="134" font-size="14" font-weight="bold">Generativo</text>
-    <text x="548" y="158" font-size="12.5" font-style="italic">aprende p(x | y) y p(y)</text>
-    <line x1="442" y1="172" x2="654" y2="172" stroke="#2f6b33" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="548" y="154" font-size="12.5" font-style="italic">con etiquetas: p(x | y) y p(y)</text>
+    <text x="548" y="170" font-size="12.5" font-style="italic">sin etiquetas: p(x)</text>
+    <line x1="442" y1="178" x2="654" y2="178" stroke="#2f6b33" stroke-width="1" stroke-dasharray="4,3"/>
     <text x="548" y="192" font-size="11.5">clasifica vía Bayes</text>
     <text x="548" y="212" font-size="11.5">además: genera y detecta anomalías</text>
     <text x="548" y="234" font-size="11.5" fill="#555">GDA · Naive Bayes · VAE</text>
@@ -252,6 +254,14 @@ $$p(x, y) = p(y \mid x)\,p(x) = p(x \mid y)\,p(y)$$
 <h2>Van directo a lo único que la tarea pide</h2>
 $$\hat\theta = \arg\min_\theta \sum_{i=1}^{n} \mathcal{L}\big(y^{(i)},\, p_\theta(y \mid x^{(i)})\big)$$
 <p class="note">En palabras: se minimiza el riesgo empírico, el promedio de la pérdida $\mathcal{L}$ sobre los $n$ ejemplos de entrenamiento, medido solo en la predicción de la etiqueta y sin ninguna referencia a cómo se distribuyen las entradas.</p>
+</section>
+
+<!-- 10b -->
+<section>
+<div class="section-label">§ 2 · Modelos discriminativos</div>
+<h2>La conjunta se separa en dos mitades independientes</h2>
+$$\log p(x, y) = \log p_\theta(y \mid x) + \log p_\phi(x)$$
+<p class="note">En palabras: el clasificador depende solo de $\theta$, y el término en $\phi$ no cambia su respuesta. El discriminativo ajusta la primera mitad, que con pérdida logarítmica es justamente el riesgo empírico, y renuncia a la segunda: nunca estima $p(x)$.</p>
 </section>
 
 <!-- 11 -->
@@ -339,7 +349,7 @@ $$\hat\theta = \arg\max_\theta \sum_{i=1}^{n} \Big[\log p_\theta(x^{(i)} \mid y^
 <!-- 20 · puente -->
 <section>
 <div class="section-label">§ 3 · Modelos generativos</div>
-<h2>Pero aprendió $p(x \mid y)$, y la tarea pedía $p(y \mid x)$</h2>
+<h2>Pero GDA y Naive Bayes entregan $p(x \mid y)$, y la tarea pide $p(y \mid x)$</h2>
 <ul>
 <li>Falta el paso que convierte a este modelo en un clasificador.</li>
 </ul>
@@ -350,7 +360,7 @@ $$\hat\theta = \arg\max_\theta \sum_{i=1}^{n} \Big[\log p_\theta(x^{(i)} \mid y^
 <!-- 21 -->
 <section>
 <div class="section-label">§ 4 · Clasificación bayesiana</div>
-<h2>Bayes hace exactamente esa conversión</h2>
+<h2>Bayes convierte al generativo en clasificador</h2>
 $$p(y \mid x) = \frac{p(x \mid y)\,p(y)}{p(x)}$$
 <p class="note">En palabras: combina lo que el modelo sabe de cada clase con la frecuencia previa de esa clase, y normaliza.</p>
 </section>
@@ -360,7 +370,7 @@ $$p(y \mid x) = \frac{p(x \mid y)\,p(y)}{p(x)}$$
 <div class="section-label">§ 4 · Clasificación bayesiana</div>
 <h2>Y el denominador se puede descartar</h2>
 $$\hat y = \arg\max_y \; p(x \mid y)\, p(y)$$
-<p class="note">En palabras: $p(x)$ es la misma para todas las clases, así que no cambia cuál gana la comparación. Solo normaliza para que las probabilidades sumen uno.</p>
+<p class="note">En palabras: para un $x$ dado, $p(x)$ es la misma para todas las clases, así que no cambia cuál gana la comparación. Es constante solo respecto de $y$: como función de $x$ es la densidad de los datos, y más adelante sirve para detectar anomalías.</p>
 </section>
 
 <!-- 23 -->
@@ -1837,27 +1847,41 @@ AAAAAAAAAAAAAIC6/wDr8ycRFKx/OQAAAABJRU5ErkJggg==
 <!-- 29 · puente -->
 <section>
 <div class="section-label">§ 4 · Clasificación bayesiana</div>
-<h2>Con ambos capaces de clasificar, cabe compararlos</h2>
+<h2>Ahora hay dos clasificadores para el mismo problema</h2>
 <ul>
-<li>Y la comparación no tiene un ganador único.</li>
+<li>La regresión logística aprende $p(y \mid x)$ directamente; GDA y Naive Bayes llegan a $p(y \mid x)$ pasando por $p(x \mid y)$ y Bayes.</li>
+<li>¿Cuál clasifica mejor, y con cuántos datos?</li>
 </ul>
 </section>
 
 <!-- ============ §5 COMPARACIÓN ============ -->
 
+<!-- 29b -->
+<section>
+<div class="section-label">§ 5 · Comparación</div>
+<h2>La diferencia está en cuánto suponen</h2>
+<ul>
+<li><strong>Discriminativo:</strong> supuesto débil, menos sesgo, necesita más datos.</li>
+<li><strong>Generativo:</strong> supuesto fuerte, necesita menos datos, pero paga sesgo si el supuesto es falso.</li>
+</ul>
+<p class="note">La regresión logística solo supone que $\log \frac{p(y=1 \mid x)}{p(y=0 \mid x)}$ es lineal en $x$, algo que cumplen muchísimas distribuciones. GDA supone clases gaussianas y Naive Bayes, características independientes dada la clase.</p>
+</section>
+
 <!-- 30 -->
 <section>
 <div class="section-label">§ 5 · Comparación</div>
-<h2>Los supuestos fuertes cortan en dos direcciones</h2>
+<h2>Los supuestos fuertes son un arma de doble filo</h2>
 <ul>
-<li>Son una restricción cuando sobran datos y un regalo cuando faltan.</li>
+<li>Si son falsos, dejan un error que ningún volumen de datos corrige.</li>
+<li>Con pocos datos, aportan la información que a los datos les falta.</li>
 </ul>
+<p class="note">Un supuesto es fuerte cuando descarta casi todas las formas posibles de los datos. Con $d$ características binarias, una distribución arbitraria por clase necesita $2^d - 1$ parámetros; Naive Bayes, al suponer independencia, necesita solo $d$.</p>
 </section>
 
 <!-- 31 -->
 <section>
 <div class="section-label">§ 5 · Comparación</div>
-<h2>Si los supuestos son falsos, el generativo paga sesgo</h2>
+<h2>Si sus supuestos son falsos, el generativo paga un sesgo que el discriminativo evita</h2>
 <ul>
 <li>La frontera queda deformada por la forma funcional impuesta, y ningún volumen de datos la corrige.</li>
 </ul>
@@ -1929,7 +1953,10 @@ AAAAAAAAAAAAAIC6/wDr8ycRFKx/OQAAAABJRU5ErkJggg==
 <section>
 <div class="section-label">§ 5 · Comparación</div>
 <h2>Para verlo con datos hace falta un problema más difícil</h2>
-<ul><li>Dos clases equiprobables en $d = 30$ dimensiones, covarianza identidad, medias a distancia de Mahalanobis 2.56: el mejor clasificador posible, el de Bayes, se equivoca en 10 %. En el plano, en cambio, ambos aciertan 99 % con cualquier $n$.</li></ul>
+<ul>
+<li>Dos clases igual de frecuentes, descritas por 30 características. Cada característica por sí sola casi no las distingue: acierta apenas el 59 % de las veces.</li>
+<li>Combinando las 30, el mejor clasificador posible acierta el 90 %. En el ejemplo del plano, en cambio, ambos acertaban 99 % con cualquier cantidad de datos.</li>
+</ul>
 </section>
 
 <section>
@@ -2109,9 +2136,10 @@ AAAAAAAAAAAAAIC6/wDr8ycRFKx/OQAAAABJRU5ErkJggg==
 <!-- 36 · puente -->
 <section>
 <div class="section-label">§ 5 · Comparación</div>
-<h2>Pero hay cosas que no dependen de cuántos datos haya</h2>
+<h2>Pero hay tareas que el discriminativo no puede hacer, con ningún volumen de datos</h2>
 <ul>
-<li>Un modelo sin $p(x)$ no puede hacerlas nunca.</li>
+<li>Generar datos nuevos, detectar observaciones raras y elegir qué datos conviene etiquetar.</li>
+<li>Las tres necesitan saber cómo se distribuye $x$, y el discriminativo nunca lo aprendió.</li>
 </ul>
 </section>
 
@@ -4574,7 +4602,7 @@ EIIgBEEIgvAWOsJCEIIgBEEIgvgHeJWMl1VKNzQAAAAASUVORK5CYII=
 <div class="section-label">§ 6 · Capacidades generativas</div>
 <h2>La «IA generativa» nombra exactamente esta distinción</h2>
 <ul>
-<li>Son modelos que aprendieron $p(x)$ y por eso pueden producir datos, no solo etiquetarlos; las familias profundas se distinguen por cómo representan y aprenden esa densidad.</li>
+<li>Son modelos que aprendieron la distribución de los datos, $p(x)$ o $p(x \mid y)$, y por eso pueden producirlos, no solo etiquetarlos; las familias profundas se distinguen por cómo representan y aprenden esa densidad.</li>
 </ul>
 </section>
 
