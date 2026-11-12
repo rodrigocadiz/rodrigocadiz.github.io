@@ -572,3 +572,249 @@ div.album{display:block}
 .dossier .wn .prose p:first-child,.dossier .pf .prose p:first-child{font-size:17px;line-height:1.68;color:var(--ink2)}
 .dossier .dt span+span,.dossier .gt span+span{text-transform:none}
 .listenbar[hidden]{display:none}
+
+/* =====================================================================
+   v4 (nov 2026): Trebuchet MS, white ground, flat color plates.
+   Portada: reproductor con carrusel, nombre, cuatro facetas.
+   Estas reglas van al final y mandan sobre las anteriores.
+   ===================================================================== */
+:root{
+  --paper:#ffffff; --paper2:#f3f3f1; --ink:#1c1c1c; --ink2:#3d3d3d; --ink3:#666666; --line:#dcdcdc; --dark:#151515;
+  --c1:#9a2b25; --c2:#1d4e6f; --c3:#8a5320; --c4:#2f5d4a;
+  --display:"Trebuchet MS","Lucida Grande","Lucida Sans Unicode",Verdana,sans-serif;
+  --sans:"Trebuchet MS","Lucida Grande","Lucida Sans Unicode",Verdana,sans-serif;
+}
+body{font-size:16px;line-height:1.5;background:#fff}
+body *{letter-spacing:normal !important;text-transform:none !important}
+.lc,.lc *{text-transform:lowercase !important}
+h1,h2,h3,h4{font-weight:700}
+.kicker{font-size:14px;font-weight:700;color:var(--accent);margin:0 0 10px}
+.workmeta dt,.panel h4,.linkcol a span,.prevnext a span,.fact span,.cross > span,.pull cite,.perf h4,.flag .yr,.ev .etag,.album .atag,.card .ph.none .ii{font-size:13px}
+.card .tag{display:none}
+
+/* navigation */
+.nav{background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;padding:14px var(--gut)}
+.brand{font-weight:700;font-size:21px;color:#111}
+.nav a.n{font-size:15px;color:var(--ink2);border-bottom-width:2px}
+.langbtn{font-size:13px;font-weight:700;border:1px solid var(--ink2);border-radius:0;color:var(--ink);padding:5px 10px}
+.subnav a{font-size:15px}
+
+/* section headers: a color plate beside the photograph, no gradient */
+.shero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);min-height:0;background:var(--accent);align-items:stretch}
+.shero:after{display:none}
+.shero img{position:static;opacity:1;order:2;width:100%;height:100%;min-height:300px;max-height:440px;object-fit:cover}
+.shero .in{order:1;padding:clamp(28px,4vw,52px) 0;align-self:end}
+.shero h1{font-size:clamp(34px,4.6vw,58px);line-height:1.02}
+.shero .tag{color:#fff;opacity:.92;font-size:16px;max-width:44ch}
+.shero .kicker{color:#fff;opacity:.85}
+@media(max-width:800px){.shero{grid-template-columns:minmax(0,1fr)}.shero img{order:0;max-height:260px;min-height:0}}
+
+/* type scale: bold sans needs less size than the old light serif */
+.phead h1,.workhead h1{font-size:clamp(32px,4.6vw,56px);line-height:1.05}
+.hero h1{font-size:clamp(38px,6vw,72px);line-height:1}
+.sechead h2{font-size:clamp(24px,3vw,36px)}
+.workhead .sub{font-size:clamp(17px,1.8vw,21px)}
+.card h3{font-size:19px} .card:hover h3{color:var(--accent)}
+.card .ph.none{background:var(--paper2)} .card .ph.none:after{display:none}
+.card .ph.none .tt{font-size:clamp(19px,2vw,24px);font-style:italic;font-weight:400}
+.list .ti{font-size:18px} .line h4{font-size:19px} .flag h3{font-size:clamp(22px,2.6vw,30px)}
+.jcard h3{font-size:21px} .jinner h2{line-height:1.05}
+.fact b{font-weight:700;font-size:clamp(26px,3vw,38px)}
+.pull{border-left:0;padding-left:0} .pull p{font-size:clamp(18px,2vw,24px)}
+.smap > a > b{font-weight:700;font-size:17px} .cross b{font-weight:700;font-size:19px} .evyear{font-weight:700}
+.btn{border-radius:0;font-size:15px;font-weight:700}
+.chip{font-size:14px}
+.panel{border:0;background:var(--paper2)} .panel h4{color:var(--ink);font-weight:700}
+.note,.cross{background:var(--paper2);border:0}
+.pub a,.ev .elink{font-size:14px;text-decoration:underline}
+
+/* footer: useful links on every page */
+footer.ft{border:0;background:#1c1c1c;color:#d8d8d8;padding:36px 0 44px;font-size:15px;margin-top:clamp(30px,5vw,60px)}
+body.home footer.ft{margin:0 6px 6px}
+.ft .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:26px 36px;justify-content:start}
+.ft h4{font-size:15px;color:#fff;margin:0 0 8px}
+.ft a{display:block;color:#d8d8d8;margin:0 0 7px;text-decoration:none}
+.ft a:hover{color:#fff;text-decoration:underline}
+.ft a small{display:block;color:#a9a9a9;font-size:13px}
+.ft .fwho b{display:block;font-size:19px;color:#fff;margin-bottom:6px}
+.ft .fwho a{margin-top:10px;text-decoration:underline}
+
+/* ---------- home ---------- */
+.hm{padding:6px;display:flex;flex-direction:column;gap:6px}
+.hm p{margin:0}
+.hm-top{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:6px}
+.hm-play{background:#151515;color:#fff;min-width:0}
+.hm-play .player{position:relative;aspect-ratio:16 / 9;background:#151515;overflow:hidden;margin:0}
+.hm-play .player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.hm-play .player img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hm-play .player > b{position:absolute;left:32px;right:32px;top:28px;font-weight:400;font-style:italic;font-size:clamp(26px,3.4vw,44px);color:#d8d8d8}
+.hm-play .player.audio iframe{top:auto;bottom:0;height:166px}
+.hm-play .player.audio.sp iframe{height:152px;left:12px;right:12px;bottom:12px;width:calc(100% - 24px)}
+.hm-bar{background:var(--c1);padding:12px 20px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center}
+.hm-bar .np{flex:1 1 260px;min-width:0}
+.hm-bar em{font-size:22px;margin-right:8px}
+.hm-bar .srcs{display:flex;flex-wrap:wrap;gap:6px}
+.hm-bar .srcs button{font:inherit;font-size:14px;cursor:pointer;padding:4px 12px;min-height:32px;border-radius:16px;background:transparent;color:#fff;border:1px solid #fff}
+.hm-bar .srcs button.on{background:#fff;color:var(--c1)}
+.hm-bar a{color:#fff}
+.hm-count{padding:10px 12px 8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14px;color:#d0d0d0}
+.hm-count b{color:#fff;margin-left:4px}
+.hm-count a{color:#fff;margin-left:auto}
+.hm-count button{font:inherit;font-size:22px;line-height:1;width:40px;height:34px;cursor:pointer;background:transparent;color:#fff;border:1px solid #8a8a8a}
+.hm-count button:hover{background:#fff;color:#151515}
+.hm-strip{display:flex;gap:6px;overflow-x:auto;padding:0 12px 12px;scroll-snap-type:x proximity}
+.hm-strip .th{flex:0 0 132px;scroll-snap-align:start;border:0;border-top:6px solid #151515;padding:0;cursor:pointer;font:inherit;text-align:left;display:flex;flex-direction:column;background:#262626;color:#d6d6d6}
+.hm-strip .th .ti{position:relative;display:block;height:84px;background:#3a3a3a;overflow:hidden}
+.hm-strip .th .ti img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.7}
+.hm-strip .th .ti.score img{object-position:center 22%;background:#fff}
+.hm-strip .th .ti b{position:absolute;left:8px;right:8px;top:8px;font-weight:400;font-style:italic;font-size:14px;line-height:1.2;color:#e6e6e6}
+.hm-strip .th .tt{display:block;padding:6px 8px 8px;font-size:13px;line-height:1.2;min-height:46px;box-sizing:border-box}
+.hm-strip .th .tt small{display:block;font-size:12px;opacity:.85}
+.hm-strip .th:hover .ti img{opacity:1}
+.hm-strip .th.on{border-top-color:#fff;background:var(--c1);color:#fff}
+.hm-strip .th.on .ti img{opacity:1}
+.hm-who{display:flex;flex-direction:column;gap:6px}
+.hm-who .nm{padding:26px 30px;display:flex;flex-direction:column;gap:18px}
+.hm-who h1{font-size:clamp(40px,4vw,58px);line-height:1;color:#111}
+.hm-who .fx{font-size:20px;display:flex;flex-wrap:wrap;gap:2px 16px}
+.hm-who .fx a{text-decoration:none}
+.hm-who .fx a:hover{text-decoration:underline}
+.hm-who .q{font-size:16px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.hm-who .st{flex:1;background:#111;color:#f0f0f0;padding:24px 30px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.hm-facets{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:6px}
+.facet{display:flex;flex-direction:column;gap:6px}
+.facet .pl{flex:1;padding:24px 26px 28px;color:#fff;display:flex;flex-direction:column;gap:14px}
+.facet .pl a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.facet h2{font-size:30px;line-height:1.1}
+.facet h2 a{text-decoration:none}
+.facet h3{font-size:14px;font-weight:400;opacity:.85;margin:0 0 2px}
+.facet .g a,.facet .g span{display:block;margin:0 0 3px}
+.facet .ph{position:relative;display:block;height:210px;background:#151515;overflow:hidden}
+.facet .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 35%}
+.facet .ph span{position:absolute;left:0;bottom:0;color:#fff;padding:8px 14px}
+@media(max-width:900px){.hm-top{grid-template-columns:minmax(0,1fr)}.hm-who{order:-1}}
+.hm-bar .meta{color:#fff;font-size:15px}
+.facet .pl h2 a{text-decoration:none}
+.facet .pl h2 a:hover{text-decoration:underline}
+.facet .ph span{position:static;padding:0}
+.facet .ph > span{position:absolute;left:0;bottom:0;padding:8px 14px}
+.concept{border-left:0;padding-left:0}
+
+/* footer: compact; statement with links */
+footer.ft{padding:26px 0 30px;font-size:14px}
+.ft .fgrid{grid-template-columns:minmax(0,1.5fr) repeat(4,minmax(0,1fr));gap:18px 32px}
+.ft h4{font-size:14px;margin:0 0 6px}
+.ft a{margin:0 0 4px}
+.ft .fwho b{font-size:17px;margin-bottom:4px}
+.ft .fwho a{margin-top:6px}
+@media(max-width:900px){.ft .fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.ft .fwho{grid-column:1 / -1}}
+.hm-who .st{font-size:15px;line-height:1.5;justify-content:flex-start}
+.hm-who .st a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.hm-strip .th .ti img{background:#3a3a3a}
+.hm-who .st strong{font-size:18px;font-weight:700}
+.hm-who .st{gap:12px}
+
+/* each facet is one block: plate and photograph touch, the photograph carries no label */
+.facet{gap:0}
+.facet .ph > span{display:none}
+/* the carousel takes whatever height the name column leaves, so both columns end together */
+.hm-play{display:flex;flex-direction:column}
+.hm-strip{flex:1}
+.hm-strip .th .ti{flex:1;height:auto;min-height:84px}
+.hm-strip .th .tt{flex:0 0 auto}
+.hm-who .st{justify-content:center}
+
+/* facet photographs: cropped to 4:3 in assets/home, shown whole at any width */
+.facet .ph{height:auto;aspect-ratio:4 / 3}
+.facet .ph img{object-position:50% 50%}
+
+/* plate lines without a link (research areas) read as tags */
+.facet .g.tags{display:flex;flex-wrap:wrap;gap:6px}
+.facet .g.tags h3{flex:0 0 100%;margin:0}
+.facet .g.tags > span{display:inline-block;margin:0;padding:3px 11px;border:1px solid rgba(255,255,255,.75);border-radius:15px;font-size:14px;line-height:1.4}
+.facet .g.tags > span span{display:inline;margin:0}
+
+/* fotos de los cubos: fundido lento entre varias */
+.facet .ph img{opacity:0;transition:opacity 2.5s ease}
+.facet .ph img.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.facet .ph img{transition:none}}
+
+/* velo del color de la faceta sobre la foto: mas denso en el borde que toca el cubo */
+.facet .ph::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,var(--v) 0%,transparent 130%);opacity:.38;transition:opacity .4s}
+.facet .ph:hover::after{opacity:.12}
+#composer .ph{--v:#9a2b25}
+#researcher .ph{--v:#1d4e6f}
+#innovator .ph{--v:#8a5320}
+#professor .ph{--v:#2f5d4a}
+
+/* formulario de contacto */
+.cform{display:grid;gap:18px;max-width:640px}
+.cform label{display:grid;gap:6px;font-size:14px;color:var(--ink2)}
+.cform input,.cform select,.cform textarea{font:inherit;font-size:17px;color:var(--ink);background:#fff;border:1px solid #1a1a1a;border-radius:0;padding:11px 12px;width:100%}
+.cform input:focus,.cform select:focus,.cform textarea:focus{outline:3px solid #9a2b25;outline-offset:0}
+.cform .btn{cursor:pointer;font:inherit}
+.cmsg{min-height:1.4em;font-size:15px}
+
+/* ===== v5: lenguaje de la portada en las paginas interiores ===== */
+.nav{padding:16px var(--gut);border-bottom:0;gap:10px 26px}
+.brand{font-size:24px}
+.nav a.n{border-bottom:0;padding:2px 0;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.nav a.n.lc{font-size:19px;text-decoration:none;border-bottom:3px solid transparent}
+.nav a.n.fc-composer{color:#9a2b25}.nav a.n.fc-research{color:#1d4e6f}.nav a.n.fc-innovation{color:#8a5320}.nav a.n.fc-teaching{color:#2f5d4a}
+.nav a.n.lc.on,.nav a.n.lc:hover{border-bottom-color:currentColor}
+.nav a.n.on:not(.lc){color:#111;text-decoration-thickness:2px}
+.navlinks{gap:6px 20px}
+/* cabeceras: placa negra en paginas generales, placa del color de la faceta en sus subpaginas */
+.phead{background:#111;color:#fff;border-bottom:0;padding:clamp(34px,4.5vw,60px) 0 clamp(26px,3.4vw,44px)}
+.phead h1,.phead .lede,.phead .kicker,.phead a{color:#fff}
+.s-composer .phead,.s-research .phead,.s-innovation .phead,.s-teaching .phead{background:var(--accent)}
+.subnav{border-bottom:2px solid #111}
+/* rotulos de seccion: mismo peso que los titulos de los cubos */
+.sec .kicker{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:14px}
+.sechead h2{font-size:clamp(26px,3vw,34px)}
+/* obras sin imagen: placa de color con el titulo, como los cubos de la portada */
+.card .ph.none{background:var(--accent,#9a2b25);align-items:flex-start;justify-content:flex-end;text-align:left;padding:18px}
+.card:nth-child(3n) .ph.none{background:#111}
+.card:nth-child(5n) .ph.none{background:#6f1d19}
+.card .ph.none .tt{color:#fff;font-style:normal;font-weight:700;font-size:clamp(20px,2vw,26px);line-height:1.08}
+.card .ph.none .ii{color:#fff;opacity:.85;margin-top:8px}
+.card .ph.none .yr{background:transparent;color:#fff}
+.card .ph.none{background-image:none;border:0}
+.card:hover .ph.none{background-color:var(--accent,#9a2b25);filter:brightness(1.15)}
+.card:nth-child(3n):hover .ph.none{background-color:#111}
+.card:nth-child(5n):hover .ph.none{background-color:#6f1d19}
+
+/* portada: retrato profesional entre el nombre y el texto */
+.hm-who .pt{flex:1 1 170px;min-height:170px;position:relative;overflow:hidden;background:#111}
+.hm-who .pt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:18% 30%}
+.hm-who .st{flex:0 0 auto}
+@media(max-width:900px){.hm-who .pt{flex:none;aspect-ratio:2 / 1;min-height:0}}
+.hm-who .pt img{object-position:0% 35%}
+.s-research .shero img{object-position:50% 8%}
+/* retrato de portada: proporcion fija 2:1, sin recorte en ningun ancho */
+.hm-who .pt{flex:none;aspect-ratio:2 / 1;min-height:0}
+.hm-who .pt img{object-position:50% 50%}
+.hm-who .st{flex:1}
+/* si la columna derecha es mas alta, crece el reproductor y no las miniaturas */
+.hm-strip{flex:none}
+.hm-strip .th .ti{flex:none;height:124px;min-height:0}
+.hm-play .player{flex:1 1 auto}
+
+/* etiquetas con enlace (conformaciones en el cubo de compositor) */
+.facet .g.tags > a{display:inline-block;margin:0;padding:3px 11px;border:1px solid rgba(255,255,255,.75);border-radius:15px;font-size:14px;line-height:1.4;text-decoration:none;color:#fff}
+.facet .g.tags > a:hover{background:#fff;color:#111}
+.facet .g.tags > a span{display:inline;margin:0}
+
+@media(min-width:901px){.ft .fgrid{grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr))}}
+
+/* logo de las partituras, esquina derecha del pie */
+.ft .flogo{width:82px;height:auto;justify-self:end;align-self:start;border:1px solid #555}
+@media(min-width:901px){.ft .fgrid{grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr)) auto}}
+@media(max-width:900px){.ft .flogo{grid-column:1 / -1;justify-self:end}}
+.ft .flogo{width:150px;border:0}
+.hm-who .st strong{font-size:inherit}
+
+/* publicaciones filtradas por area */
+.areaf{display:inline-flex;align-items:center;gap:10px;margin:0 0 18px;padding:6px 8px 6px 14px;background:#1d4e6f;color:#fff;font-size:15px}
+.areaf[hidden]{display:none}
+.areaf button{background:none;border:0;color:#fff;font-size:20px;line-height:1;cursor:pointer;padding:0 4px}

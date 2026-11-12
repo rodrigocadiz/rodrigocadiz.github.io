@@ -78,10 +78,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     const chips=Array.from(document.querySelectorAll('.chip'));
     const search=document.querySelector('.search');
     let f='all';
+    /* ?a=<area>: only publications of that research area (keywords from the build) */
+    let area=null; const af=document.getElementById('areaf');
+    try{ const A=JSON.parse(pl.dataset.areas||'{}'); area=A[new URLSearchParams(location.search).get('a')]||null; }catch(e){}
+    if(area&&af){ af.hidden=false;
+      af.innerHTML='<span data-l="en">Area: '+area.en+'</span><span data-l="es">Área: '+area.es+'</span> <button type="button" aria-label="Clear">×</button>';
+      af.querySelector('button').addEventListener('click',()=>{ area=null; af.hidden=true; history.replaceState(null,'',location.pathname); apply(); }); }
     const apply=()=>{
       const q=(search&&search.value||'').trim().toLowerCase();
       rows.forEach(r=>{
-        const ok=(f==='all'||r.dataset.cat===f)&&(!q||(r.dataset.search||'').includes(q));
+        const t=r.dataset.search||'';
+        const ok=(f==='all'||r.dataset.cat===f)&&(!q||t.includes(q))&&(!area||area.k.some(k=>(r.dataset.t||'').includes(k)));
         r.style.display=ok?'':'none';
       });
       chips.forEach(c=>c.classList.toggle('on',c.dataset.f===f));
@@ -143,3 +150,58 @@ function mount(el){
   else if(sc) el.innerHTML='<iframe loading="lazy" allow="autoplay" src="'+scUrl(sc)+'"></iframe>';
   else if(yt) el.innerHTML='<iframe loading="lazy" allowfullscreen allow="accelerometer;clipboard-write;encrypted-media;picture-in-picture" src="https://www.youtube-nocookie.com/embed/'+yt+(t?'?start='+t:'')+'"></iframe>';
 }
+
+/* home: one player, a carousel of works, and a source switch (video, SoundCloud, Spotify) */
+document.addEventListener('DOMContentLoaded',()=>{
+  const hp=document.querySelector('.hm-play');
+  if(!hp) return;
+  const stage=hp.querySelector('.player'), bar=hp.querySelector('.hm-bar'), srcs=bar.querySelector('.srcs');
+  const strip=hp.querySelector('.hm-strip'), ths=Array.from(strip.querySelectorAll('.th'));
+  if(!ths.length) return;
+  const LBL={yt:'Video',sc:'SoundCloud',sp:'Spotify'};
+  let cur=0, src='';
+  const frame=(u,cls)=>{ const f=document.createElement('iframe'); f.src=u; if(cls) f.className=cls;
+    f.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'); f.setAttribute('allowfullscreen',''); f.setAttribute('referrerpolicy','strict-origin-when-cross-origin'); f.title=ths[cur].dataset.title; return f; };
+  function draw(){
+    const b=ths[cur], d=b.dataset, av=['yt','sc','sp'].filter(k=>d[k]);
+    if(!av.includes(src)) src=av[0];
+    ths.forEach((x,i)=>{ x.classList.toggle('on',i===cur); x.setAttribute('aria-pressed',String(i===cur)); });
+    bar.querySelector('em').textContent=d.title;
+    const en=bar.querySelector('.meta [data-l="en"]'), es=bar.querySelector('.meta [data-l="es"]');
+    if(en) en.textContent=d.metaEn; if(es) es.textContent=d.metaEs;
+    bar.querySelector('.wp').href=d.href;
+    hp.querySelector('.hm-count .n').textContent=(cur+1)+' / '+ths.length;
+    srcs.innerHTML='';
+    av.forEach(k=>{ const x=document.createElement('button'); x.type='button'; x.textContent=LBL[k];
+      if(k===src) x.className='on'; x.setAttribute('aria-pressed',String(k===src));
+      x.addEventListener('click',()=>{ src=k; draw(); }); srcs.appendChild(x); });
+    stage.innerHTML=''; stage.className='player'+(src==='yt'?'':' audio '+src);
+    if(src==='yt'){ stage.appendChild(frame('https://www.youtube-nocookie.com/embed/'+d.yt+(d.t?'?start='+d.t:''))); return; }
+    if(d.img){ const im=document.createElement('img'); im.src=d.img; im.alt=''; stage.appendChild(im); }
+    else { const t=document.createElement('b'); t.textContent=d.title; stage.appendChild(t); }
+    stage.appendChild(frame(src==='sc'?scUrl(d.sc):'https://open.spotify.com/embed/'+d.sp+'?utm_source=generator','au'));
+  }
+  function go(i){ cur=(i+ths.length)%ths.length; src=''; draw();
+    const b=ths[cur]; strip.scrollTo({left:b.offsetLeft-(strip.clientWidth-b.offsetWidth)/2,behavior:'smooth'}); }
+  ths.forEach((b,i)=>b.addEventListener('click',()=>go(i)));
+  hp.querySelector('.pv').addEventListener('click',()=>go(cur-1));
+  hp.querySelector('.nx').addEventListener('click',()=>go(cur+1));
+  draw();
+});
+
+// Portada: las fotos de cada cubo cambian lentamente (fundido). Cada cubo tiene su propio
+// periodo, con variacion al azar, y elige la siguiente foto al azar: la combinacion de las
+// cuatro no sigue un ciclo.
+document.addEventListener('DOMContentLoaded',function(){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  var per=[7000,11000,13000,17000];
+  document.querySelectorAll('.facet .ph').forEach(function(ph,k){
+    var im=ph.querySelectorAll('img'); if(im.length<2) return; var i=0, base=per[k%per.length];
+    function wait(){ setTimeout(next, base+Math.random()*5000); }
+    function next(){ var j=i; while(j===i) j=Math.floor(Math.random()*im.length);
+      var n=im[j]; n.loading='eager';
+      var sw=function(){ im[i].classList.remove('on'); n.classList.add('on'); i=j; wait(); };
+      if(n.complete&&n.naturalWidth) sw(); else { n.addEventListener('load',sw,{once:true}); n.addEventListener('error',wait,{once:true}); } }
+    setTimeout(next, 3000+Math.random()*base);
+  });
+});
